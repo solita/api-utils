@@ -1,0 +1,19 @@
+<Layer>
+    <ows:Title>{{name}}</ows:Title>
+    <ows:Identifier>{{name}}</ows:Identifier>
+    <Style isDefault="true">
+        <ows:Identifier>default</ows:Identifier>
+    </Style>
+    <Format>image/png</Format>
+    <Dimension>
+        <ows:Identifier>time</ows:Identifier>
+        <ows:UOM>ISO8601</ows:UOM>
+        <Default>{{time}}</Default>
+        <Current>false</Current>
+        <Value>2010-01-01T00:00:00Z/2030-01-01T00:00:00Z/PT1S</Value>
+    </Dimension>
+    <TileMatrixSetLink>
+        <TileMatrixSet>ETRS-TM35FIN</TileMatrixSet>
+    </TileMatrixSetLink>
+    <ResourceURL format="image/png" resourceType="tile" template="{{url}}{{path}}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png?{{qsPreTime}}time={time}{{qsPostTime}}" />
+</Layer>
