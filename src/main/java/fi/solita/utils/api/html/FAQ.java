@@ -46,10 +46,6 @@ public abstract class FAQ implements Renderable {
 "Swagger-dokumentaatiosta näet ajantasaisen listan. Lähes kaikki rajapintametodit on saatavilla kaikissa vastausmuodoissa."
                    ))
                    .render(definition(
-"Miksi geometria on joskus vastauksessa mukana ja joskus ei?",
-"Geometriat ovat joskus suuria, joten niitä ei aina laiteta oletuksena mukaan kaikissa vastausmuodoissa. Oletuksena ei-pistemäiset (eli muut kuin POINT ja MULTIPOINT) jätetään pois muista kuin spatiaalisista muodoista. Saat geometriat kuitenkin halutessasi mukaan lisäämällä geometriakentän 'propertyName'-parametriin."
-                   ))
-                   .render(definition(
 "Miten saan piirretyä dataa kartalle?",
 "Voit katsoa rajapinnan etusivun karttatoteutuksesta mallia."
                    ))

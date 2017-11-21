@@ -11,9 +11,7 @@ import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
-import static fi.solita.utils.functional.FunctionalA.flatMap;
 import static fi.solita.utils.functional.FunctionalA.last;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
 import static fi.solita.utils.functional.FunctionalC.reverse;
 import static fi.solita.utils.functional.FunctionalC.tail;
@@ -129,6 +127,7 @@ public abstract class RequestUtil {
         }
     }
     
+    @SuppressWarnings("unchecked")
     public static final void checkURL(HttpServletRequest request, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
         assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), acceptedParams);
     }

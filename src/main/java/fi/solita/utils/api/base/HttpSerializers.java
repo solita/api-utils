@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
@@ -31,6 +30,7 @@ import fi.solita.utils.functional.Pair;
 
 public class HttpSerializers {
     
+    @SuppressWarnings("unused")
     private final Serializers s;
 
     public HttpSerializers(Serializers s) {
@@ -42,6 +42,7 @@ public class HttpSerializers {
         public final String name;
         public final List<String> validValues;
         public <E extends Enum<E>> InvalidEnumException(String source, Class<E> enumClass, Apply<E,String> serialization) {
+            super(source);
             this.value = source;
             this.name = enumClass.getName();
             this.validValues = newList(map(serialization, enumClass.getEnumConstants()));
@@ -108,6 +109,7 @@ public class HttpSerializers {
     public static class InvalidLocalDateException extends RuntimeException {
         public final String localdate;
         public InvalidLocalDateException(String localdate) {
+            super(localdate);
             this.localdate = localdate;
         }
     }
@@ -123,6 +125,7 @@ public class HttpSerializers {
     public static class InvalidDateTimeException extends RuntimeException {
         public final String datetime;
         public InvalidDateTimeException(String datetime) {
+            super(datetime);
             this.datetime = datetime;
         }
     }

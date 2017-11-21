@@ -7,7 +7,6 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.isEmpty;
-import static fi.solita.utils.functional.Functional.last;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.greaterThan;

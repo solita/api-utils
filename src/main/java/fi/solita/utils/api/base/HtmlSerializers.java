@@ -27,6 +27,7 @@ import org.rendersnake.Renderable;
 
 import fi.solita.utils.api.ClassUtils;
 import fi.solita.utils.api.JsonSerializeAsBean;
+import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function2;
 import fi.solita.utils.functional.Option;
@@ -41,6 +42,39 @@ public abstract class HtmlSerializers {
     
     public HtmlSerializers(Serializers s) {
         this.s = s;
+    }
+    
+    public static final <T> HtmlSerializer<T> stringSerializer(final Apply<T,String> f, final String cssTypeName) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(f.apply(value))
+                    ._span();
+            }
+        };
+    }
+    
+    public static final <T> HtmlSerializer<T> intSerializer(final Apply<T,Integer> f, final String cssTypeName) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(f.apply(value))
+                    ._span();
+            }
+        };
+    }
+    
+    public static final <T> HtmlSerializer<T> delegateSerializer(final Apply<T,?> f, final String cssTypeName) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                        .render(module.toRenderable(f.apply(value)))
+                    ._span();
+            }
+        };
     }
     
     protected abstract <T extends Enum<?>> Option<String> docName_en(T member);
@@ -285,24 +319,6 @@ public abstract class HtmlSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> localdate = Pair.of(LocalDate.class, new HtmlSerializer<LocalDate>() {
-        @Override
-        public void renderOn(LocalDate value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-date"))
-                  .write(s.ser(value))
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> localtime = Pair.of(LocalTime.class, new HtmlSerializer<LocalTime>() {
-        @Override
-        public void renderOn(LocalTime value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-time"))
-                  .write(s.ser(value))
-                ._span();
-        }
-    });
-    
     public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> datetime = Pair.of(DateTime.class, new HtmlSerializer<DateTime>() {
         public final DateTime END_OF_ALL_TIMES = new DateTime(3000, 12, 31, 21, 59, DateTimeZone.UTC);
         public final DateTime START_OF_TIME = new DateTime(1921, 12, 31, 22, 0, DateTimeZone.UTC);
@@ -335,24 +351,6 @@ public abstract class HtmlSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> duration = Pair.of(Duration.class, new HtmlSerializer<Duration>() {
-        @Override
-        public void renderOn(Duration value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-duration"))
-                  .write(s.ser(value))
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> datetimezone = Pair.of(DateTimeZone.class, new HtmlSerializer<DateTimeZone>() {
-        @Override
-        public void renderOn(DateTimeZone value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-timezone"))
-                  .write(s.ser(value))
-                ._span();
-        }
-    });
-    
     public Map<Class<?>, HtmlSerializer<?>> serializers() { return newMap(
             nullValue,
             jsonOutput,
@@ -371,12 +369,12 @@ public abstract class HtmlSerializers {
             option,
             either,
             uri,
-            localdate,
-            localtime,
+            Pair.of(LocalDate.class, stringSerializer(Serializers_.ser1.ap(s), "date")),
+            Pair.of(LocalTime.class, stringSerializer(Serializers_.ser2.ap(s), "time")),
             datetime,
             interval,
-            duration,
-            datetimezone
+            Pair.of(Duration.class, stringSerializer(Serializers_.ser5.ap(s), "duration")),
+            Pair.of(DateTimeZone.class, stringSerializer(Serializers_.ser6.ap(s), "timezone"))
         );
     }
 }

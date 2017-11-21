@@ -10,7 +10,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.sort;
-import static fi.solita.utils.functional.FunctionalA.concat;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
@@ -49,6 +48,15 @@ public class CsvSerializers {
     
     public CsvSerializers(Serializers s) {
         this.s = s;
+    }
+    
+    public static final <T> CsvSerializer<T> stdSerializer(final Apply<T,? extends CharSequence> f) {
+        return new CsvSerializer<T>() {
+            @Override
+            public Cells render(CsvModule module, T value) {
+                return new Cells(f.apply(value));
+            }
+        };
     }
     
     public static String cells2str(Cells cells) {
@@ -286,34 +294,6 @@ public class CsvSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> uri = Pair.of(URI.class, new CsvSerializer<URI>() {
-        @Override
-        public Cells render(CsvModule module, URI value) {
-            return new Cells(s.ser(value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> localdate = Pair.of(LocalDate.class, new CsvSerializer<LocalDate>() {
-        @Override
-        public Cells render(CsvModule module, LocalDate value) {
-            return new Cells(s.ser(value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> localtime = Pair.of(LocalTime.class, new CsvSerializer<LocalTime>() {
-        @Override
-        public Cells render(CsvModule module, LocalTime value) {
-            return new Cells(s.ser(value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> datetime = Pair.of(DateTime.class, new CsvSerializer<DateTime>() {
-        @Override
-        public Cells render(CsvModule module, DateTime value) {
-            return new Cells(s.serZoned(value));
-        }
-    });
-    
     public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> interval = Pair.of(Interval.class, new CsvSerializer<Interval>() {
         @Override
         public Cells render(CsvModule module, Interval value) {
@@ -326,21 +306,6 @@ public class CsvSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> duration = Pair.of(Duration.class, new CsvSerializer<Duration>() {
-        @Override
-        public Cells render(CsvModule module, Duration value) {
-            return new Cells(s.ser(value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> datetimezone = Pair.of(DateTimeZone.class, new CsvSerializer<DateTimeZone>() {
-        @Override
-        public Cells render(CsvModule module, DateTimeZone value) {
-            return new Cells(s.ser(value));
-        }
-    });
-    
-    @SuppressWarnings("unchecked")
     public Map<Class<?>, CsvSerializer<?>> serializers() { return newMap(
             nullValue,
             jsonOutput,
@@ -359,13 +324,13 @@ public class CsvSerializers {
             character,
             option,
             either,
-            uri,
-            localdate,
-            localtime,
-            datetime,
+            Pair.of(URI.class, stdSerializer(Serializers_.ser.ap(s))),
+            Pair.of(LocalDate.class, stdSerializer(Serializers_.ser1.ap(s))),
+            Pair.of(LocalTime.class, stdSerializer(Serializers_.ser2.ap(s))),
+            Pair.of(DateTime.class, stdSerializer(Serializers_.serZoned.ap(s))),
             interval,
-            duration,
-            datetimezone
+            Pair.of(Duration.class, stdSerializer(Serializers_.ser5.ap(s))),
+            Pair.of(DateTimeZone.class, stdSerializer(Serializers_.ser6.ap(s)))
         );
     }
 }

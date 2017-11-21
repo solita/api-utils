@@ -9,7 +9,6 @@ import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.FunctionalA.concat;
-import static fi.solita.utils.functional.FunctionalA.cons;
 import static fi.solita.utils.functional.FunctionalC.drop;
 import static fi.solita.utils.functional.FunctionalC.span;
 import static fi.solita.utils.functional.Predicates.equalTo;

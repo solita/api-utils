@@ -130,15 +130,8 @@ public class JsonModule extends SimpleModule {
     }
     
     private static class CannotDeserializeDueToMissingFieldException extends SerializingDeserializingProhibitedException {
-        private final String fieldName;
-
         public CannotDeserializeDueToMissingFieldException(String fieldName) {
             super("Field '" + fieldName + "' was left null since it was missing from the input data.");
-            this.fieldName = fieldName;
-        }
-
-        public String getFieldName() {
-            return fieldName;
         }
     }
 }

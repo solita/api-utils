@@ -161,10 +161,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (clazz.equals(DateTimeZone.class)) {
                 builder.description("Aikavyöhykekoodi / Time zone code")
                        .example("Europe/Helsinki");
-            } else if (name.equals("vari")) {
-                builder.example("#009E47");
-            } else if (name.equals("ratanumero")) {
-                builder.example("002");
             } else {
                 if (Option.class.isAssignableFrom(clazz)) {
                     Class<?> parameterClass = ClassUtils.typeClass(ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType());
@@ -268,16 +264,14 @@ public abstract class SwaggerSupport extends ApiResourceController {
         return Integer.toString(i);
     }
     
-    public static void addResourceHandlers(ResourceHandlerRegistry registry, Iterable<? extends Class<? extends VersionBase>> publishedVersions) {
-        for (Class<? extends VersionBase> publishedVersion: publishedVersions) {
-            try {
-                registry.addResourceHandler("/" + publishedVersion.getField("VERSION").get(null) + "/swagger*.html")
-                        .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
-                registry.addResourceHandler("/" + publishedVersion.getField("VERSION").get(null) + "/webjars/**")
-                        .addResourceLocations("classpath:/META-INF/resources/webjars/");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+    public static void addResourceHandler(ResourceHandlerRegistry registry, String version) {
+        try {
+            registry.addResourceHandler("/" + version + "/swagger*.html")
+                    .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
+            registry.addResourceHandler("/" + version + "/webjars/**")
+                    .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
     

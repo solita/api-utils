@@ -10,7 +10,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.sort;
-import static fi.solita.utils.functional.FunctionalA.concat;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
@@ -53,6 +52,15 @@ public class ExcelSerializers {
     
     public ExcelSerializers(Serializers s) {
         this.s = s;
+    }
+    
+    public static final <T> ExcelSerializer<T> stdSerializer(final Apply<T, ? extends CharSequence> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
     }
     
     public static String cells2str(Cells cells) {
@@ -334,13 +342,6 @@ public class ExcelSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> uri = Pair.of(URI.class, new ExcelSerializer<URI>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, URI value) {
-            return new Cells(newCell(row, columnIndex, s.ser(value)));
-        }
-    });
-    
     public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> localdate = Pair.of(LocalDate.class, new ExcelSerializer<LocalDate>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, LocalDate value) {
@@ -391,21 +392,6 @@ public class ExcelSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> duration = Pair.of(Duration.class, new ExcelSerializer<Duration>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Duration value) {
-            return new Cells(newCell(row, columnIndex, s.ser(value)));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> datetimezone = Pair.of(DateTimeZone.class, new ExcelSerializer<DateTimeZone>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, DateTimeZone value) {
-            return new Cells(newCell(row, columnIndex, s.ser(value)));
-        }
-    });
-    
-    @SuppressWarnings("unchecked")
     public Map<Class<?>, ExcelSerializer<?>> serializers() { return newMap(
             nullValue,
             jsonOutput,
@@ -424,13 +410,13 @@ public class ExcelSerializers {
             character,
             option,
             either,
-            uri,
+            Pair.of(URI.class, stdSerializer(Serializers_.ser.ap(s))),
             localdate,
             localtime,
             datetime,
             interval,
-            duration,
-            datetimezone
+            Pair.of(Duration.class, stdSerializer(Serializers_.ser5.ap(s))),
+            Pair.of(DateTimeZone.class, stdSerializer(Serializers_.ser6.ap(s)))
         );
     }
 }

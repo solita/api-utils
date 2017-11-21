@@ -9,9 +9,14 @@ import com.fasterxml.jackson.databind.type.CollectionType;
 
 public class JsonConversionService {
 
-    public final ObjectMapper om = new JsonObjectMapper();
+    public final ObjectMapper om;
 
     public JsonConversionService(Module... modules) {
+        this(new JsonObjectMapper(), modules);
+    }
+    
+    public JsonConversionService(ObjectMapper om, Module... modules) {
+        this.om = om;
         for ( Module module : modules ) {
             this.om.registerModule(module);
         }
