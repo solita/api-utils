@@ -13,12 +13,17 @@ import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
+import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.MethodDescriptor;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -55,6 +60,76 @@ public class MemberUtil {
             super(propertyName);
             this.propertyName = propertyName;
         }
+    }
+    
+    public static final <T> Collection<? extends MetaNamedMember<? super T,?>> allMethods(Class<T> clazz) {
+        try {
+            return newList(map(MemberUtil_.<T>md(), filter(MemberUtil_.include, Introspector.getBeanInfo(clazz).getMethodDescriptors())));
+        } catch (IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    static boolean include(MethodDescriptor md) {
+        return !md.getMethod().getDeclaringClass().equals(Object.class);
+    }
+    
+    static <T> MetaNamedMember<T,?> md(final MethodDescriptor md) {
+        return new MetaNamedMember<T, Object>() {
+            @Override
+            public Object apply(T t) {
+                try {
+                    return md.getMethod().invoke(t);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public AccessibleObject getMember() {
+                return md.getMethod();
+            }
+
+            @Override
+            public String getName() {
+                return md.getName();
+            }
+        };
+    }
+    
+    public static final <T> Collection<? extends MetaNamedMember<? super T,?>> beanGetters(Class<T> clazz) {
+        try {
+            return newList(map(MemberUtil_.<T>pd(), filter(MemberUtil_.include1, Introspector.getBeanInfo(clazz).getPropertyDescriptors())));
+        } catch (IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    static boolean include(PropertyDescriptor pd) {
+        return !pd.getReadMethod().getDeclaringClass().equals(Object.class);
+    }
+    
+    static <T> MetaNamedMember<T,?> pd(final PropertyDescriptor pd) {
+        return new MetaNamedMember<T, Object>() {
+            @Override
+            public Object apply(T t) {
+                try {
+                    return pd.getReadMethod().invoke(t);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public AccessibleObject getMember() {
+                return pd.getReadMethod();
+            }
+
+            @Override
+            public String getName() {
+                return pd.getName();
+            }
+        };
     }
     
     /**
