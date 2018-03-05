@@ -108,7 +108,7 @@ public class WMTS {
                         .replace("{{url}}", requestURI.replace("wmts.xml", "")));
         }
         return WMTS.WMTS_TEMPLATE
-                .replaceAll("{{title}}", title)
+                .replace("{{title}}", title)
                 .replace("{{layers}}", layers.toString())
                 .replace("{{url}}", requestURI.replace("wmts.xml", ""));
     }
