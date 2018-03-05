@@ -230,7 +230,7 @@ public abstract class HtmlConversionService {
                                 + "  th, td         { vertical-align: top; display: block; line-height: 1.5em; }"
                                 + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
                                 + "  tr             { border-top: none; }"
-                                + "  table          { display: flex; position: relative; width: 100%; overflow: auto; }"
+                                + "  table          { display: flex; position: relative; width: 100%; overflow-x: hidden; white-space: nowrap; }"
                                 + "  thead          { display: inline-block; font-size: 0.75em; }"
                                 + "  tbody          { display: inline-block; width: auto; white-space: nowrap; }"
                                 + "  thead tr       { display: block; }"
