@@ -8,18 +8,20 @@ import fi.solita.utils.api.Documentation;
 
 @Documentation(name_en = "SRSName", description = "Vastauksen koordinaattien muoto", description_en = "Response coordinate system")
 public final class SRSName {
-    public static final SRSName THE_ONE_IN_THE_DATABASE = new SRSName("epsg:3067", "urn:ogc:def:crs:EPSG::3067");
+    public static final SRSName THE_ONE_IN_THE_DATABASE = new SRSName("epsg:3067", "urn:ogc:def:crs:EPSG::3067", false);
     public static final SRSName DEFAULT = THE_ONE_IN_THE_DATABASE;
-    public static final SRSName WGS84 = new SRSName("wgs84", "urn:ogc:def:crs:EPSG::4326");
+    public static final SRSName WGS84 = new SRSName("wgs84", "urn:ogc:def:crs:EPSG::4326", true);
     
     public static final List<SRSName> validValues = newList(DEFAULT, WGS84);
     
     public final String value;
     public final String longValue;
+    public final boolean axisReversed;
     
-    public SRSName(String value, String longValue) {
+    public SRSName(String value, String longValue, boolean axisReversed) {
         this.value = value;
         this.longValue = longValue;
+        this.axisReversed = axisReversed;
     }
 
     @Override

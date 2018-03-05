@@ -46,7 +46,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
                 return (T)None();
             }
         } else if (u instanceof Iterable) {
-            // not sure if this is smart... but it's due to kohde1/kohde2 migration where a Dto has unexpected nulls...
+            // not sure if this is smart...
             return (T) filter(not(Predicates.isNull()), map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u));
         } else {
             return ((MetaNamedMember<Object,T>)child).apply(u);

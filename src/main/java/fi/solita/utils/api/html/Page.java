@@ -1,5 +1,7 @@
 package fi.solita.utils.api.html;
 
+import static org.rendersnake.HtmlAttributesFactory.class_;
+
 import java.io.IOException;
 
 import org.rendersnake.DocType;
@@ -10,10 +12,14 @@ import org.rendersnake.RenderableWrapper;
 public class Page extends RenderableWrapper {
 
     private final String title;
+    private final String copyright_fi;
+    private final String copyright_en;
 
-    public Page(String title, Renderable component) {
+    public Page(String title, String copyright_fi, String copyright_en, Renderable component) {
         super(component);
         this.title = title;
+        this.copyright_fi = copyright_fi;
+        this.copyright_en = copyright_en;
     }
 
     @Override
@@ -40,7 +46,12 @@ public class Page extends RenderableWrapper {
               ._header()
               .render(component)
               .footer()
-                  .write("© Liikennevirasto")
+                  .span(class_("fi").class_("copyright"))
+                      .write("© " + copyright_fi)
+                  ._span()
+                  .span(class_("en").class_("copyright"))
+                      .write("© " + copyright_en)
+                  ._span()
               ._footer()
           ._body()
         ._html();

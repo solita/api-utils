@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.filter;
-import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
@@ -26,7 +25,6 @@ import fi.solita.utils.api.base.HttpModule;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Filters.Filter;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Match;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
@@ -66,11 +64,6 @@ public class Filtering {
     }
     
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, SortedMap<K,V> ts) {
-        if (filters == null) {
-            // spring might give null...
-            return ts;
-        }
-        
         SortedMap<K, V> ret = newSortedMap(ts.comparator());
         for (Map.Entry<K,V> e: ts.entrySet()) {
             // Keeps the whole key (all values) if any value satisfies filters
@@ -85,21 +78,9 @@ public class Filtering {
         return headOption(filterData(includes, geometryMembers, filters, newList(t)));
     }
     
-    static <T> T assertSingleton(Iterable<T> iterable) {
-        if (iterable == null) {
-            return null;
-        }
-        int size = (int)Functional.size(iterable);
-        if (size != 1) {
-            throw new IllegalArgumentException("Iterable was not of size 1: " + newList(iterable));
-        }
-        return head(iterable);
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> Iterable<T> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Iterable<T> ts) {
         if (filters == null) {
-            // spring might give null...
             return ts;
         }
         
@@ -108,41 +89,45 @@ public class Filtering {
                 if (MemberUtil.toMembers(geometryMembers, filter.property).isEmpty()) {
                     throw new SpatialFilteringRequiresGeometryPropertyException(filter.property, newSet(map(MemberUtil_.memberName, geometryMembers)));
                 }
-                // skip filtering since it's been already done in the DB
+                // TODO: filtering is skipped here. Assuming it's been already done in the DB
             } else {
                 MetaNamedMember<? super T,?> member;
                 try {
-                    member = assertSingleton(MemberUtil.toMembers(includes, filter.property));
+                    member = Assert.singleton(MemberUtil.toMembers(includes, filter.property));
                 } catch (UnknownPropertyNameException e) {
                     throw new FilterPropertyNotFoundException(filter.property, e);
                 }
                 
+                // TODO: make filters work with collections (Any) (https://github.com/geotools/geotools/wiki/support-multi-valued-attributes-in-filter-comparison-operators)
                 if (filter.pattern == Filters.EQUAL) {
-                    ts = equal(member, assertSingleton(filter.values), ts);
+                    ts = equal(member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.NOT_EQUAL) {
-                    ts = notEqual(member, assertSingleton(filter.values), ts);
+                    ts = notEqual(member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.LT) {
-                    ts = lt((MetaNamedMember<? super T,? extends Comparable>)member, assertSingleton(filter.values), ts);
+                    ts = lt((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.GT) {
-                    ts = gt((MetaNamedMember<? super T,? extends Comparable>)member, assertSingleton(filter.values), ts);
+                    ts = gt((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.LTE) {
-                    ts = lte((MetaNamedMember<? super T,? extends Comparable>)member, assertSingleton(filter.values), ts);
+                    ts = lte((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.GTE) {
-                    ts = gte((MetaNamedMember<? super T,? extends Comparable>)member, assertSingleton(filter.values), ts);
+                    ts = gte((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.BETWEEN) {
                     Pair<String, String> vals = Match.pair(filter.values).success.get();
                     ts = between((MetaNamedMember<? super T,? extends Comparable>)member, vals.left, vals.right, ts);
                 } else if (filter.pattern == Filters.NOT_BETWEEN) {
                     Pair<String, String> vals = Match.pair(filter.values).success.get();
                     ts = notBetween((MetaNamedMember<? super T,? extends Comparable>)member, vals.left, vals.right, ts);
+                
+                // TODO: could these be made to work also with other than String-properties, by comparing to the chosen serialization format?
                 } else if (filter.pattern == Filters.LIKE) {
-                    ts = like((MetaNamedMember<? super T,String>)member, assertSingleton(filter.values), ts);
+                    ts = like((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.NOT_LIKE) {
-                    ts = notLike((MetaNamedMember<? super T,String>)member, assertSingleton(filter.values), ts);
+                    ts = notLike((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.ILIKE) {
-                    ts = ilike((MetaNamedMember<? super T,String>)member, assertSingleton(filter.values), ts);
+                    ts = ilike((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.NOT_ILIKE) {
-                    ts = notILike((MetaNamedMember<? super T,String>)member, assertSingleton(filter.values), ts);
+                    ts = notILike((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.values), ts);
+                    
                 } else if (filter.pattern == Filters.IN) {
                     ts = in(member, filter.values, ts);
                 } else if (filter.pattern == Filters.NOT_IN) {
@@ -203,19 +188,19 @@ public class Filtering {
     }
     
     public <T> Iterable<T> like(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(Filtering_.matches.apply(Function._, likePattern.replace("%", ".*")))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*")))), ts);
     }
     
     public <T> Iterable<T> notLike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Predicates.<String>isNull().or(not(Filtering_.matches.apply(Function._, likePattern.replace("%", ".*"))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Predicates.<String>isNull().or(not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))), ts);
     }
     
     public <T> Iterable<T> ilike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(Filtering_.matches.apply(Function._, "(?i)" + likePattern.replace("%", ".*")))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*")))), ts);
     }
     
     public <T> Iterable<T> notILike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Predicates.<String>isNull().or(not(Filtering_.matches.apply(Function._, "(?i)" + likePattern.replace("%", ".*"))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Predicates.<String>isNull().or(not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))), ts);
     }
     
     public <T,V> Iterable<T> in(MetaNamedMember<? super T,V> member, List<String> values, Iterable<T> ts) {

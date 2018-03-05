@@ -7,7 +7,7 @@ import static fi.solita.utils.functional.Collections.newMapOfSize;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSetOfSize;
 import static fi.solita.utils.functional.Collections.newSortedSet;
-import static fi.solita.utils.functional.Function._;
+import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
@@ -132,34 +132,24 @@ public class MemberUtil {
         };
     }
     
-    /**
-     * @see MemberUtil#resolveIncludes(SerializationFormat, Collection, Builder[], Iterable, Iterable)
-     */
     public static final <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders) {
-        return MemberUtil.resolveIncludes(format, members, builders, propertyNames, Collections.<MetaNamedMember<T,?>>emptyList());
+        return resolveIncludes(format, members, builders, propertyNames, Collections.<MetaNamedMember<T,?>>emptyList());
     }
 
-    /**
-     * @see MemberUtil#resolveIncludes(SerializationFormat, Collection, Builder[], Iterable, Iterable)
-     */
     public static final <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<? super T,?> geometry) {
-        return MemberUtil.resolveIncludes(format, members, builders, propertyNames, newList(geometry));
+        return resolveIncludes(format, members, builders, propertyNames, newList(geometry));
     }
 
-    /**
-     * @see MemberUtil#resolveIncludes(SerializationFormat, Collection, Builder[], Iterable, Iterable)
-     */
     public static final <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<T,?> geometry, MetaNamedMember<T,?> geometry2) {
-        return MemberUtil.resolveIncludes(format, members, builders, propertyNames, newList(geometry, geometry2));
+        return resolveIncludes(format, members, builders, propertyNames, newList(geometry, geometry2));
     }
 
     /**
      * 
-     * @param members Kaikki T:n jäsenet joita halutaan olevan mahdollista filtteröidä lopputuloksesta.
-     * @param propertyNames Käyttäjältä tullut filtteröinti, tai tyhjä (tai null, koska Spring)
-     * @param geometries Geometria-propertyt eli member:n osajoukko. Geometrioilla on erityiset includesäännöt niiden suuresta koosta johtuen.
-     * @param builders Builderit mahdollisille "nested propertyille". Jos tyhjä, property-filtteröinti pistenotaatiolla ei toimi.
-     * @return
+     * @param members All members of T, which would be possible to use for filtering the result.
+     * @param builders Builders defining what are considered as "nested properties". That is, these define the objects in the hierarchy whose members can be filtered with <i>propertyName</i>
+     * @param propertyNames Filtering given by the API user. Empty if not given.
+     * @param geometries Geometry members. Subset of <i>members</i>.
      */
     @SuppressWarnings("unchecked")
     static final <T> Includes<T> resolveIncludes(SerializationFormat format, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<String> propertyNames, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
@@ -171,6 +161,7 @@ public class MemberUtil {
             switch (format) {
                 case PNG:
                     members = emptyList();
+                    break;
                 case CSV:
                 case XLSX:
                 case HTML:
@@ -181,6 +172,7 @@ public class MemberUtil {
                 case JSON:
                 case XML:
                     members = withNestedMembers(members, Include.All, builders);
+                    break;
             }
             
             ret = (List<MetaNamedMember<? super T, ?>>) members;
@@ -239,12 +231,12 @@ public class MemberUtil {
     }
     
     /**
-     * Palauttaa "nested properties" hierarkisesti, eli kaikki sellaiset, joiden tyypille löytyy builder.
-     * Esim jos
-     * <p>Foo { A a, B b, C c } ja B { A a } ja C { A a }
-     * <p>niin
+     * Returns "nested properties" hierarchically. That is, those for which there is a builder in <i>builders</i>.
+     * For example, if:
+     * <p>Foo { A a, B b, C c } and B { A a } and C { A a }
+     * <p>then
      * <code>withNestedMembers([foo.a, foo.b, foo.c], Builder<A>, Builder<B>)</code>
-     * <p>palauttaa [a, a.b, a.b.a, b, b.a, c]
+     * <p>would return [a, a.b, a.b.a, b, b.a, c]
      */
     @SuppressWarnings("unchecked")
     public static <T> List<MetaNamedMember<? super T, ?>> withNestedMembers(Collection<? extends MetaNamedMember<? super T, ?>> members, Include include, Builder<?>... builders) {
@@ -266,9 +258,6 @@ public class MemberUtil {
         return ret;
     }
 
-    /**
-     * Palauttaa funktion, joka suodattaa parametristaan muut paitsi <i>Includes</i> määräämät datat. 
-     */
     public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes) {
         return MemberUtil_.<T>withProperties_topLevel().ap(Functional.map(MemberUtil_.memberNameWithDot, includes), Arrays.asList(includes.builders));
     }
@@ -282,7 +271,7 @@ public class MemberUtil {
     }
 
     static final <T> T withProperties_topLevel(Iterable<String> propertyNames, Iterable<Builder<?>> builders, T t) {
-        Assert.defined(findBuilderFor(builders, t.getClass()), "Ei löytynyt builderia juuriobjektin tyypille " + t.getClass().getName() + ". Sinulla bugittaa jokin?");
+        Assert.defined(findBuilderFor(builders, t.getClass()), "No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
         return withProperties(propertyNames, builders, t);
     }
     
@@ -294,7 +283,7 @@ public class MemberUtil {
             Set<String> props = newSet(propertyNames);
             for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);
-                List<String> subs = newList(filter(MemberUtil_.startsWith.apply(Function._, memberNameWithDot(member)), props));
+                List<String> subs = newList(filter(MemberUtil_.startsWith.apply(Function.__, memberNameWithDot(member)), props));
                 logger.debug("Relevant properties: {}", props);
                 if (!subs.isEmpty()) {
                     Object value = member.apply(t);
@@ -302,7 +291,7 @@ public class MemberUtil {
                     if (value != null) {
                         List<String> subProps = newList(filter(not(MemberUtil_.isEmpty), Functional.map(MemberUtil_.removeFirstPart, subs)));
                         logger.debug("Relevant properties for nested: {}", subProps);
-                        // ei rajoitusta rakenteen sisään
+                        
                         Object nested = subProps.isEmpty() ? value : withProperties(subProps, builders, value);
                         logger.debug("Builder.with({},{})", member, nested);
                         builder = builder.with(member, nested);
@@ -387,7 +376,7 @@ public class MemberUtil {
     }
     
     static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(Iterable<? extends MetaNamedMember<? super T,?>> fields, String propertyName) throws UnknownPropertyNameException {
-        List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberNameWithDot.andThen(MemberUtil_.startsWith.apply(_, propertyName + ".")), fields));
+        List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberNameWithDot.andThen(MemberUtil_.startsWith.apply(__, propertyName + ".")), fields));
         if (ret.isEmpty()) {
             throw new MemberUtil.UnknownPropertyNameException(propertyName);
         }

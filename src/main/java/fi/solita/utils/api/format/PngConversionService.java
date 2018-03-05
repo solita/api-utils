@@ -177,6 +177,9 @@ public class PngConversionService {
     }
     
     private static StyledLayer[] createStyles(final URL url) throws IOException, SAXException, ParserConfigurationException, URISyntaxException {
+        if (url == null) {
+            return new StyledLayer[0];
+        }
         URI imagePath = url.toURI().resolve("r/img/");
         final URL sourceUrl = imagePath.toURL();
         Parser parser = new Parser(new SLDConfiguration() {

@@ -96,7 +96,7 @@ public class WMTS {
         };
 
     
-    public static String luoWmtsKuvaus(String requestURI, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
+    public static String luoWmtsKuvaus(String title, String requestURI, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
         StringBuilder layers = new StringBuilder();
         for (Tuple4<String, String, String, String> layer: wmtsLayers) {
             layers.append(WMTS.LAYER_TEMPLATE
@@ -108,6 +108,7 @@ public class WMTS {
                         .replace("{{url}}", requestURI.replace("wmts.xml", "")));
         }
         return WMTS.WMTS_TEMPLATE
+                .replaceAll("{{title}}", title)
                 .replace("{{layers}}", layers.toString())
                 .replace("{{url}}", requestURI.replace("wmts.xml", ""));
     }

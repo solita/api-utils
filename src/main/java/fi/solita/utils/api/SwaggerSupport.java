@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 
 import java.lang.reflect.AccessibleObject;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import com.fasterxml.classmate.TypeResolver;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
@@ -47,7 +49,6 @@ import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
 import springfox.documentation.RequestHandler;
-import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.ModelPropertyBuilder;
 import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -55,12 +56,14 @@ import springfox.documentation.schema.AlternateTypeRules;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.AllowableListValues;
 import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.Contact;
+import springfox.documentation.service.PathDecorator;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
 import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
+import springfox.documentation.spi.service.contexts.DocumentationContext;
 import springfox.documentation.spi.service.contexts.ParameterContext;
+import springfox.documentation.spi.service.contexts.PathContext;
 import springfox.documentation.spring.web.paths.AbstractPathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger.common.SwaggerPluginSupport;
@@ -76,9 +79,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
     
     public static final SecurityConfiguration SECURITY_CONFIGURATION = new SecurityConfiguration(null, null, null, null, null, ApiKeyVehicle.HEADER, API_KEY, ",");
     
-    public static final String YLEINEN_KUVAUS = "Rajapinnan palauttama data ei välttämättä tarkalleen vastaa muualla julkaistua vastaavaa dataa.";
-    public static final String YLEINEN_KUVAUS_EN = "The data retrieved through the API does not necessarily match exactly to data published elsewhere.";
-    
     public SwaggerSupport(final String groupName) {
         super(new SwaggerResourcesProvider() {
             @Override
@@ -91,9 +91,31 @@ public abstract class SwaggerSupport extends ApiResourceController {
         });
     }
     
+    // To fix incorrect stripping of regex parts
+    public static class PathSanitizerFixer implements PathDecorator, Ordered {
+        @Override
+        public Function<String, String> decorator(PathContext context) {
+            return new Function<String, String>() {
+                @Override
+                public String apply(String input) {
+                    return input.replaceAll("\\{([^}]+?):[^}]+?\\}", "{$1}");
+                }
+            };
+        }
+        
+        @Override
+        public boolean supports(DocumentationContext dc) {
+            return SwaggerPluginSupport.pluginDoesApply(dc.getDocumentationType());
+        }
+
+        @Override
+        public int getOrder() {
+            return Ordered.HIGHEST_PRECEDENCE;
+        }
+    }
+    
     /**
-     * Asettaa mallissa (metodien paluuobjekteissa) Option-tyyppiset vapaaehtoisiksi
-     * ja kaikki muut pakollisiksi.
+     * Set Option:s optional, others required.
      */
     public static class OptionModelPropertyBuilder implements ModelPropertyBuilderPlugin {
         @Override
@@ -217,10 +239,14 @@ public abstract class SwaggerSupport extends ApiResourceController {
         protected abstract Option<String> doc(Class<?> clazz);
         
         @Override
-        public void apply(ParameterContext parameterContext) {
+        public final void apply(ParameterContext parameterContext) {
             Class<?> type = parameterContext.resolvedMethodParameter().getParameterType().getErasedType();
             Option<String> pathVariableName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orNull()).map(CustomTypeParameterBuilder_.pathVariableName);
             Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orNull()).map(CustomTypeParameterBuilder_.requestParamName);
+            apply(parameterContext, type, pathVariableName, requestParamName);
+        }
+        
+        protected void apply(ParameterContext parameterContext, Class<?> type, Option<String> pathVariableName, Option<String> requestParamName) {
             if (DateTime.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .defaultValue(intervalNow())
@@ -285,9 +311,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, String groupName, Class<? extends VersionBase> publishedVersion, ApiInfo info) {
+    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, Class<? extends VersionBase> publishedVersion, ApiInfo info) {
         Docket docket = new Docket(DocumentationType.SWAGGER_2)
-            .groupName(groupName)
             .select()
                // dokumentoidaan vain kyseisen version paketti, ja sieltäkin vain publicit  
               .apis(RequestHandlerSelectors.basePackage(publishedVersion.getPackage().getName()))
@@ -301,7 +326,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 @Override
                 public String getOperationPath(String operationPath) {
                     // poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
-                    return super.getOperationPath(operationPath).replace("{revision}/", "");
+                    return super.getOperationPath(operationPath)
+                            .replace("{revision}/", "") // poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
+                            .replace("{*****}", ""); // poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+
                 }
 
                 // Piti tehdä oma pathprovider ja käyttää tätä contextPathia, koska oletus (RelativePathProvider)
@@ -335,18 +363,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 .modelRef(new ModelRef("String"))
                 .parameterType("path")
                 .required(true)
-                .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), newList(SerializationFormat.XML, SerializationFormat.GML)))), "String"))
+                .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML)))), "String"))
                 .build()
-            ))
-            .apiInfo(new ApiInfoBuilder()
-                .title(info.title)
-                .description(info.description)
-                .version(groupName)
-                .termsOfServiceUrl(null)
-                .contact(new Contact("Liikennevirasto / Finnish Traffic Agency", "", ""))
-                .license("Digitraffic is an open data service. All content from the service and the service documentation is licenced under the Creative Commons 4.0 BY license.")
-                .licenseUrl("https://creativecommons.org/licenses/by/4.0/")
-                .build());
+            ));
         
         for (Constructor<?> c: publishedVersion.getDeclaredConstructors()) {
             // uuh, so ugly...

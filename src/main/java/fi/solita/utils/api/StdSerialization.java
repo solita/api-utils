@@ -1,6 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.api.MemberUtil.excluding;
+import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Option.Some;
@@ -26,6 +27,7 @@ import fi.solita.utils.api.format.geojson.Feature;
 import fi.solita.utils.api.format.geojson.FeatureCollection;
 import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
+import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function3;
@@ -78,37 +80,27 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             BOUNDS bbox,
+            SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<SortedMap<KEY, Iterable<DTO>>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedMap(req, res, bbox, formatAndETags, includes, data, title, key, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson));
-    }
-    
-    public <DTO, KEY> byte[] stdSpatialBoundedMap(
-            HttpServletRequest req,
-            HttpServletResponse res,
-            BOUNDS bbox,
-            Pair<SerializationFormat, ETags> formatAndETags,
-            Includes<DTO> includes,
-            Supplier<SortedMap<KEY, Iterable<DTO>>> data,
-            HtmlTitle title,
-            MetaNamedMember<? super DTO, KEY> key,
-            Apply<? super DTO, ? super DTO> excluding,
-            Apply<? super DTO, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedMap(req, res, bbox, formatAndETags, includes, data, title, key, excluding, toGeojson, Feature_.$);
+        return stdSpatialBoundedMap(req, res, bbox, srsName, formatAndETags, includes, data, dataTransformer, title, key, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
 
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
             HttpServletRequest req,
             HttpServletResponse res,
             BOUNDS bbox,
+            SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<SortedMap<KEY, Iterable<DTO>>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
             Apply<? super DTO, ? super DTO> excluding,
@@ -117,7 +109,7 @@ public abstract class StdSerialization<BOUNDS> {
         byte[] response;
         switch (formatAndETags.left) {
         case JSON:
-            response = json.serialize(data.get());
+            response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
             response = geoJson.serialize(new FeatureCollection(
@@ -125,17 +117,17 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            flatten(data.get().values()))),
-                    Some(Crs.epsg3067)));
+                            flatten(map(dataTransformer, data.get()).values()))),
+                    Some(Crs.of(srsName))));
             break;
         case HTML:
-            response = html.serialize(req, title, data.get(), includes, key);
+            response = html.serialize(req, title, map(dataTransformer, data.get()), includes, key);
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), data.get(), includes, key);
+            response = csv.serialize(res, title2fileName(title), map(dataTransformer, data.get()), includes, key);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), data.get(), includes, key);
+            response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()), includes, key);
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -153,35 +145,26 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             BOUNDS bbox,
+            SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedCollection(req, res, bbox, formatAndETags, includes, data, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson));
-    }
-    
-    public <DTO, KEY> byte[] stdSpatialBoundedCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
-            BOUNDS bbox,
-            Pair<SerializationFormat, ETags> formatAndETags,
-            Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
-            HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
-            Apply<? super DTO, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedCollection(req, res, bbox, formatAndETags, includes, data, title, excluding, toGeojson, Feature_.$);
+        return stdSpatialBoundedCollection(req, res, bbox, srsName, formatAndETags, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
     
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedCollection(
             HttpServletRequest req,
             HttpServletResponse res,
             BOUNDS bbox,
+            SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
@@ -189,7 +172,7 @@ public abstract class StdSerialization<BOUNDS> {
         byte[] response;
         switch (formatAndETags.left) {
         case JSON:
-            response = json.serialize(data.get());
+            response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
             response = geoJson.serialize(new FeatureCollection(
@@ -197,17 +180,17 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            data.get())),
-                    Some(Crs.epsg3067)));
+                            map(dataTransformer, data.get()))),
+                    Some(Crs.of(srsName))));
             break;
         case HTML:
-            response = html.serialize(req, title, data.get(), includes);
+            response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), data.get(), includes);
+            response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), data.get(), includes);
+            response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -224,33 +207,25 @@ public abstract class StdSerialization<BOUNDS> {
     public <DTO,KEY,SPATIAL> byte[] stdSpatialCollection(
             HttpServletRequest req,
             HttpServletResponse res,
+            SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialCollection(req, res, formatAndETags, includes, data, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson));
-    }
-    
-    public <DTO,KEY> byte[] stdSpatialCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
-            Pair<SerializationFormat, ETags> formatAndETags,
-            Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
-            HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
-            Apply<? super DTO, ? extends GeometryObject> toGeojson) {
-        return stdSpatialCollection(req, res, formatAndETags, includes, data, title, excluding, toGeojson, Feature_.$);
+        return stdSpatialCollection(req, res, srsName, formatAndETags, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
 
     public <DTO,KEY,SPATIAL> byte[] stdSpatialCollection(
             HttpServletRequest req,
             HttpServletResponse res,
+            SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
@@ -258,7 +233,7 @@ public abstract class StdSerialization<BOUNDS> {
         byte[] response;
         switch (formatAndETags.left) {
             case JSON:
-                response = json.serialize(data.get());
+                response = json.serialize(map(dataTransformer, data.get()));
                 break;
             case GEOJSON:
                 response = geoJson.serialize(new FeatureCollection(
@@ -266,17 +241,60 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            data.get())),
-                    Some(Crs.epsg3067)));
+                            map(dataTransformer, data.get()))),
+                    Some(Crs.of(srsName))));
                 break;
             case HTML:
-                response = html.serialize(req, title, data.get(), includes);
+                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), data.get(), includes);
+                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), data.get(), includes);
+                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                break;
+            case PNG:
+            case GML:
+            case XML:
+                throw new UnavailableContentTypeException();
+            default:
+                throw new IllegalStateException();
+        }
+        return response;
+    }
+    
+    public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(
+            HttpServletRequest req,
+            HttpServletResponse res,
+            SRSName srsName,
+            Pair<SerializationFormat, ETags> formatAndETags,
+            Includes<DTO> includes,
+            Supplier<DTO> data,
+            Apply<DTO,DTO> dataTransformer,
+            HtmlTitle title,
+            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+        byte[] response;
+        switch (formatAndETags.left) {
+            case JSON:
+                response = json.serialize(dataTransformer.apply(data.get()));
+                break;
+            case GEOJSON:
+                DTO d = dataTransformer.apply(data.get());
+                response = geoJson.serialize(toFeature.apply(
+                            toGeojson.apply(d),
+                            excluding.apply(d),
+                    Some(Crs.of(srsName))));
+                break;
+            case HTML:
+                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
+                break;
+            case CSV:
+                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
+                break;
+            case XLSX:
+                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
                 break;
             case PNG:
             case GML:
@@ -295,12 +313,13 @@ public abstract class StdSerialization<BOUNDS> {
             formatAndETags,
             Includes<DTO> includes,
             Supplier<SortedMap<KEY, Iterable<DTO>>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key) {
         byte[] response;
         switch (formatAndETags.left) {
         case JSON:
-            response = json.serialize(data.get());
+            response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
             response = geoJson.serialize(new FeatureCollection(
@@ -308,17 +327,17 @@ public abstract class StdSerialization<BOUNDS> {
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
-                                flatten(data.get().values()))),
-                        Some(Crs.epsg3067)));
+                                flatten(map(dataTransformer, data.get()).values()))),
+                        Option.<Crs>None()));
             break;
         case HTML:
-            response = html.serialize(req, title, data.get(), includes, key);
+            response = html.serialize(req, title, map(dataTransformer, data.get()), includes, key);
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), data.get(), includes, key);
+            response = csv.serialize(res, title2fileName(title), map(dataTransformer, data.get()), includes, key);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), data.get(), includes, key);
+            response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()), includes, key);
             break;
         case PNG:
         case GML:
@@ -336,11 +355,12 @@ public abstract class StdSerialization<BOUNDS> {
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
         switch (formatAndETags.left) {
             case JSON:
-                response = json.serialize(data.get());
+                response = json.serialize(map(dataTransformer, data.get()));
                 break;
             case GEOJSON:
                 response = geoJson.serialize(new FeatureCollection(
@@ -348,17 +368,17 @@ public abstract class StdSerialization<BOUNDS> {
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
-                            data.get())),
+                            map(dataTransformer, data.get()))),
                     Option.<Crs>None()));
                 break;
             case HTML:
-                response = html.serialize(req, title, data.get(), includes);
+                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), data.get(), includes);
+                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), data.get(), includes);
+                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case PNG:
             case GML:
@@ -376,26 +396,27 @@ public abstract class StdSerialization<BOUNDS> {
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
             Supplier<DTO> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
         switch (formatAndETags.left) {
             case JSON:
-                response = json.serialize(data.get());
+                response = json.serialize(dataTransformer.apply(data.get()));
                 break;
             case GEOJSON:
                 response = geoJson.serialize(new Feature(
                         Option.<GeometryObject>None(),
-                        data.get(),
-                        Some(Crs.epsg3067)));
+                        dataTransformer.apply(data.get()),
+                        Option.<Crs>None()));
                 break;
             case HTML:
-                response = html.serialize(req, title, data.get(), includes);
+                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), data.get(), includes);
+                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), data.get(), includes);
+                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
                 break;
             case PNG:
             case GML:
@@ -451,20 +472,21 @@ public abstract class StdSerialization<BOUNDS> {
             SerializationFormat format,
             Iterable<? extends MetaNamedMember<DTO, ?>> includes,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
         switch (format) {
             case JSON:
-                response = json.serialize(data.get());
+                response = json.serialize(map(dataTransformer, data.get()));
                 break;
             case HTML:
-                response = html.serialize(req, title, data.get(), includes);
+                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), data.get(), includes);
+                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), data.get(), includes);
+                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case PNG:
             case XML:
@@ -482,20 +504,21 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             SerializationFormat format,
             Supplier<? extends Collection<DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
         switch (format) {
             case JSON:
-                response = json.serialize(data.get());
+                response = json.serialize(map(dataTransformer, data.get()));
                 break;
             case HTML:
-                response = html.serialize(req, title, data.get());
+                response = html.serialize(req, title, map(dataTransformer, data.get()));
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), data.get());
+                response = csv.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), data.get());
+                response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case PNG:
             case XML:

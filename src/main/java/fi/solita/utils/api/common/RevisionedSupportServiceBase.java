@@ -29,7 +29,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
     protected abstract Revision getCurrentRevision();
     
     public void redirectToCurrentRevision(HttpServletRequest req, HttpServletResponse res) {
-        RequestUtil.cacheFor(revisionsRedirectCached, res);
+        ResponseUtil.cacheFor(revisionsRedirectCached, res);
         redirectToRevision(getCurrentRevision().revision, req, res);
     }
     

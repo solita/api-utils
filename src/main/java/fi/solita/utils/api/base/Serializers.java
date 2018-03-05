@@ -6,8 +6,6 @@ import static fi.solita.utils.functional.Predicates.not;
 
 import java.net.URI;
 
-import org.geotools.geometry.DirectPosition2D;
-import org.geotools.referencing.CRS;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -16,11 +14,8 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.MathTransform;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
-import fi.solita.utils.api.types.TransformedPoint;
 import fi.solita.utils.functional.Pair;
 
 /**
@@ -79,20 +74,6 @@ public class Serializers {
     
     public RevisioJaMuokkausaikaData ser(long revisio, DateTime muokkaus_aika) {
             return new RevisioJaMuokkausaikaData(revisio, muokkaus_aika);
-    }
-    
-    public double[] ser(TransformedPoint v) {
-        final MathTransform transformer;
-        try {
-            transformer = CRS.findMathTransform(CRS.decode(((TransformedPoint) v).getSourceCRS()), CRS.decode(((TransformedPoint) v).getTargetCRS()));
-        } catch (FactoryException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            return transformer.transform(new DirectPosition2D(v.getX(), v.getY()), null).getCoordinate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }
 

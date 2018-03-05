@@ -1,9 +1,11 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Function._;
+import static fi.solita.utils.functional.Function.__;
+import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
@@ -11,6 +13,7 @@ import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
+import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalA.last;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
 import static fi.solita.utils.functional.FunctionalC.reverse;
@@ -23,21 +26,20 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.prepend;
 
+import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.meta.MetaMethod;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class RequestUtil {
@@ -114,19 +116,6 @@ public abstract class RequestUtil {
         return None();
     }
     
-    /**
-     * No-op if cache-control header is already set
-     */
-    public static final void cacheFor(Duration age, HttpServletResponse response) {
-        if (age.isLongerThan(Duration.ZERO) && !response.containsHeader(HttpHeaders.CACHE_CONTROL)) {
-            DateTime now = DateTime.now(DateTimeZone.UTC);
-            response.setDateHeader(HttpHeaders.DATE, now.getMillis());
-            response.setDateHeader(HttpHeaders.EXPIRES, now.plus(age).getMillis());
-            response.setHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=" + age.getStandardSeconds());
-            response.setHeader(HttpHeaders.PRAGMA, "cache");
-        }
-    }
-    
     @SuppressWarnings("unchecked")
     public static final void checkURL(HttpServletRequest request, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
         assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), acceptedParams);
@@ -175,15 +164,15 @@ public abstract class RequestUtil {
             }
         }
         
-        for (String paramName: newList("propertyName", "typeNames")) {
-            String[] value = parameters.get(paramName);
-            if (value != null) {
-                List<String> values = newList(map(RequestUtil_.trim, flatMap(RequestUtil_.split.apply(_, ","), value)));
+        for (Map.Entry<String, String[]> param: parameters.entrySet()) {
+            String[] value = param.getValue();
+            if (value != null && value.length > 1) {
+                List<String> values = newList(map(RequestUtil_.trim, flatMap(RequestUtil_.split.apply(__, ","), value)));
                 if (!newList(sort(values)).equals(values)) {
-                    throw new RequestUtil.QueryParameterMustBeInAlphabeticalOrderException(paramName);
+                    throw new RequestUtil.QueryParameterMustBeInAlphabeticalOrderException(param.getKey());
                 }
                 if (newSet(values).size() != values.size()) {
-                    throw new RequestUtil.QueryParameterMustNotContainDuplicatesException(paramName);
+                    throw new RequestUtil.QueryParameterMustNotContainDuplicatesException(param.getKey());
                 }
             }
         }
@@ -224,6 +213,18 @@ public abstract class RequestUtil {
     public static final SerializationFormat resolveFormat(HttpServletRequest request) throws NotFoundException {
         String extension = resolveExtension(getContextRelativePath(request));
         return NotFoundException.assertFound(SerializationFormat.valueOfExtension(extension)).get();
+    }
+    
+    public static final String[] resolveQueryParams(MetaMethod<?, ?> requestMethod) {
+        return newArray(String.class, map(RequestUtil_.paramValue, filter(RequestUtil_.isRequestParam, flatten(requestMethod.getMember().getParameterAnnotations()))));
+    }
+    
+    static boolean isRequestParam(Annotation a) {
+        return a.annotationType().equals(RequestParam.class);
+    }
+    
+    static String paramValue(Annotation rp) {
+        return ((RequestParam)rp).value().equals("") ? ((RequestParam)rp).name() : ((RequestParam)rp).value();
     }
 
     @SuppressWarnings("unchecked")

@@ -10,14 +10,11 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.max;
+import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.zip;
-import static fi.solita.utils.functional.FunctionalA.map;
-import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.FunctionalA.subtract;
-import static fi.solita.utils.functional.FunctionalC.init;
-import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalS.range;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.not;
@@ -44,8 +41,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
-import fi.solita.utils.api.ControllerTestUtils_.Param_;
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.api.types.SRSName;
+import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Compare;
@@ -110,6 +108,20 @@ public abstract class ControllerTestUtils {
             @Override
             public boolean isRequired() {
                 return true;
+            }
+        };
+    }
+    
+    public static final Param srsName() {
+        return new Param("srsName") {
+            @Override
+            public List<String[]> variants() {
+                return Collections.<String[]>newList(map(SRSName_.value.andThen(new Apply<String,String[]>() {
+                    @Override
+                    public String[] apply(String v) {
+                        return new String[] {v};
+                    }
+                }), SRSName.validValues));
             }
         };
     }
@@ -388,7 +400,7 @@ public abstract class ControllerTestUtils {
         
         // tehdään niin monta requestia kuin maksimissaan on jollakin parametrilla variantteja
         List<Set<Pair<String,String[]>>> requests = newList();
-        for (@SuppressWarnings("unused") long i: range(1l, max(map(Param_.variants.andThen(Transformers.size), params)).getOrElse(1l))) {
+        for (@SuppressWarnings("unused") long i: range(1l, max(map(ControllerTestUtils_.Param_.variants.andThen(Transformers.size), params)).getOrElse(1l))) {
             requests.add(Collections.<Pair<String,String[]>>newSortedSet(Compare.by_1));
         }
         

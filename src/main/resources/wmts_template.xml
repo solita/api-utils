@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Capabilities version="1.0.0" xmlns="http://www.opengis.net/wmts/1.0" xmlns:gml="http://www.opengis.net/gml" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd">
     <ows:ServiceIdentification>
-        <ows:Title>Liikennevirasto DigiTraffic (WMTS)</ows:Title>
+        <ows:Title>{{title}}</ows:Title>
         <ows:Abstract></ows:Abstract>
         <ows:ServiceType>OGC WMTS</ows:ServiceType>
         <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
     </ows:ServiceIdentification>
     <ows:ServiceProvider>
-        <ows:ProviderName>Liikennevirasto DigiTraffic</ows:ProviderName>
+        <ows:ProviderName>{{title}}</ows:ProviderName>
         <ows:ServiceContact></ows:ServiceContact>
     </ows:ServiceProvider>
     <Contents>

@@ -58,7 +58,7 @@ var olstuff = function(constants, util) {
                 type: 'Polygon'
             });
             draw.on('drawend', function(e) {
-                return callback(e, map.getCoordinateFromPixel([50,50]));
+                return callback(e, map.getCoordinateFromPixel([50,100]));
             });
             return draw;
         },

@@ -88,6 +88,7 @@ public abstract class VersionBase {
     public final <T> Iterable<T> filter(Includes<T> includes, Filters filters, Iterable<T> ts) {
         return filterColumns(includes, filterRows(includes, filters, ts));
     }
+    
     public final <T> T filter(Includes<T> includes, T t) {
         return MemberUtil.<T>withPropertiesF(includes).apply(t);
     }

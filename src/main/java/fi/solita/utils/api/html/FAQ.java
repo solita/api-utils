@@ -14,8 +14,8 @@ import org.rendersnake.Renderable;
 import fi.solita.utils.api.types.Filters;
 
 public abstract class FAQ implements Renderable {
-    public static Renderable page() {
-        return new Page("FAQ", new FAQ() {});
+    public static Renderable page(String copyright_fi, String copyright_en) {
+        return new Page("FAQ", copyright_fi, copyright_en, new FAQ() {});
     }
     
     @Override

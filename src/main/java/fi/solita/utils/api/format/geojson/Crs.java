@@ -6,8 +6,6 @@ import fi.solita.utils.api.types.SRSName;
 
 @JsonSerializeAsBean
 public abstract class Crs {
-    public static final Crs epsg3067 = Crs.of(SRSName.DEFAULT);
-    
     public final String type;
     public final Object properties;
     

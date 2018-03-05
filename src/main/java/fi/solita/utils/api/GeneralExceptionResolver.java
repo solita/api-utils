@@ -21,8 +21,6 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
     @Override
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         try {
-            // api-utils:
-            
             for (NotFoundException e: ExceptionUtils.findCauseFromHierarchy(ex, NotFoundException.class)) {
                 for (List<String> etags: RequestUtil.getETags(request).ifMatch) {
                     if (etags.contains("*")) {
@@ -88,7 +86,7 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
             throw new RuntimeException(e);
         }
         
-        // siltä varalta että valuu läpi jonnekin joka ei käytä ResponseUtil.respondError
+        // just in case the next resolver doesn't set this
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         return null;
     }
