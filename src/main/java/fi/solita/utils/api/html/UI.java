@@ -9,6 +9,15 @@ import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 
 public abstract class UI {
+    
+    public static Renderable concat(final Renderable a, final Renderable b) throws IOException {
+        return new Renderable() {
+            @Override
+            public void renderOn(HtmlCanvas html) throws IOException {
+                html.render(a).render(b);
+            }
+        };
+    }
 
     public static Renderable text(final String text) throws IOException {
         return new Renderable() {

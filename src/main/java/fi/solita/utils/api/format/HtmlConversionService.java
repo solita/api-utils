@@ -222,6 +222,8 @@ public abstract class HtmlConversionService {
                             + "body.fi .fi, body.en .en { display: inherit !important; }"
                             + ".fi i, .en i   { font-weight: normal; display: block; }"
                             + ".type-interval { white-space: nowrap; }"
+                            + ".type-multiline, .type-multipolygon { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
+                            + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; display: inline; }"
                             + "*[title]::after { content: '?'; font-size: 0.75em; font-style: italic; float: right; margin-top: -0.25em; color: #bbb; font-weight: lighter; }"
                             + mkString(" ", sequence(
                                  ("  .loadButton    { display: none !important; }"

@@ -1,7 +1,7 @@
 package fi.solita.utils.api.html;
 
 import static fi.solita.utils.api.html.UI.definition;
-import static fi.solita.utils.api.html.UI.link;
+import static fi.solita.utils.api.html.UI.*;
 import static fi.solita.utils.api.html.UI.text;
 import static fi.solita.utils.functional.Functional.mkString;
 import static org.rendersnake.HtmlAttributesFactory.href;
@@ -51,7 +51,7 @@ public abstract class FAQ implements Renderable {
                    ))
                    .render(definition(
 "Etusivun karttatoteutus on melko iso, vaikka onkin melko yksinkertainen. Miten saan edes jotakin kartalle?",
-link(href("minimal.html"), text("Tässä minimaalinen OpenLayers 3 -esimerkki."))
+link(href("minimal.html"), text("Tässä minimaalinen OpenLayers-esimerkki."))
                    ))
                    .render(definition(
 "Mikä on time-paremetri?",
@@ -95,7 +95,15 @@ link(href("minimal.html"), text("Tässä minimaalinen OpenLayers 3 -esimerkki.")
                    ))
                    .render(definition(
 "Missä koordinaattijärjestelmässä geometriat ovat?",
-"ETRS-TM35FIN-karttaprojektio ja -tasokoordinaatisto (EPSG:3067)."
+"Oletuksena ETRS-TM35FIN-karttaprojektio ja -tasokoordinaatisto (EPSG:3067)."
+                   ))
+                   .render(definition(
+"Mitä muita koordinaattijärjestelmiä on tarjolla?",
+"Saat vastaukset myös WGS84-muodoissa antamalla parametrin srsName=epsg:4326 tai srsName=crs:84. Tällöin myös mahdolliset muut koordinaatteja sisältävät parametrit olettavat saavansa vastaavaa muotoa."
+                   ))
+                   .render(definition(
+"Miten päin WGS84:n longitude ja latitude ovat koordinaateissa?",
+concat(text("Tämä rajapinta välttää paikkatietomaailman ongelman antamalla käyttäjän valita. srsName=epsg:4326 määrää parametrit järjestykseen lat,lon kun taas srsName=crs:84 päinvastaiseen järjestykseen. Sekasotkusta voi lukea lisää vaikkapa "), link(href("http://docs.geotools.org/latest/userguide/library/referencing/order.html"), text("täältä.")))
                    ))
                    .render(definition(
 "Vektorit vai kuvat?",

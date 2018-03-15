@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.3</version>
+    <version>0.3.2</version>
     <build>
         <resources>
             <resource>
@@ -21,20 +21,6 @@
                 </includes>
             </resource>
         </resources>
-        <testResources>
-            <testResource>
-                <directory>${basedir}/src/testShared/java</directory>
-                <includes>
-                    <include>**/*.java</include>
-                </includes>
-            </testResource>
-            <testResource>
-                <directory>${project.build.directory}/generated-sources/apt-test</directory>
-                <includes>
-                    <include>**/*.java</include>
-                </includes>
-            </testResource>
-        </testResources>
         
         <plugins>
             <plugin>
@@ -83,11 +69,6 @@
                             <goal>process-test</goal>
                         </goals>
                         <inherited>false</inherited>
-                        <configuration>
-                            <additionalSourceDirectories>
-                                <source>src/testShared/java</source>
-                            </additionalSourceDirectories>
-                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
@@ -97,25 +78,6 @@
                         <processor>fi.solita.utils.meta.CommonMetadataProcessor</processor>
                     </processors>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.7</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/testShared/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
