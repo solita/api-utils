@@ -11,6 +11,17 @@ public abstract class Assert {
     private Assert() {
         //
     }
+    
+    public static <T> T Null(T o) {
+        return Null(o, "Argument must be null");
+    }
+    
+    public static <T> T Null(T o, CharSequence message) {
+        if (o != null) {
+            throw new IllegalArgumentException(message.toString());
+        }
+        return o;
+    }
 
     public static <T> T notNull(T o) {
         return notNull(o, "Argument cannot be null");
@@ -44,6 +55,31 @@ public abstract class Assert {
 
     public static boolean True(boolean condition) {
         return True(condition, "Condition was false");
+    }
+    
+    public static <T extends Comparable<T>> void greaterThan(T c1, T c2) {
+        if (c1.compareTo(c2) <= 0) {
+            throw new IllegalArgumentException(c1 + " must be greater than " + c2);
+        }
+    }
+
+
+    public static <T extends Comparable<T>> void greaterThanOrEqual(T c1, T c2) {
+        if (c1.compareTo(c2) < 0) {
+            throw new IllegalArgumentException(c1 + " must be greater than or equal to " + c2);
+        }
+    }
+
+    public static <T extends Comparable<T>> void lessThan(T c1, T c2) {
+        if (c1.compareTo(c2) >= 0) {
+            throw new IllegalArgumentException(c1 + " must be less than " + c2);
+        }
+    }
+
+    public static <T extends Comparable<T>> void lessThanOrEqual(T c1, T c2) {
+        if (c1.compareTo(c2) > 0) {
+            throw new IllegalArgumentException(c1 + " must be less than or equal to " + c2);
+        }
     }
     
     public static <T> T singleton(Iterable<T> iterable) {

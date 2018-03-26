@@ -4,12 +4,10 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -142,7 +140,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
     private static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     private static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     private static final String DESCRIPTION_Filters = "ECQL-subset: " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
-    private static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS. Oletuksena " + SRSName.DEFAULT.value + " / SRS for response coordinates. " + SRSName.DEFAULT.value + " by default";
+    private static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
     
     public static abstract class DocumentingModelPropertyBuilder implements ModelPropertyBuilderPlugin {
         protected static <T extends Enum<T>> void enumValue(ModelPropertyBuilder builder, Apply<T,String> f, Class<T> clazz) {
@@ -257,7 +255,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     .description(DESCRIPTION_Interval);
             } else if (Count.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .description(doc(Count.class).get())
+                    .description(doc(Count.class).getOrElse(""))
                     .defaultValue("1")
                     .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.int2string, Count.validValues)), "int"));
             } else if (Filters.class.isAssignableFrom(type)) {
@@ -311,14 +309,15 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, Class<? extends VersionBase> publishedVersion, ApiInfo info) {
+    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info) {
         Docket docket = new Docket(DocumentationType.SWAGGER_2)
+            .groupName(publishedVersion.getVersion())
             .select()
-               // dokumentoidaan vain kyseisen version paketti, ja sieltäkin vain publicit  
-              .apis(RequestHandlerSelectors.basePackage(publishedVersion.getPackage().getName()))
+              .apis(RequestHandlerSelectors.basePackage(publishedVersion.getBasePackage()))
               .apis(new Predicate<RequestHandler>() {
                 @Override
                 public boolean apply(RequestHandler rh) {
+                    // only document publid methods
                     return Modifier.isPublic(rh.getHandlerMethod().getMethod().getModifiers());
                 }
             }).build()
@@ -346,7 +345,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     return contextPath;
                 }
             })
-            .securitySchemes(newList(new ApiKey(API_KEY, API_KEY, "header")))
+            .securitySchemes(newList(new ApiKey(API_KEY, API_KEY, ApiKeyVehicle.HEADER.getValue())))
             .useDefaultResponseMessages(false)
             .genericModelSubstitutes(Option.class)
             
@@ -367,36 +366,26 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 .build()
             ));
         
-        for (Constructor<?> c: publishedVersion.getDeclaredConstructors()) {
-            // uuh, so ugly...
-            VersionBase v;
-            try {
-                v = (VersionBase) (c.getParameterTypes().length == 0 ? c.newInstance() : c.newInstance(new Object[]{null}));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-                
-            for (Entry<Class<?>, Class<?>> dms: v.jsonModule.rawTypes.entrySet()) {
-                docket.directModelSubstitute(dms.getKey(), dms.getValue());
-                
-                // Pitää asettaa explisiittisesti collectionien sisällä olevat asiat,
-                // sprinfox ei osaa mäpätä collectionien sisälle automaattisesti directModelSubstitutes perusteella.
-                docket.alternateTypeRules(AlternateTypeRules.newRule(
-                    typeResolver.resolve(Option.class, dms.getKey()),
-                    typeResolver.resolve(dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
-                docket.alternateTypeRules(AlternateTypeRules.newRule(
-                    typeResolver.resolve(SortedSet.class, dms.getKey()),
-                    typeResolver.resolve(SortedSet.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
-                docket.alternateTypeRules(AlternateTypeRules.newRule(
-                    typeResolver.resolve(List.class, dms.getKey()),
-                    typeResolver.resolve(List.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
-                docket.alternateTypeRules(AlternateTypeRules.newRule(
-                    typeResolver.resolve(Set.class, dms.getKey()),
-                    typeResolver.resolve(Set.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE + 1));
-                docket.alternateTypeRules(AlternateTypeRules.newRule(
-                    typeResolver.resolve(Collection.class, dms.getKey()),
-                    typeResolver.resolve(Collection.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE + 2));
-            }
+        for (Entry<Class<?>, Class<?>> dms: publishedVersion.jsonModule.rawTypes.entrySet()) {
+            docket.directModelSubstitute(dms.getKey(), dms.getValue());
+            
+            // Pitää asettaa explisiittisesti collectionien sisällä olevat asiat,
+            // sprinfox ei osaa mäpätä collectionien sisälle automaattisesti directModelSubstitutes perusteella.
+            docket.alternateTypeRules(AlternateTypeRules.newRule(
+                typeResolver.resolve(Option.class, dms.getKey()),
+                typeResolver.resolve(dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
+            docket.alternateTypeRules(AlternateTypeRules.newRule(
+                typeResolver.resolve(SortedSet.class, dms.getKey()),
+                typeResolver.resolve(SortedSet.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
+            docket.alternateTypeRules(AlternateTypeRules.newRule(
+                typeResolver.resolve(List.class, dms.getKey()),
+                typeResolver.resolve(List.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
+            docket.alternateTypeRules(AlternateTypeRules.newRule(
+                typeResolver.resolve(Set.class, dms.getKey()),
+                typeResolver.resolve(Set.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE + 1));
+            docket.alternateTypeRules(AlternateTypeRules.newRule(
+                typeResolver.resolve(Collection.class, dms.getKey()),
+                typeResolver.resolve(Collection.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE + 2));
         }
         
         return docket;

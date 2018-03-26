@@ -23,6 +23,19 @@ import fi.solita.utils.meta.MetaNamedMember;
  * Extend a new class for each new API version, overriding fields as necessary.
  */
 public abstract class VersionBase {
+    // package containing the version implementation
+    public String getBasePackage() {
+        return getClass().getPackage().getName();
+    }
+    
+    public String getVersion() {
+        try {
+            return (String) getClass().getField("VERSION").get(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public static class XmlNameGenerator extends fi.solita.utils.api.base.XmlNameGenerator {
     }
     

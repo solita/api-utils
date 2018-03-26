@@ -71,7 +71,7 @@ public abstract class StdSerialization<BOUNDS> {
     }
     
     protected String title2layerName(HtmlTitle title) {
-        return title.plainTextTitle.toLowerCase();
+        return title.plainTextTitle.toLowerCase().replace(' ', '_').replace('ä',  'a').replace('ö', 'o').replace('å', 'a');
     }
     
     public abstract Envelope bounds2envelope(BOUNDS place);
@@ -261,6 +261,20 @@ public abstract class StdSerialization<BOUNDS> {
                 throw new IllegalStateException();
         }
         return response;
+    }
+    
+    public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(
+            HttpServletRequest req,
+            HttpServletResponse res,
+            SRSName srsName,
+            Pair<SerializationFormat, ETags> formatAndETags,
+            Includes<DTO> includes,
+            Supplier<DTO> data,
+            Apply<DTO,DTO> dataTransformer,
+            HtmlTitle title,
+            Lens<? super DTO, SPATIAL> geometryLens,
+            Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
+        return stdSpatialSingle(req, res, srsName, formatAndETags, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
     
     public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(

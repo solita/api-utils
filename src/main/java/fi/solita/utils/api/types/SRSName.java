@@ -8,13 +8,11 @@ import fi.solita.utils.api.Documentation;
 
 @Documentation(name_en = "SRSName", description = "Vastauksen koordinaattien muoto", description_en = "Response coordinate system")
 public final class SRSName {
-    public static final SRSName THE_ONE_IN_THE_DATABASE = new SRSName("epsg:3067", "urn:ogc:def:crs:EPSG::3067", false);
-    public static final SRSName EPSG4326                = new SRSName("epsg:4326", "urn:ogc:def:crs:EPSG::4326", true);
-    public static final SRSName CRS84                   = new SRSName("crs:84"   , "urn:ogc:def:crs:OGC:1.3:CRS84", false);
+    public static final SRSName EPSG3067 = new SRSName("epsg:3067", "urn:ogc:def:crs:EPSG::3067", false);
+    public static final SRSName EPSG4326 = new SRSName("epsg:4326", "urn:ogc:def:crs:EPSG::4326", true);
+    public static final SRSName CRS84    = new SRSName("crs:84"   , "urn:ogc:def:crs:OGC:1.3:CRS84", false);
     
-    public static final SRSName DEFAULT = THE_ONE_IN_THE_DATABASE;
-    
-    public static final List<SRSName> validValues = newList(DEFAULT, EPSG4326, CRS84);
+    public static final List<SRSName> validValues = newList(EPSG3067, EPSG4326, CRS84);
     
     public final String value;
     public final String longValue;
