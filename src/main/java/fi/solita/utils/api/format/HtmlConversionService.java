@@ -19,8 +19,9 @@ import static org.rendersnake.HtmlAttributesFactory.onClick;
 import static org.rendersnake.HtmlAttributesFactory.rowspan;
 import static org.rendersnake.HtmlAttributesFactory.type;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.AccessibleObject;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -333,7 +334,8 @@ public abstract class HtmlConversionService {
     }
     
     private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request) {
-        HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, new StringWriter(8192));
+        ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
+        HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, new OutputStreamWriter(os, Charset.forName("UTF-8")));
         
         try {
             html.html()
@@ -365,7 +367,7 @@ public abstract class HtmlConversionService {
             throw new RuntimeException(e);
         }
         
-        return html.toHtml().getBytes(Charset.forName("UTF-8"));
+        return os.toByteArray();
     }
     
     static String[] split(String s, String regex) {
