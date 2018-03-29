@@ -10,12 +10,14 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     public final Iterable<MetaNamedMember<T, ?>> includes;
     public final Iterable<MetaNamedMember<T, ?>> geometryMembers;
     public final Builder<?>[] builders;
+    public final boolean includesEverything;
 
     @SuppressWarnings("unchecked")
-    public Includes(Iterable<? extends MetaNamedMember<? super T,?>> includes, Iterable<? extends MetaNamedMember<? super T, ?>> geometryMembers, Builder<?>... builders) {
+    public Includes(Iterable<? extends MetaNamedMember<? super T,?>> includes, Iterable<? extends MetaNamedMember<? super T, ?>> geometryMembers, boolean includesEverything, Builder<?>... builders) {
         this.includes = (Iterable<MetaNamedMember<T, ?>>) includes;
         this.geometryMembers = (Iterable<MetaNamedMember<T, ?>>) geometryMembers;
         this.builders = builders;
+        this.includesEverything = includesEverything;
     }
     
     @Override

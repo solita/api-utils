@@ -154,6 +154,7 @@ public class MemberUtil {
     @SuppressWarnings("unchecked")
     static final <T> Includes<T> resolveIncludes(SerializationFormat format, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<String> propertyNames, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         List<MetaNamedMember<? super T, ?>> ret;
+        boolean includesEverything = false;
         if (propertyNames == null) {
             // For PNG exclude everything (geometry included back in the end)
             // For HTML and spreadsheet formats, exclude parent of nested members.
@@ -176,6 +177,7 @@ public class MemberUtil {
             }
             
             ret = (List<MetaNamedMember<? super T, ?>>) members;
+            includesEverything = true;
         } else if (size(propertyNames) == 1 && head(propertyNames).isEmpty()) {
             ret = emptyList();
         } else {
@@ -201,7 +203,7 @@ public class MemberUtil {
             case XML:
         }
         
-        return new Includes<T>(ret, geometries, builders);
+        return new Includes<T>(ret, geometries, includesEverything, builders);
     }
     
     public static Class<?> memberTypeUnwrappingOptionAndEither(AccessibleObject member) {
@@ -259,7 +261,7 @@ public class MemberUtil {
     }
 
     public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes) {
-        return MemberUtil_.<T>withProperties_topLevel().ap(Functional.map(MemberUtil_.memberNameWithDot, includes), Arrays.asList(includes.builders));
+        return includes.includesEverything ? Function.<T>id() : MemberUtil_.<T>withProperties_topLevel().ap(Functional.map(MemberUtil_.memberNameWithDot, includes), Arrays.asList(includes.builders));
     }
     
     static boolean startsWith(String s, String prefix) {
