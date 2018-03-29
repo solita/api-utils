@@ -46,7 +46,7 @@ public abstract class ResponseUtil {
     public static void respond(HttpServletResponse response, int status, String responseText, Pair<String,String>... headers) throws IOException {
         response.setStatus(status);
         for (Pair<String,String> header: headers) {
-            response.setHeader(header.left, header.right);
+            response.setHeader(header.left(), header.right());
         }
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         response.getWriter().write(responseText);
@@ -120,7 +120,7 @@ public abstract class ResponseUtil {
    
     public static void respondError(HttpServletResponse response, HttpStatus status, Pair<String,String>... headers) throws IOException {
         for (Pair<String,String> header: headers) {
-            response.setHeader(header.left, header.right);
+            response.setHeader(header.left(), header.right());
         }
         respondError(response, status.value(), status.getReasonPhrase());
     }
@@ -141,18 +141,18 @@ public abstract class ResponseUtil {
         // path == <Whole API path>
         // path.left == <API version>
         // path.right == <remaining API path, if any?>
-        redirect307(path.left + "/" + revision + path.right, request, response);
+        redirect307(path.left() + "/" + revision + path.right(), request, response);
     }
     
     public static void redirectToAnotherRevision(long revision, HttpServletRequest request, HttpServletResponse response) {
         Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(request)));
-        Pair<String, String> revisionAndRemainingPath = span(not(equalTo('/')), drop(1, path.right));
+        Pair<String, String> revisionAndRemainingPath = span(not(equalTo('/')), drop(1, path.right()));
         // path == <Whole API path>
         // path.left == <API version>
         // path.right == 
         // revisionAndRemainingPath.left == <old revision>
         // revisionAndRemainingPath.right == <remaining API path, if any?>
-        redirect307(path.left + "/" + revision + revisionAndRemainingPath.right, request, response);
+        redirect307(path.left() + "/" + revision + revisionAndRemainingPath.right(), request, response);
     }
     
     public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response) {

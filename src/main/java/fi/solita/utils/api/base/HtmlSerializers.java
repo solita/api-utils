@@ -344,9 +344,9 @@ public abstract class HtmlSerializers {
         public void renderOn(Interval value, HtmlCanvas html, HtmlModule module) throws IOException {
             Pair<DateTime,DateTime> i = s.ser(value);
             html.span(class_("type-interval"))
-                  .render(module.toRenderable(i.left))
+                  .render(module.toRenderable(i.left()))
                   .write(" - ")
-                  .render(module.toRenderable(i.right))
+                  .render(module.toRenderable(i.right()))
                 ._span();
         }
     });

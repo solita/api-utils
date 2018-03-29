@@ -83,8 +83,8 @@ public class ExcelSerializers {
     }
     
     protected static Cells merge(ExcelModule module, Row row, int columnIndex, Pair<?, ?> pair, Apply<? super String,String> mapFirst) {
-        Cells alku = module.serialize(row, columnIndex, pair.left);
-        Cells loppu = module.serialize(row, columnIndex+alku.cells.size(), pair.right);
+        Cells alku = module.serialize(row, columnIndex, pair.left());
+        Cells loppu = module.serialize(row, columnIndex+alku.cells.size(), pair.right());
         return new Cells(concat(alku.cells, loppu.cells), mapFirst.apply(cells2str(alku)) + cells2str(loppu)).withUnit(alku.unit);
     }
     

@@ -108,8 +108,8 @@ public class XmlSerializers {
             public DateTime loppu;
             
             public IntervalWrapper(Pair<DateTime,DateTime> pair) {
-                this.alku = pair.left;
-                this.loppu = pair.right;
+                this.alku = pair.left();
+                this.loppu = pair.right();
             }
             IntervalWrapper() {
             }

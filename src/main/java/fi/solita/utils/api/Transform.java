@@ -51,9 +51,9 @@ public class Transform {
             throw new RuntimeException(e);
         }
         try {
-            double[] from = {coord.left.doubleValue(), coord.right.doubleValue()};
+            double[] from = {coord.left().doubleValue(), coord.right().doubleValue()};
             if (sourceCRS.equals(SRSName.CRS84)) {
-                from = new double[] {coord.right.doubleValue(), coord.left.doubleValue()};
+                from = new double[] {coord.right().doubleValue(), coord.left().doubleValue()};
             }
             Double[] ret = newArray(transformer.transform(new DirectPosition2D(from[0], from[1]), null).getCoordinate());
             if (targetCRS.equals(SRSName.CRS84)) {

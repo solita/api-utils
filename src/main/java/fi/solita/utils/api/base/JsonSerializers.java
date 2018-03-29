@@ -127,7 +127,7 @@ public class JsonSerializers {
         @Override
         public void serialize(Interval value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
             Pair<DateTime,DateTime> i = s.ser(value);
-            jgen.writeString(s.ser(i.left) + "/" + s.ser(i.right));
+            jgen.writeString(s.ser(i.left()) + "/" + s.ser(i.right()));
         }
     });
     

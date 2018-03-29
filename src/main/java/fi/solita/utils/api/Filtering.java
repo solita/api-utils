@@ -113,10 +113,10 @@ public class Filtering {
                     ts = gte((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.values), ts);
                 } else if (filter.pattern == Filters.BETWEEN) {
                     Pair<String, String> vals = Match.pair(filter.values).success.get();
-                    ts = between((MetaNamedMember<? super T,? extends Comparable>)member, vals.left, vals.right, ts);
+                    ts = between((MetaNamedMember<? super T,? extends Comparable>)member, vals.left(), vals.right(), ts);
                 } else if (filter.pattern == Filters.NOT_BETWEEN) {
                     Pair<String, String> vals = Match.pair(filter.values).success.get();
-                    ts = notBetween((MetaNamedMember<? super T,? extends Comparable>)member, vals.left, vals.right, ts);
+                    ts = notBetween((MetaNamedMember<? super T,? extends Comparable>)member, vals.left(), vals.right(), ts);
                 
                 // TODO: could these be made to work also with other than String-properties, by comparing to the chosen serialization format?
                 } else if (filter.pattern == Filters.LIKE) {

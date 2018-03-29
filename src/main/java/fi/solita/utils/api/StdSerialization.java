@@ -107,7 +107,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -170,7 +170,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -231,7 +231,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
@@ -290,7 +290,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
             case JSON:
                 response = json.serialize(dataTransformer.apply(data.get()));
                 break;
@@ -331,7 +331,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -372,7 +372,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
@@ -413,7 +413,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
             case JSON:
                 response = json.serialize(dataTransformer.apply(data.get()));
                 break;
@@ -449,7 +449,7 @@ public abstract class StdSerialization<BOUNDS> {
             Iterable<E> data,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left) {
+        switch (formatAndETags.left()) {
             case JSON:
                 response = json.serialize(data);
                 break;

@@ -72,8 +72,8 @@ public class CsvSerializers {
     }
     
     protected static Cells merge(CsvModule module, Pair<?, ?> pair, Apply<? super String,String> mapFirst) {
-        Cells alku = module.serialize(pair.left);
-        Cells loppu = module.serialize(pair.right);
+        Cells alku = module.serialize(pair.left());
+        Cells loppu = module.serialize(pair.right());
         return new Cells(concat(alku.cells, loppu.cells), mapFirst.apply(cells2str(alku)) + cells2str(loppu)).withUnit(alku.unit);
     }
     
