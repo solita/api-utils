@@ -19,6 +19,29 @@ import fi.solita.utils.api.types.Filters_.Filter_;
 import fi.solita.utils.functional.Option;
 
 public final class Filters {
+    public static final class IllegalPolygonException extends RuntimeException {
+        public final String polygon;
+        public IllegalPolygonException(String polygon) {
+            this.polygon = polygon;
+        }
+    }
+    
+    public static final class IllegalPointException extends RuntimeException {
+        public final String point;
+        public IllegalPointException(String point) {
+            this.point = point;
+        }
+    }
+    
+    public static final class FirstCoordinateMustEqualLastCoordinateException extends RuntimeException {
+        public final String first;
+        public final String last;
+        public FirstCoordinateMustEqualLastCoordinateException(String first, String last) {
+            this.first = first;
+            this.last = last;
+        }
+    }
+    
     public static final List<String> SUPPORTED_OPERATIONS = newList("=", "<>", "<", ">", "<=", ">=", "_ [NOT] BETWEEN _ AND _", "_ [NOT] LIKE '%'", "_ [NOT] ILIKE '%'", "_ [NOT] IN (_,_)", "_ IS [NOT] NULL", "INTERSECTS(_,_)");
     
     private static final String attribute = "([a-z][a-zA-Z0-9_.]*)";
@@ -103,9 +126,8 @@ public final class Filters {
             Matcher matcher = p.matcher(cql_filter);
             while (matcher.find()) {
                 String wkt = matcher.group(2);
-                if (legalWKT(wkt)) {
-                    filters.add(new Filter(p, matcher.group(1), wkt));
-                }
+                checkWKT(wkt);
+                filters.add(new Filter(p, matcher.group(1), wkt));
             }
         }
         
@@ -118,21 +140,20 @@ public final class Filters {
     
     private static final Pattern POLYGON = Pattern.compile("^POLYGON\\s*\\(\\s*\\((.+)\\)\\s*\\)$");
     private static final Pattern POINT = Pattern.compile("\\d+(\\.\\d+)?\\s+\\d+(\\.\\d+)?");
-    private static boolean legalWKT(String wkt) {
+    private static void checkWKT(String wkt) throws FirstCoordinateMustEqualLastCoordinateException, IllegalPointException, IllegalPolygonException {
         Matcher matcher = POLYGON.matcher(wkt);
         if (!matcher.matches() || matcher.groupCount() != 1) {
-            return false;
+            throw new IllegalPolygonException(wkt);
         }
         String[] points = matcher.group(1).split("\\s*,\\s*");
         for (String p: points) {
             if (!POINT.matcher(p).matches()) {
-                return false;
+                throw new IllegalPointException(p);
             }
         }
         if (!head(points).equals(last(points))) {
-            return false;
+            throw new FirstCoordinateMustEqualLastCoordinateException(head(points), last(points));
         }
-        return true;
     }
 
     public final List<Filter> filters;

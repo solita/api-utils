@@ -11,6 +11,7 @@ import org.junit.Test;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Filters.Filter;
+import fi.solita.utils.api.types.Filters.IllegalPointException;
 import fi.solita.utils.functional.Option;
 
 public class FiltersTest {
@@ -150,5 +151,25 @@ public class FiltersTest {
     @Test
     public void parseINTERSECTS() {
         assertTrue(Filters.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20, 30 10)))").isDefined());
+    }
+    
+    @Test(expected = Filters.IllegalPointException.class)
+    public void doesNotParsePolygonWithIllegalPoint() {
+        Filters.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20, 30 a)))");
+    }
+    
+    @Test(expected = Filters.IllegalPolygonException.class)
+    public void doesNotParseIllegalPolygon() {
+        Filters.parse("INTERSECTS(foo,POLYGON(30 10,40 40,20 40,10 20, 30 10))");
+    }
+    
+    @Test(expected = Filters.IllegalPolygonException.class)
+    public void doesNotParseEmptyPolygon() {
+        Filters.parse("INTERSECTS(foo,POLYGON(()))");
+    }
+    
+    @Test(expected = Filters.FirstCoordinateMustEqualLastCoordinateException.class)
+    public void doesNotParseOpenPolygon() {
+        Filters.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20)))");
     }
 }

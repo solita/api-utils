@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
+import fi.solita.utils.api.types.Filters;
+
 
 public class GeneralExceptionResolver implements HandlerExceptionResolver, Ordered {
 
@@ -80,6 +82,19 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
             }
             for (Filtering.FilterPropertyNotFoundException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.FilterPropertyNotFoundException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Property used for filtering (" + e.filterProperty + ") not found in result. Use 'propertyName' parameter to define suitable set of properties");
+                return new ModelAndView();
+            }
+            
+            for (Filters.IllegalPointException e: ExceptionUtils.findCauseFromHierarchy(ex, Filters.IllegalPointException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal coordinate in filtering: " + e.point);
+                return new ModelAndView();
+            }
+            for (Filters.IllegalPolygonException e: ExceptionUtils.findCauseFromHierarchy(ex, Filters.IllegalPolygonException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal polygon in filtering: " + e.polygon);
+                return new ModelAndView();
+            }
+            for (Filters.FirstCoordinateMustEqualLastCoordinateException e: ExceptionUtils.findCauseFromHierarchy(ex, Filters.FirstCoordinateMustEqualLastCoordinateException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "First coordinate of a polygon must match the last coordinate in filtering: " + e.first + " / " + e.last);
                 return new ModelAndView();
             }
         } catch (IOException e) {
