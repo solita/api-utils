@@ -30,7 +30,7 @@ var olstuff = function(constants, util) {
         },
         
         toWKT: function(feature) {
-            return new ol.format.WKT().writeFeature(feature).replace(/[.]\d+/, '');
+            return new ol.format.WKT().writeFeature(feature).replace(/[.]\d+/g, '');
         },
         
         createPolygonInteraction: function(map, callback) {
@@ -92,12 +92,15 @@ var olstuff = function(constants, util) {
         featuresOnScreen: function(map) {
             var mapExtent = map.getView().calculateExtent(map.getSize());
             var results = {};
+            var onlyUnique = function(value, index, self) { 
+                return !value.tunniste || self.findIndex(function(v) { return v.tunniste == value.tunniste; }) === index;
+            }
             ret.actualVisibleLayers(map).forEach(function(layer) {
                 if (layer.getSource && layer.getSource().getFeaturesInExtent) {
                     var props = layer.getProperties();
                     results[props.title] = layer.getSource().getFeaturesInExtent(mapExtent).map(function(x) {
                         return util.withoutProp(x.getProperties(), 'geometry');
-                    });
+                    }).filter(onlyUnique);
                 }
             });
             return results;
@@ -109,9 +112,9 @@ var olstuff = function(constants, util) {
                 var layer = layers[i];
                 if (layer.getSource && layer.getSource().getFeatures) {
                     var features = layer.getSource().getFeatures(tunniste);
-                    for (var i = 0; i < features.length; ++i) {
-                        if (features[i].getProperties().tunniste == tunniste) {
-                            return features[i];
+                    for (var j = 0; j < features.length; ++j) {
+                        if (features[j].getProperties().tunniste == tunniste) {
+                            return features[j];
                         }
                     }
                 }
@@ -150,7 +153,11 @@ var olstuff = function(constants, util) {
                 $('ul ul', elem).hover(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
-                    selectInteraction.getFeatures().clear();
+                    try {
+                        selectInteraction.getFeatures().clear();
+                    } catch (e) {
+                        // ignore
+                    }
                     selectInteraction.getFeatures().push(feature);
                     select(feature);
                 }, unselect).click(function() {
