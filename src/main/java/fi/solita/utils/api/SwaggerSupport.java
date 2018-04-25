@@ -331,10 +331,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
 
                 }
 
-                // Piti tehdä oma pathprovider ja käyttää tätä contextPathia, koska oletus (RelativePathProvider)
-                // vaatii ServletContextin, jota ei ole vielä BeanPostProcessor-vaiheessa ilmeisestikään saatavilla,
-                // ja taas ServletContextAware-vaiheessa beanien luonti on myöhäistä koska joku swagger-kikkare
-                // on jo lukenut mitä Doclet-beaneja on olemassa. Huoh...
                 @Override
                 protected String applicationPath() {
                     return contextPath;

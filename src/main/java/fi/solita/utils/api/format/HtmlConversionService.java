@@ -335,7 +335,8 @@ public abstract class HtmlConversionService {
     
     private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request) {
         ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
-        HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, new OutputStreamWriter(os, Charset.forName("UTF-8")));
+        OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
+        HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, ow);
         
         try {
             html.html()
@@ -363,6 +364,8 @@ public abstract class HtmlConversionService {
                   ._script()
                 ._body()
               ._html();
+            
+            ow.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
