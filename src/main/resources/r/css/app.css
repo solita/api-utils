@@ -20,14 +20,14 @@ h3 {
   margin-top: 1em;
 }
 section.menu {
-  width: 200px;
+  width: 260px;
   font-size: 14px;
   float: left;
   overflow-y: scroll;
   height: 100%;
 }
 section.map {
-  padding-left: 200px;
+  padding-left: 260px;
   width: 100%;
   height: 100%;
 }
