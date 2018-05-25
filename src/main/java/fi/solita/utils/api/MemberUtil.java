@@ -261,7 +261,7 @@ public class MemberUtil {
     }
 
     public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes) {
-        return includes.includesEverything ? Function.<T>id() : MemberUtil_.<T>withProperties_topLevel().ap(Functional.map(MemberUtil_.memberNameWithDot, includes), Arrays.asList(includes.builders));
+        return includes.includesEverything ? Function.<T>id() : MemberUtil_.<T>withProperties_topLevel().ap(newList(Functional.map(MemberUtil_.memberNameWithDot, includes)), Arrays.asList(includes.builders));
     }
     
     static boolean startsWith(String s, String prefix) {
@@ -272,21 +272,20 @@ public class MemberUtil {
         return s.isEmpty();
     }
 
-    static final <T> T withProperties_topLevel(Iterable<String> propertyNames, Iterable<Builder<?>> builders, T t) {
+    static final <T> T withProperties_topLevel(Collection<String> propertyNames, Iterable<Builder<?>> builders, T t) {
         Assert.defined(findBuilderFor(builders, t.getClass()), "No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
         return withProperties(propertyNames, builders, t);
     }
     
     @SuppressWarnings("unchecked")
-    static final <T> T withProperties(Iterable<String> propertyNames, Iterable<Builder<?>> builders, T t) {
+    static final <T> T withProperties(Collection<String> propertyNames, Iterable<Builder<?>> builders, T t) {
         logger.debug("Including properties {} in {}", propertyNames, t);
         for (Builder<T> builder: findBuilderFor(builders, (Class<T>)t.getClass())) {
             logger.debug("Found Builder for {}", t.getClass());
-            Set<String> props = newSet(propertyNames);
             for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);
-                List<String> subs = newList(filter(MemberUtil_.startsWith.apply(Function.__, memberNameWithDot(member)), props));
-                logger.debug("Relevant properties: {}", props);
+                List<String> subs = newList(filter(MemberUtil_.startsWith.apply(Function.__, memberNameWithDot(member)), propertyNames));
+                logger.debug("Relevant properties: {}", propertyNames);
                 if (!subs.isEmpty()) {
                     Object value = member.apply(t);
                     logger.debug("Got value: {}", value);
