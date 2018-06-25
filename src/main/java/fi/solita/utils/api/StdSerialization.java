@@ -29,11 +29,11 @@ import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function3;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Supplier;
 import fi.solita.utils.functional.lens.Lens;
 import fi.solita.utils.meta.MetaNamedMember;
 import fi.solita.utils.api.RequestUtil.UnavailableContentTypeException;
@@ -83,7 +83,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<SortedMap<KEY, Iterable<DTO>>> data,
+            ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
@@ -99,7 +99,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<SortedMap<KEY, Iterable<DTO>>> data,
+            ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
@@ -148,7 +148,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
@@ -163,7 +163,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
@@ -210,7 +210,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
@@ -224,7 +224,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
@@ -269,7 +269,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<DTO> data,
+            ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
@@ -283,7 +283,7 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<DTO> data,
+            ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
@@ -326,7 +326,7 @@ public abstract class StdSerialization<BOUNDS> {
             Pair<SerializationFormat, ETags>
             formatAndETags,
             Includes<DTO> includes,
-            Supplier<SortedMap<KEY, Iterable<DTO>>> data,
+            ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key) {
@@ -368,7 +368,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
@@ -409,7 +409,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             Pair<SerializationFormat, ETags> formatAndETags,
             Includes<DTO> includes,
-            Supplier<DTO> data,
+            ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
@@ -485,7 +485,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             SerializationFormat format,
             Iterable<? extends MetaNamedMember<DTO, ?>> includes,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
@@ -517,7 +517,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             SerializationFormat format,
-            Supplier<? extends Collection<DTO>> data,
+            ApplyZero<? extends Collection<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
