@@ -211,10 +211,12 @@ var olstuff = function(constants, util) {
                 return func;
             },
             
-            icon: function(url, flipped) {
+            icon: function(url, flipped, rotation) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
-                        src: url
+                        src: url,
+                        anchor: [0,0.5],
+                        rotation: rotation ? 2*Math.PI*rotation/360 : 0
                     })
                 });
             },
