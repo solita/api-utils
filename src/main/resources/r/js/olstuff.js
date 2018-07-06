@@ -215,7 +215,6 @@ var olstuff = function(constants, util) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         src: url,
-                        anchor: [0,0.5],
                         rotation: rotation ? 2*Math.PI*rotation/360 : 0
                     })
                 });
