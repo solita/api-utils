@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
@@ -116,7 +115,6 @@ public abstract class RequestUtil {
         return None();
     }
     
-    @SuppressWarnings("unchecked")
     public static final void checkURL(HttpServletRequest request, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
         assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), acceptedParams);
     }
@@ -160,19 +158,6 @@ public abstract class RequestUtil {
             for (String v: param.getValue()) {
                 if (!param.getKey().equals("time") && !param.getKey().equals("propertyName") && !param.getKey().equals("cql_filter") && !v.toLowerCase().equals(v)) {
                     throw new RequestUtil.QueryParameterValuesMustBeInLowercaseException();
-                }
-            }
-        }
-        
-        for (Map.Entry<String, String[]> param: parameters.entrySet()) {
-            String[] value = param.getValue();
-            if (value != null && value.length > 1) {
-                List<String> values = newList(map(RequestUtil_.trim, flatMap(RequestUtil_.split.apply(__, ","), value)));
-                if (!newList(sort(values)).equals(values)) {
-                    throw new RequestUtil.QueryParameterMustBeInAlphabeticalOrderException(param.getKey());
-                }
-                if (newSet(values).size() != values.size()) {
-                    throw new RequestUtil.QueryParameterMustNotContainDuplicatesException(param.getKey());
                 }
             }
         }
