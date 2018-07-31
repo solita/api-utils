@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sequence;
@@ -113,8 +114,12 @@ public abstract class HtmlConversionService {
         return serialize(title, tableHeader(members), regularBody(obj, members), request);
     }
     
+    public <K,V> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request);
+    }
+    
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithoutKey(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> byte[] serializeWithKey(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         // empty header if there's no simple key. This is a bit too hackish...
         headers = cons(new MetaNamedMember<V, Object>() {
@@ -135,7 +140,7 @@ public abstract class HtmlConversionService {
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<? super V, ?>> members, final MetaNamedMember<? super V,?> key) {
+    public <K,V> byte[] serializeWithKey(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<? super V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);

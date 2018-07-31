@@ -137,10 +137,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    private static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
-    private static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
-    private static final String DESCRIPTION_Filters = "ECQL-subset: " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
-    private static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
+    public static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String DESCRIPTION_Filters = "ECQL-subset: " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
+    public static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
     
     public static abstract class DocumentingModelPropertyBuilder implements ModelPropertyBuilderPlugin {
         protected static <T extends Enum<T>> void enumValue(ModelPropertyBuilder builder, Apply<T,String> f, Class<T> clazz) {

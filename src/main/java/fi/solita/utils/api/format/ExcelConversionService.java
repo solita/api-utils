@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.drop;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
+import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.size;
@@ -82,9 +83,13 @@ public class ExcelConversionService {
     public <T> byte[] serialize(HttpServletResponse res, String filename, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return serialize(res, filename, header(members), map(ExcelConversionService_.<T>regularBodyRow().ap(members), obj));
     }
+
+    public <K,V> byte[] serialize(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(res, filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), flatten(obj.values())));
+    }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithoutKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         // empty header if there's no simple key. This is a bit too hackish...
         headers = cons(new MetaNamedMember<V, Object>() {
@@ -105,7 +110,7 @@ public class ExcelConversionService {
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serialize(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
+    public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
