@@ -16,6 +16,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import com.vividsolutions.jts.geom.Envelope;
 
 import ar.com.hjg.pngj.FilterType;
 import fi.solita.utils.api.RequestUtil;
+import fi.solita.utils.api.SwaggerSupport;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import it.geosolutions.imageio.plugins.png.PNGWriter;
@@ -85,12 +87,12 @@ public class PngConversionService {
     
     public byte[] render(HttpServletRequest req, Envelope paikka, String layerName) {
         URI uri = baseURI.resolve(req.getContextPath() + RequestUtil.getContextRelativePath(req).replaceFirst(".png", ".geojson") + Option.of(req.getQueryString()).map(prepend("?")).getOrElse(""));
-        return render(uri, paikka, layerName);
+        return render(uri, paikka, layerName, Option.of(req.getHeader(SwaggerSupport.API_KEY)));
     }
     
-    public byte[] render(URI uri, Envelope paikka, String layerName) {
+    public byte[] render(URI uri, Envelope paikka, String layerName, Option<String> apikey) {
         try {
-            return render(tileSize, tileSize, uri, paikka, layerName);
+            return render(tileSize, tileSize, uri, paikka, layerName, apikey);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -98,11 +100,17 @@ public class PngConversionService {
         }
     }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, Envelope paikka, String layerName) throws IOException {
+    public byte[] render(int imageWidth, int imageHeight, URI uri, Envelope paikka, String layerName, Option<String> apikey) throws IOException {
         Style layerStyle = find(layerName, defaultStyles).get();
         logger.debug("Fetching geojson...");
         FeatureJSON io = new FeatureJSON();
-        Reader in = new InputStreamReader(uri.toURL().openStream(), Charset.forName("UTF-8"));
+        
+        URLConnection connection = uri.toURL().openConnection();
+        for (String key: apikey) {
+            connection.setRequestProperty(SwaggerSupport.API_KEY, key);
+        }
+        
+        Reader in = new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8"));
         FeatureCollection<?,?> featureCollection;
         try {
             featureCollection = io.readFeatureCollection(in);
