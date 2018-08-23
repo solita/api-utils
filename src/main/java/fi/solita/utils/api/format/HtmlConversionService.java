@@ -463,7 +463,7 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 for (MetaNamedMember<T, ?> member: members) {
                     Object val = member.apply(t);
-                    html.td(class_(val == null ? "null" : ""))
+                    html.td(class_(val == null ? "null" : null))
                           .render(htmlModule.toRenderable(val))
                         ._td();
                 }
