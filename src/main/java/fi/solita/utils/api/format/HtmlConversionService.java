@@ -256,35 +256,39 @@ public abstract class HtmlConversionService {
                           , false)
                     ._style()
                     .script(type("text/javascript"))
-                        .write("window.iframeLoad = function(parent) { var p = parent.parentElement; while (p.nodeName.toLowerCase() != 'body' && p.nodeName.toLowerCase() != 'header') { p = p.parentElement; } if (p.nodeName.toLowerCase() == 'header') { return; } else if (parent.getElementsByTagName('iframe').length == 0) { var elem = document.createElement('iframe'); elem.setAttribute('src', parent.attributes.href.value); parent.appendChild(elem); }; };", false)
+                        .cdata()
+                            .write("window.iframeLoad = function(parent) { var p = parent.parentElement; while (p.nodeName.toLowerCase() != 'body' && p.nodeName.toLowerCase() != 'header') { p = p.parentElement; } if (p.nodeName.toLowerCase() == 'header') { return; } else if (parent.getElementsByTagName('iframe').length == 0) { var elem = document.createElement('iframe'); elem.setAttribute('src', parent.attributes.href.value); parent.appendChild(elem); }; };", false)
+                        ._cdata()    
                     ._script()
                     .script(type("text/javascript"))
-                        .write("window.loadContent = function(url, parent) {" +
-                               "  var temp = document.createElement('div');" +
-                               "  var x = new XMLHttpRequest();" +
-                               "  x.onreadystatechange = function() {" +
-                               "    if (x.readyState == XMLHttpRequest.DONE ) {" +
-                               "      if (x.status == 200) { temp.innerHTML = x.responseText; parent.innerHTML = temp.getElementsByTagName('table')[0].outerHTML; parent.classList = ['nested'] }" +
-                               "      else { console.log(x.status); }" +
-                               "    }" +
-                               "  };" +
-                               "  x.open('GET', url);" +
-                               "  x.send();" +
-                               "};" +
-                               "window.loadAdditionalContent = function() { " +
-                               "  var links = document.body.getElementsByClassName('type-oid');" +
-                               "  for (var i = 0; i < links.length; ++i) {" +
-                               "    var link = links[i].parentElement;" +
-                               "    while (link.nodeName.toLowerCase() != 'td' && link.nodeName.toLowerCase() != 'body') { link = link.parentElement; }" +
-                               "    if (link.previousSibling != null && link.previousSibling.nodeName.toLowerCase() == 'td') {" +
-                               "      var as = link.getElementsByTagName('a');" +
-                               "      if (as.length == 1) {" +
-                               "        var url = as[0].attributes.href.value;" +
-                               "        loadContent(url, link);" +
-                               "      }" +
-                               "    }" +
-                               "  }" +
-                               "};", false)
+                        .cdata()
+                            .write("window.loadContent = function(url, parent) {" +
+                                   "  var temp = document.createElement('div');" +
+                                   "  var x = new XMLHttpRequest();" +
+                                   "  x.onreadystatechange = function() {" +
+                                   "    if (x.readyState == XMLHttpRequest.DONE ) {" +
+                                   "      if (x.status == 200) { temp.innerHTML = x.responseText; parent.innerHTML = temp.getElementsByTagName('table')[0].outerHTML; parent.classList = ['nested'] }" +
+                                   "      else { console.log(x.status); }" +
+                                   "    }" +
+                                   "  };" +
+                                   "  x.open('GET', url);" +
+                                   "  x.send();" +
+                                   "};" +
+                                   "window.loadAdditionalContent = function() { " +
+                                   "  var links = document.body.getElementsByClassName('type-oid');" +
+                                   "  for (var i = 0; i < links.length; ++i) {" +
+                                   "    var link = links[i].parentElement;" +
+                                   "    while (link.nodeName.toLowerCase() != 'td' && link.nodeName.toLowerCase() != 'body') { link = link.parentElement; }" +
+                                   "    if (link.previousSibling != null && link.previousSibling.nodeName.toLowerCase() == 'td') {" +
+                                   "      var as = link.getElementsByTagName('a');" +
+                                   "      if (as.length == 1) {" +
+                                   "        var url = as[0].attributes.href.value;" +
+                                   "        loadContent(url, link);" +
+                                   "      }" +
+                                   "    }" +
+                                   "  }" +
+                                   "};", false)
+                        ._cdata()
                     ._script();
             }
         };
@@ -351,7 +355,7 @@ public abstract class HtmlConversionService {
                 ._head()
                 .body(class_("fi"))
                   .render(pageHeader(title))
-                  .section()
+                  .section(id("content"))
                       .table()
                         .thead()
                           .tr()
@@ -365,7 +369,9 @@ public abstract class HtmlConversionService {
                   ._section()
                   .render(pageFooter())
                   .script(type("text/javascript"))
-                      .write("if (window.location.hash.indexOf('deep') == -1) { document.getElementById('loadButton').style.visibility = 'visible'; } else { loadAdditionalContent(); }", false)
+                      .cdata()
+                          .write("if (window.location.hash.indexOf('deep') == -1) { document.getElementById('loadButton').style.visibility = 'visible'; } else { loadAdditionalContent(); }", false)
+                      ._cdata()
                   ._script()
                 ._body()
               ._html();
