@@ -78,6 +78,13 @@ public class ExcelModule {
             return Some((ExcelSerializer<T>)ret);
         }
         
+        // try direct interface implementations
+        for (Class<?> e: type.getInterfaces()) {
+            for (ExcelSerializer<?> excelSerializer: find(e, serializers)) {
+                return Some((ExcelSerializer<T>)excelSerializer);
+            }
+        }
+        
         // no exact match, try based on class hierarchy
         for (Class<?> e: ClassUtils.AllExtendedClasses.apply(type)) {
             for (ExcelSerializer<?> ExcelSerializer: find(e, serializers)) {

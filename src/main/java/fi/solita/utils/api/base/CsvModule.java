@@ -69,6 +69,13 @@ public class CsvModule {
             return Some((CsvSerializer<T>)ret);
         }
         
+        // try direct interface implementations
+        for (Class<?> e: type.getInterfaces()) {
+            for (CsvSerializer<?> csvSerializer: find(e, serializers)) {
+                return Some((CsvSerializer<T>)csvSerializer);
+            }
+        }
+        
         // no exact match, try based on class hierarchy
         for (Class<?> e: ClassUtils.AllExtendedClasses.apply(type)) {
             for (CsvSerializer<?> csvSerializer: find(e, serializers)) {
