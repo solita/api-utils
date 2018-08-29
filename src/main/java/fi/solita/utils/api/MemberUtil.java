@@ -4,17 +4,24 @@ import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newListOfSize;
 import static fi.solita.utils.functional.Collections.newMapOfSize;
-import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSetOfSize;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Function.__;
+import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
+import static fi.solita.utils.functional.Functional.fold;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
+import static fi.solita.utils.functional.Functional.sort;
+import static fi.solita.utils.functional.Functional.span;
+import static fi.solita.utils.functional.FunctionalA.filter;
+import static fi.solita.utils.functional.FunctionalM.groupBy;
+import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.equalTo;
@@ -33,18 +40,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Ordering;
+
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Collections;
+import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.functional.lens.Setter;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -52,6 +63,15 @@ import fi.solita.utils.meta.MetaNamedMember;
 public class MemberUtil {
     
     private static final Logger logger = LoggerFactory.getLogger(MemberUtil.class);
+    
+    public static class RedundantResolvablePropertiesException extends RuntimeException {
+        public final SortedSet<String> propertyNames;
+    
+        public RedundantResolvablePropertiesException(SortedSet<String> propertyNames) {
+            super(mkString(",", propertyNames));
+            this.propertyNames = propertyNames;
+        }
+    }
 
     public static class UnknownPropertyNameException extends RuntimeException {
         public final String propertyName;
@@ -132,18 +152,6 @@ public class MemberUtil {
         };
     }
     
-    public static final <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders) {
-        return resolveIncludes(format, members, builders, propertyNames, Collections.<MetaNamedMember<T,?>>emptyList());
-    }
-
-    public static final <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<? super T,?> geometry) {
-        return resolveIncludes(format, members, builders, propertyNames, newList(geometry));
-    }
-
-    public static final <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<T,?> geometry, MetaNamedMember<T,?> geometry2) {
-        return resolveIncludes(format, members, builders, propertyNames, newList(geometry, geometry2));
-    }
-
     /**
      * 
      * @param members All members of T, which would be possible to use for filtering the result.
@@ -152,7 +160,7 @@ public class MemberUtil {
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
     @SuppressWarnings("unchecked")
-    static final <T> Includes<T> resolveIncludes(SerializationFormat format, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<String> propertyNames, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         List<MetaNamedMember<? super T, ?>> ret;
         boolean includesEverything = false;
         if (propertyNames == null) {
@@ -182,7 +190,7 @@ public class MemberUtil {
             ret = emptyList();
         } else {
             members = withNestedMembers(members, Include.All, builders);
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(members), propertyNames));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, members), propertyNames));
         }
         
         // Always include geometries for png/geojson/gml
@@ -203,7 +211,16 @@ public class MemberUtil {
             case XML:
         }
         
-        return new Includes<T>(ret, geometries, includesEverything, builders);
+        Pair<Iterable<MetaNamedMember<? super T,?>>,Iterable<MetaNamedMember<? super T,?>>> resolvableAndOthers = span(ResolvableMemberProvider_.isResolvableMember, ret);
+        Map<CharSequence, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, resolvableAndOthers.left());
+        Collection<ResolvableMember<T>> combinedResolvables = mapValue(MemberUtil_.<T>combineResolvableMembers(), resolvable).values();
+        
+        return new Includes<T>(newList(concat(resolvableAndOthers.right(), combinedResolvables)), geometries, includesEverything, builders);
+    }
+    
+    @SuppressWarnings("unchecked")
+    static <T> ResolvableMember<T> combineResolvableMembers(List<MetaNamedMember<? super T, ?>> xs) {
+        return fold(ResolvableMember_.<T>combine(), (List<ResolvableMember<T>>)(Object)xs).get();
     }
     
     public static Class<?> memberTypeUnwrappingOptionAndEither(AccessibleObject member) {
@@ -376,18 +393,20 @@ public class MemberUtil {
         };
     }
     
-    static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(Iterable<? extends MetaNamedMember<? super T,?>> fields, String propertyName) throws UnknownPropertyNameException {
+    static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider resolvableMemberProvider, Iterable<? extends MetaNamedMember<? super T,?>> fields, String propertyName) throws UnknownPropertyNameException {
         List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberNameWithDot.andThen(MemberUtil_.startsWith.apply(__, propertyName + ".")), fields));
         if (ret.isEmpty()) {
+            // Exactly the requested property was not found. Check if the property was resolvable, for example a reference to an external API
+            Iterable<? extends MetaNamedMember<? super T, ?>> allResolvableMembers = filter(ResolvableMemberProvider_.isResolvable.ap(resolvableMemberProvider), fields);
+            Iterable<? extends MetaNamedMember<? super T, ?>> potentialPrefixes = filter(MemberUtil_.memberNameWithDot.andThen(MemberUtil_.startsWith.ap(propertyName)), allResolvableMembers);
+            for (MetaNamedMember<? super T, ?> prefix: sort(Compare.by(MemberUtil_.memberName.andThen(MemberUtil_.stringLength)), potentialPrefixes)) {
+                return newList(new ResolvableMember<T>(prefix, newSortedSet(Ordering.<String>natural(), newList(propertyName.replaceFirst(Pattern.quote(prefix.getName() + "."), ""))), resolvableMemberProvider.resolveType(prefix)));
+            }
             throw new MemberUtil.UnknownPropertyNameException(propertyName);
         }
         return ret;
     }
 
-    static String memberType(MetaNamedMember<?, ?> member) {
-        return memberClassUnwrappingGeneric(member).getName();
-    }
-    
     @SuppressWarnings("unchecked")
     static <T> Class<T> memberClass(MetaNamedMember<?, T> member) {
         return (Class<T>)(member.getMember() instanceof Field ? ((Field)member.getMember()).getType() : ((Method)member.getMember()).getReturnType());
@@ -423,5 +442,9 @@ public class MemberUtil {
     
     public static String memberNameWithDot(Apply<?, ?> member) {
         return memberName(member) + ".";
+    }
+    
+    public static int stringLength(CharSequence str) {
+        return str.length();
     }
 }

@@ -37,6 +37,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.functional.Function;
+import fi.solita.utils.functional.Function2;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.meta.MetaMethod;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -221,6 +223,6 @@ public abstract class RequestUtil {
         if (size(propertyNames) == 1 && head(propertyNames).isEmpty()) {
             return emptyList();
         }
-        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(members), propertyNames));
+        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, members), propertyNames));
     }
 }

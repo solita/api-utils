@@ -1,8 +1,6 @@
 package fi.solita.utils.api.common;
 
 import static fi.solita.utils.api.ResponseUtil.redirectToRevision;
-import static fi.solita.utils.functional.Collections.newArray;
-import static fi.solita.utils.functional.FunctionalA.cons;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
@@ -11,13 +9,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.Duration;
 
-import fi.solita.utils.api.RequestUtil;
-import fi.solita.utils.api.RequestUtil.ETags;
 import fi.solita.utils.api.ResponseUtil;
-import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Pair;
 
 public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
     protected Duration revisionsRedirectCached;
@@ -33,13 +27,23 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
         redirectToRevision(getCurrentRevision().revision, req, res);
     }
     
-    public Option<Pair<SerializationFormat,ETags>> checkRevisionAndUrlAndResolveFormat(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
+    public Option<Boolean> checkRevision(Revision revision, HttpServletRequest request, HttpServletResponse response) {
+        long currentRevision = getCurrentRevision().revision;
+        if (currentRevision != revision.revision) {
+            ResponseUtil.redirectToAnotherRevision(currentRevision, request, response);
+            return None();
+        }
+        return Some(true);
+    }
+    
+    public Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
         long currentRevision = getCurrentRevision().revision;
         if (currentRevision != revision.revision) {
             ResponseUtil.redirectToAnotherRevision(currentRevision, request, response);
             return None();
         } else {
-            return Some(checkUrlAndResolveFormat(request, response, acceptedParams));
+            RequestData data = checkUrlAndResolveFormat(request, response, acceptedParams);
+            return Some(new RevisionedRequestData(data.format, data.etags, revision));
         }
     }
 
@@ -49,7 +53,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
             ResponseUtil.redirectToAnotherRevision(currentRevision, request, response);
             return None();
         } else {
-            RequestUtil.checkURL(request, newArray(String.class, cons("profile", acceptedParams)));
+            checkUrl(request, acceptedParams);
             return Some(true);
         }
     }

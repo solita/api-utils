@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 
 import java.lang.reflect.AccessibleObject;
@@ -183,8 +184,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                        .example("Europe/Helsinki");
             } else {
                 if (Option.class.isAssignableFrom(clazz)) {
-                    Class<?> parameterClass = ClassUtils.typeClass(ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType());
-                    apply(name, parameterClass, ae, builder);
+                    apply(name, ClassUtils.typeClass(ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType()), ae, builder);
                 }
             }
         }

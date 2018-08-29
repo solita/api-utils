@@ -36,7 +36,9 @@ import org.joda.time.LocalTime;
 import fi.solita.utils.api.ClassUtils;
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.MemberUtil;
+import fi.solita.utils.api.ResolvableMemberProvider;
 import fi.solita.utils.api.base.ExcelSerializer.Cells;
+import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
@@ -124,6 +126,13 @@ public class ExcelSerializers {
         cell.setCellValue(value.doubleValue());
         return cell;
     }
+    
+    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> resolvedMember = Pair.of(Void.class, new ExcelSerializer<Object>() {
+        @Override
+        public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
+            throw new ResolvableMemberProvider.CannotResolveAsFormatException(SerializationFormat.XLSX);
+        }
+    });
     
     public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> nullValue = Pair.of(Void.class, new ExcelSerializer<Object>() {
         @Override
@@ -393,6 +402,7 @@ public class ExcelSerializers {
     });
     
     public Map<Class<?>, ExcelSerializer<?>> serializers() { return newMap(
+            resolvedMember,
             nullValue,
             jsonOutput,
             map_,

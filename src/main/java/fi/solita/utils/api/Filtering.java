@@ -34,9 +34,11 @@ import fi.solita.utils.meta.MetaNamedMember;
 
 public class Filtering {
     private final HttpModule httpModule;
+    private final ResolvableMemberProvider resolvableMemberProvider;
     
-    public Filtering(HttpModule httpModule) {
+    public Filtering(HttpModule httpModule, ResolvableMemberProvider resolvableMemberProvider) {
         this.httpModule = httpModule;
+        this.resolvableMemberProvider = resolvableMemberProvider;
     }
     
     public static class SpatialFilteringRequiresGeometryPropertyException extends RuntimeException {
@@ -58,12 +60,24 @@ public class Filtering {
         }
     }
     
+    public static class CannotFilterByResolvableException extends RuntimeException {
+        public final String filterProperty;
+
+        public CannotFilterByResolvableException(String filterProperty) {
+            super(filterProperty);
+            this.filterProperty = filterProperty;
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     public <T> T convert(MetaNamedMember<?,T> m, String value) {
         return (T)httpModule.convert(value, MemberUtil.actualTypeUnwrappingOptionAndEither(m));
     }
     
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, SortedMap<K,V> ts) {
+        if (filters == null) {
+            return ts;
+        }
         SortedMap<K, V> ret = newSortedMap(ts.comparator());
         for (Map.Entry<K,V> e: ts.entrySet()) {
             // Keeps the whole key (all values) if any value satisfies filters
@@ -86,16 +100,20 @@ public class Filtering {
         
         for (Filter filter: filters.filters) {
             if (filter.pattern == Filters.INTERSECTS) {
-                if (MemberUtil.toMembers(geometryMembers, filter.property).isEmpty()) {
+                if (MemberUtil.toMembers(resolvableMemberProvider, geometryMembers, filter.property).isEmpty()) {
                     throw new SpatialFilteringRequiresGeometryPropertyException(filter.property, newSet(map(MemberUtil_.memberName, geometryMembers)));
                 }
                 // TODO: filtering is skipped here. Assuming it's been already done in the DB
             } else {
                 MetaNamedMember<? super T,?> member;
                 try {
-                    member = Assert.singleton(MemberUtil.toMembers(includes, filter.property));
+                    member = Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, includes, filter.property));
                 } catch (UnknownPropertyNameException e) {
                     throw new FilterPropertyNotFoundException(filter.property, e);
+                }
+                
+                if (member instanceof ResolvableMember) {
+                    throw new CannotFilterByResolvableException(member.getName());
                 }
                 
                 // TODO: make filters work with collections (Any) (https://github.com/geotools/geotools/wiki/support-multi-valued-attributes-in-filter-comparison-operators)

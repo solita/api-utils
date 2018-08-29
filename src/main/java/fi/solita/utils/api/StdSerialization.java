@@ -6,7 +6,6 @@ import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Option.Some;
 
-import java.util.Collection;
 import java.util.SortedMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.vividsolutions.jts.geom.Envelope;
 
-import fi.solita.utils.api.RequestUtil.ETags;
+import fi.solita.utils.api.RequestUtil.UnavailableContentTypeException;
 import fi.solita.utils.api.format.CsvConversionService;
 import fi.solita.utils.api.format.ExcelConversionService;
 import fi.solita.utils.api.format.HtmlConversionService;
@@ -33,10 +32,8 @@ import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function3;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Lens;
 import fi.solita.utils.meta.MetaNamedMember;
-import fi.solita.utils.api.RequestUtil.UnavailableContentTypeException;
 
 /**
  * One "standard" way to serialize stuff. Feel free to use this, or make your own.
@@ -81,7 +78,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             BOUNDS bbox,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
@@ -89,24 +86,24 @@ public abstract class StdSerialization<BOUNDS> {
             MetaNamedMember<? super DTO, KEY> key,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedMap(req, res, bbox, srsName, formatAndETags, includes, data, dataTransformer, title, key, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
+        return stdSpatialBoundedMap(req, res, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
     
-    public <DTO, SPATIAL> byte[] stdSpatialBoundedMap(
+    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
             HttpServletRequest req,
             HttpServletResponse res,
             BOUNDS bbox,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<SortedMap<?, Iterable<DTO>>> data,
+            ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -145,7 +142,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             BOUNDS bbox,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
@@ -155,7 +152,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -194,14 +191,14 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             BOUNDS bbox,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedCollection(req, res, bbox, srsName, formatAndETags, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
+        return stdSpatialBoundedCollection(req, res, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
     
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedCollection(
@@ -209,16 +206,16 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             BOUNDS bbox,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -256,30 +253,30 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialCollection(req, res, srsName, formatAndETags, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
+        return stdSpatialCollection(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
 
     public <DTO,KEY,SPATIAL> byte[] stdSpatialCollection(
             HttpServletRequest req,
             HttpServletResponse res,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
@@ -315,21 +312,21 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialSingle(req, res, srsName, formatAndETags, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
+        return stdSpatialSingle(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), Function.of(geometryLens).andThen(toGeojson), Feature_.$);
     }
     
     public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(
             HttpServletRequest req,
             HttpServletResponse res,
             SRSName srsName,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
@@ -338,7 +335,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
             case JSON:
                 response = json.serialize(dataTransformer.apply(data.get()));
                 break;
@@ -368,17 +365,16 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO> byte[] stdMap(
+    public <KEY,DTO> byte[] stdMap(
             HttpServletRequest req,
             HttpServletResponse res,
-            Pair<SerializationFormat, ETags>
-            formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<SortedMap<?, Iterable<DTO>>> data,
+            ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -413,15 +409,14 @@ public abstract class StdSerialization<BOUNDS> {
     public <DTO, KEY> byte[] stdMap(
             HttpServletRequest req,
             HttpServletResponse res,
-            Pair<SerializationFormat, ETags>
-            formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<SortedMap<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
         case JSON:
             response = json.serialize(map(dataTransformer, data.get()));
             break;
@@ -456,13 +451,13 @@ public abstract class StdSerialization<BOUNDS> {
     public <DTO> byte[] stdCollection(
             HttpServletRequest req,
             HttpServletResponse res,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
@@ -497,13 +492,13 @@ public abstract class StdSerialization<BOUNDS> {
     public <DTO> byte[] stdSingle(
             HttpServletRequest req,
             HttpServletResponse res,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
             case JSON:
                 response = json.serialize(dataTransformer.apply(data.get()));
                 break;
@@ -535,11 +530,11 @@ public abstract class StdSerialization<BOUNDS> {
     public <E extends Enum<E>> byte[] stdTypes(
             HttpServletRequest req,
             HttpServletResponse res,
-            Pair<SerializationFormat, ETags> formatAndETags,
+            SerializationFormat format,
             Iterable<E> data,
             HtmlTitle title) {
         byte[] response;
-        switch (formatAndETags.left()) {
+        switch (format) {
             case JSON:
                 response = json.serialize(data);
                 break;
@@ -575,7 +570,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletResponse res,
             SerializationFormat format,
             Iterable<? extends MetaNamedMember<DTO, ?>> includes,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;
@@ -607,7 +602,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             SerializationFormat format,
-            ApplyZero<? extends Collection<DTO>> data,
+            ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         byte[] response;

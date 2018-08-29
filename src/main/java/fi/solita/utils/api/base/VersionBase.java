@@ -8,13 +8,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
 import fi.solita.utils.api.Filtering;
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.MemberUtil;
+import fi.solita.utils.api.ResolvableMemberProvider;
+import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Filters;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
+import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
 
@@ -74,15 +80,19 @@ public abstract class VersionBase {
         }
     };
     
+    public ResolvableMemberProvider resolvableMemberProvider() {
+        return ResolvableMemberProvider.NONE;
+    }
     
-    
-    public final Filtering filtering = new Filtering(httpModule);
+    public Filtering filtering() {
+        return new Filtering(httpModule, resolvableMemberProvider());
+    }
     
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterRows(Includes<T> includes, Filters filters, SortedMap<K,V> ts) {
-        return filtering.filterData(includes.includes, includes.geometryMembers, filters, ts);
+        return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
     }
     public <T> Iterable<T> filterRows(Includes<T> includes, Filters filters, Iterable<T> ts) {
-        return filtering.filterData(includes.includes, includes.geometryMembers, filters, ts);
+        return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
     }
     
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
@@ -92,36 +102,49 @@ public abstract class VersionBase {
         return map(MemberUtil.<T>withPropertiesF(includes), ts);
     }
     
-    public final <K,T> SortedMap<K,Iterable<T>>  filter(Includes<T> includes, Filters filters, SortedMap<K,? extends Iterable<T>> ts) {
-        return filterColumns(includes, filterRows(includes, filters, ts));
+    public final <K,T> SortedMap<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Filters filters, SortedMap<K,? extends Iterable<T>> ts) {
+        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(includes, filters, ts)));
     }
-    public final <T> List<T> filter(Includes<T> includes, Filters filters, List<T> ts) {
-        return newList(filterColumns(includes, filterRows(includes, filters, ts)));
+    public final <T> List<T> filter(HttpServletRequest req, Includes<T> includes, Filters filters, List<T> ts) {
+        return newList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(includes, filters, ts))));
     }
-    public final <T> Iterable<T> filter(Includes<T> includes, Filters filters, Iterable<T> ts) {
-        return filterColumns(includes, filterRows(includes, filters, ts));
+    public final <T> Iterable<T> filter(HttpServletRequest req, Includes<T> includes, Filters filters, Iterable<T> ts) {
+        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(includes, filters, ts)));
     }
     
-    public final <T> T filter(Includes<T> includes, T t) {
-        return MemberUtil.<T>withPropertiesF(includes).apply(t);
+    public final <T> T filter(HttpServletRequest req, Includes<T> includes, T t) {
+        return resolvableMemberProvider().mutateResolvables(req, includes, MemberUtil.<T>withPropertiesF(includes).apply(t));
+    }
+    
+    
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders) {
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames, members, builders, Collections.<MetaNamedMember<? super T,?>>emptyList());
+    }
+    
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<? super T,?> geometry) {
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames, members, builders, newList(geometry));
+    }
+
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<T,?> geometry, MetaNamedMember<T,?> geometry2) {
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames, members, builders, newList(geometry, geometry2));
     }
     
     
     
     @Deprecated
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, SortedMap<K,V> ts) {
-        return filtering.filterData(includes, newList(geometry), filters, ts);
+        return filtering().filterData(includes, newList(geometry), filters, ts);
     }
     @Deprecated
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, SortedMap<K,V> ts) {
-        return filtering.filterData(includes, newList(geometry, geometry2), filters, ts);
+        return filtering().filterData(includes, newList(geometry, geometry2), filters, ts);
     }
     @Deprecated
     public <T> Iterable<T> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Iterable<T> ts) {
-        return filtering.filterData(includes, newList(geometry), filters, ts);
+        return filtering().filterData(includes, newList(geometry), filters, ts);
     }
     @Deprecated
     public <T> Iterable<T> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Iterable<T> ts) {
-        return filtering.filterData(includes, newList(geometry, geometry2), filters, ts);
+        return filtering().filterData(includes, newList(geometry, geometry2), filters, ts);
     }
 }

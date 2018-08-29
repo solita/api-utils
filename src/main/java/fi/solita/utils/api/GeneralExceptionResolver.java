@@ -76,8 +76,20 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Spatial filtering can only be done for a geometry column. Not '" + e.filteringProperty + "' but one of: " + mkString(",", e.geometryProperties));
                 return new ModelAndView();
             }
+            for (Filtering.CannotFilterByResolvableException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.CannotFilterByResolvableException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Cannot filter by a resolved property: " + e.filterProperty);
+                return new ModelAndView();
+            }
             for (MemberUtil.UnknownPropertyNameException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.UnknownPropertyNameException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unknown propertyName: " + e.propertyName);
+                return new ModelAndView();
+            }
+            for (MemberUtil.RedundantResolvablePropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.RedundantResolvablePropertiesException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + e.propertyNames);
+                return new ModelAndView();
+            }
+            for (ResolvableMemberProvider.CannotResolveAsFormatException e: ExceptionUtils.findCauseFromHierarchy(ex, ResolvableMemberProvider.CannotResolveAsFormatException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Cannot use resolvable properties with " + e.format);
                 return new ModelAndView();
             }
             for (Filtering.FilterPropertyNotFoundException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.FilterPropertyNotFoundException.class)) {

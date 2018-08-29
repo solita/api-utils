@@ -1,12 +1,7 @@
 package fi.solita.utils.api;
 
-import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Collections.newMapOfSize;
-import static fi.solita.utils.functional.Functional.cons;
-import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.FunctionalA.concat;
 import static fi.solita.utils.functional.FunctionalC.drop;
@@ -16,7 +11,6 @@ import static fi.solita.utils.functional.Predicates.not;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
 import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
@@ -32,12 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriUtils;
 
 import fi.solita.utils.api.RequestUtil.ETags;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformers;
-import fi.solita.utils.functional.lens.Builder;
-import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class ResponseUtil {
     

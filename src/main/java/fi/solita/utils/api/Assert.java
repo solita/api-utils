@@ -34,6 +34,12 @@ public abstract class Assert {
         return o;
     }
 
+    public static void notEqual(Object o1, Object o2) {
+        if (o1.equals(o2)) {
+            throw new IllegalArgumentException(lazyToString("'", o1, "' must not equal '", o2, "'").toString());
+        }
+    }
+    
     public static void equal(Object o1, Object o2) {
         if (!o1.equals(o2)) {
             throw new IllegalArgumentException(lazyToString("'", o1, "' must equal '", o2, "'").toString());

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
+import fi.solita.utils.api.ResolvedMember;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
@@ -88,6 +89,13 @@ public class JsonSerializers {
         return field.getName();
     }
     
+    public final Map.Entry<? extends Class<?>, ? extends JsonSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new StdSerializer<ResolvedMember>(ResolvedMember.class) {
+        @Override
+        public void serialize(ResolvedMember value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            jgen.writeRawValue(value.getData());
+        }
+    });
+    
     @SuppressWarnings("rawtypes")
     public final Map.Entry<? extends Class<?>, ? extends JsonSerializer<?>> option = Pair.of(Option.class, new StdSerializer<Option>(Option.class) {
         @Override
@@ -132,6 +140,7 @@ public class JsonSerializers {
     });
     
     public Map<Class<?>,JsonSerializer<?>> serializers() { return newMap(
+            resolvedMember,
             option,
             either,
             tuple,

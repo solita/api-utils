@@ -94,5 +94,8 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return true;
     }
 
-    
+    @Override
+    public String toString() {
+        return getName();
+    }    
 }

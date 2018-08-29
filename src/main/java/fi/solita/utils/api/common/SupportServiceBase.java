@@ -2,14 +2,13 @@ package fi.solita.utils.api.common;
 
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;
-import static fi.solita.utils.functional.FunctionalA.cons;
+import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Option.Some;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import fi.solita.utils.api.RequestUtil;
-import fi.solita.utils.api.RequestUtil.ETags;
 import fi.solita.utils.api.ResponseUtil;
 import fi.solita.utils.api.SwaggerSupport;
 import fi.solita.utils.api.format.SerializationFormat;
@@ -22,16 +21,18 @@ public class SupportServiceBase {
         ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", SwaggerSupport.intervalNow())));
     }
 
-    public Option<Pair<SerializationFormat, ETags>> resolveFormat(HttpServletRequest request,
-            HttpServletResponse response) {
+    public Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
         SerializationFormat format = RequestUtil.resolveFormat(request);
         response.setContentType(format.mediaType);
-        return Some(Pair.of(format, RequestUtil.getETags(request)));
+        return Some(new RequestData(format, RequestUtil.getETags(request)));
     }
 
-    public Pair<SerializationFormat, ETags> checkUrlAndResolveFormat(HttpServletRequest request,
-            HttpServletResponse response, String... acceptedParams) {
-        RequestUtil.checkURL(request, newArray(String.class, cons("profile", acceptedParams)));
+    public RequestData checkUrlAndResolveFormat(HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
+        checkUrl(request, acceptedParams);
         return resolveFormat(request, response).get();
+    }
+    
+    public void checkUrl(HttpServletRequest request, String... acceptedParams) {
+        RequestUtil.checkURL(request, newArray(String.class, cons("profile", cons("srsName", acceptedParams))));
     }
 }

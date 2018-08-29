@@ -27,6 +27,7 @@ import org.rendersnake.Renderable;
 
 import fi.solita.utils.api.ClassUtils;
 import fi.solita.utils.api.JsonSerializeAsBean;
+import fi.solita.utils.api.ResolvedMember;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function2;
@@ -96,6 +97,20 @@ public abstract class HtmlSerializers {
             }
         };
     }
+    
+    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new HtmlSerializer<ResolvedMember>() {
+        @Override
+        public void renderOn(ResolvedMember value, HtmlCanvas html, HtmlModule module) throws IOException {
+            try {
+                String content = value.getData().replaceFirst(".*<section\\s+id=\"content\">", "").replaceFirst("</section>.*", "");
+                html.span(class_("type-resolved"))
+                      .write(content, false)
+                    ._span();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    });
     
     public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> nullValue = Pair.of(Void.class, new HtmlSerializer<Object>() {
         @Override
@@ -352,6 +367,7 @@ public abstract class HtmlSerializers {
     });
     
     public Map<Class<?>, HtmlSerializer<?>> serializers() { return newMap(
+            resolvedMember,
             nullValue,
             jsonOutput,
             map,
