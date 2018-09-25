@@ -236,7 +236,15 @@ var olstuff = function(constants, util) {
             }
         },
         
+        newVectorLayerNoTile: function(url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
+            return ret.newVectorLayerImpl(false, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames);
+        },
+        
         newVectorLayer: function(url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
+            return ret.newVectorLayerImpl(true, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames);
+        },
+        
+        newVectorLayerImpl: function(tiling, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + '.geojson?';
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (propertyName == null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
@@ -245,7 +253,7 @@ var olstuff = function(constants, util) {
             var source = new ol.source.Vector({
                 format: ret.format,
                 projection: ret.projection,
-                strategy: ol.loadingstrategy.tile(ret.tileGrid),
+                strategy: tiling ? ol.loadingstrategy.tile(ret.tileGrid) : ol.loadingstrategy.all,
                 loader: function(extent, resolution, projection) {
                     if (extent[0] < constants.dataExtent[0] ||
                         extent[1] < constants.dataExtent[1] ||
@@ -255,7 +263,7 @@ var olstuff = function(constants, util) {
                     }
                     var kaavio = document.getElementById('kaavio');
                     $.ajax({
-                        url: u1 + 'bbox=' + extent.join(',') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2,
+                        url: (u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'),
                         dataType: 'json',
                         success: function(response) {
                           var features = ret.format.readFeatures(response)
