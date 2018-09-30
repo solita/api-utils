@@ -96,7 +96,7 @@ var olstuff = function(constants, util) {
             var results = {};
             var onlyUnique = function(value, index, self) { 
                 return !value.tunniste || self.findIndex(function(v) { return v.tunniste == value.tunniste; }) === index;
-            }
+            };
             ret.actualVisibleLayers(map).forEach(function(layer) {
                 if (layer.getSource && layer.getSource().getFeaturesInExtent) {
                     var props = layer.getProperties();
@@ -135,8 +135,8 @@ var olstuff = function(constants, util) {
             var f = function(evt) {
                 elem.get(0).innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(ret.featuresOnScreen(map));
                 $('input', elem).keyup(function() {
-                    $('ul ul:contains("' + $(this).val() + '")', elem).show();
-                    $('ul ul:not(:contains("' + $(this).val() + '"))', elem).hide();
+                    $('ul > li > span > span > ul:contains("' + $(this).val() + '")', elem).show();
+                    $('ul > li > span > span > ul:not(:contains("' + $(this).val() + '"))', elem).hide();
                 });
                 $(elem).children().children().children('.key').each(function() {
                     if (map.mystate.closed[$(this).text()]) {
@@ -152,7 +152,7 @@ var olstuff = function(constants, util) {
                         $(this).siblings().hide();
                     }
                 });
-                $('ul ul', elem).hover(function() {
+                $('ul > li > span > span > ul', elem).hover(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
                     try {
@@ -249,7 +249,7 @@ var olstuff = function(constants, util) {
         newVectorLayerImpl: function(tiling, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + '.geojson?';
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
-                     (propertyName == null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
+                     (propertyName === null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
             u2 += (typeNames ? '&typeNames=' + typeNames : '');
 
             var source = new ol.source.Vector({
@@ -268,7 +268,7 @@ var olstuff = function(constants, util) {
                         url: (u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'),
                         dataType: 'json',
                         success: function(response) {
-                          var features = ret.format.readFeatures(response)
+                          var features = ret.format.readFeatures(response);
                           if (styleOrHandler instanceof Function) {
                               features.forEach(styleOrHandler);
                           }
@@ -293,7 +293,7 @@ var olstuff = function(constants, util) {
         
         newPngLayer: function(url, title, opacity, propertyName, typeNames) {
             var u1 = url + '.png?';
-            var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') + (propertyName == null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
+            var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') + (propertyName === null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
             u2 += (typeNames ? '&typeNames=' + typeNames : '');
 
             var source = new ol.source.TileImage({
@@ -331,7 +331,7 @@ var olstuff = function(constants, util) {
                   projection: ret.projection,
                   imageExtent: constants.dataExtent,
                 })
-              })
+              });
             layer.setVisible(false);
             return layer;
         },
@@ -353,7 +353,8 @@ var olstuff = function(constants, util) {
                         group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), 1.0));
                     }
                 });
-            }};
+              };
+            };
             
             $.ajax(url).then(createLayer(matrix));
             
@@ -380,14 +381,15 @@ var olstuff = function(constants, util) {
                     var tms = l.TileMatrixSetLink.map(function(t) { return t.TileMatrixSet; });
                     if (tms.indexOf(matrix) > -1) {
                         var options = ol.source.WMTS.optionsFromCapabilities(result, {layer: id, matrixSet: matrix});
-                        if (host != null) {
+                        if (host !== null) {
                             options.urls[0] = options.urls[0].replace(/[-a-z]+\.[a-z]+\.local/, host)
                                                              .replace(/\d+\.\d+\.\d+\.\d+/, host);
                         }
                         group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), opacity));
                     }
                 });
-            }};
+              };
+            };
             
             if (window.location.hostname != 'localhost' && window.location.hostname.indexOf('.') == -1 ||
                        window.location.hostname.indexOf('liikennevirasto.fi') != -1) {
@@ -415,7 +417,7 @@ var olstuff = function(constants, util) {
                 renderBuffer: constants.renderBuffer,
                 updateWhileInteracting: true,
                 updateWhileAnimating: true
-            })
+            });
             layer.setVisible(false);
             return layer;
         },

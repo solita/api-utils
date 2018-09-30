@@ -2,8 +2,8 @@ var util = function() {
     var ret = {
         toISOStringNoMillis: function(d) {
             function pad(n) {
-                return n < 10 ? '0' + n : n
-            };
+                return n < 10 ? '0' + n : n;
+            }
             return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z';
         },
 
@@ -27,11 +27,11 @@ var util = function() {
                 var r = '';
                 for (var key in obj) {
                     if (obj.hasOwnProperty(key)) {
-                        if (r == '') {
+                        if (r === '') {
                             r = '<ul>';
                         }
                         var val = obj[key];
-                        if (val instanceof Array && val.length == 0) {
+                        if (val instanceof Array && val.length === 0) {
                             // skip empty arrays
                         } else {
                             var printedVal = (val && typeof val === 'object') ? ret.prettyPrint(val) : val;
@@ -39,7 +39,7 @@ var util = function() {
                         }
                     }
                 }
-                return r == '' ? '' : r + '</ul>';
+                return r === '' ? '' : r + '</ul>';
             }
         },
 

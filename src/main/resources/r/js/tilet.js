@@ -30,7 +30,7 @@ var tilet = function(map, projection, tiletCheckbox, olstuff) {
 	};
 	
 	var poistaTilet = function() {
-	    tiletSource.clear()
+	    tiletSource.clear();
 	};
 	
 	var paivitaTilet = function() {
