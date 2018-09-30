@@ -1,9 +1,11 @@
 var olstuff = function(constants, util) {
     proj4.defs("EPSG:3067", "+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs");
     
-    var instant = util.now();
+    var instant = new URLSearchParams(window.location.search).get('time') || util.now();
     
     var ret = {
+        instant: instant,
+        
         projection: new ol.proj.Projection({
             code: 'EPSG:3067',
             extent: constants.world
@@ -387,15 +389,9 @@ var olstuff = function(constants, util) {
                 });
             }};
             
-            var t = window.location.hash.match(/#(.*)/);
-            if (t != null && t[1].indexOf('//') != -1) {
-                var host = t[1].match(/https?[:][/][/]([^/]+)/)[1];
-                console.log(host);
-                $.ajax(t[1]).then(createLayer('ETRS-TM35FIN', host));
-            } else if (window.location.hostname == 'localhost' && t != null ||
-                       window.location.hostname != 'localhost' && window.location.hostname.indexOf('.') == -1 ||
+            if (window.location.hostname != 'localhost' && window.location.hostname.indexOf('.') == -1 ||
                        window.location.hostname.indexOf('liikennevirasto.fi') != -1) {
-                var host = window.location.hostname == 'localhost' ? t[1] : window.location.hostname;
+                var host = window.location.hostname;
                 var baseurl = window.location.protocol + '//' + host;
                 var maasto = baseurl + '/rasteripalvelu-mml/wmts/maasto/1.0.0/WMTSCapabilities.xml';
                 var teema = baseurl + '/rasteripalvelu-mml/wmts/teema/1.0.0/WMTSCapabilities.xml';
