@@ -136,6 +136,24 @@
                 <MatrixWidth>32768</MatrixWidth>
                 <MatrixHeight>32768</MatrixHeight>
             </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>16</ows:Identifier>
+                <ScaleDenominator>446.428571428571445</ScaleDenominator>
+                <TopLeftCorner>-548576.000000 8388608.000000</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>65536</MatrixWidth>
+                <MatrixHeight>65536</MatrixHeight>
+            </TileMatrix>
+            <TileMatrix>
+                <ows:Identifier>17</ows:Identifier>
+                <ScaleDenominator>223.214285714285723</ScaleDenominator>
+                <TopLeftCorner>-548576.000000 8388608.000000</TopLeftCorner>
+                <TileWidth>256</TileWidth>
+                <TileHeight>256</TileHeight>
+                <MatrixWidth>131072</MatrixWidth>
+                <MatrixHeight>131072</MatrixHeight>
+            </TileMatrix>
         </TileMatrixSet>
     </Contents>
     <ServiceMetadataURL xlink:href="{{url}}wmts.xml" />

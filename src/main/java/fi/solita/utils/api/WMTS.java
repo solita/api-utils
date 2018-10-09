@@ -92,7 +92,9 @@ public class WMTS {
             /* 12 */ {BigDecimal.valueOf(2), BigDecimal.valueOf(512)},
             /* 13 */ {BigDecimal.valueOf(1), BigDecimal.valueOf(256)},
             /* 14 */ {BigDecimal.valueOf(0.5), BigDecimal.valueOf(128)},
-            /* 15 */ {BigDecimal.valueOf(0.25), BigDecimal.valueOf(64)}
+            /* 15 */ {BigDecimal.valueOf(0.25), BigDecimal.valueOf(64)},
+            /* 16 */ {BigDecimal.valueOf(0.125), BigDecimal.valueOf(32)},
+            /* 17 */ {BigDecimal.valueOf(0.0625), BigDecimal.valueOf(16)}
         };
 
     
