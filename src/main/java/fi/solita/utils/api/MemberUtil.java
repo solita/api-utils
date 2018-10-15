@@ -211,11 +211,11 @@ public class MemberUtil {
             case XML:
         }
         
-        Pair<Iterable<MetaNamedMember<? super T,?>>,Iterable<MetaNamedMember<? super T,?>>> resolvableAndOthers = span(ResolvableMemberProvider_.isResolvableMember, ret);
-        Map<CharSequence, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, resolvableAndOthers.left());
+        Map<CharSequence, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
+        Iterable<MetaNamedMember<? super T, ?>> others = filter(not(ResolvableMemberProvider_.isResolvableMember), ret);
         Collection<ResolvableMember<T>> combinedResolvables = mapValue(MemberUtil_.<T>combineResolvableMembers(), resolvable).values();
         
-        return new Includes<T>(newList(concat(resolvableAndOthers.right(), combinedResolvables)), geometries, includesEverything, builders);
+        return new Includes<T>(newList(concat(others, combinedResolvables)), geometries, includesEverything, builders);
     }
     
     @SuppressWarnings("unchecked")
