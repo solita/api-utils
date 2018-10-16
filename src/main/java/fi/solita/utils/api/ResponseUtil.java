@@ -89,6 +89,10 @@ public abstract class ResponseUtil {
     public static final void cacheForInfinity(HttpServletResponse response) {
         cacheFor(Duration.standardDays(360), response);
     }
+    
+    public static final void disableCaching(HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "private, no-store, no-cache, must-revalidate");
+    }
 
     public static final void setLastModifiedToAppStartupTime(HttpServletResponse response) {
         DateTime now = DateTime.now(DateTimeZone.UTC);
