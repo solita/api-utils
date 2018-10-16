@@ -1,6 +1,7 @@
-var hover = function(map, layers, callbackOver, callbackOut) {
+var hover = function(map, layers, callbackOver, callbackOut, callbackMultiple) {
     var hoverInteraction = new ol.interaction.Select({
         hitTolerance: 3,
+        multi: true,
         condition: ol.events.condition.pointerMove,
         layers: [].concat.apply([], layers.map(function(l) { return (l instanceof ol.layer.Group) ? l.getLayers().getArray() : l; }))
     });
@@ -8,7 +9,9 @@ var hover = function(map, layers, callbackOver, callbackOut) {
 
     hoverInteraction.on('select', function(evt){
         var coord = evt.mapBrowserEvent.coordinate;
-        if(evt.selected.length > 0){
+        if (evt.selected.length > 1 && callbackMultiple) {
+            callbackMultiple(evt.selected, coord)
+        } else if (evt.selected.length > 0){
             callbackOver(evt.selected[0], coord);
         } else {
             callbackOut();
