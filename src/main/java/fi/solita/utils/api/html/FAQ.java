@@ -121,6 +121,18 @@ concat(text("Tämä rajapinta välttää paikkatietomaailman ongelman antamalla 
 "Miten piirrän infran kaaviomuodossa / mitä ovat kaaviogeometriat?",
 "Käsitteillä on todellisten koordinaattisijaintien lisäksi \"kaaviokoordinaattisijainnit\", joita käyttämällä infra voidaan piirtää kaaviomaisena. Esitystapa voidaan valita \"presentation\" parametrilla."
                   ))
+                   .render(definition(
+"Miten haen 'sisäkkäistä' dataa, esimerkiksi Tilirataosat yhdessä kunnossapitoalueen nimen kanssa?",
+"Voit jatkaa propertyName-arvoja 'suhde'-tapauksissa arvon sisään, esimerkiksi 'propertyName=kunnossapitoalue.nimi'. Ei käytettävissä kaikilla datamuodoilla. Tämä soveltuu erityisesti ad-hoc tarpeisiin, ja rajapintaa aktiivisesti käyttävän sovelluksen voi olla välimuistituksenkin vuoksi parempi hakea datat erikseen käyttämättä tätä ominaisuutta."
+                 ))
+                   .render(definition(
+"Miten haen 'kaikki paitsi X'?",
+"Voit jättää sarakkeita pois lisäämällä propertyName-parametrissa annettuun nimeen väliviivan etumerkiksi. Tämä toimii myös 'sisäkkäisille' arvoille, mutta huomaa laittaa etumerkki sisäkkäisen nimen yhteyteen."
+                 ))
+                   .render(definition(
+"Miten saan rajapinnasta haettua Liikennepaikkojen ja Liikennepaikkavälien muodostaman graafin?",
+concat(text("Esimerkiksi "), link(href("lp-graph.txt"), text("näin")))
+                 ))
               ._dl()
           ._section();
     }

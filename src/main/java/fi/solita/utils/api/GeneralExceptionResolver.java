@@ -88,6 +88,10 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + e.propertyNames);
                 return new ModelAndView();
             }
+            for (MemberUtil.InvalidResolvableExclusionException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.InvalidResolvableExclusionException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Invalid exclusion of resolvable member: " + e.propertyName + ". Put the negation sign in front of the external propertyname, e.g. instead of '-foo.bar' use 'foo.-bar'");
+                return new ModelAndView();
+            }
             for (ResolvableMemberProvider.CannotResolveAsFormatException e: ExceptionUtils.findCauseFromHierarchy(ex, ResolvableMemberProvider.CannotResolveAsFormatException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Cannot use resolvable properties with " + e.format);
                 return new ModelAndView();

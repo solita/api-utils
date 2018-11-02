@@ -13,13 +13,13 @@ import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.fold;
+import static fi.solita.utils.functional.Functional.forall;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
-import static fi.solita.utils.functional.Functional.span;
-import static fi.solita.utils.functional.FunctionalA.filter;
+import static fi.solita.utils.functional.Functional.subtract;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.Option.None;
@@ -55,7 +55,7 @@ import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.functional.lens.Setter;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -77,6 +77,15 @@ public class MemberUtil {
         public final String propertyName;
     
         public UnknownPropertyNameException(String propertyName) {
+            super(propertyName);
+            this.propertyName = propertyName;
+        }
+    }
+    
+    public static class InvalidResolvableExclusionException extends RuntimeException {
+        public final String propertyName;
+    
+        public InvalidResolvableExclusionException(String propertyName) {
             super(propertyName);
             this.propertyName = propertyName;
         }
@@ -159,38 +168,47 @@ public class MemberUtil {
      * @param propertyNames Filtering given by the API user. Empty if not given.
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
-    @SuppressWarnings("unchecked")
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
-        List<MetaNamedMember<? super T, ?>> ret;
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, SerializationFormat format, Iterable<String> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
+        List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
-        if (propertyNames == null) {
+        // if no propertyNames given, or given but contains only exclusions:
+        if (propertyNames == null || forall(MemberUtil_.isExclusion, propertyNames)) {
             // For PNG exclude everything (geometry included back in the end)
             // For HTML and spreadsheet formats, exclude parent of nested members.
             // For others, include everything.
             switch (format) {
                 case PNG:
-                    members = emptyList();
+                    ret = emptyList();
                     break;
                 case CSV:
                 case XLSX:
                 case HTML:
-                    members = withNestedMembers(members, Include.OnlyLeaf, builders);
+                    ret = withNestedMembers(members, Include.OnlyLeaf, builders);
                     break;
                 case GEOJSON:
                 case GML:
                 case JSON:
                 case XML:
-                    members = withNestedMembers(members, Include.All, builders);
+                    ret = withNestedMembers(members, Include.All, builders);
                     break;
             }
             
-            ret = (List<MetaNamedMember<? super T, ?>>) members;
             includesEverything = true;
         } else if (size(propertyNames) == 1 && head(propertyNames).isEmpty()) {
             ret = emptyList();
         } else {
-            members = withNestedMembers(members, Include.All, builders);
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, members), propertyNames));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, withNestedMembers(members, Include.All, builders)), filter(not(MemberUtil_.isExclusion), propertyNames)));
+        }
+        
+        // Exclusions
+        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, withNestedMembers(members, Include.All, builders)), map(Transformers.tailStr, filter(MemberUtil_.isExclusion, propertyNames))));
+        ret = newList(subtract(ret, toRemove));
+        if (toRemove != null) {
+            for (MetaNamedMember<?,?> m: toRemove) {
+                if (ResolvableMemberProvider.isResolvableMember(m)) {
+                    throw new InvalidResolvableExclusionException(m.getName());
+                }
+            }
         }
         
         // Always include geometries for png/geojson/gml
@@ -216,6 +234,10 @@ public class MemberUtil {
         Collection<ResolvableMember<T>> combinedResolvables = mapValue(MemberUtil_.<T>combineResolvableMembers(), resolvable).values();
         
         return new Includes<T>(newList(concat(others, combinedResolvables)), geometries, includesEverything, builders);
+    }
+    
+    public static boolean isExclusion(String propertyName) {
+        return propertyName.startsWith("-");
     }
     
     @SuppressWarnings("unchecked")

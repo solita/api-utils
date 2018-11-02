@@ -3,6 +3,8 @@ package fi.solita.utils.api;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.concat;
+import static fi.solita.utils.functional.Functional.exists;
+import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
 import java.util.SortedSet;
@@ -27,10 +29,10 @@ public class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     }
     
     public ResolvableMember<T> combine(ResolvableMember<T> other) {
-        if (resolvablePropertyNames.equals(ALL_DATA)) {
+        if (resolvablePropertyNames.equals(ALL_DATA) && exists(not(MemberUtil_.isExclusion), other.resolvablePropertyNames)) {
             throw new RedundantResolvablePropertiesException(other.resolvablePropertyNames);
         }
-        if (other.resolvablePropertyNames.equals(ALL_DATA)) {
+        if (other.resolvablePropertyNames.equals(ALL_DATA) && exists(not(MemberUtil_.isExclusion), resolvablePropertyNames)) {
             throw new RedundantResolvablePropertiesException(resolvablePropertyNames);
         }
         
