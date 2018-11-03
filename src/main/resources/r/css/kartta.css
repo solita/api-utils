@@ -104,14 +104,17 @@
 }
 .app-button {
   width: 11em;
-  margin-left: 9em;
+  margin-left: 0;
   margin-top: 0.5em;
   left: 21.5em;
   position: absolute;
   top: 0;
 }
-.app-button:first-child {
-  margin-left: 0;
+.app-button:nth-child(2) {
+  margin-left: 9em;
+}
+.app-button:nth-child(3) {
+  margin-left: 20em;
 }
 .app-button button {
   width: auto;

@@ -130,7 +130,9 @@ var olstuff = function(constants, util) {
                 map.mystate.closed = {};
             }
             $(document).keydown(function() {
-                $('#rajoita').focus();
+                if ($('input:not(#rajoita):focus').size() == 0) {
+                    $('#rajoita').focus();
+                }
             });
             var f = function(evt) {
                 elem.get(0).innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(ret.featuresOnScreen(map));
@@ -249,7 +251,7 @@ var olstuff = function(constants, util) {
         newVectorLayerImpl: function(tiling, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + '.geojson?';
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
-                     (propertyName === null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
+                     (!propertyName ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
             u2 += (typeNames ? '&typeNames=' + typeNames : '');
 
             var source = new ol.source.Vector({
@@ -257,10 +259,10 @@ var olstuff = function(constants, util) {
                 projection: ret.projection,
                 strategy: tiling ? ol.loadingstrategy.tile(ret.tileGrid) : ol.loadingstrategy.all,
                 loader: function(extent, resolution, projection) {
-                    if (extent[0] < constants.dataExtent[0] ||
-                        extent[1] < constants.dataExtent[1] ||
-                        extent[2] > constants.dataExtent[2] ||
-                        extent[3] > constants.dataExtent[3]) {
+                    if (tiling && (extent[0] < constants.dataExtent[0] ||
+                                   extent[1] < constants.dataExtent[1] ||
+                                   extent[2] > constants.dataExtent[2] ||
+                                   extent[3] > constants.dataExtent[3])) {
                         return;
                     }
                     var kaavio = document.getElementById('kaavio');
