@@ -17,9 +17,9 @@ import fi.solita.utils.api.types.Filters.Filter;
 import fi.solita.utils.api.types.Filters_.Filter_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
-import fi.solita.utils.functional.Function2;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Setter;
 
@@ -66,11 +66,11 @@ public class Transform {
         }
     }
     
-    public static final <T,G> Function1<T,T> transforming(final SRSName source, final SRSName target, final Setter<T, G> setter, final Function2<SRSName,G,G> f) {
+    public static final <T,G> Function1<T,T> transforming(final SRSName source, final SRSName target, final Setter<T, G> setter, final ApplyBi<SRSName,G,G> f) {
         return source.equals(target) ? Function.<T>id() : new Function1<T, T>() {
             @Override
             public T apply(T t) {
-                return t == null ? t : setter.modify(t, f.ap(target));
+                return t == null ? t : setter.modify(t, Function.of(f).ap(target));
             }
         };
     }
