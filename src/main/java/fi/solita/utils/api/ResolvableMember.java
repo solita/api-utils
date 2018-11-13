@@ -9,12 +9,12 @@ import static fi.solita.utils.functional.Predicates.not;
 import java.lang.reflect.AccessibleObject;
 import java.util.SortedSet;
 
-import fi.solita.utils.api.MemberUtil.RedundantResolvablePropertiesException;
+import fi.solita.utils.api.MemberUtil.RedundantPropertiesException;
 import fi.solita.utils.api.ResolvableMemberProvider.Type;
 import fi.solita.utils.functional.Ordering;
 import fi.solita.utils.meta.MetaNamedMember;
 
-public class ResolvableMember<T> implements MetaNamedMember<T,Object> {
+public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     public static final SortedSet<String> ALL_DATA = newSortedSet(Ordering.Natural(), newList(""));
     
     public final MetaNamedMember<? super T,?> original;
@@ -30,10 +30,10 @@ public class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     
     public ResolvableMember<T> combine(ResolvableMember<T> other) {
         if (resolvablePropertyNames.equals(ALL_DATA) && exists(not(MemberUtil_.isExclusion), other.resolvablePropertyNames)) {
-            throw new RedundantResolvablePropertiesException(other.resolvablePropertyNames);
+            throw new RedundantPropertiesException(other.resolvablePropertyNames);
         }
         if (other.resolvablePropertyNames.equals(ALL_DATA) && exists(not(MemberUtil_.isExclusion), resolvablePropertyNames)) {
-            throw new RedundantResolvablePropertiesException(resolvablePropertyNames);
+            throw new RedundantPropertiesException(resolvablePropertyNames);
         }
         
         Assert.equal(original, other.original);
@@ -59,5 +59,39 @@ public class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     @Override
     public String getName() {
         return original.getName();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((original == null) ? 0 : original.hashCode());
+        result = prime * result + ((resolvablePropertyNames == null) ? 0 : resolvablePropertyNames.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ResolvableMember<?> other = (ResolvableMember<?>) obj;
+        if (original == null) {
+            if (other.original != null)
+                return false;
+        } else if (!original.equals(other.original))
+            return false;
+        if (resolvablePropertyNames == null) {
+            if (other.resolvablePropertyNames != null)
+                return false;
+        } else if (!resolvablePropertyNames.equals(other.resolvablePropertyNames))
+            return false;
+        if (type != other.type)
+            return false;
+        return true;
     }
 }

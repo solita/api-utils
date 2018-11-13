@@ -4,27 +4,31 @@ import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newListOfSize;
 import static fi.solita.utils.functional.Collections.newMapOfSize;
+import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSetOfSize;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Function.__;
-import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
+import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
+import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.fold;
 import static fi.solita.utils.functional.Functional.forall;
+import static fi.solita.utils.functional.Functional.group;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
+import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
-import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.equalTo;
+import static fi.solita.utils.functional.Predicates.greaterThan;
 import static fi.solita.utils.functional.Predicates.not;
 
 import java.beans.IntrospectionException;
@@ -64,10 +68,10 @@ public class MemberUtil {
     
     private static final Logger logger = LoggerFactory.getLogger(MemberUtil.class);
     
-    public static class RedundantResolvablePropertiesException extends RuntimeException {
+    public static class RedundantPropertiesException extends RuntimeException {
         public final SortedSet<String> propertyNames;
     
-        public RedundantResolvablePropertiesException(SortedSet<String> propertyNames) {
+        public RedundantPropertiesException(SortedSet<String> propertyNames) {
             super(mkString(",", propertyNames));
             this.propertyNames = propertyNames;
         }
@@ -171,8 +175,18 @@ public class MemberUtil {
     public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, SerializationFormat format, Iterable<String> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
-        // if no propertyNames given, or given but contains only exclusions:
-        if (propertyNames == null || forall(MemberUtil_.isExclusion, propertyNames)) {
+        
+        if (propertyNames != null && newList(propertyNames).size() > newSet(propertyNames).size()) {
+            throw new RedundantPropertiesException(newSortedSet(flatten(filter(Transformers.size.andThen(greaterThan(1l)), group(sort(propertyNames))))));
+        }
+        
+        if (propertyNames != null && (Functional.isEmpty(propertyNames) ||
+                                      size(propertyNames) == 1 && head(propertyNames).isEmpty())) {
+            // propertyNames is empty or contains only the empty string
+            ret = emptyList();
+        } else if (propertyNames == null || forall(MemberUtil_.isExclusion, propertyNames)) {
+            // if no propertyNames given, or given but contains only exclusions:
+            
             // For PNG exclude everything (geometry included back in the end)
             // For HTML and spreadsheet formats, exclude parent of nested members.
             // For others, include everything.
@@ -192,10 +206,7 @@ public class MemberUtil {
                     ret = withNestedMembers(members, Include.All, builders);
                     break;
             }
-            
             includesEverything = true;
-        } else if (size(propertyNames) == 1 && head(propertyNames).isEmpty()) {
-            ret = emptyList();
         } else {
             ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, withNestedMembers(members, Include.All, builders)), filter(not(MemberUtil_.isExclusion), propertyNames)));
         }
@@ -229,11 +240,21 @@ public class MemberUtil {
             case XML:
         }
         
-        Map<CharSequence, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
-        Iterable<MetaNamedMember<? super T, ?>> others = filter(not(ResolvableMemberProvider_.isResolvableMember), ret);
-        Collection<ResolvableMember<T>> combinedResolvables = mapValue(MemberUtil_.<T>combineResolvableMembers(), resolvable).values();
+        final Map<CharSequence, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
+
+        ret = newList(distinct(map(new Apply<MetaNamedMember<? super T,?>, MetaNamedMember<? super T,?>>() {
+            @Override
+            public MetaNamedMember<? super T, ?> apply(MetaNamedMember<? super T, ?> t) {
+                Option<List<MetaNamedMember<? super T, ?>>> x = find(t.getName(), resolvable);
+                if (x.isDefined()) {
+                    return combineResolvableMembers(x.get());
+                } else {
+                    return t;
+                }
+            }
+        }, ret)));
         
-        return new Includes<T>(newList(concat(others, combinedResolvables)), geometries, includesEverything, builders);
+        return new Includes<T>(ret, geometries, includesEverything, builders);
     }
     
     public static boolean isExclusion(String propertyName) {

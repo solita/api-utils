@@ -84,7 +84,7 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unknown propertyName: " + e.propertyName);
                 return new ModelAndView();
             }
-            for (MemberUtil.RedundantResolvablePropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.RedundantResolvablePropertiesException.class)) {
+            for (MemberUtil.RedundantPropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.RedundantPropertiesException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + e.propertyNames);
                 return new ModelAndView();
             }
