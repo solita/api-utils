@@ -252,7 +252,8 @@ var olstuff = function(constants, util) {
         },
         
         newVectorLayerImpl: function(tiling, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
-            var u1 = url + '.geojson?';
+            var u1 = url + (url.indexOf('?') < 0 ? '?' : '&');
+            u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1; 
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (!propertyName ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
             u2 += (typeNames ? '&typeNames=' + typeNames : '');
