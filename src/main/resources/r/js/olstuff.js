@@ -124,7 +124,7 @@ var olstuff = function(constants, util) {
             return null;
         },
         
-        registerListView: function(map, elem, selectInteraction, select, unselect) {
+        registerListView: function(map, elem, selectInteraction, select, unselect, click) {
             if (!map.mystate) {
                 map.mystate = {};
                 map.mystate.closed = {};
@@ -167,6 +167,9 @@ var olstuff = function(constants, util) {
                 }, unselect).click(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
+                    if (click) {
+                        click(feature);
+                    }
                     map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                 });
             };
