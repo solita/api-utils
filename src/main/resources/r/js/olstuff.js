@@ -218,10 +218,13 @@ var olstuff = function(constants, util) {
                 return func;
             },
             
-            icon: function(url, flipped, rotation) {
+            icon: function(url, flipped, rotation, anchor, scale) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         src: url,
+                        scale: scale ? scale : 1,
+                        rotateWithView: true,
+                        anchor: anchor ? anchor : [0.5, 0.5],
                         rotation: rotation ? 2*Math.PI*rotation/360 : 0
                     })
                 });
@@ -276,7 +279,13 @@ var olstuff = function(constants, util) {
                         success: function(response) {
                           var features = ret.format.readFeatures(response);
                           if (styleOrHandler instanceof Function) {
-                              features.forEach(styleOrHandler);
+                              if (styleOrHandler.length == 1) {
+                                  // on feature load
+                                  features.forEach(styleOrHandler);
+                              } else {
+                                  // dynamic style
+                                  features.forEach(function(f) { f.setStyle(styleOrHandler); });
+                              }
                           }
                           source.addFeatures(features);
                         }
@@ -287,7 +296,7 @@ var olstuff = function(constants, util) {
                 title: '<span class="fi">' + title_fi + '</span><span class="en">' + title_en + '</span>',
                 source: source,
                 opacity: opacity || 1.0,
-                style: styleOrHandler instanceof Function ? null : styleOrHandler,
+                style: styleOrHandler instanceof Function ? undefined : styleOrHandler,
                 extent: constants.dataExtent,
                 renderBuffer: constants.renderBuffer,
                 updateWhileInteracting: true,
