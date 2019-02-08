@@ -189,7 +189,12 @@ public class PngConversionService {
             return new StyledLayer[0];
         }
         URI imagePath = url.toURI().resolve("r/img/");
-        final URL sourceUrl = imagePath.toURL();
+        final URL sourceUrl;
+        try {
+            sourceUrl = imagePath.toURL();
+        } catch (Exception e) {
+            throw new RuntimeException("Error constructing URL for styles, based on: " + url.toString(), e);
+        }
         Parser parser = new Parser(new SLDConfiguration() {
             // suhteellisten urlien parsinta vaatii ilmeisesti tällaista...
             // https://osgeo-org.atlassian.net/browse/GEOS-5800

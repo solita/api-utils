@@ -156,109 +156,148 @@ public abstract class HtmlConversionService {
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
                     .title().write(title.plainTextTitle)._title()
                     .style().write(
-                              "html           { font-family: sans-serif; font-weight: lighter; }"
-                            + "body           { display: inline-block; }"
-                            + "h1             { font-weight: lighter; margin-bottom: 0.3em; position: relative; padding-right: 1.5em; }"
-                            + "h1 > span      { padding-left: 1em; }"
-                            + "h1 .type-datetime { font-size: 0.5em; font-style: italic; }"
-                            + "h1 .type-rectangle { font-size: 0.5em; font-style: italic; color: #bbb; }"
-                            + "h1 .type-oid a { text-decoration: none; }"
-                            + ".loadButton    { right: 0; position: absolute; padding: 0.5em; margin: 0.5em; visibility: hidden; }"
-                            + ".lang          { right: 0; top:0; position: fixed; font-size: 0.5em; margin: 0.5em; }"
-                            + ".lang li       { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; }"
-                            + "section        { border-radius: 5px; border: 1px solid #ddd; overflow: visible; display: inline-block; }"
-                            + "table          { border-collapse: collapse; border-spacing: 0; }"
-                            + "thead          { background: #eee; vertical-align: top; }"
-                            + "tbody          { font-size: 0.75em; overflow: visible; }"
-                            + "th, td         { padding: 5px 10px; margin: 0; }"
-                            + "th             { border-left: 1px solid #ccc; border-bottom: 1px solid #ccc; background-color: #ddd; }"
-                            + "th:first-child { border-left: none; }"
-                            + "td             { border-left: 1px dotted #eee; vertical-align: top; }"
-                            + "td:first-child { border-left: none; }"
-                            + "tr             { border-top: 1px solid #ccc; }"
-                            + "tr:first-child { border-top: none; }"
-                            + "footer         { padding-top: 10px; color: #ccc; font-style: italic; font-size: 0.8em; position: relative; }"
-                            + ".copyright     { position: absolute; right: 0; padding: 0.5em; }"
+                              "html,h1,table  { font-family: sans-serif; font-weight: lighter; }"
+                            + "body           { margin: 0; display: flex; flex-direction: column; padding: 0 0.5em; min-height: 100%; height: 100%; }"
+                            
+                            + "header, footer { display: flex; padding: 0.5em; }"
+                            + "h1             { flex: 1; }"
+                            + "header .type-datetime, header .type-oid, header .type-rectangle { font-size: small; font-style: italic; padding: 1em; }"
+                            + "header .type-rectangle { color: #bbb; }"
+                            + ".loadButton    { visibility: hidden; height: 2em; }"
+                            + ".lang li       { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
+                            
+                            + "footer *       { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
+                            + ".timestamps    { text-align: left; }"
+                            + ".copyright     { text-align: right; }"
+                            
+                            + "section        { flex: 1; overflow-y: scroll; }"
+                            + "table          { border-collapse: collapse; }"
+                            + "th,td          { vertical-align: top; padding: 0.5em 1em 0.5em 0; }"
+                            + "th             { position: -webkit-sticky; position: sticky; top: 0; z-index: 999; background-color: white; text-align: left; }"
+                            + "tbody          { font-size: small; }"
+                            + "tbody tr       { border-top: 1px dotted #ccc; }"
+                            
                             + "ul             { list-style: none; padding: 0; margin: 0; white-space: normal; }"
-                            + "ul li          { border-top: 1px solid #ddd; }"
+                            + "ul li          { border-top: 1px dotted #ddd; }"
                             + "ul li:first-child { border: none; }"
-                            + "ul li.index-1  { background-color: #fffafa; }"
-                            + "ul li.index-2  { background-color: #f0fff0; }"
-                            + "ul li.index-3  { background-color: #f5fffa; }"
-                            + "ul li.index-4  { background-color: #f0ffff; }"
-                            + "ul li.index-5  { background-color: #f0f8ff; }"
-                            + "ul li.index-6  { background-color: #f8f8ff; }"
-                            + "ul li.index-7  { background-color: #f5f5f5; }"
-                            + "ul li.index-8  { background-color: #fff5ee; }"
-                            + "ul li.index-9  { background-color: #f5f5dc; }"
-                            + "ul li.index-10 { background-color: #fdf5e6; }"
-                            + "ul li.index-11 { background-color: #fffaf0; }"
-                            + "ul li.index-12 { background-color: #fffff0; }"
-                            + "ul li.index-13 { background-color: #faebd7; }"
-                            + "ul li.index-14 { background-color: #faf0e6; }"
-                            + "ul li.index-15 { background-color: #fff0f5; }"
-                            + "ul li.index-16 { background-color: #ffe4e1; }"
-                            + "ul li.index-17 { background-color: #fffafa; }"
-                            + "ul li.index-18 { background-color: #f0fff0; }"
-                            + "ul li.index-19 { background-color: #f5fffa; }"
-                            + "ul li.index-20 { background-color: #f0ffff; }"
-                            + "ul li.index-21 { background-color: #f0f8ff; }"
-                            + "ul li.index-22 { background-color: #f8f8ff; }"
-                            + "ul li.index-23 { background-color: #f5f5f5; }"
-                            + "ul li.index-24 { background-color: #fff5ee; }"
-                            + "ul li.index-25 { background-color: #f5f5dc; }"
-                            + "ul li.index-26 { background-color: #fdf5e6; }"
-                            + "ul li.index-27 { background-color: #fffaf0; }"
-                            + "ul li.index-28 { background-color: #fffff0; }"
-                            + "ul li.index-29 { background-color: #faebd7; }"
-                            + "ul li.index-30 { background-color: #faf0e6; }"
-                            + "ul li.index-31 { background-color: #fff0f5; }"
-                            + "ul li.index-32 { background-color: #ffe4e1; }"
+                            + "ul li.i-1  { background-color: #fffafa; }"
+                            + "ul li.i-2  { background-color: #f0fff0; }"
+                            + "ul li.i-3  { background-color: #f5fffa; }"
+                            + "ul li.i-4  { background-color: #f0ffff; }"
+                            + "ul li.i-5  { background-color: #f0f8ff; }"
+                            + "ul li.i-6  { background-color: #f8f8ff; }"
+                            + "ul li.i-7  { background-color: #f5f5f5; }"
+                            + "ul li.i-8  { background-color: #fff5ee; }"
+                            + "ul li.i-9  { background-color: #f5f5dc; }"
+                            + "ul li.i-10 { background-color: #fdf5e6; }"
+                            + "ul li.i-11 { background-color: #fffaf0; }"
+                            + "ul li.i-12 { background-color: #fffff0; }"
+                            + "ul li.i-13 { background-color: #faebd7; }"
+                            + "ul li.i-14 { background-color: #faf0e6; }"
+                            + "ul li.i-15 { background-color: #fff0f5; }"
+                            + "ul li.i-16 { background-color: #ffe4e1; }"
+                            + "ul li.i-17 { background-color: #fffafa; }"
+                            + "ul li.i-18 { background-color: #f0fff0; }"
+                            + "ul li.i-19 { background-color: #f5fffa; }"
+                            + "ul li.i-20 { background-color: #f0ffff; }"
+                            + "ul li.i-21 { background-color: #f0f8ff; }"
+                            + "ul li.i-22 { background-color: #f8f8ff; }"
+                            + "ul li.i-23 { background-color: #f5f5f5; }"
+                            + "ul li.i-24 { background-color: #fff5ee; }"
+                            + "ul li.i-25 { background-color: #f5f5dc; }"
+                            + "ul li.i-26 { background-color: #fdf5e6; }"
+                            + "ul li.i-27 { background-color: #fffaf0; }"
+                            + "ul li.i-28 { background-color: #fffff0; }"
+                            + "ul li.i-29 { background-color: #faebd7; }"
+                            + "ul li.i-30 { background-color: #faf0e6; }"
+                            + "ul li.i-31 { background-color: #fff0f5; }"
+                            + "ul li.i-32 { background-color: #ffe4e1; }"
                             + "ul li ul li    { border: none !important; }"
                             + "ul li ul li    { background-color: transparent !important; }"
+                            
+                            + "table table tr { border: none; }"
                             + "table table th { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; }"
                             + "table table td { border: none; padding: 1px 3px; line-height: 1em; }"
-                            + "table table tr { border: none; }"
-                            + "td.null        { background: #f8f8f8; }"
-                            + "a              { position: relative; }"
-                            + "a:hover iframe { display: block !important; }"
-                            + "td:first-child iframe { left: 0; right: auto; }"
-                            + "iframe         { position: absolute; right: 0; top: 1em; display: none; margin-top: 1px; height: 500px; width: 500px; z-index: 999; background: white; border: 1px solid #ddd; }"
-                            + "body .fi, body .en { display: none !important; }"
-                            + "body.fi .fi, body.en .en { display: inherit !important; }"
+                            
+                            + "body.en .fi, body.fi .en { display: none !important; }"
                             + ".fi i, .en i   { font-weight: normal; display: block; }"
-                            + ".type-interval { white-space: nowrap; }"
+                            + "*[title]::after { content: '?'; font-size: 0.75em; font-style: italic; color: #bbb; font-weight: lighter; }"
+                            
+                            + "a:hover        { position: relative; }"
+                            + "a:hover iframe { visibility: visible !important; transition: visibility; transition-delay: 0.5s; z-index: 999; }"
+                            + "td:first-child iframe { left: 0; right: auto; }"
+                            + "iframe         { position: absolute; right: 0; visibility: hidden; margin-top: 1px; height: 45em; width: 45em; z-index: -1; background: white; border: 1px solid #ddd; }"
+                            
+                            + "td.null        { background: #f8f8f8; }"
+                            + ".type-interval, .type-point, .type-kmetaisyys, .type-ratakmetaisyys, .type-ratakmvali { white-space: nowrap; }"
                             + ".type-multiline, .type-multipolygon { overflow: hidden; height: 1em; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
                             + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
-                            + "*[title]::after { content: '?'; font-size: 0.75em; font-style: italic; float: right; margin-top: -0.25em; color: #bbb; font-weight: lighter; }"
                             + mkString(" ", sequence(
                                  ("  .loadButton    { display: none !important; }"
                                 + "  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
                                 + "  h1 .type-datetime { display: block; }"
-                                + "  th, td         { vertical-align: top; display: block; line-height: 1.5em; }"
-                                + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
-                                + "  tr             { border-top: none; }"
                                 + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; }"
-                                + "  thead          { display: inline-block; font-size: 0.75em; }"
-                                + "  tbody          { display: inline-block; width: auto; white-space: nowrap; }"
+                                + "  table tr       { border-top: none; }"
+                                + "  thead          { display: inline-block; font-size: small; max-width: 33%; overflow-x: scroll; }"
+                                + "  tbody          { display: inline-block; font-size: small; min-width: 67%; white-space: nowrap; }"
                                 + "  thead tr       { display: block; }"
                                 + "  tbody tr       { display: flex; flex-direction: column; vertical-align: top; }"
+                                + "  tbody td       { overflow-x: scroll; }"
+                                + "  th, td         { display: block; height: 1.5em; line-height: 1.5em; min-height: 1.5em; max-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; padding: 0.25em; }"
+                                + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
+                                + "  td:first-child { border-left: 1px solid #eee; }"
+                                + "  td:last-child  { border-bottom: none; }"
                                 + "  ul             { white-space: nowrap; max-width: 20em; }"
                                 + "  table table tr { display: table-row; }"
                                 + "  table table td { display: table-cell; }"
                                 + "  table li       { display: inline-block; border-left: 1px solid #eee; padding: 0 3px; }"
                                 + "  table li:first-child { border-left: none; }"
-                                + "  td, th         { min-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; }"
-                                + "  td:last-child  { border-bottom: none; }"
-                                + "  td:first-child { border-left: 1px solid #eee; }"
                                 + "  .fi i, .en i   { display: inline; padding-left: 0.25em; margin-left: 0.25em; border-left: 1px solid #eee; }"),
                              newList((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {").andThen(append("}")), (Apply<String,String>)HtmlConversionService_.split.apply(Function.__, "}").andThen(HtmlConversionService_.<String>toList()).andThen(Transformers.map(prepend(".nested ").andThen(HtmlConversionService_.replaceAll.apply(__, ",", ", .nested ")).andThen(append("}")))).andThen(HtmlConversionService_.join.ap(" ")) )))
                           , false)
                     ._style()
                     .script(type("text/javascript"))
                         .cdata()
-                            .write("window.iframeLoad = function(parent) { var p = parent.parentElement; while (p.nodeName.toLowerCase() != 'body' && p.nodeName.toLowerCase() != 'header') { p = p.parentElement; } if (p.nodeName.toLowerCase() == 'header') { return; } else if (parent.getElementsByTagName('iframe').length == 0) { var elem = document.createElement('iframe'); elem.setAttribute('src', parent.attributes.href.value); parent.appendChild(elem); }; };", false)
+                            .write("window.iframeLoad = function(parent) {"
+                                    + "var p = parent.parentElement;"
+                                    + "while (p.nodeName.toLowerCase() != 'body' && p.nodeName.toLowerCase() != 'header') {"
+                                    + "  p = p.parentElement;"
+                                    + "}"
+                                    + "if (p.nodeName.toLowerCase() == 'header') {"
+                                    + "  return;"
+                                    + "} else if (parent.getElementsByTagName('iframe').length == 0) {"
+                                    + "  var elem = document.createElement('iframe');"
+                                    + "  elem.style.display = 'none';"
+                                    + "  parent.appendChild(elem);"
+                                    + "  setTimeout(function() {"
+                                    + "    if (window.getComputedStyle(elem).visibility == 'visible') {"
+                                    + "      elem.setAttribute('src', parent.attributes.href.value);"
+                                    + "      elem.style.display = 'block';"
+                                    + "    } else {"
+                                    + "      parent.removeChild(elem);"
+                                    + "    }"
+                                    + "  }, 1000);"
+                                    + "}"
+                                    + "};", false)
                         ._cdata()    
+                    ._script()
+                    .script(type("text/javascript"))
+                        .cdata()
+                            /*.write("var prevScrollY = window.pageYOffset || document.documentElement.scrollTop;" +
+                                   "var scrollY = prevScrollY;" +
+                                   "window.addEventListener('scroll', function() {" +  
+                                   "    if (!document.body.classList.contains('disable-hover')) {" +
+                                   "      document.body.classList.add('disable-hover');" +
+                                   "    }" +
+                                   "}, false);" +
+                                   "setInterval(function() {" +
+                                   "  if (prevScrollY == scrollY && scrollY == (window.pageYOffset || document.documentElement.scrollTop)) {" +
+                                   "    document.body.classList.remove('disable-hover');" +
+                                   "  }" +
+                                   "  prevScrollY = scrollY;" +
+                                   "  scrollY = window.pageYOffset || document.documentElement.scrollTop;" +
+                                   "}, 1000);", false)*/
+                        ._cdata()
                     ._script()
                     .script(type("text/javascript"))
                         .cdata()
@@ -298,19 +337,20 @@ public abstract class HtmlConversionService {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
-                html
-                    .header()
-                    .h1()
-                      .render(title)
-                      .button(id("loadButton").class_("loadButton").onClick("this.style.visibility = 'hidden'; window.location += '#deep'; loadAdditionalContent();"))
-                          .write("Lataa lisäsisältö")
-                      ._button()
-                      .ul(id("lang").class_("lang"))
-                          .li(onClick("document.body.classList.add('fi'); document.body.classList.remove('en')")).a().write("finnish")._a()._li()
-                          .li(onClick("document.body.classList.add('en'); document.body.classList.remove('fi')")).a().write("english")._a()._li()
-                      ._ul()
-                    ._h1()
-                  ._header();
+                html.header()
+                        .h1()
+                          .render(title)
+                        ._h1()
+                        .button(id("loadButton").class_("loadButton").onClick("this.style.visibility = 'hidden'; window.location += '#deep'; loadAdditionalContent();"))
+                            .write("Lataa lisäsisältö")
+                        ._button()
+                        .div(id("lang").class_("lang"))
+                            .ul()
+                                .li(onClick("document.body.classList.add('fi'); document.body.classList.remove('en')")).a().write("finnish")._a()._li()
+                                .li(onClick("document.body.classList.add('en'); document.body.classList.remove('fi')")).a().write("english")._a()._li()
+                            ._ul()
+                        ._div()
+                    ._header();
             }
         };
     }
@@ -325,16 +365,16 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
                   .footer()
-                    .span(class_("fi").class_("timestamps"))
+                    .span(class_("fi timestamps"))
                         .write("Aikaleimat Suomen aikavyöhykkeellä (EET)")
                     ._span()
-                    .span(class_("en").class_("timestamps"))
+                    .span(class_("en timestamps"))
                         .write("Timestamps in Europe/Helsinki (EET) time zone")
                     ._span()
-                    .span(class_("fi").class_("copyright"))
+                    .span(class_("fi copyright"))
                         .write("© " + copyright_fi)
                     ._span()
-                    .span(class_("en").class_("copyright"))
+                    .span(class_("en copyright"))
                         .write("© " + copyright_en)
                     ._span()
                   ._footer();

@@ -192,7 +192,7 @@ public abstract class HtmlSerializers {
         public void renderOn(Object value, HtmlCanvas html, HtmlModule module) throws IOException {
             html.ul();
             for (int i = 0; i < Array.getLength(value); ++i) {
-                html.li(class_("index-" + i))
+                html.li(class_("i-" + i))
                       .render(module.toRenderable(Array.get(value, i)))
                     ._li();
             }
@@ -205,7 +205,7 @@ public abstract class HtmlSerializers {
         public void renderOn(Iterable<?> value, HtmlCanvas html, HtmlModule module) throws IOException {
             html.ul();
             for (Tuple2<Integer, ?> o: zipWithIndex(value)) {
-                html.li(class_("index-" + o._1))
+                html.li(class_("i-" + o._1))
                       .render(module.toRenderable(o._2))
                     ._li();
             }
