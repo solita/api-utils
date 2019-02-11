@@ -400,6 +400,9 @@ public class MemberUtil {
                 throw new IllegalStateException("Something wrong");
             }
             return (T) ret;
+        } else if (t instanceof Option) {
+            logger.debug("Object is an Option: {}", t.getClass());
+            return (T)((Option<T>) t).map(MemberUtil_.withProperties().ap(propertyNames, builders));
         }
         
         logger.debug("No builder found for {}", t.getClass());
