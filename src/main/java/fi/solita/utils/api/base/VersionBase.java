@@ -125,8 +125,10 @@ public abstract class VersionBase {
         return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames, members, builders, newList(geometry));
     }
 
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<T,?> geometry, MetaNamedMember<T,?> geometry2) {
-        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames, members, builders, newList(geometry, geometry2));
+    // some type problems... 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames, members, builders, (List)newList(geometry, geometry2));
     }
     
     
