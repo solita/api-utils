@@ -1,12 +1,22 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.api.MemberUtil.excluding;
+import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Functional.concat;
+import static fi.solita.utils.functional.Functional.cons;
+import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
+import static fi.solita.utils.functional.Functional.foreach;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.SortedMap;
+import java.util.SortedSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +34,7 @@ import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.format.geojson.Crs;
 import fi.solita.utils.api.format.geojson.Feature;
 import fi.solita.utils.api.format.geojson.FeatureCollection;
+import fi.solita.utils.api.format.geojson.FeatureObject;
 import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
 import fi.solita.utils.api.types.SRSName;
@@ -48,19 +59,23 @@ public abstract class StdSerialization<BOUNDS> {
     public final PngConversionService png;
     //public final XmlConversionService xml;
     
+    private final GeojsonResolver geojsonResolver;
+    
     public StdSerialization(
         JsonConversionService json,
         JsonConversionService geoJson,
         HtmlConversionService html,
         CsvConversionService csv,
         ExcelConversionService excel,
-        PngConversionService png) {
+        PngConversionService png,
+        GeojsonResolver geojsonResolver) {
         this.json = json;
         this.geoJson = geoJson;
         this.html = html;
         this.csv = csv;
         this.excel = excel;
         this.png = png;
+        this.geojsonResolver = geojsonResolver;
     }
     
     protected String title2fileName(HtmlTitle title) {
@@ -108,12 +123,14 @@ public abstract class StdSerialization<BOUNDS> {
             response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
+            SortedMap<KEY, Iterable<DTO>> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = geoJson.serialize(new FeatureCollection(
-                    map(toFeature, map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            flatten(map(dataTransformer, data.get()).values()))),
+                            flatten(map(dataTransformer, d).values()))), resolvables),
                     Some(Crs.of(srsName))));
             break;
         case HTML:
@@ -157,12 +174,14 @@ public abstract class StdSerialization<BOUNDS> {
             response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
+            SortedMap<KEY, Iterable<DTO>> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = geoJson.serialize(new FeatureCollection(
-                    map(toFeature, map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            flatten(map(dataTransformer, data.get()).values()))),
+                            flatten(map(dataTransformer, data.get()).values()))), resolvables),
                     Some(Crs.of(srsName))));
             break;
         case HTML:
@@ -220,12 +239,14 @@ public abstract class StdSerialization<BOUNDS> {
             response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
+            Iterable<DTO> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
             response = geoJson.serialize(new FeatureCollection(
-                    map(toFeature, map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))),
+                            map(dataTransformer, data.get()))), resolvables),
                     Some(Crs.of(srsName))));
             break;
         case HTML:
@@ -281,12 +302,14 @@ public abstract class StdSerialization<BOUNDS> {
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
             case GEOJSON:
+                Iterable<DTO> d = data.get();
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = geoJson.serialize(new FeatureCollection(
-                    map(toFeature, map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))),
+                            map(dataTransformer, data.get()))), resolvables),
                     Some(Crs.of(srsName))));
                 break;
             case HTML:
@@ -340,11 +363,15 @@ public abstract class StdSerialization<BOUNDS> {
                 response = json.serialize(dataTransformer.apply(data.get()));
                 break;
             case GEOJSON:
-                DTO d = dataTransformer.apply(data.get());
-                response = geoJson.serialize(toFeature.apply(
-                            toGeojson.apply(d),
-                            excluding.apply(d),
-                    Some(Crs.of(srsName))));
+                DTO d = data.get();
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(Some(d), includes);
+                DTO d2 = dataTransformer.apply(data.get());
+                Feature feature = toFeature.apply(
+                        toGeojson.apply(d2),
+                        excluding.apply(d2),
+                    Some(Crs.of(srsName)));
+                
+                response = geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName))));
                 break;
             case HTML:
                 response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
@@ -379,12 +406,14 @@ public abstract class StdSerialization<BOUNDS> {
             response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
+            SortedMap<KEY,Iterable<DTO>> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = geoJson.serialize(new FeatureCollection(
-                        map(Feature_.$1, map(
+                        concat(map(Feature_.$1, map(
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
-                                flatten(map(dataTransformer, data.get()).values()))),
+                                flatten(map(dataTransformer, data.get()).values()))), resolvables),
                         Option.<Crs>None()));
             break;
         case HTML:
@@ -421,12 +450,14 @@ public abstract class StdSerialization<BOUNDS> {
             response = json.serialize(map(dataTransformer, data.get()));
             break;
         case GEOJSON:
+            SortedMap<KEY,Iterable<DTO>> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = geoJson.serialize(new FeatureCollection(
-                        map(Feature_.$1, map(
+                        concat(map(Feature_.$1, map(
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
-                                flatten(map(dataTransformer, data.get()).values()))),
+                                flatten(map(dataTransformer, data.get()).values()))), resolvables),
                         Option.<Crs>None()));
             break;
         case HTML:
@@ -462,12 +493,14 @@ public abstract class StdSerialization<BOUNDS> {
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
             case GEOJSON:
+                Iterable<DTO> d = data.get();
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = geoJson.serialize(new FeatureCollection(
-                    map(Feature_.$1, map(
+                    concat(map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))),
+                            map(dataTransformer, data.get()))), resolvables),
                     Option.<Crs>None()));
                 break;
             case HTML:
@@ -503,10 +536,13 @@ public abstract class StdSerialization<BOUNDS> {
                 response = json.serialize(dataTransformer.apply(data.get()));
                 break;
             case GEOJSON:
-                response = geoJson.serialize(new Feature(
+                DTO d = data.get();
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(Some(d), includes);
+                Feature feature = new Feature(
                         Option.<GeometryObject>None(),
                         dataTransformer.apply(data.get()),
-                        Option.<Crs>None()));
+                        Option.<Crs>None());
+                response = geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Option.<Crs>None()));
                 break;
             case HTML:
                 response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);

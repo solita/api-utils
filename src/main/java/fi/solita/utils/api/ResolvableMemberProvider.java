@@ -8,19 +8,30 @@ import static fi.solita.utils.functional.Functional.foreach;
 import static fi.solita.utils.functional.Functional.map;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class ResolvableMemberProvider {
     
     public enum Type { Internal, ExternalKnown, ExternalUnknown, Unknown }
+    
+    private static final ExecutorService pool = Executors.newFixedThreadPool(5);
     
     public static final class CannotResolveAsFormatException extends RuntimeException {
         public final SerializationFormat format;
@@ -72,21 +83,53 @@ public abstract class ResolvableMemberProvider {
     }
     
     @SuppressWarnings("unchecked")
-    public <T> T mutateResolvables(HttpServletRequest request, Includes<T> includes, T t) {
+    public <T> T mutateResolvables(final HttpServletRequest request, Includes<T> includes, T t) {
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
-            SortedSet<String> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
-            foreach(ResolvableMemberProvider_.mutateResolvable.ap(this, request, propertyNames), unwrapResolvable(((ResolvableMember<T>)member).original, t));
+            final SortedSet<String> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
+            try {
+                List<Future<Void>> futures = pool.invokeAll(newList(map(new Apply<Object, Callable<Void>>() {
+                    @Override
+                    public Callable<Void> apply(final Object x) {
+                        return new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                mutateResolvable(request, propertyNames, x);
+                                return null;
+                            }
+                        };
+                    }
+                }, unwrapResolvable(((ResolvableMember<T>)member).original, t))), 30, TimeUnit.SECONDS);
+                foreach(new Apply<Future<Void>, Void>() {
+                    @Override
+                    public Void apply(Future<Void> t) {
+                        try {
+                            return t.get();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }, futures);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         return t;
     }
 
     @SuppressWarnings("unchecked")
-    static Iterable<Object> unwrapResolvable(MetaNamedMember<?,?> member, Object resolvable) {
+    public static Iterable<Object> unwrapResolvable(MetaNamedMember<?,?> member, Object resolvable) {
         if (member instanceof NestedMember) {
             Object res = ((NestedMember<Object,?>) member).parent.apply(resolvable);
             return flatMap(ResolvableMemberProvider_.unwrapResolvable.ap(((NestedMember<?,?>) member).child), Collection.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) || Option.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) ? (Iterable<?>)res : newList(res));
         }
         Object ret = ((MetaNamedMember<Object,Object>)member).apply(resolvable);
-        return (Iterable<Object>) (Collection.class.isAssignableFrom(MemberUtil.memberClass(member)) || Option.class.isAssignableFrom(MemberUtil.memberClass(member)) ? ret : newList(ret));
+        Class<?> memberClass = MemberUtil.memberClass(member);
+        return (Iterable<Object>) (Collection.class.isAssignableFrom(memberClass) || Option.class.isAssignableFrom(memberClass) ? map(ResolvableMemberProvider_.hackTuple, (Iterable<Object>)ret) : newList(hackTuple(ret)));
+    }
+    
+    // if a tuple, assume the first element is the resolvable one. Sigh...
+    @SuppressWarnings("unchecked")
+    public static Object hackTuple(Object resolvable) {
+        return resolvable instanceof Tuple ? ((Tuple._1<Object>)resolvable).get_1() : resolvable; 
     }
 }

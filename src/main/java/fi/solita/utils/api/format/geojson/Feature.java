@@ -1,7 +1,10 @@
 package fi.solita.utils.api.format.geojson;
 
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
+
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.functional.Option;
@@ -36,6 +39,20 @@ public class Feature extends FeatureObject {
         private FeatureWithBBox(Option<GeometryObject> geometry, Object properties, Option<Crs> crs, Object bbox) {
             super(geometry, properties, crs);
             this.bbox = bbox;
+        }
+    }
+    
+    public static final class RawFeature extends FeatureObject {
+        private final Object data;
+
+        public RawFeature(Object data) {
+            super(null, Option.<Crs>None());
+            this.data = data;
+        }
+        
+        @JsonValue
+        public Object value() {
+            return data;
         }
     }
 }
