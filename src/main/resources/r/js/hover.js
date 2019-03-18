@@ -16,7 +16,7 @@ var hover = function(map, layers, callbackOver, callbackOut, callbackMultiple) {
         } else if (selected.length > 0){
             callbackOver(selected[0], coord);
         } else {
-            callbackOut();
+            callbackOut(evt.deselected);
         }
     });
     return hoverInteraction;

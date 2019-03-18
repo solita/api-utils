@@ -157,7 +157,7 @@ public abstract class HtmlConversionService {
                     .title().write(title.plainTextTitle)._title()
                     .style().write(
                               "html,h1,table  { font-family: sans-serif; font-weight: lighter; }"
-                            + "body           { margin: 0; display: flex; flex-direction: column; padding: 0 0.5em; min-height: 100%; height: 100%; }"
+                            + "body           { margin: 0; display: flex; flex-direction: column; padding: 0 0.5em; min-height: 100%; height: 100%; overflow-x: hidden; }"
                             
                             + "header, footer { display: flex; padding: 0.5em; }"
                             + "h1             { flex: 1; }"
@@ -170,7 +170,7 @@ public abstract class HtmlConversionService {
                             + ".timestamps    { text-align: left; }"
                             + ".copyright     { text-align: right; }"
                             
-                            + "section        { flex: 1; overflow-y: scroll; }"
+                            + "section        { flex: 1; overflow-y: auto; }"
                             + "table          { border-collapse: collapse; }"
                             + "th,td          { vertical-align: top; padding: 0.5em 1em 0.5em 0; }"
                             + "th             { position: -webkit-sticky; position: sticky; top: 0; z-index: 999; background-color: white; text-align: left; }"
@@ -238,12 +238,12 @@ public abstract class HtmlConversionService {
                                 + "  h1 .type-datetime { display: block; }"
                                 + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; }"
                                 + "  table tr       { border-top: none; }"
-                                + "  thead          { display: inline-block; font-size: small; max-width: 33%; overflow-x: scroll; }"
+                                + "  thead          { display: inline-block; font-size: small; max-width: 33%; overflow-x: auto; }"
                                 + "  tbody          { display: inline-block; font-size: small; min-width: 67%; white-space: nowrap; }"
                                 + "  thead tr       { display: block; }"
                                 + "  tbody tr       { display: flex; flex-direction: column; vertical-align: top; }"
-                                + "  tbody td       { overflow-x: scroll; }"
-                                + "  th, td         { display: block; height: 1.5em; line-height: 1.5em; min-height: 1.5em; max-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; padding: 0.25em; }"
+                                + "  tbody td       { overflow-x: auto; }"
+                                + "  th, td         { display: block; height: 1.5em; min-height: 1.5em; max-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; padding: 0.25em; }"
                                 + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
                                 + "  td:first-child { border-left: 1px solid #eee; }"
                                 + "  td:last-child  { border-bottom: none; }"

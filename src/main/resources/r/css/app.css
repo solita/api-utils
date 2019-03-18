@@ -23,8 +23,9 @@ section.menu {
   width: 260px;
   font-size: 14px;
   float: left;
-  overflow-y: scroll;
+  overflow-y: auto;
   height: 100%;
+  padding-left: 0.5em;
 }
 section.map {
   padding-left: 260px;
