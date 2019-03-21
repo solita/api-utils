@@ -38,6 +38,10 @@ public class HttpSerializationExceptionResolver implements HandlerExceptionResol
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal 'count'. Accepted values: " + mkString(", ", map(HttpSerializationExceptionResolver_.int2string, e.validValues)));
                 return new ModelAndView();
             }
+            for (HttpSerializers.InvalidStartIndexException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidStartIndexException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal 'startIndex'. Must be a positive integer");
+                return new ModelAndView();
+            }
             for (HttpSerializers.InvalidSRSNameException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidSRSNameException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal 'srsName'. Accepted values: " + mkString(", ", e.validValues));
                 return new ModelAndView();

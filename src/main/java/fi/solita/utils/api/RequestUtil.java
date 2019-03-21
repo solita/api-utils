@@ -135,7 +135,7 @@ public abstract class RequestUtil {
             throw new RequestUtil.QueryParametersMustBeInAlphabeticalOrderException();
         }
         
-        if (parameterNames.contains("cql_filter") && parameterNames.contains("count")) {
+        if (parameterNames.contains("cql_filter") && (parameterNames.contains("count") || parameterNames.contains("startIndex"))) {
             throw new RequestUtil.FilteringNotSupportedWithPaginationException();
         }
         

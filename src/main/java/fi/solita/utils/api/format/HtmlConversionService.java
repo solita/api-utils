@@ -39,6 +39,8 @@ import org.rendersnake.ext.spring.HtmlCanvasFactory;
 
 import fi.solita.utils.api.base.HtmlModule;
 import fi.solita.utils.api.types.Count;
+import fi.solita.utils.api.types.Count_;
+import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
@@ -62,21 +64,37 @@ public abstract class HtmlConversionService {
     }
     
     public static HtmlTitle title(final String title) {
-        return title(title, Option.<Count>None());
+        return title(title, Option.<Count>None(), Option.<StartIndex>None());
     }
     
-    public static HtmlTitle title(final String title, final Option<Count> count) {
+    public static HtmlTitle title(final String title, final Option<Count> count, final Option<StartIndex> startIndex) {
         return new HtmlTitle(title) {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 html.span()
                         .write(title)
                     ._span();
-                for (Count c: count) {
-                    if (c.value != Integer.MAX_VALUE) {
-                        html.span()
-                                .write("1-" + Integer.toString(c.value))
-                            ._span();
+                
+                if (startIndex.isDefined() && count.isDefined()) {
+                    html.span()
+                            .write(Integer.toString(startIndex.get().value) + "-" + count.map(Count_.value.andThen(Transformers.toString)).getOrElse(""))
+                        ._span();
+                } else {
+                    for (StartIndex si: startIndex) {
+                        if (si.value != StartIndex.DEFAULT.value) {
+                            html.span()
+                                    .write(Integer.toString(si.value) + "-")
+                                ._span();
+                        }
+                    }
+                    if (!startIndex.isDefined()) {
+                        for (Count c: count) {
+                            if (c.value != Count.DEFAULT.value) {
+                                html.span()
+                                        .write("1-" + Integer.toString(c.value))
+                                    ._span();
+                            }
+                        }
                     }
                 }
             }

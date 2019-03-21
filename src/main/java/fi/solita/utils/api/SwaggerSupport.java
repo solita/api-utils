@@ -45,6 +45,7 @@ import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.SRSName_;
+import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
 import springfox.documentation.RequestHandler;
@@ -161,6 +162,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                        .example(intervalNow());
             } else if (clazz.equals(Count.class)) {
                 builder.example("1");
+            } else if (clazz.equals(StartIndex.class)) {
+                builder.example("1");
             } else if (clazz.equals(Filters.class)) {
                 builder.description(DESCRIPTION_Filters)
                        .example("tunniste<>1.2.246.578.2.3.4");
@@ -258,6 +261,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     .description(doc(Count.class).getOrElse(""))
                     .defaultValue("1")
                     .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.int2string, Count.validValues)), "int"));
+            } else if (StartIndex.class.isAssignableFrom(type)) {
+                parameterContext.parameterBuilder()
+                .description(doc(StartIndex.class).getOrElse(""))
+                .defaultValue("1");
             } else if (Filters.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .defaultValue("")
@@ -347,6 +354,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             
             // Http-parametreissa käytetyt tyypit, jotka eivät välttämättä satu tulemaan JsonModulen kautta
             .directModelSubstitute(Count.class, String.class)
+            .directModelSubstitute(StartIndex.class, String.class)
             .directModelSubstitute(Filters.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             .directModelSubstitute(SRSName.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             

@@ -12,6 +12,13 @@ public abstract class Assert {
         //
     }
     
+    public static int positive(int number) {
+        if (number <= 0) {
+            throw new IllegalArgumentException("Argument (" + number + ") must be > 0");
+        }
+        return number;
+    }
+    
     public static <T> T Null(T o) {
         return Null(o, "Argument must be null");
     }

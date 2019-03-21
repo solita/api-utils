@@ -24,6 +24,7 @@ import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.SRSName_;
+import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
@@ -88,6 +89,9 @@ public class HttpSerializers {
         }
     }
     
+    public static final class InvalidStartIndexException extends RuntimeException {
+    }
+    
     public static final class InvalidSRSNameException extends RuntimeException {
         public final List<String> validValues;
         public InvalidSRSNameException(List<String> validValues) {
@@ -140,7 +144,7 @@ public class HttpSerializers {
     
     public final Map.Entry<? extends Class<?>, ? extends Converter<String,Revision>> revision = Pair.of(Revision.class, new Converter<String, Revision>() {
         @Override
-        public Revision convert(String source) throws InvalidCountException {
+        public Revision convert(String source) throws InvalidRevisionException {
             try {
                 long val = Long.parseLong(source);
                 return new Revision(val);
@@ -223,6 +227,18 @@ public class HttpSerializers {
         }
     });
     
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,StartIndex>> startIndex = Pair.of(StartIndex.class, new Converter<String, StartIndex>() {
+        @Override
+        public StartIndex convert(String source) throws InvalidStartIndexException {
+            try {
+                int val = Integer.parseInt(source);
+                return new StartIndex(val);
+            } catch (RuntimeException e) {
+                throw new InvalidStartIndexException();
+            }
+        }
+    });
+    
     public final Map.Entry<? extends Class<?>, ? extends Converter<String,SRSName>> srsName = Pair.of(SRSName.class, new Converter<String, SRSName>() {
         @Override
         public SRSName convert(String source) throws InvalidSRSNameException {
@@ -288,6 +304,7 @@ public class HttpSerializers {
             biginteger,
             bigdecimal,
             count,
+            startIndex,
             srsName,
             ajanhetki,
             paiva
