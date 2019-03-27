@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.joda.time.Duration;
+
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
@@ -82,6 +84,10 @@ public abstract class ResolvableMemberProvider {
         return member instanceof ResolvableMember;
     }
     
+    protected Duration getTimeout() {
+        return Duration.standardSeconds(30);
+    }
+    
     @SuppressWarnings("unchecked")
     public <T> T mutateResolvables(final HttpServletRequest request, Includes<T> includes, T t) {
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
@@ -98,7 +104,7 @@ public abstract class ResolvableMemberProvider {
                             }
                         };
                     }
-                }, unwrapResolvable(((ResolvableMember<T>)member).original, t))), 30, TimeUnit.SECONDS);
+                }, unwrapResolvable(((ResolvableMember<T>)member).original, t))), getTimeout().getMillis(), TimeUnit.MILLISECONDS);
                 foreach(new Apply<Future<Void>, Void>() {
                     @Override
                     public Void apply(Future<Void> t) {
