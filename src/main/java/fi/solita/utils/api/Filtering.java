@@ -1,12 +1,14 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.greaterThan;
 import static fi.solita.utils.functional.Predicates.greaterThanOrEqualTo;
@@ -17,13 +19,17 @@ import static fi.solita.utils.functional.Predicates.not;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.regex.Pattern;
 
 import fi.solita.utils.api.MemberUtil.UnknownPropertyNameException;
 import fi.solita.utils.api.base.HttpModule;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Filters.Filter;
+import fi.solita.utils.api.types.Filters_.Filter_;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Match;
 import fi.solita.utils.functional.Option;
@@ -34,11 +40,36 @@ import fi.solita.utils.meta.MetaNamedMember;
 
 public class Filtering {
     private final HttpModule httpModule;
-    private final ResolvableMemberProvider resolvableMemberProvider;
+    final ResolvableMemberProvider resolvableMemberProvider;
     
     public Filtering(HttpModule httpModule, ResolvableMemberProvider resolvableMemberProvider) {
         this.httpModule = httpModule;
         this.resolvableMemberProvider = resolvableMemberProvider;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> Constraints<T> with(Filters filters, Includes<T> includes) {
+        if (filters == null) {
+            return Constraints.empty();
+        }
+        
+        Map<Pattern,List<Pair<MetaNamedMember<T,Object>,?>>> c = newMap();
+        
+        for (Entry<Pattern, List<Filter>> f: groupBy(Filter_.pattern, filters.filters).entrySet()) {
+            List<Pair<MetaNamedMember<T, Object>, ?>> lst = Collections.<Pair<MetaNamedMember<T,Object>,?>>newList();
+            c.put(f.getKey(), lst);
+            for (Filter filter: f.getValue()) {
+                MetaNamedMember<T,Object> member;
+                try {
+                    member = (MetaNamedMember<T, Object>) Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, includes.includes, filter.property));
+                } catch (UnknownPropertyNameException e) {
+                    throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
+                }
+                lst.add(Pair.of(member, newList(map(Filtering_.convert().ap(this, (MetaNamedMember<? super T,Object>)member), filter.values))));
+            }
+        }
+        
+        return new Constraints<T>(c);
     }
     
     public static class SpatialFilteringRequiresGeometryPropertyException extends RuntimeException {

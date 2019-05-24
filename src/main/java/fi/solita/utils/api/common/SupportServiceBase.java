@@ -33,6 +33,6 @@ public class SupportServiceBase {
     }
     
     public void checkUrl(HttpServletRequest request, String... acceptedParams) {
-        RequestUtil.checkURL(request, newArray(String.class, cons("time", cons("profile", cons("srsName", acceptedParams)))));
+        RequestUtil.checkURL(request, newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
     }
 }
