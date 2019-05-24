@@ -11,6 +11,10 @@ var olstuff = function(constants, util) {
             extent: constants.world
         }),
         
+        geojsonProjection: new ol.proj.Projection({
+            code: 'EPSG:4326'
+        }),
+        
         tileGrid: new ol.tilegrid.TileGrid({
             resolutions: constants.resolutions,
             tileSizes: constants.tileSizes,
@@ -164,7 +168,11 @@ var olstuff = function(constants, util) {
                     }
                     selectInteraction.getFeatures().push(feature);
                     select(feature);
-                }, unselect).click(function() {
+                }, function() {
+                    var tunniste = $('.key:contains("tunniste")', this).siblings().text();
+                    var feature = ret.getFeatureByTunniste(map, tunniste);
+                    unselect([feature]);
+                }).click(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
                     if (click) {
