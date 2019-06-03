@@ -275,9 +275,11 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     .allowableValues(new AllowableListValues(newList(map(SRSName_.value, SRSName.validValues)), "string"));
             } else if (requestParamName.getOrElse("").equals("propertyName")) {
                 parameterContext.parameterBuilder()
-                    .description("Palautettavat kentät aakkosjärjestyksessä. Oletuksena kaikki paitsi ei-pistemäiset geometriat / Attributes to return, in alphabetic order. All except non-point-like geoemtries by default.");
+                    .collectionFormat("csv")
+                    .description("Palautettavat kentät aakkosjärjestyksessä. Oletuksena kaikki paitsi ei-pistemäiset geometriat / Attributes to return, in alphabetic order. All except non-point-like geometries by default.");
             } else if (requestParamName.getOrElse("").equals("typeNames")) {
                 parameterContext.parameterBuilder()
+                    .collectionFormat("csv")
                     .description("Palautettavat alityypit aakkosjärjestyksessä. Oletuksena kaikki. / Subtypes to return, in alphabetic order. All subtypes by default.");
             } else if (pathVariableName.getOrElse("").equals("versio")) {
                 parameterContext.parameterBuilder()
