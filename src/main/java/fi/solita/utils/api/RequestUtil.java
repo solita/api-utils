@@ -37,8 +37,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fi.solita.utils.api.format.SerializationFormat;
-import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function2;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.meta.MetaMethod;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -171,7 +169,16 @@ public abstract class RequestUtil {
     
     public static final URI getRequestURI(HttpServletRequest req) {
         Option<String> qs = req.getQueryString() == null || req.getQueryString().trim().length() == 0 ? Option.<String>None() : Some(req.getQueryString());
-        return URI.create(req.getRequestURL().toString() + qs.map(prepend("?")).getOrElse(""));
+        Option<String> forwardedProto = Option.of(req.getHeader("X-Forwarded-Proto"));
+        Option<String> forwardedHost = Option.of(req.getHeader("X-Forwarded-Host"));
+        String url = req.getRequestURL().toString();
+        for (String proto: forwardedProto) {
+            url = url.replaceFirst("[^:]+://", proto + "://");
+        }
+        for (String host: forwardedHost) {
+            url = url.replaceFirst("://[^:/]*", "://" + host);
+        }
+        return URI.create(url + qs.map(prepend("?")).getOrElse(""));
     }
     
     public static final String getContextRelativePath(HttpServletRequest req) {
