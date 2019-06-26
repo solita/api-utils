@@ -8,6 +8,7 @@ import static fi.solita.utils.functional.Functional.zip;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -92,7 +93,7 @@ public class JsonSerializers {
     public final Map.Entry<? extends Class<?>, ? extends JsonSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new StdSerializer<ResolvedMember>(ResolvedMember.class) {
         @Override
         public void serialize(ResolvedMember value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
-            jgen.writeRawValue(value.getData());
+            jgen.writeRawValue(new String(value.getData(), Charset.forName("UTF-8")));
         }
     });
     

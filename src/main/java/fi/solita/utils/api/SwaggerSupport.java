@@ -276,7 +276,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (requestParamName.getOrElse("").equals("propertyName")) {
                 parameterContext.parameterBuilder()
                     .collectionFormat("csv")
-                    .description("Palautettavat kentät aakkosjärjestyksessä. Oletuksena kaikki paitsi ei-pistemäiset geometriat / Attributes to return, in alphabetic order. All except non-point-like geometries by default.");
+                    .description("Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois. / Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields.");
             } else if (requestParamName.getOrElse("").equals("typeNames")) {
                 parameterContext.parameterBuilder()
                     .collectionFormat("csv")

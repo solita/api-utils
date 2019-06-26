@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -102,7 +103,7 @@ public abstract class HtmlSerializers {
         @Override
         public void renderOn(ResolvedMember value, HtmlCanvas html, HtmlModule module) throws IOException {
             try {
-                String content = value.getData().replaceFirst(".*<section\\s+id=\"content\">", "").replaceFirst("</section>.*", "");
+                String content = new String(value.getData(), Charset.forName("UTF-8")).replaceFirst(".*<section\\s+id=\"content\">", "").replaceFirst("</section>.*", "");
                 html.span(class_("type-resolved"))
                       .write(content, false)
                     ._span();

@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -88,7 +89,7 @@ public class CsvSerializers {
     public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new CsvSerializer<ResolvedMember>() {
         @Override
         public Cells render(CsvModule module, ResolvedMember value) {
-            return new Cells(value.getData());
+            return new Cells(new String(value.getData(), Charset.forName("UTF-8")));
         }
     });
     
