@@ -55,6 +55,7 @@ import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.schema.AlternateTypeRules;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.AllowableListValues;
+import springfox.documentation.service.AllowableRangeValues;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.PathDecorator;
 import springfox.documentation.spi.DocumentationType;
@@ -141,7 +142,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
     
     public static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
-    public static final String DESCRIPTION_Filters = "ECQL-subset: " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
+    public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
     public static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
     
     public static abstract class DocumentingModelPropertyBuilder implements ModelPropertyBuilderPlugin {
@@ -161,15 +162,15 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.description(DESCRIPTION_Interval)
                        .example(intervalNow());
             } else if (clazz.equals(Count.class)) {
-                builder.example("1");
+                builder.example(1);
             } else if (clazz.equals(StartIndex.class)) {
-                builder.example("1");
+                builder.example(1);
             } else if (clazz.equals(Filters.class)) {
                 builder.description(DESCRIPTION_Filters)
                        .example("tunniste<>1.2.246.578.2.3.4");
             } else if (clazz.equals(SRSName.class)) {
                 builder.description(DESCRIPTION_SRSName)
-                       .example("WGS84");
+                       .example(SRSName.EPSG3067.value);
             } else if (clazz.equals(URI.class)) {
                 builder.description("URI")
                        .example("https://www.liikennevirasto.fi");
@@ -263,8 +264,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.int2string, Count.validValues)), "int"));
             } else if (StartIndex.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                .description(doc(StartIndex.class).getOrElse(""))
-                .defaultValue("1");
+                    .description(doc(StartIndex.class).getOrElse(""))
+                    .defaultValue("1")
+                    .allowableValues(new AllowableRangeValues("1", null));
             } else if (Filters.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .defaultValue("")
@@ -355,8 +357,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
             .genericModelSubstitutes(Option.class)
             
             // Http-parametreissa käytetyt tyypit, jotka eivät välttämättä satu tulemaan JsonModulen kautta
-            .directModelSubstitute(Count.class, String.class)
-            .directModelSubstitute(StartIndex.class, String.class)
+            .directModelSubstitute(Count.class, int.class)
+            .directModelSubstitute(StartIndex.class, int.class)
             .directModelSubstitute(Filters.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             .directModelSubstitute(SRSName.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             
