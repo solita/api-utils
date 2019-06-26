@@ -130,6 +130,9 @@ public class ExcelConversionService {
         headerFont.setBold(true);
         headerStyle.setFont(headerFont);
         
+        CellStyle defaultStyle = wb.createCellStyle();
+        defaultStyle.setWrapText(true);
+        
         Row header = sheet.createRow((short)0);
         header.setRowStyle(headerStyle);
         for (Tuple2<Integer, Iterable<Pair<Object,Class<Object>>>> r: zipWithIndex(tableBody)) {
@@ -151,6 +154,7 @@ public class ExcelConversionService {
             
             int maxLines = 1;
             for (Cell cell: row) {
+                cell.setCellStyle(defaultStyle);
                 if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
                     maxLines = max(maxLines, cell.getStringCellValue().split("\r\n").length);
                 }
