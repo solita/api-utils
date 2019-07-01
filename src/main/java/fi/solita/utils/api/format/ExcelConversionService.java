@@ -130,8 +130,8 @@ public class ExcelConversionService {
         headerFont.setBold(true);
         headerStyle.setFont(headerFont);
         
-        CellStyle defaultStyle = wb.createCellStyle();
-        defaultStyle.setWrapText(true);
+        CellStyle wrapStyle = wb.createCellStyle();
+        wrapStyle.setWrapText(true);
         
         Row header = sheet.createRow((short)0);
         header.setRowStyle(headerStyle);
@@ -154,8 +154,8 @@ public class ExcelConversionService {
             
             int maxLines = 1;
             for (Cell cell: row) {
-                cell.setCellStyle(defaultStyle);
                 if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+                    cell.setCellStyle(wrapStyle);
                     maxLines = max(maxLines, cell.getStringCellValue().split("\r\n").length);
                 }
             }
