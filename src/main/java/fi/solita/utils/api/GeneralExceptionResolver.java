@@ -65,7 +65,7 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 return new ModelAndView();
             }
             for (RequestUtil.FilteringNotSupportedWithPaginationException e: ExceptionUtils.findCauseFromHierarchy(ex, RequestUtil.FilteringNotSupportedWithPaginationException.class)) {
-                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Filtering is not supported together with pagination");
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Row filtering (cql_filter) is not supported together with pagination (count/startIndex)");
                 return new ModelAndView();
             }
             for (RequestUtil.SpatialFilteringCannotBeUsedWithBBOXException e: ExceptionUtils.findCauseFromHierarchy(ex, RequestUtil.SpatialFilteringCannotBeUsedWithBBOXException.class)) {

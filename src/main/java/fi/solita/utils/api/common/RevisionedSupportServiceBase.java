@@ -4,6 +4,8 @@ import static fi.solita.utils.api.ResponseUtil.redirectToRevision;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -23,6 +25,8 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
     }
     
     public abstract Revision getCurrentRevision();
+    
+    public abstract Set<Revision> getValidRevisions();
     
     public boolean withinTolerance(Revision revision1, Revision revision2) {
         return Math.abs(revision1.revision - revision2.revision) <= revisionCheckTolerance;
