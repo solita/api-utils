@@ -22,7 +22,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
         this.revisionCheckTolerance = revisionCheckTolerance;
     }
     
-    protected abstract Revision getCurrentRevision();
+    public abstract Revision getCurrentRevision();
     
     public boolean withinTolerance(Revision revision1, Revision revision2) {
         return Math.abs(revision1.revision - revision2.revision) <= revisionCheckTolerance;

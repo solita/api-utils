@@ -92,8 +92,8 @@ public abstract class HtmlSerializers {
                 html.span(class_("fi type-" + typeClassSuffix).title(docDescription(value).getOrElse(null)))
                         .write(serializer.ap(s).apply(value))
                     ._span()
-                    .span(class_("en type-" + typeClassSuffix).title(docDescription_en(value).getOrElse(docName_en(value).getOrElse(null))))
-                        .write(serializer.ap(s).apply(value))
+                    .span(class_("en type-" + typeClassSuffix).title(docDescription_en(value).getOrElse(null)))
+                        .write(docName_en(value).getOrElse(serializer.ap(s).apply(value)))
                     ._span();
             }
         };

@@ -186,10 +186,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (clazz.equals(DateTimeZone.class)) {
                 builder.description("Aikavyöhykekoodi / Time zone code")
                        .example("Europe/Helsinki");
-            } else {
-                if (Option.class.isAssignableFrom(clazz)) {
-                    apply(name, ClassUtils.typeClass(ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType()), ae, builder);
-                }
             }
         }
         
@@ -201,10 +197,17 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 if (ae instanceof AccessibleObject) {
                     String name = ((Member)ae).getName();
                     Class<?> clazz = MemberUtil.memberTypeUnwrappingOptionAndEither((AccessibleObject)ae);
-                    apply(name, clazz, ae, context.getBuilder());
+                    
+                    ModelPropertyBuilder builder = context.getBuilder();
+                    if (Option.class.isAssignableFrom(clazz)) {
+                        clazz = ClassUtils.typeClass(ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType());
+                    }
+                    apply(name, clazz, ae, builder);
                     
                     for (String s: doc(ae)) {
-                        context.getBuilder().description(s);
+                        if (!s.isEmpty()) {
+                            builder.description(s);
+                        }
                     }
                 }
             }

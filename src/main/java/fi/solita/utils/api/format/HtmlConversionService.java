@@ -76,22 +76,22 @@ public abstract class HtmlConversionService {
                     ._span();
                 
                 if (startIndex.isDefined() && count.isDefined()) {
-                    html.span()
-                            .write(Integer.toString(startIndex.get().value) + "-" + count.map(Count_.value.andThen(Transformers.toString)).getOrElse(""))
+                    html.span(class_("page"))
+                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(Count_.value.andThen(Transformers.toString)).getOrElse("") + ")")
                         ._span();
                 } else {
                     for (StartIndex si: startIndex) {
                         if (si.value != StartIndex.DEFAULT.value) {
-                            html.span()
-                                    .write(Integer.toString(si.value) + "-")
+                            html.span(class_("page"))
+                                    .write("(" + Integer.toString(si.value) + "- )")
                                 ._span();
                         }
                     }
                     if (!startIndex.isDefined()) {
                         for (Count c: count) {
                             if (c.value != Count.DEFAULT.value) {
-                                html.span()
-                                        .write("1-" + Integer.toString(c.value))
+                                html.span(class_("page"))
+                                        .write("(1-" + Integer.toString(c.value) + ")")
                                     ._span();
                             }
                         }
@@ -179,6 +179,7 @@ public abstract class HtmlConversionService {
                             
                             + "header, footer { display: flex; padding: 0.5em; }"
                             + "h1             { flex: 1; }"
+                            + "header .page   { padding-left: 1em; }"
                             + "header .type-datetime, header .type-oid, header .type-rectangle { font-size: small; font-style: italic; padding: 1em; }"
                             + "header .type-rectangle { color: #bbb; }"
                             + ".loadButton    { visibility: hidden; height: 2em; }"
@@ -469,7 +470,7 @@ public abstract class HtmlConversionService {
                             .write(member.getName())
                         ._span();
                     html.span(class_("en").title(pseudo ? null : docDescription_en(member.getMember()).getOrElse(null)))
-                            .write(member.getName()).i().write(pseudo ? null : docName_en(member.getMember()).getOrElse(""))._i()
+                            .write(pseudo ? member.getName() : docName_en(member.getMember()).getOrElse(member.getName()))
                         ._span();
                     html._th();
                 }
