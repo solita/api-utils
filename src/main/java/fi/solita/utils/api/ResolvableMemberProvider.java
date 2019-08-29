@@ -6,6 +6,8 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.foreach;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Predicates.isNull;
+import static fi.solita.utils.functional.Predicates.not;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +15,6 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,7 +32,13 @@ import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class ResolvableMemberProvider {
     
-    public enum Type { Internal, ExternalKnown, ExternalUnknown, Unknown }
+    public enum Type {
+        Internal,
+        /* External API, but whose revision is included in the revision number of the current API */
+        ExternalKnown,
+        ExternalUnknown,
+        Unknown
+    }
     
     private static final ExecutorService pool = Executors.newFixedThreadPool(5);
     
@@ -104,7 +111,8 @@ public abstract class ResolvableMemberProvider {
                             }
                         };
                     }
-                }, unwrapResolvable(((ResolvableMember<T>)member).original, t))), getTimeout().getMillis(), TimeUnit.MILLISECONDS);
+                    // might be null in some edge-cases due to propertyName-filtering
+                }, filter(not(isNull()), unwrapResolvable(((ResolvableMember<T>)member).original, t)))), getTimeout().getMillis(), TimeUnit.MILLISECONDS);
                 foreach(new Apply<Future<Void>, Void>() {
                     @Override
                     public Void apply(Future<Void> t) {
