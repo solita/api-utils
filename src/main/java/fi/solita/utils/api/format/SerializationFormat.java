@@ -10,6 +10,7 @@ import fi.solita.utils.functional.Option;
 public enum SerializationFormat {
     JSON(MediaType.APPLICATION_JSON_UTF8_VALUE),
     GEOJSON("application/vnd.geo+json;charset=UTF-8"),
+    JSONL("application/x-ndjson"),
     HTML(MediaType.TEXT_HTML_VALUE + ";charset=UTF-8"),
     CSV("text/csv;charset=UTF-8"),
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"),
@@ -28,6 +29,8 @@ public enum SerializationFormat {
             return Some(SerializationFormat.JSON);
         } else if (extension.equals("geojson")) {
             return Some(SerializationFormat.GEOJSON);
+        } else if (extension.equals("jsonl")) {
+            return Some(SerializationFormat.JSONL);
         } else if (extension.equals("html")) {
             return Some(SerializationFormat.HTML);
         } else if (extension.equals("csv")) {

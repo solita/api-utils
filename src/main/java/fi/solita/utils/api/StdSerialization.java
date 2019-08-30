@@ -1,22 +1,15 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.api.MemberUtil.excluding;
-import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
-import static fi.solita.utils.functional.Functional.filter;
-import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
-import static fi.solita.utils.functional.Functional.foreach;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.SortedMap;
-import java.util.SortedSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +22,7 @@ import fi.solita.utils.api.format.ExcelConversionService;
 import fi.solita.utils.api.format.HtmlConversionService;
 import fi.solita.utils.api.format.HtmlConversionService.HtmlTitle;
 import fi.solita.utils.api.format.JsonConversionService;
+import fi.solita.utils.api.format.JsonLinesConversionService;
 import fi.solita.utils.api.format.PngConversionService;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.format.geojson.Crs;
@@ -53,6 +47,7 @@ public abstract class StdSerialization<BOUNDS> {
     
     public final JsonConversionService json;
     public final JsonConversionService geoJson;
+    public final JsonLinesConversionService jsonlines;
     public final HtmlConversionService html;
     public final CsvConversionService csv;
     public final ExcelConversionService excel;
@@ -64,6 +59,7 @@ public abstract class StdSerialization<BOUNDS> {
     public StdSerialization(
         JsonConversionService json,
         JsonConversionService geoJson,
+        JsonLinesConversionService jsonlines,
         HtmlConversionService html,
         CsvConversionService csv,
         ExcelConversionService excel,
@@ -71,6 +67,7 @@ public abstract class StdSerialization<BOUNDS> {
         GeojsonResolver geojsonResolver) {
         this.json = json;
         this.geoJson = geoJson;
+        this.jsonlines = jsonlines;
         this.html = html;
         this.csv = csv;
         this.excel = excel;
@@ -133,6 +130,9 @@ public abstract class StdSerialization<BOUNDS> {
                             flatten(map(dataTransformer, d).values()))), resolvables),
                     Some(Crs.of(srsName))));
             break;
+        case JSONL:
+            response = jsonlines.serialize(map(dataTransformer, data.get()));
+            break;
         case HTML:
             response = html.serialize(req, title, map(dataTransformer, data.get()), includes);
             break;
@@ -183,6 +183,9 @@ public abstract class StdSerialization<BOUNDS> {
                             Function.constant(Option.<Crs>None()),
                             flatten(map(dataTransformer, data.get()).values()))), resolvables),
                     Some(Crs.of(srsName))));
+            break;
+        case JSONL:
+            response = jsonlines.serialize(map(dataTransformer, data.get()));
             break;
         case HTML:
             response = html.serializeWithKey(req, title, map(dataTransformer, data.get()), includes, key);
@@ -249,6 +252,9 @@ public abstract class StdSerialization<BOUNDS> {
                             map(dataTransformer, data.get()))), resolvables),
                     Some(Crs.of(srsName))));
             break;
+        case JSONL:
+            response = jsonlines.serialize(map(dataTransformer, data.get()));
+            break;
         case HTML:
             response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
             break;
@@ -312,6 +318,9 @@ public abstract class StdSerialization<BOUNDS> {
                             map(dataTransformer, data.get()))), resolvables),
                     Some(Crs.of(srsName))));
                 break;
+            case JSONL:
+                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                break;
             case HTML:
                 response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
                 break;
@@ -373,6 +382,9 @@ public abstract class StdSerialization<BOUNDS> {
                 
                 response = geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName))));
                 break;
+            case JSONL:
+                response = jsonlines.serialize(newList(dataTransformer.apply(data.get())));
+                break;
             case HTML:
                 response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
                 break;
@@ -415,6 +427,9 @@ public abstract class StdSerialization<BOUNDS> {
                                 Function.constant(Option.<Crs>None()),
                                 flatten(map(dataTransformer, data.get()).values()))), resolvables),
                         Option.<Crs>None()));
+            break;
+        case JSONL:
+            response = jsonlines.serialize(map(dataTransformer, data.get()));
             break;
         case HTML:
             response = html.serialize(req, title, map(dataTransformer, data.get()), includes);
@@ -460,6 +475,9 @@ public abstract class StdSerialization<BOUNDS> {
                                 flatten(map(dataTransformer, data.get()).values()))), resolvables),
                         Option.<Crs>None()));
             break;
+        case JSONL:
+            response = jsonlines.serialize(map(dataTransformer, data.get()));
+            break;
         case HTML:
             response = html.serializeWithKey(req, title, map(dataTransformer, data.get()), includes, key);
             break;
@@ -503,6 +521,9 @@ public abstract class StdSerialization<BOUNDS> {
                             map(dataTransformer, data.get()))), resolvables),
                     Option.<Crs>None()));
                 break;
+            case JSONL:
+                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                break;
             case HTML:
                 response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
                 break;
@@ -544,6 +565,9 @@ public abstract class StdSerialization<BOUNDS> {
                         Option.<Crs>None());
                 response = geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Option.<Crs>None()));
                 break;
+            case JSONL:
+                response = jsonlines.serialize(newList(dataTransformer.apply(data.get())));
+                break;
             case HTML:
                 response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
                 break;
@@ -582,6 +606,9 @@ public abstract class StdSerialization<BOUNDS> {
                             data)),
                     Option.<Crs>None()));
                 break;
+            case JSONL:
+                response = jsonlines.serialize(data);
+                break;
             case HTML:
                 response = html.serialize(req, title, data);
                 break;
@@ -614,6 +641,9 @@ public abstract class StdSerialization<BOUNDS> {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
+            case JSONL:
+                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                break;
             case HTML:
                 response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
                 break;
@@ -645,6 +675,9 @@ public abstract class StdSerialization<BOUNDS> {
         switch (format) {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
+                break;
+            case JSONL:
+                response = jsonlines.serialize(map(dataTransformer, data.get()));
                 break;
             case HTML:
                 response = html.serialize(req, title, map(dataTransformer, data.get()));

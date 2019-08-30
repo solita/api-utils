@@ -202,6 +202,7 @@ public class MemberUtil {
                 case GEOJSON:
                 case GML:
                 case JSON:
+                case JSONL:
                 case XML:
                     ret = withNestedMembers(members, Include.All, builders);
                     break;
@@ -234,6 +235,7 @@ public class MemberUtil {
                 }
                 break;
             case JSON:
+            case JSONL:
             case HTML:
             case CSV:
             case XLSX:
