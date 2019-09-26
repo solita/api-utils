@@ -254,15 +254,15 @@ var olstuff = function(constants, util) {
             }
         },
         
-        newVectorLayerNoTile: function(url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
-            return ret.newVectorLayerImpl(false, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames);
+        newVectorLayerNoTile: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
+            return ret.newVectorLayerImpl(false, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames);
         },
         
-        newVectorLayer: function(url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
-            return ret.newVectorLayerImpl(true, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames);
+        newVectorLayer: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
+            return ret.newVectorLayerImpl(true, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames);
         },
         
-        newVectorLayerImpl: function(tiling, url, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
+        newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '&');
             u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1; 
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
@@ -302,6 +302,7 @@ var olstuff = function(constants, util) {
             });
             var layer = new ol.layer.Vector({
                 title: '<span class="fi">' + title_fi + '</span><span class="en">' + title_en + '</span>',
+                shortName: shortName,
                 source: source,
                 opacity: opacity || 1.0,
                 style: styleOrHandler instanceof Function ? undefined : styleOrHandler,

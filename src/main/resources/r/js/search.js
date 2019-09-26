@@ -1,6 +1,6 @@
 var search = function(map, searchUrlFunction, searchInput, olstuff, select, unselect) {
     window.onhashchange = function() {
-        window.location.hash.split('#').forEach(function(h) {
+        window.location.hash.split('#').map(function(h) { return decodeURIComponent(h); }).forEach(function(h) {
             let s = searchUrlFunction(h);
             if (s) {
                 let layer = olstuff.newVectorLayerNoTile(s, 'Haku', 'Search');
