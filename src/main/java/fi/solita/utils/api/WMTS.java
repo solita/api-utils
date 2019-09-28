@@ -100,6 +100,7 @@ public class WMTS {
     
     public static String luoWmtsKuvaus(String title, String requestURI, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
         StringBuilder layers = new StringBuilder();
+        for (String matrixset: newList("ETRS-TM35FIN", "MERCATOR"))
         for (Tuple4<String, String, String, String> layer: wmtsLayers) {
             layers.append(WMTS.LAYER_TEMPLATE
                         .replace("{{name}}", layer._1)
@@ -107,6 +108,7 @@ public class WMTS {
                         .replace("{{path}}", layer._2)
                         .replace("{{qsPreTime}}", layer._3)
                         .replace("{{qsPostTime}}", layer._4)
+                        .replace("{{matrixset}}", matrixset)
                         .replace("{{url}}", requestURI.replace("wmts.xml", "")));
         }
         return WMTS.WMTS_TEMPLATE

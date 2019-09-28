@@ -48,8 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.vividsolutions.jts.geom.Envelope;
-
 import ar.com.hjg.pngj.FilterType;
 import fi.solita.utils.api.RequestUtil;
 import fi.solita.utils.api.SwaggerSupport;
@@ -85,12 +83,12 @@ public class PngConversionService {
         }
     }
     
-    public byte[] render(HttpServletRequest req, Envelope paikka, String layerName) {
+    public byte[] render(HttpServletRequest req, ReferencedEnvelope paikka, String layerName) {
         URI uri = baseURI.resolve(req.getContextPath() + RequestUtil.getContextRelativePath(req).replaceFirst(".png", ".geojson") + Option.of(req.getQueryString()).map(prepend("?")).getOrElse(""));
         return render(uri, paikka, layerName, Option.of(req.getHeader(SwaggerSupport.API_KEY)));
     }
     
-    public byte[] render(URI uri, Envelope paikka, String layerName, Option<String> apikey) {
+    public byte[] render(URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) {
         try {
             return render(tileSize, tileSize, uri, paikka, layerName, apikey);
         } catch (RuntimeException e) {
@@ -100,7 +98,7 @@ public class PngConversionService {
         }
     }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, Envelope paikka, String layerName, Option<String> apikey) throws IOException {
+    public byte[] render(int imageWidth, int imageHeight, URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) throws IOException {
         Style layerStyle = find(layerName, defaultStyles).get();
         logger.debug("Fetching geojson...");
         FeatureJSON io = new FeatureJSON();
@@ -130,7 +128,7 @@ public class PngConversionService {
         BufferedImage image;
         try {
             map.addLayer(new FeatureLayer(featureCollection, layerStyle));
-            map.getViewport().setBounds(new ReferencedEnvelope(paikka, map.getCoordinateReferenceSystem()));
+            map.getViewport().setBounds(paikka);
             
             final GTRenderer renderer = new StreamingRenderer();
             renderer.setMapContent(map);

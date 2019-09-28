@@ -14,7 +14,7 @@ import java.util.SortedMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.vividsolutions.jts.geom.Envelope;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 
 import fi.solita.utils.api.RequestUtil.UnavailableContentTypeException;
 import fi.solita.utils.api.format.CsvConversionService;
@@ -83,7 +83,7 @@ public abstract class StdSerialization<BOUNDS> {
         return title.plainTextTitle.toLowerCase().replace(' ', '_').replace('ä',  'a').replace('ö', 'o').replace('å', 'a');
     }
     
-    public abstract Envelope bounds2envelope(BOUNDS place);
+    public abstract ReferencedEnvelope bounds2envelope(BOUNDS place);
     
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
             HttpServletRequest req,
