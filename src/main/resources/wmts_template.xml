@@ -3,7 +3,7 @@
     <ows:ServiceIdentification>
         <ows:Title>{{title}}</ows:Title>
         <ows:Abstract></ows:Abstract>
-        <ows:ServiceType>http://inspire.ec.europa.eu/metadata-codelist/SpatialDataServiceType/view</ows:ServiceType>
+        <ows:ServiceType>OGC WMTS</ows:ServiceType>
         <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
     </ows:ServiceIdentification>
     <ows:ServiceProvider>

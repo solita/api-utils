@@ -12,8 +12,7 @@
         <Current>false</Current>
         <Value>2010-01-01T00:00:00Z/2030-01-01T00:00:00Z/PT1S</Value>
     </Dimension>
-    <TileMatrixSetLink>
-        <TileMatrixSet>{{matrixset}}</TileMatrixSet>
-    </TileMatrixSetLink>
+    <TileMatrixSetLink><TileMatrixSet>{{matrixset1}}</TileMatrixSet></TileMatrixSetLink>
+    <TileMatrixSetLink><TileMatrixSet>{{matrixset2}}</TileMatrixSet></TileMatrixSetLink>
     <ResourceURL format="image/png" resourceType="tile" template="{{url}}{{path}}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png?{{qsPreTime}}time={time}{{qsPostTime}}" />
 </Layer>

@@ -54,9 +54,9 @@ public class WMTS {
                         ret.add(
                             WMTS.LAYER_URL_TEMPLATE
                                 .replace("{{name}}", layer._1)
-                                .replace("{time}", SwaggerSupport.intervalNow())
+                                .replace("{{time}}", SwaggerSupport.intervalNow())
                                 .replace("{{path}}", layer._2)
-                                .replace("{{qsPreTime}}", layer._3)
+                                .replace("{{qsPreTime}}", "")
                                 .replace("{{qsPostTime}}", layer._4)
                                 .replace("{{url}}", "latest/")
                                 .replace("{TileMatrixSet}", WMTS.TILE_MATRIX_SET)
@@ -100,20 +100,20 @@ public class WMTS {
     
     public static String luoWmtsKuvaus(String title, String requestURI, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
         StringBuilder layers = new StringBuilder();
-        for (String matrixset: newList("ETRS-TM35FIN", "MERCATOR"))
         for (Tuple4<String, String, String, String> layer: wmtsLayers) {
             layers.append(WMTS.LAYER_TEMPLATE
                         .replace("{{name}}", layer._1)
-                        .replace("{time}", SwaggerSupport.intervalNow())
+                        .replace("{{time}}", SwaggerSupport.intervalNow())
                         .replace("{{path}}", layer._2)
-                        .replace("{{qsPreTime}}", layer._3)
+                        .replace("{{qsPreTime}}", "")
                         .replace("{{qsPostTime}}", layer._4)
-                        .replace("{{matrixset}}", matrixset)
-                        .replace("{{url}}", requestURI.replace("wmts.xml", "")));
+                        .replace("{{matrixset1}}", "ETRS-TM35FIN")
+                        .replace("{{matrixset2}}", "MERCATOR")
+                        .replace("{{url}}", requestURI.replace("wmts.xml", "").replaceAll("[?].*", "")));
         }
         return WMTS.WMTS_TEMPLATE
                 .replace("{{title}}", title)
                 .replace("{{layers}}", layers.toString())
-                .replace("{{url}}", requestURI.replace("wmts.xml", ""));
+                .replace("{{url}}", requestURI.replace("wmts.xml", "").replaceAll("[?].*", ""));
     }
 }
