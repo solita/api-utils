@@ -1,5 +1,6 @@
 package fi.solita.utils.api;
 
+import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
@@ -103,6 +104,20 @@ public class Filtering {
     @SuppressWarnings("unchecked")
     public <T> T convert(MetaNamedMember<?,T> m, String value) {
         return (T)httpModule.convert(value, MemberUtil.actualTypeUnwrappingOptionAndEither(m));
+    }
+    
+    public <K,T,V extends Iterable<T>> Map<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Map<K,V> ts) {
+        if (filters == null) {
+            return ts;
+        }
+        Map<K, V> ret = newLinkedMap();
+        for (Map.Entry<K,V> e: ts.entrySet()) {
+            // Keeps the whole key (all values) if any value satisfies filters
+            if (!isEmpty(filterData(includes, geometryMembers, filters, e.getValue()))) {
+                ret.put(e.getKey(), e.getValue());
+            }
+        }
+        return ret;
     }
     
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, SortedMap<K,V> ts) {

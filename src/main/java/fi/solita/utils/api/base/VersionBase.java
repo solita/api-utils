@@ -6,6 +6,8 @@ import static fi.solita.utils.functional.Functional.map;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +22,8 @@ import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
+import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Transformer;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -88,6 +92,9 @@ public abstract class VersionBase {
         return new Filtering(httpModule, resolvableMemberProvider());
     }
     
+    public <K,T,V extends Iterable<T>> Map<K,V> filterRows(Includes<T> includes, Filters filters, Map<K,V> ts) {
+        return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
+    }
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterRows(Includes<T> includes, Filters filters, SortedMap<K,V> ts) {
         return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
     }
@@ -95,6 +102,14 @@ public abstract class VersionBase {
         return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
     }
     
+    public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
+        return FunctionalM.map(new Transformer<Map.Entry<K,? extends Iterable<T>>,Map.Entry<K,Iterable<T>>>() {
+            @Override
+            public Map.Entry<K, Iterable<T>> transform(Map.Entry<K, ? extends Iterable<T>> source) {
+                return Pair.of(source.getKey(), map(MemberUtil.<T>withPropertiesF(includes), source.getValue()));
+            }
+        }, ts);
+    }
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
         return FunctionalM.map(MemberUtil.<T>withPropertiesF(includes), ts);
     }
@@ -102,6 +117,9 @@ public abstract class VersionBase {
         return map(MemberUtil.<T>withPropertiesF(includes), ts);
     }
     
+    public final <K,T> Map<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,? extends Iterable<T>> ts) {
+        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(includes, filters, ts)));
+    }
     public final <K,T> SortedMap<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Filters filters, SortedMap<K,? extends Iterable<T>> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(includes, filters, ts)));
     }
@@ -134,8 +152,16 @@ public abstract class VersionBase {
     
     
     @Deprecated
+    public <K,T,V extends Iterable<T>> Map<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Map<K,V> ts) {
+        return filtering().filterData(includes, newList(geometry), filters, ts);
+    }
+    @Deprecated
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, SortedMap<K,V> ts) {
         return filtering().filterData(includes, newList(geometry), filters, ts);
+    }
+    @Deprecated
+    public <K,T,V extends Iterable<T>> Map<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Map<K,V> ts) {
+        return filtering().filterData(includes, newList(geometry, geometry2), filters, ts);
     }
     @Deprecated
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, SortedMap<K,V> ts) {

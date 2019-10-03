@@ -1,5 +1,6 @@
 package fi.solita.utils.api;
 
+import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.filter;
@@ -76,15 +77,23 @@ public abstract class ResolvableMemberProvider {
      */
     public abstract void mutateResolvable(HttpServletRequest request, SortedSet<String> propertyNames, Object object);
     
+    public <K,T> Map<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
+        Map<K, Iterable<T>> ret = newLinkedMap();
+        for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
+            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), e.getValue())));
+        }
+        return ret;
+    }
+    
     public <K,T> SortedMap<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
         SortedMap<K, Iterable<T>> ret = newSortedMap(ts.comparator());
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
-            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables2().ap(this, request, includes), e.getValue())));
+            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), e.getValue())));
         }
         return ret;
     }
     public <T> Iterable<T> mutateResolvables(HttpServletRequest request, Includes<T> includes, Iterable<T> ts) {
-        return map(ResolvableMemberProvider_.<T>mutateResolvables2().ap(this, request, includes), ts);
+        return map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), ts);
     }
     
     static boolean isResolvableMember(MetaNamedMember<?, ?> member) {

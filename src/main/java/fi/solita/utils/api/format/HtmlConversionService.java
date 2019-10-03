@@ -75,13 +75,13 @@ public abstract class HtmlConversionService {
                         .write(title)
                     ._span();
                 
-                if (startIndex.isDefined() && count.isDefined()) {
+                if (startIndex.isDefined() && !startIndex.get().equals(StartIndex.DEFAULT) && count.isDefined() && !count.get().equals(Count.DEFAULT)) {
                     html.span(class_("page"))
-                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(Count_.value.andThen(Transformers.toString)).getOrElse("") + ")")
+                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(Count_.value.andThen(HtmlConversionService_.plus.ap(startIndex.get().value-1).andThen(Transformers.toString))).getOrElse("") + ")")
                         ._span();
                 } else {
                     for (StartIndex si: startIndex) {
-                        if (si.value != StartIndex.DEFAULT.value) {
+                        if (!si.equals(StartIndex.DEFAULT)) {
                             html.span(class_("page"))
                                     .write("(" + Integer.toString(si.value) + "- )")
                                 ._span();
@@ -89,7 +89,7 @@ public abstract class HtmlConversionService {
                     }
                     if (!startIndex.isDefined()) {
                         for (Count c: count) {
-                            if (c.value != Count.DEFAULT.value) {
+                            if (!c.equals(Count.DEFAULT)) {
                                 html.span(class_("page"))
                                         .write("(1-" + Integer.toString(c.value) + ")")
                                     ._span();
@@ -99,6 +99,10 @@ public abstract class HtmlConversionService {
                 }
             }
         };
+    }
+    
+    static int plus(int a, int b) {
+        return a + b;
     }
     
     public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
