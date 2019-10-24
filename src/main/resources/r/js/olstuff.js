@@ -407,7 +407,8 @@ var olstuff = function(constants, util) {
                         var options = ol.source.WMTS.optionsFromCapabilities(result, {layer: id, matrixSet: matrix});
                         if (host !== null) {
                             options.urls[0] = options.urls[0].replace(/[-a-z]+\.[a-z]+\.local/, host)
-                                                             .replace(/\d+\.\d+\.\d+\.\d+/, host);
+                                                             .replace(/\d+\.\d+\.\d+\.\d+/, host)
+                                                             .replace('oag.vayla.fi', host);
                         }
                         group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), opacity));
                     }
@@ -415,8 +416,7 @@ var olstuff = function(constants, util) {
               };
             };
             
-            if (window.location.hostname != 'localhost' && window.location.hostname.indexOf('.') == -1 ||
-                       window.location.hostname.indexOf('liikennevirasto.fi') != -1) {
+            if (window.location.hostname != 'localhost' && window.location.hostname != '127.0.0.1' && window.location.hostname.indexOf('digitraffic.fi') == -1) {
                 var host = window.location.hostname;
                 var baseurl = window.location.protocol + '//' + host;
                 var maasto = baseurl + '/rasteripalvelu-mml/wmts/maasto/1.0.0/WMTSCapabilities.xml';

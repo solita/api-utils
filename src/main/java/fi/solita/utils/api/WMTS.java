@@ -16,11 +16,13 @@ import fi.solita.utils.functional.Tuple4;
 
 public class WMTS {
 
+    public static final String MERCATOR = "MERCATOR";
+    public static final String ETRS_TM35FIN = "ETRS-TM35FIN";
+    
     public static final String WMTS_TEMPLATE;
     public static final String LAYER_TEMPLATE;
     public static final String LAYER_URL_TEMPLATE;
     public static final int MIN_LAYER_ID;
-    public static final String TILE_MATRIX_SET = "ETRS-TM35FIN";
     static {
         try {
             WMTS_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/wmts_template.xml"));
@@ -41,7 +43,7 @@ public class WMTS {
         }
     }
     
-    public static List<String> luoWmtsSeedUrlit(Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
+    public static List<String> luoWmtsSeedUrlit(String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
         List<String> ret = newList();
         
         for (int taso: newList(WMTS.MIN_LAYER_ID)) {
@@ -59,11 +61,12 @@ public class WMTS {
                                 .replace("{{qsPreTime}}", "")
                                 .replace("{{qsPostTime}}", layer._4)
                                 .replace("{{url}}", "latest/")
-                                .replace("{TileMatrixSet}", WMTS.TILE_MATRIX_SET)
+                                .replace("{TileMatrixSet}", tilematrixset)
                                 .replace("{TileMatrix}", Integer.toString(taso))
                                 .replace("{TileRow}", Integer.toString(i))
                                 .replace("{TileCol}", Integer.toString(j))
-                                .replace("&amp;", "&"));
+                                .replace("&amp;", "&")
+                                .replace("?time={time}", ""));
                     }
                 }
             }
@@ -107,8 +110,8 @@ public class WMTS {
                         .replace("{{path}}", layer._2)
                         .replace("{{qsPreTime}}", "")
                         .replace("{{qsPostTime}}", layer._4)
-                        .replace("{{matrixset1}}", "ETRS-TM35FIN")
-                        .replace("{{matrixset2}}", "MERCATOR")
+                        .replace("{{matrixset1}}", ETRS_TM35FIN)
+                        .replace("{{matrixset2}}", MERCATOR)
                         .replace("{{url}}", requestURI.replace("wmts.xml", "").replaceAll("[?].*", "")));
         }
         return WMTS.WMTS_TEMPLATE
