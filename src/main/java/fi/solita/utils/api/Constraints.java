@@ -22,11 +22,11 @@ import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class Constraints<T> {
-    private Map<Pattern,List<Pair<MetaNamedMember<T,Object>,?>>> filters;
+    private Map<Pattern,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> filters;
     
-    public static final <T> Constraints<T> empty() { return new Constraints<T>(Collections.<Pattern,List<Pair<MetaNamedMember<T,Object>,?>>>emptyMap()); }
+    public static final <T> Constraints<T> empty() { return new Constraints<T>(Collections.<Pattern,List<Pair<MetaNamedMember<T,Object>,List<Object>>>>emptyMap()); }
     
-    public Constraints(Map<Pattern,List<Pair<MetaNamedMember<T,Object>,?>>> filters) {
+    public Constraints(Map<Pattern,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> filters) {
         this.filters = filters;
     }
     
@@ -46,13 +46,29 @@ public class Constraints<T> {
         return in(Filters.NOT_IN, candidate);
     }
     
+    public <V> Iterable<V> greaterThan(MetaNamedMember<? super T,V> candidate) {
+        return equal(Filters.GT, candidate);
+    }
+    
+    public <V> Iterable<V> greaterThanOrEqual(MetaNamedMember<? super T,V> candidate) {
+        return equal(Filters.GTE, candidate);
+    }
+    
+    public <V> Iterable<V> lessThan(MetaNamedMember<? super T,V> candidate) {
+        return equal(Filters.LT, candidate);
+    }
+    
+    public <V> Iterable<V> lessThanOrEqual(MetaNamedMember<? super T,V> candidate) {
+        return equal(Filters.LTE, candidate);
+    }
+    
     @SuppressWarnings("unchecked")
     private <V> Iterable<V> equal(Pattern pattern, final MetaNamedMember<? super T,V> candidate) {
-        return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, ?>, Option<V>>() {
+        return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, List<Object>>, Option<V>>() {
             @Override
-            public Option<V> apply(Pair<MetaNamedMember<T, Object>, ?> filter) {
+            public Option<V> apply(Pair<MetaNamedMember<T, Object>, List<Object>> filter) {
                 if (candidate.equals(filter.left())) {
-                    return Some((V)filter.right());
+                    return Some((V)Assert.singleton(filter.right()));
                 }
                 return None();
             }
@@ -71,4 +87,5 @@ public class Constraints<T> {
             }
         }, flatten(find(pattern, filters)));
     }
+
 }

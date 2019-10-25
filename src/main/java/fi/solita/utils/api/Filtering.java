@@ -54,10 +54,10 @@ public class Filtering {
             return Constraints.empty();
         }
         
-        Map<Pattern,List<Pair<MetaNamedMember<T,Object>,?>>> c = newMap();
+        Map<Pattern,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> c = newMap();
         
         for (Entry<Pattern, List<Filter>> f: groupBy(Filter_.pattern, filters.filters).entrySet()) {
-            List<Pair<MetaNamedMember<T, Object>, ?>> lst = Collections.<Pair<MetaNamedMember<T,Object>,?>>newList();
+            List<Pair<MetaNamedMember<T, Object>, List<Object>>> lst = Collections.<Pair<MetaNamedMember<T,Object>,List<Object>>>newList();
             c.put(f.getKey(), lst);
             for (Filter filter: f.getValue()) {
                 MetaNamedMember<T,Object> member;
