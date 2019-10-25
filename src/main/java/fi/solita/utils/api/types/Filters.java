@@ -74,6 +74,8 @@ public final class Filters {
 
     private static final Pattern inlist = Pattern.compile("(" + literal + "),");
     
+    public static final Filters EMPTY = new Filters();
+    
     static String stripLiteral(String expr) {
         return (expr.startsWith("'") && expr.endsWith("'") ? init(tail(expr)) : expr).replace("''", "'");
     }
