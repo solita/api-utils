@@ -27,6 +27,10 @@ public class Constraints<T> {
     
     public static final <T> Constraints<T> empty() { return new Constraints<T>(Collections.<Pattern,List<Pair<MetaNamedMember<T,Object>,List<Object>>>>emptyMap()); }
     
+    public boolean isEmpty() {
+        return filters.isEmpty();
+    }
+    
     public Constraints(Map<Pattern,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> filters) {
         this.filters = filters;
     }
