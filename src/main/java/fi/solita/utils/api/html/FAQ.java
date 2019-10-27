@@ -99,7 +99,7 @@ link(href("minimal.html"), text("Tässä minimaalinen OpenLayers-esimerkki."))
                    ))
                    .render(definition(
 "Mitä muita koordinaattijärjestelmiä on tarjolla?",
-"Saat vastaukset myös WGS84-muodoissa antamalla parametrin srsName=epsg:4326 tai srsName=crs:84. Tällöin myös mahdolliset muut koordinaatteja sisältävät parametrit olettavat saavansa vastaavaa muotoa."
+"Saat vastaukset myös WGS84-muodoissa antamalla parametrin srsName=epsg:4326 tai srsName=crs:84 tai epsg:3857. Tällöin myös mahdolliset muut koordinaatteja sisältävät parametrit olettavat saavansa vastaavaa muotoa. BBOX-parametrin koordinaattijärjestelmän voit määrätä viidennellä parametrilla."
                    ))
                    .render(definition(
 "Miten päin WGS84:n longitude ja latitude ovat koordinaateissa?",
