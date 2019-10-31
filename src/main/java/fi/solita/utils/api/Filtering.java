@@ -216,7 +216,7 @@ public class Filtering {
     
     @SuppressWarnings("unchecked")
     static <T> T unwrapOption(T t) {
-        return t instanceof Option ? ((Option<T>)t).getOrElse(null) : t;
+        return t instanceof Option ? unwrapOption(((Option<T>)t).getOrElse(null)) : t;
     }
     
     public <T,V> Iterable<T> equal(MetaNamedMember<? super T,V> member, String value, Iterable<T> ts) {
@@ -224,7 +224,7 @@ public class Filtering {
     }
     
     public <T,V> Iterable<T> notEqual(MetaNamedMember<? super T,V> member, String value, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(Predicates.<V>isNull().or(not(equalTo(convert(member, value))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(not(equalTo(convert(member, value))))), ts);
     }
     
     public <T,V extends Comparable<V>> Iterable<T> lt(MetaNamedMember<? super T,V> member, String value, Iterable<T> ts) {
@@ -248,7 +248,7 @@ public class Filtering {
     }
     
     public <T,V extends Comparable<V>> Iterable<T> notBetween(MetaNamedMember<? super T,V> member, String value1, String value2, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(Predicates.<V>isNull().or(not(Predicates.between(convert(member, value1), convert(member, value2))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(not(Predicates.between(convert(member, value1), convert(member, value2))))), ts);
     }
     
     public <T> Iterable<T> like(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
@@ -256,7 +256,7 @@ public class Filtering {
     }
     
     public <T> Iterable<T> notLike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Predicates.<String>isNull().or(not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))), ts);
     }
     
     public <T> Iterable<T> ilike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
@@ -264,7 +264,7 @@ public class Filtering {
     }
     
     public <T> Iterable<T> notILike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Predicates.<String>isNull().or(not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))), ts);
     }
     
     public <T,V> Iterable<T> in(MetaNamedMember<? super T,V> member, List<String> values, Iterable<T> ts) {
@@ -272,11 +272,12 @@ public class Filtering {
     }
     
     public <T,V> Iterable<T> notIn(MetaNamedMember<? super T,V> member, List<String> values, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(Predicates.<V>isNull().or(not(Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, member), values)))))), ts);
+        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(not(Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, member), values)))))), ts);
     }
     
+    @SuppressWarnings("unchecked")
     public <T,V> Iterable<T> isNull(MetaNamedMember<? super T,Option<V>> member, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(not(isDefined)), ts);
+        return filter(Function.of(member).andThen(Filtering_.isOption.and(not((Predicate<Object>)(Object)isDefined))), ts);
     }
     
     @SuppressWarnings("unchecked")
