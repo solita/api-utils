@@ -139,13 +139,13 @@ public class Constraints<T> {
     
     @SuppressWarnings("unchecked")
     private <V> Iterable<Set<V>> multi(Pattern pattern, final MetaNamedMember<? super T,V> candidate) {
-        return map(new Apply<Pair<MetaNamedMember<T, Object>, ?>, Set<V>>() {
+        return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, ?>, Option<Set<V>>>() {
             @Override
-            public Set<V> apply(Pair<MetaNamedMember<T, Object>, ?> filter) {
+            public Option<Set<V>> apply(Pair<MetaNamedMember<T, Object>, ?> filter) {
                 if (candidate.equals(filter.left())) {
-                    return newSet((List<V>)filter.right());
+                    return Some(newSet((List<V>)filter.right()));
                 }
-                return emptySet();
+                return None();
             }
         }, flatten(find(pattern, filters)));
     }
