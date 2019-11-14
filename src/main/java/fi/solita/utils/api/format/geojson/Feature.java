@@ -20,7 +20,7 @@ public class Feature extends FeatureObject {
     }
     
     public Feature(GeometryObject geometry, Object properties, Option<Crs> crs) {
-        this(geometry.isEmpty() ? Option.<GeometryObject>None() : Some(geometry), properties, crs);
+        this(geometry == null ? Option.<GeometryObject>None() : Some(geometry), properties, crs);
     }
     
     public Feature(Option<? extends GeometryObject> geometry, Object properties, Option<Crs> crs) {
