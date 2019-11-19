@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.concat;
+import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.subtract;
 
@@ -139,17 +140,17 @@ public abstract class VersionBase {
     
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters) {
-        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames == null ? null : concat(propertyNames, filters == null ? null : subtract(map(Filter_.property, filters.filters), newSet(propertyNames))), members, builders, Collections.<MetaNamedMember<? super T,?>>emptyList());
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames == null ? null : concat(propertyNames, filters == null ? null : newSet(subtract(map(Filter_.property, filters.filters), newSet(propertyNames)))), members, builders, Collections.<MetaNamedMember<? super T,?>>emptyList());
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry) {
-        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames == null ? null : concat(propertyNames, filters == null ? null : subtract(map(Filter_.property, filters.filters), newSet(propertyNames))), members, builders, newList(geometry));
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames == null ? null : concat(propertyNames, filters == null ? null : newSet(subtract(map(Filter_.property, filters.filters), newSet(propertyNames)))), members, builders, newList(geometry));
     }
 
     // some type problems... 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<String> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
-        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames == null ? null : concat(propertyNames, filters == null ? null : subtract(map(Filter_.property, filters.filters), newSet(propertyNames))), members, builders, (List)newList(geometry, geometry2));
+        return MemberUtil.resolveIncludes(resolvableMemberProvider(), format, propertyNames == null ? null : concat(propertyNames, filters == null ? null : newSet(subtract(map(Filter_.property, filters.filters), newSet(propertyNames)))), members, builders, (List)newList(geometry, geometry2));
     }
     
     
