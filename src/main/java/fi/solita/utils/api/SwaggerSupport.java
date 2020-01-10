@@ -38,6 +38,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
 import fi.solita.utils.api.SwaggerSupport_.CustomTypeParameterBuilder_;
+import fi.solita.utils.api.base.HttpSerializers;
 import fi.solita.utils.api.base.VersionBase;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Count;
@@ -227,6 +228,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
         return now() + "/" + now();
     }
     
+    public static final String intervalInfinity() {
+        return HttpSerializers.VALID.getStart().toString(ISODateTimeFormat.dateTimeNoMillis()) + "/" + HttpSerializers.VALID.getEnd().toString(ISODateTimeFormat.dateTimeNoMillis());
+    }
+    
     
     /**
      * Rekisteröi kuvauksia jne globaalisti tunnetuille parametrityypeille
@@ -254,11 +259,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
         protected void apply(ParameterContext parameterContext, Class<?> type, Option<String> pathVariableName, Option<String> requestParamName) {
             if (DateTime.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .defaultValue(intervalNow())
                     .description(DESCRIPTION_DateTime);
             } else if (Interval.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .defaultValue(intervalNow())
                     .description(DESCRIPTION_Interval);
             } else if (Count.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
@@ -268,7 +271,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (StartIndex.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(doc(StartIndex.class).getOrElse(""))
-                    .defaultValue("1")
                     .allowableValues(new AllowableRangeValues("1", null));
             } else if (Filters.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()

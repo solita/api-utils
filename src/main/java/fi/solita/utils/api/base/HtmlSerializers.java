@@ -231,11 +231,11 @@ public abstract class HtmlSerializers {
         }
     });
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> string = Pair.of(String.class, new HtmlSerializer<String>() {
+    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> charSequence = Pair.of(CharSequence.class, new HtmlSerializer<CharSequence>() {
         @Override
-        public void renderOn(String value, HtmlCanvas html, HtmlModule module) throws IOException {
+        public void renderOn(CharSequence value, HtmlCanvas html, HtmlModule module) throws IOException {
             html.span(class_("type-string"))
-                  .write(value)
+                  .write(value.toString())
                 ._span();
         }
     });
@@ -376,7 +376,7 @@ public abstract class HtmlSerializers {
             iterable,
             tuple,
             bool,
-            string,
+            charSequence,
             shortInteger,
             integer,
             longInteger,

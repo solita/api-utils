@@ -20,9 +20,13 @@ import org.joda.time.LocalTime;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import fi.solita.utils.api.ResolvedMember;
@@ -51,6 +55,15 @@ public class JsonSerializers {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
                 jgen.writeString(f.apply(value));
+            }
+        };
+    }
+    
+    public static final <T> StdDeserializer<T> stringDeserializer(final Apply<String,T> f, Class<T> clazz) {
+        return new StdDeserializer<T>(clazz) {
+            @Override
+            public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+                return f.apply(p.getValueAsString());
             }
         };
     }
@@ -154,8 +167,13 @@ public class JsonSerializers {
             Pair.of(DateTimeZone.class, stringSerializer(Serializers_.ser6.ap(s), DateTimeZone.class))
         );
     }
+    
     public Map<Class<?>,JsonSerializer<?>> keySerializers() { return emptyMap(); }
-    public Map<Class<?>,JsonDeserializer<?>> deserializers() { return emptyMap(); }
+    
+    public Map<Class<?>,JsonDeserializer<?>> deserializers() { return newMap(
+            Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(Serializers_.deserDateTime.ap(s), DateTime.class))
+        );
+    }
     
     // Näiden pitäisi vastata sarjallistusten lopullisia raakatyyppejä
     public Map<Class<?>,Class<?>> rawTypes() { return Collections.<Class<?>,Class<?>>newMap(

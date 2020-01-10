@@ -1,11 +1,17 @@
 package fi.solita.utils.api.format;
 
+import static fi.solita.utils.functional.Option.None;
+
 import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
@@ -28,6 +34,7 @@ import com.fasterxml.jackson.databind.deser.std.DateDeserializers.SqlDateDeseria
 import com.fasterxml.jackson.databind.deser.std.DateDeserializers.TimestampDeserializer;
 import com.fasterxml.jackson.databind.deser.std.DelegatingDeserializer;
 import com.fasterxml.jackson.databind.deser.std.EnumDeserializer;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
@@ -43,6 +50,7 @@ import com.fasterxml.jackson.databind.type.SimpleType;
 import fi.solita.utils.api.ClassUtils;
 import fi.solita.utils.api.JsonDeserializeAsBean;
 import fi.solita.utils.api.JsonSerializeAsBean;
+import fi.solita.utils.functional.Option;
 
 /**
  * Projektiperheen yleinen objectmapper. Rajoittaa Jacksonia tekemästä typeryyksiä.
@@ -84,7 +92,30 @@ public class JsonObjectMapper extends ObjectMapper {
 
             return candidate;
         }
+        
+        @Override
+        protected JsonDeserializer<?> findStdDeserializer(DeserializationContext ctxt, final JavaType type, BeanDescription beanDesc) throws JsonMappingException {
+            if (type.getRawClass() == Option.class) {
+                return new StdDeserializer<Option<?>>(type) {
+                    @Override
+                    public Option<?> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+                        JsonDeserializer<?> valueDeser = findDeserializer(ctxt, type.containedType(0), null);
+                        if (jp.getCurrentToken() == JsonToken.VALUE_NULL) {
+                            return None();
+                        }
 
+                        return Option.of(valueDeser.deserialize(jp, ctxt));
+                    }
+
+                    @Override
+                    public Option<?> getNullValue() {
+                        return None();
+                    }
+                };
+            }
+            return super.findStdDeserializer(ctxt, type, beanDesc);
+        }
+        
         @SuppressWarnings("unchecked")
         @Override
         public JsonDeserializer<Object> createBeanDeserializer(DeserializationContext ctxt, JavaType type, BeanDescription beanDesc) throws JsonMappingException {

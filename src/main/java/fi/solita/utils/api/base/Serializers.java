@@ -56,6 +56,10 @@ public class Serializers {
         return v.toString(DATETIME_FORMAT);
     }
     
+    public DateTime deserDateTime(String value) {
+        return DateTime.parse(value, DATETIME_FORMAT);
+    }
+    
     public String serZoned(DateTime value) {
         return takeWhile(not(equalTo('+')), value.toString(ISODateTimeFormat.dateTimeNoMillis().withZone(APP_ZONE))).replace('T', ' ');
     }
