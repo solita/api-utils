@@ -186,7 +186,6 @@ public abstract class HtmlConversionService {
                             + "header .page   { padding-left: 1em; }"
                             + "header .type-datetime, header .type-oid, header .type-rectangle { font-size: small; font-style: italic; padding: 1em; }"
                             + "header .type-rectangle { color: #bbb; }"
-                            + ".loadButton    { visibility: hidden; height: 2em; }"
                             + ".lang li       { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
                             
                             + "footer *       { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
@@ -256,8 +255,7 @@ public abstract class HtmlConversionService {
                             + ".type-multiline, .type-multipolygon { overflow: hidden; height: 1em; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
                             + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
                             + mkString(" ", sequence(
-                                 ("  .loadButton    { display: none !important; }"
-                                + "  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
+                                 ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
                                 + "  h1 .type-datetime { display: block; }"
                                 + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; }"
                                 + "  table tr       { border-top: none; }"
@@ -364,9 +362,6 @@ public abstract class HtmlConversionService {
                         .h1()
                           .render(title)
                         ._h1()
-                        .button(id("loadButton").class_("loadButton").onClick("this.style.visibility = 'hidden'; window.location += '#deep'; loadAdditionalContent();"))
-                            .write("Lataa lisäsisältö")
-                        ._button()
                         .div(id("lang").class_("lang"))
                             .ul()
                                 .li(onClick("document.body.classList.add('fi'); document.body.classList.remove('en')")).a().write("finnish")._a()._li()
@@ -431,11 +426,6 @@ public abstract class HtmlConversionService {
                       ._table()
                   ._section()
                   .render(pageFooter())
-                  .script(type("text/javascript"))
-                      .cdata()
-                          .write("if (window.location.hash.indexOf('deep') == -1) { document.getElementById('loadButton').style.visibility = 'visible'; } else { loadAdditionalContent(); }", false)
-                      ._cdata()
-                  ._script()
                 ._body()
               ._html();
             
