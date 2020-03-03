@@ -266,8 +266,9 @@ var olstuff = function(constants, util) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '&');
             u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1; 
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
-                     (!propertyName ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
-            u2 += (typeNames ? '&typeNames=' + typeNames : '');
+                     (!propertyName ? '' : '&propertyName=' + propertyName) +
+                     (url.indexOf('time=') >= 0 ? '' : '&time=' + instant + '/' + instant) +
+                     (!typeNames ? '' : '&typeNames=' + typeNames);
 
             var source = new ol.source.Vector({
                 format: ret.format,
