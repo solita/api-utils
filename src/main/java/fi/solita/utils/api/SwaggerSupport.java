@@ -238,6 +238,11 @@ public abstract class SwaggerSupport extends ApiResourceController {
      */
     // TODO: Tämän sisältö oikeastaan riippuu API-versiosta, eli siis voi muuttua rajapinnan kehittyessä. Miten saisi versiokohtaiseksi?
     public static abstract class CustomTypeParameterBuilder implements ParameterBuilderPlugin {
+        protected static <T extends Enum<T>> void enumValue(ParameterBuilder builder, Apply<T,String> f, Class<T> clazz) {
+            List<String> vals = newList(map(f, ClassUtils.getEnumType(clazz).get().getEnumConstants()));
+            builder.allowableValues(new AllowableListValues(vals, "string"));
+        }
+        
         protected static String pathVariableName(PathVariable pv) {
             return pv.value();
         }
