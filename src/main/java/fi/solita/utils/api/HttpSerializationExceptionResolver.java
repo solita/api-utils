@@ -68,6 +68,18 @@ public class HttpSerializationExceptionResolver implements HandlerExceptionResol
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal localdate. Accepted range: " + e.validStart + "-" + e.validEnd);
                 return new ModelAndView();
             }
+            for (HttpSerializers.InvalidLocalTimeException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidLocalTimeException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal localtime");
+                return new ModelAndView();
+            }
+            for (HttpSerializers.InvalidDurationException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidDurationException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal duration");
+                return new ModelAndView();
+            }
+            for (HttpSerializers.InvalidTimeZoneException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidTimeZoneException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal time zone");
+                return new ModelAndView();
+            }
             
             for (HttpSerializers.InvalidDateTimeException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidDateTimeException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal datetime");
@@ -75,6 +87,10 @@ public class HttpSerializationExceptionResolver implements HandlerExceptionResol
             }
             for (HttpSerializers.DateTimeNotWithinLimitsException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.DateTimeNotWithinLimitsException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal datetime. Accepted range: " + e.validStart + "-" + e.validEnd);
+                return new ModelAndView();
+            }
+            for (HttpSerializers.InvalidURIException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidURIException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal uri");
                 return new ModelAndView();
             }
             

@@ -37,6 +37,7 @@ import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaField;
+import fi.solita.utils.meta.MetaNamedMember;
 
 /**
  * Base serializers/deserializers for the first API version.
@@ -95,11 +96,11 @@ public class JsonSerializers {
         };
     }
     
-    public static <T> Map<String,Object> toMap(T value, Iterable<? extends MetaField<? super T, ?>> fields) {
+    public static <T> Map<String,Object> toMap(T value, Iterable<? extends MetaNamedMember<T, ?>> fields) {
         return newMap(zip(map(JsonSerializers_.fieldName, fields), sequence(value, fields)));
     }
 
-    static String fieldName(MetaField<?,?> field) {
+    static String fieldName(MetaNamedMember<?,?> field) {
         return field.getName();
     }
     
@@ -179,6 +180,7 @@ public class JsonSerializers {
     public Map<Class<?>,Class<?>> rawTypes() { return Collections.<Class<?>,Class<?>>newMap(
             // tuple?
             Pair.of(URI.class, String.class),
+            Pair.of(Character.class, String.class),
             Pair.of(LocalDate.class, String.class),
             Pair.of(LocalTime.class, String.class),
             Pair.of(DateTime.class, String.class),

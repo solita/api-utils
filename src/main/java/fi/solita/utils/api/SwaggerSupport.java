@@ -159,6 +159,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
             if (clazz.equals(DateTime.class)) {
                 builder.description(DESCRIPTION_DateTime)
                        .example(now());
+            } else if (clazz.equals(Character.class)) {
+                builder.description("character")
+                       .example("c");
             } else if (clazz.equals(Interval.class)) {
                 builder.description(DESCRIPTION_Interval)
                        .example(intervalNow());
@@ -345,10 +348,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
             .pathProvider(new AbstractPathProvider() {
                 @Override
                 public String getOperationPath(String operationPath) {
-                    // poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
                     return super.getOperationPath(operationPath)
-                            .replace("{revision}/", "") // poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
-                            .replace("{*****}", ""); // poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+                            .replace("{revision}/", "")      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
+                            .replace("{*****}", "")          // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+                            .replace("{asterisk}", "*"); // Keino lisätä Springissä polkuun tähtönen, niin että tulee swagger-kuvaukseenkin oikein.
 
                 }
 

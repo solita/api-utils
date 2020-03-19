@@ -41,6 +41,7 @@ import fi.solita.utils.api.MemberUtil;
 import fi.solita.utils.api.MemberUtil_;
 import fi.solita.utils.api.base.ExcelModule;
 import fi.solita.utils.api.base.ExcelSerializer.Cells;
+import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple2;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -242,7 +243,7 @@ public class ExcelConversionService {
     static <T> Pair<Object,Class<Object>> cell(final T obj, final MetaNamedMember<T, ?> member) {
         if (member.getName().equals("")) {
             // oma dummy-otsikko
-            return Pair.of((Object)member.apply(obj), Object.class);
+            return Pair.of((Object)member.apply(obj), (Class<Object>)(obj instanceof Option && ((Option<?>)obj).isDefined() ? ((Option<?>)obj).get().getClass() : obj.getClass()));
         } else {
             return Pair.of((Object)member.apply(obj), (Class<Object>)MemberUtil.actualTypeUnwrappingOptionAndEither(member));
         }

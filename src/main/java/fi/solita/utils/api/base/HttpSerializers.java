@@ -8,17 +8,22 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.core.convert.converter.Converter;
 
 import fi.solita.utils.api.Assert;
+import fi.solita.utils.api.base.HttpSerializers.InvalidTimeZoneException;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Revision;
@@ -126,6 +131,28 @@ public class HttpSerializers {
         }
     }
     
+    public static class InvalidLocalTimeException extends RuntimeException {
+        public final String localtime;
+        public InvalidLocalTimeException(String localtime) {
+            super(localtime);
+            this.localtime = localtime;
+        }
+    }
+    public static class InvalidDurationException extends RuntimeException {
+        public final String duration;
+        public InvalidDurationException(String duration) {
+            super(duration);
+            this.duration = duration;
+        }
+    }
+    public static class InvalidTimeZoneException extends RuntimeException {
+        public final String timeZone;
+        public InvalidTimeZoneException(String timeZone) {
+            super(timeZone);
+            this.timeZone = timeZone;
+        }
+    }
+    
     public static class InvalidDateTimeException extends RuntimeException {
         public final String datetime;
         public InvalidDateTimeException(String datetime) {
@@ -139,6 +166,14 @@ public class HttpSerializers {
         public DateTimeNotWithinLimitsException(String validStart, String validEnd) {
             this.validStart = validStart;
             this.validEnd = validEnd;
+        }
+    }
+    
+    public static class InvalidURIException extends RuntimeException {
+        public final String uri;
+        public InvalidURIException(String uri) {
+            super(uri);
+            this.uri = uri;
         }
     }
     
@@ -269,6 +304,19 @@ public class HttpSerializers {
             return ret;
         }
     });
+    
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,Duration>> kesto = Pair.of(Duration.class, new Converter<String, Duration>() {
+        @Override
+        public Duration convert(String source) throws InvalidDurationException {
+            Duration ret;
+            try {
+                ret = Duration.parse(source);
+            } catch (Exception e) {
+                throw new InvalidDurationException(source);
+            }
+            return ret;
+        }
+    });
 
     public static final DateTimeFormatter dateTimeParser = ISODateTimeFormat.dateTimeNoMillis().withOffsetParsed();
     public static final Interval VALID = new Interval(dateTimeParser.parseDateTime("2010-01-01T00:00:00Z"), dateTimeParser.parseDateTime("2030-01-01T00:00:00Z"));
@@ -293,6 +341,41 @@ public class HttpSerializers {
         }
     });
     
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,LocalTime>> kellonaika = Pair.of(LocalTime.class, new Converter<String, LocalTime>() {
+        private final DateTimeFormatter localTimeParser = ISODateTimeFormat.localTimeParser();
+        
+        @Override
+        public LocalTime convert(String source) throws InvalidLocalDateException, LocalDateNotWithinLimitsException {
+            try {
+                return localTimeParser.parseLocalTime(source);
+            } catch (RuntimeException e) {
+                throw new InvalidLocalTimeException(source);
+            }
+        }
+    });
+    
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,DateTimeZone>> zone = Pair.of(DateTimeZone.class, new Converter<String, DateTimeZone>() {
+        @Override
+        public DateTimeZone convert(String source) throws InvalidTimeZoneException {
+            try {
+                return DateTimeZone.forID(source);
+            } catch (RuntimeException e) {
+                throw new InvalidTimeZoneException(source);
+            }
+        }
+    });
+    
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,URI>> uri = Pair.of(URI.class, new Converter<String, URI>() {
+        @Override
+        public URI convert(String source) throws InvalidURIException {
+            try {
+                return URI.create(source);
+            } catch (RuntimeException e) {
+                throw new InvalidURIException(source);
+            }
+        }
+    });
+    
     public Map<Class<?>,? extends Converter<?,?>> converters() { return newMap(
             revision,
             filter,
@@ -307,7 +390,11 @@ public class HttpSerializers {
             startIndex,
             srsName,
             ajanhetki,
-            paiva
+            paiva,
+            kellonaika,
+            kesto,
+            zone,
+            uri
         );
     }
 }
