@@ -288,6 +288,22 @@ public class MemberUtil {
         return MemberUtil.memberTypeUnwrappingOptionAndEither(member.getMember());
     }
     
+    public static Class<?> memberTypeUnwrappingOptionAndEitherAndIterables(AccessibleObject member) {
+        Class<?> type = member instanceof Field ? ((Field)member).getType() : ((Method)member).getReturnType();
+        if (Option.class.isAssignableFrom(type)) {
+            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
+        } else if (Either.class.isAssignableFrom(type)) {
+            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
+        } else if (Iterable.class.isAssignableFrom(type)) {
+            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
+        }
+        return type;
+    }
+    
+    public static <T> Class<?> actualTypeUnwrappingOptionAndEitherAndIterables(final MetaNamedMember<T, ?> member) {
+        return MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(member.getMember());
+    }
+    
     public enum Include {
         All,
         OnlyLeaf,

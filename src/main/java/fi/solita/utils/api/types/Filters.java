@@ -45,7 +45,7 @@ public final class Filters {
     public static final List<String> SUPPORTED_OPERATIONS = newList("=", "<>", "<", ">", "<=", ">=", "_ [NOT] BETWEEN _ AND _", "_ [NOT] LIKE '%'", "_ [NOT] ILIKE '%'", "_ [NOT] IN (_,_)", "_ IS [NOT] NULL", "INTERSECTS(_,_)");
     
     private static final String attribute = "([a-z][a-zA-Z0-9_.]*)";
-    private static final String polygon = "(POLYGON\\(.+?\\))";
+    private static final String polygon = "(POLYGON\\s*\\(.+?\\))";
     private static final String literal = "(-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'|\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ|P\\d+Y(?:\\d+M(?:\\d+D(?:T\\d+H(?:\\d+M(?:\\d+S))))))";
     private static final String like_pattern = "('(?:[^']|'')*')";
     
