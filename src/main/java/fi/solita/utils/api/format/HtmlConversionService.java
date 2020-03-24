@@ -193,11 +193,13 @@ public abstract class HtmlConversionService {
                             + ".copyright     { text-align: right; }"
                             
                             + "section        { flex: 1; overflow-y: auto; }"
-                            + "table          { border-collapse: collapse; }"
+                            + "table          { border-collapse: collapse; counter-reset: rowNumber; }"
                             + "th,td          { vertical-align: top; padding: 0.5em 1em 0.5em 0; }"
                             + "th             { position: -webkit-sticky; position: sticky; top: 0; z-index: 999; background-color: white; text-align: left; }"
                             + "tbody          { font-size: small; }"
-                            + "tbody tr       { border-top: 1px dotted #ccc; }"
+                            + "tbody tr       { border-top: 1px dotted #ccc; counter-increment: rowNumber; }"
+                            + "thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 1em; }"
+                            + "tbody > tr > td:first-child::before { content: counter(rowNumber); margin-right: 1em; color: #ddd; }"
                             
                             + "ul             { list-style: none; padding: 0; margin: 0; white-space: normal; }"
                             + "ul li          { border-top: 1px dotted #ddd; }"
@@ -237,7 +239,8 @@ public abstract class HtmlConversionService {
                             + "ul li ul li    { border: none !important; }"
                             + "ul li ul li    { background-color: transparent !important; }"
                             
-                            + "table table tr { border: none; }"
+                            + "table table { counter-reset: none; }"
+                            + "table table tr { border: none; counter-increment: none; }"
                             + "table table th { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; }"
                             + "table table td { border: none; padding: 1px 3px; line-height: 1em; }"
                             
@@ -257,8 +260,8 @@ public abstract class HtmlConversionService {
                             + mkString(" ", sequence(
                                  ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
                                 + "  h1 .type-datetime { display: block; }"
-                                + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; }"
-                                + "  table tr       { border-top: none; }"
+                                + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; counter-reset: none; }"
+                                + "  table tr       { border-top: none; counter-increment: none; }"
                                 + "  thead          { display: inline-block; font-size: small; max-width: 33%; overflow-x: auto; }"
                                 + "  tbody          { display: inline-block; font-size: small; min-width: 67%; white-space: nowrap; }"
                                 + "  thead tr       { display: block; }"
