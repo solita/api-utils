@@ -226,14 +226,15 @@ var olstuff = function(constants, util) {
                 return func;
             },
             
-            icon: function(url, flipped, rotation, anchor, scale) {
+            icon: function(url, flipped, rotation, anchor, scale, opacity) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         src: url,
                         scale: scale ? scale : 1,
                         rotateWithView: true,
                         anchor: anchor ? anchor : [0.5, 0.5],
-                        rotation: rotation ? 2*Math.PI*rotation/360 : 0
+                        rotation: rotation ? 2*Math.PI*rotation/360 : 0,
+                        opacity: opacity ? opacity : 1.0
                     })
                 });
             },
