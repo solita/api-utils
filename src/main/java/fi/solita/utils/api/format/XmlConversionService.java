@@ -18,7 +18,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.eclipse.persistence.jaxb.JAXBContextProperties;
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
-import fi.solita.utils.api.base.XmlModule;
+import fi.solita.utils.api.base.xml.XmlModule;
 import fi.solita.utils.api.format.xml.Dummy;
 
 public class XmlConversionService {

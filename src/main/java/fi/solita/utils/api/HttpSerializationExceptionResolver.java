@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
-import fi.solita.utils.api.base.HttpSerializers;
+import fi.solita.utils.api.base.http.HttpSerializers;
+import fi.solita.utils.api.util.ExceptionUtils;
+import fi.solita.utils.api.util.ResponseUtil;
 
 
 public class HttpSerializationExceptionResolver implements HandlerExceptionResolver, Ordered {

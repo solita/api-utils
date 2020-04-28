@@ -38,15 +38,18 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
 import fi.solita.utils.api.SwaggerSupport_.CustomTypeParameterBuilder_;
-import fi.solita.utils.api.base.HttpSerializers;
 import fi.solita.utils.api.base.VersionBase;
+import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
+import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.api.types.StartIndex;
+import fi.solita.utils.api.util.ClassUtils;
+import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
 import springfox.documentation.RequestHandler;
@@ -144,6 +147,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
     public static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
+    public static final String DESCRIPTION_PropertyName = "Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois. / Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields.";
     public static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
     
     public static abstract class DocumentingModelPropertyBuilder implements ModelPropertyBuilderPlugin {
@@ -171,6 +175,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.example(1);
             } else if (clazz.equals(Filters.class)) {
                 builder.description(DESCRIPTION_Filters)
+                       .example("tunniste<>1.2.246.578.2.3.4");
+            } else if (clazz.equals(PropertyName.class)) {
+                builder.description(DESCRIPTION_PropertyName)
                        .example("tunniste<>1.2.246.578.2.3.4");
             } else if (clazz.equals(SRSName.class)) {
                 builder.description(DESCRIPTION_SRSName)
@@ -284,14 +291,14 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 parameterContext.parameterBuilder()
                     .defaultValue("")
                     .description(DESCRIPTION_Filters);
+            } else if (PropertyName.class.isAssignableFrom(type)) {
+                parameterContext.parameterBuilder()
+                .collectionFormat("csv")
+                .description(DESCRIPTION_PropertyName);
             } else if (SRSName.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(DESCRIPTION_SRSName)
                     .allowableValues(new AllowableListValues(newList(map(SRSName_.value, SRSName.validValues)), "string"));
-            } else if (requestParamName.getOrElse("").equals("propertyName")) {
-                parameterContext.parameterBuilder()
-                    .collectionFormat("csv")
-                    .description("Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois. / Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields.");
             } else if (requestParamName.getOrElse("").equals("typeNames")) {
                 parameterContext.parameterBuilder()
                     .collectionFormat("csv")
@@ -373,6 +380,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             .directModelSubstitute(Count.class, int.class)
             .directModelSubstitute(StartIndex.class, int.class)
             .directModelSubstitute(Filters.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
+            .directModelSubstitute(PropertyName.class, String[].class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             .directModelSubstitute(SRSName.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             
             .ignoredParameterTypes(Revision.class)

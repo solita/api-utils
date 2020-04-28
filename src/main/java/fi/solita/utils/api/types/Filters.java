@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import fi.solita.utils.api.PropertyName;
 import fi.solita.utils.api.types.Filters_.Filter_;
 import fi.solita.utils.functional.Option;
 

@@ -1,9 +1,9 @@
 package fi.solita.utils.api.format;
 
 import fi.solita.utils.api.base.Cells;
-import fi.solita.utils.api.base.CsvModule;
-import fi.solita.utils.api.base.CsvSerializers;
 import fi.solita.utils.api.base.Serializers;
+import fi.solita.utils.api.base.csv.CsvModule;
+import fi.solita.utils.api.base.csv.CsvSerializers;
 import fi.solita.utils.api.format.CsvConversionService;
 
 public class CsvConversionServiceTest extends SpreadsheetConversionServiceTestBase {

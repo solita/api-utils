@@ -8,9 +8,11 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import fi.solita.utils.api.base.HttpModule;
-import fi.solita.utils.api.base.HttpSerializers;
 import fi.solita.utils.api.base.Serializers;
+import fi.solita.utils.api.base.http.HttpModule;
+import fi.solita.utils.api.base.http.HttpSerializers;
+import fi.solita.utils.api.functions.FunctionProvider;
+import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.meta.MetaNamedMember;
 

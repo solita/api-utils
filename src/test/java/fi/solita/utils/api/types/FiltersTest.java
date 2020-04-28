@@ -8,7 +8,6 @@ import static org.junit.Assert.*;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import fi.solita.utils.api.PropertyName;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Filters.Filter;

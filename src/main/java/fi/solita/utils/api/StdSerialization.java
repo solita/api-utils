@@ -1,6 +1,6 @@
 package fi.solita.utils.api;
 
-import static fi.solita.utils.api.MemberUtil.excluding;
+import static fi.solita.utils.api.util.MemberUtil.excluding;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
-import fi.solita.utils.api.RequestUtil.UnavailableContentTypeException;
 import fi.solita.utils.api.format.CsvConversionService;
 import fi.solita.utils.api.format.ExcelConversionService;
 import fi.solita.utils.api.format.HtmlConversionService;
@@ -32,7 +31,10 @@ import fi.solita.utils.api.format.geojson.FeatureCollection;
 import fi.solita.utils.api.format.geojson.FeatureObject;
 import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
+import fi.solita.utils.api.resolving.GeojsonResolver;
 import fi.solita.utils.api.types.SRSName;
+import fi.solita.utils.api.util.RequestUtil;
+import fi.solita.utils.api.util.RequestUtil.UnavailableContentTypeException;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;

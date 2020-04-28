@@ -37,7 +37,7 @@ import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 import org.rendersnake.ext.spring.HtmlCanvasFactory;
 
-import fi.solita.utils.api.base.HtmlModule;
+import fi.solita.utils.api.base.html.HtmlModule;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.StartIndex;

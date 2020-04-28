@@ -1,6 +1,6 @@
 package fi.solita.utils.api.common;
 
-import static fi.solita.utils.api.ResponseUtil.redirectToRevision;
+import static fi.solita.utils.api.util.ResponseUtil.redirectToRevision;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
@@ -11,8 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.Duration;
 
-import fi.solita.utils.api.ResponseUtil;
 import fi.solita.utils.api.types.Revision;
+import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.functional.Option;
 
 public abstract class RevisionedSupportServiceBase extends SupportServiceBase {

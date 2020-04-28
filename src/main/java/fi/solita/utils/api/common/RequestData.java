@@ -1,7 +1,7 @@
 package fi.solita.utils.api.common;
 
-import fi.solita.utils.api.RequestUtil.ETags;
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.api.util.RequestUtil.ETags;
 
 public class RequestData {
     public final SerializationFormat format;

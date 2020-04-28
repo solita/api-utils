@@ -47,9 +47,9 @@ import com.fasterxml.jackson.databind.ser.std.StdKeySerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.SimpleType;
 
-import fi.solita.utils.api.ClassUtils;
 import fi.solita.utils.api.JsonDeserializeAsBean;
 import fi.solita.utils.api.JsonSerializeAsBean;
+import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.functional.Option;
 
 /**

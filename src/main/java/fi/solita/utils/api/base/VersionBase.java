@@ -16,14 +16,27 @@ import javax.servlet.http.HttpServletRequest;
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
 import fi.solita.utils.api.Filtering;
-import fi.solita.utils.api.FunctionProvider;
 import fi.solita.utils.api.Includes;
-import fi.solita.utils.api.MemberUtil;
-import fi.solita.utils.api.PropertyName;
-import fi.solita.utils.api.ResolvableMemberProvider;
+import fi.solita.utils.api.base.csv.CsvModule;
+import fi.solita.utils.api.base.csv.CsvSerializers;
+import fi.solita.utils.api.base.excel.ExcelModule;
+import fi.solita.utils.api.base.excel.ExcelSerializers;
+import fi.solita.utils.api.base.html.HtmlModule;
+import fi.solita.utils.api.base.html.HtmlSerializers;
+import fi.solita.utils.api.base.http.HttpModule;
+import fi.solita.utils.api.base.http.HttpSerializers;
+import fi.solita.utils.api.base.json.JsonModule;
+import fi.solita.utils.api.base.json.JsonSerializers;
+import fi.solita.utils.api.base.xml.XmlMetadataSource;
+import fi.solita.utils.api.base.xml.XmlModule;
+import fi.solita.utils.api.base.xml.XmlSerializers;
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.api.functions.FunctionProvider;
+import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.Filters;
+import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.types.Filters_.Filter_;
+import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
 import fi.solita.utils.functional.Pair;
@@ -50,7 +63,7 @@ public abstract class VersionBase {
         }
     }
     
-    public static class XmlNameGenerator extends fi.solita.utils.api.base.XmlNameGenerator {
+    public static class XmlNameGenerator extends fi.solita.utils.api.base.xml.XmlNameGenerator {
     }
     
     @javax.xml.bind.annotation.XmlRegistry

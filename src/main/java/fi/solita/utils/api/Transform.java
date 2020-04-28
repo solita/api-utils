@@ -15,6 +15,7 @@ import org.opengis.referencing.operation.MathTransform;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Filters.Filter;
 import fi.solita.utils.api.types.Filters_.Filter_;
+import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.ApplyBi;

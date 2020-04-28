@@ -8,10 +8,10 @@ import static fi.solita.utils.functional.Option.Some;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import fi.solita.utils.api.RequestUtil;
-import fi.solita.utils.api.ResponseUtil;
 import fi.solita.utils.api.SwaggerSupport;
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.api.util.RequestUtil;
+import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 

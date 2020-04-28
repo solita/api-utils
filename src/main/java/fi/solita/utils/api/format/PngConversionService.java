@@ -49,8 +49,8 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import ar.com.hjg.pngj.FilterType;
-import fi.solita.utils.api.RequestUtil;
 import fi.solita.utils.api.SwaggerSupport;
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import it.geosolutions.imageio.plugins.png.PNGWriter;

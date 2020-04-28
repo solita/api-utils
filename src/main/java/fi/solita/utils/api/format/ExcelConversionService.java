@@ -36,11 +36,11 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpHeaders;
 
-import fi.solita.utils.api.Assert;
-import fi.solita.utils.api.MemberUtil;
-import fi.solita.utils.api.MemberUtil_;
-import fi.solita.utils.api.base.ExcelModule;
-import fi.solita.utils.api.base.ExcelSerializer.Cells;
+import fi.solita.utils.api.util.MemberUtil_;
+import fi.solita.utils.api.base.excel.ExcelModule;
+import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
+import fi.solita.utils.api.util.Assert;
+import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple2;
