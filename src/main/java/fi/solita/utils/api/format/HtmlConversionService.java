@@ -267,6 +267,7 @@ public abstract class HtmlConversionService {
                                 + "  thead tr       { display: block; }"
                                 + "  tbody tr       { display: flex; flex-direction: column; vertical-align: top; }"
                                 + "  tbody td       { overflow-x: auto; }"
+                                + "  tbody > tr > td:first-child::before { content: ''; margin-right: 0; }"
                                 + "  th, td         { display: block; height: 1.5em; min-height: 1.5em; max-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; padding: 0.25em; }"
                                 + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
                                 + "  td:first-child { border-left: 1px solid #eee; }"

@@ -32,9 +32,9 @@ public class Serializers {
     
      @JsonSerializeAsBean
      public static final class RevisioJaMuokkausaikaData {
-         public final long revisio;
+         public final Long revisio;
          public final DateTime muokkaus_aika;
-         public RevisioJaMuokkausaikaData(long revisio, DateTime muokkaus_aika) {
+         public RevisioJaMuokkausaikaData(Long revisio, DateTime muokkaus_aika) {
              this.revisio = revisio;
              this.muokkaus_aika = muokkaus_aika;
          }
@@ -76,7 +76,7 @@ public class Serializers {
         return v.getID();
     }
     
-    public RevisioJaMuokkausaikaData ser(long revisio, DateTime muokkaus_aika) {
+    public RevisioJaMuokkausaikaData ser(Long revisio, DateTime muokkaus_aika) {
             return new RevisioJaMuokkausaikaData(revisio, muokkaus_aika);
     }
 }

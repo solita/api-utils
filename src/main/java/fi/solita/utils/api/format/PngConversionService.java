@@ -72,7 +72,7 @@ public class PngConversionService {
     public PngConversionService(URI baseURI) {
         this.baseURI = baseURI;
         try {
-            for (StyledLayer layer: createStyles(getClass().getResource("/defaultStyle.sld"))) {
+            for (StyledLayer layer: createStyles(getSld())) {
                 // use only the first style in the layer...
                 defaultStyles.put(layer.getName(), ((NamedLayer)layer).getStyles()[0]);
             }
@@ -81,6 +81,10 @@ public class PngConversionService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    protected URL getSld() {
+        return getClass().getResource("/defaultStyle.sld");
     }
     
     public byte[] render(HttpServletRequest req, ReferencedEnvelope paikka, String layerName) {
