@@ -8,6 +8,7 @@ import static org.junit.Assert.*;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import fi.solita.utils.api.PropertyName;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Filters.Filter;
@@ -16,8 +17,10 @@ import fi.solita.utils.functional.Option;
 
 public class FiltersTest {
     
+    private static final PropertyName FOO = new PropertyName("foo");
+
     private Option<Filters> someFilter(String value) {
-        return Some(new Filters(new Filter(EQUAL, "foo", value)));
+        return Some(new Filters(new Filter(EQUAL, FOO, value)));
     }
     
     @Test
@@ -58,14 +61,14 @@ public class FiltersTest {
     
     @Test
     public void parsesPolygon() {
-        assertEquals(Some(new Filters(new Filter(INTERSECTS, "foo", "POLYGON((30 10,40 40,20 40,10 20,30 10))"))), Filters.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20,30 10)))"));
+        assertEquals(Some(new Filters(new Filter(INTERSECTS, FOO, "POLYGON((30 10,40 40,20 40,10 20,30 10))"))), Filters.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20,30 10)))"));
     }
     
     @Test
     public void parsesMultiple() {
-        assertEquals(Some(new Filters(new Filter(EQUAL, "foo", "1"), new Filter(EQUAL, "foo", "2"))), Filters.parse("foo=1 AND foo=2"));
-        assertEquals(Some(new Filters(new Filter(EQUAL, "foo", "1"), new Filter(EQUAL, "foo", "2"), new Filter(EQUAL, "foo", "3"))), Filters.parse("foo=1 AND foo=2 AND foo=3"));
-        assertEquals(Some(new Filters(new Filter(EQUAL, "foo", "1"), new Filter(EQUAL, "foo", "2"), new Filter(EQUAL, "foo", "3"), new Filter(EQUAL, "foo", "4"), new Filter(EQUAL, "foo", "5"))), Filters.parse("foo=1 AND foo=2 AND foo=3 AND foo=4 AND foo=5"));
+        assertEquals(Some(new Filters(new Filter(EQUAL, FOO, "1"), new Filter(EQUAL, FOO, "2"))), Filters.parse("foo=1 AND foo=2"));
+        assertEquals(Some(new Filters(new Filter(EQUAL, FOO, "1"), new Filter(EQUAL, FOO, "2"), new Filter(EQUAL, FOO, "3"))), Filters.parse("foo=1 AND foo=2 AND foo=3"));
+        assertEquals(Some(new Filters(new Filter(EQUAL, FOO, "1"), new Filter(EQUAL, FOO, "2"), new Filter(EQUAL, FOO, "3"), new Filter(EQUAL, FOO, "4"), new Filter(EQUAL, FOO, "5"))), Filters.parse("foo=1 AND foo=2 AND foo=3 AND foo=4 AND foo=5"));
     }
     
     @Test

@@ -63,7 +63,7 @@ public abstract class ResolvableMemberProvider {
         }
         
         @Override
-        public void mutateResolvable(HttpServletRequest request, SortedSet<String> propertyNames, Object apply) {
+        public void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object apply) {
             throw new UnsupportedOperationException();
         }
     };
@@ -75,7 +75,7 @@ public abstract class ResolvableMemberProvider {
     /**
      * Aaargh, mutable, but would need Lenses here to update a single value...
      */
-    public abstract void mutateResolvable(HttpServletRequest request, SortedSet<String> propertyNames, Object object);
+    public abstract void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object object);
     
     public <K,T> Map<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
         Map<K, Iterable<T>> ret = newLinkedMap();
@@ -107,7 +107,7 @@ public abstract class ResolvableMemberProvider {
     @SuppressWarnings("unchecked")
     public <T> T mutateResolvables(final HttpServletRequest request, Includes<T> includes, T t) {
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
-            final SortedSet<String> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
+            final SortedSet<PropertyName> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
             try {
                 List<Future<Void>> futures = pool.invokeAll(newList(map(new Apply<Object, Callable<Void>>() {
                     @Override

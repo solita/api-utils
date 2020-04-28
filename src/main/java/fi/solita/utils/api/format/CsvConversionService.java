@@ -107,7 +107,7 @@ public class CsvConversionService {
         return serialize(res, filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
     
-    private byte[] serialize(HttpServletResponse res, String filename, Iterable<CharSequence> tableHeader, Iterable<Iterable<Cells>> tableBody) {
+    private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Cells>> tableBody) {
         res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".csv");
         
         List<CharSequence> header = newList();
@@ -124,9 +124,9 @@ public class CsvConversionService {
         return mkString("\r\n", map(Transformers.map(CsvConversionService_.escape).andThen(CsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8"));
     }
 
-    private List<CharSequence> createHeader(Iterable<CharSequence> tableHeader, Iterable<Cells> row) {
+    private List<CharSequence> createHeader(Iterable<String> tableHeader, Iterable<Cells> row) {
         List<CharSequence> header = newList();
-        Iterator<CharSequence> fieldNames = tableHeader.iterator();
+        Iterator<String> fieldNames = tableHeader.iterator();
         for (Cells cells: row) {
             CharSequence currentFieldName = fieldNames.next();
             String unit = cells.unit.map(prepend(" (").andThen(append(")"))).getOrElse("");
@@ -177,7 +177,7 @@ public class CsvConversionService {
         return Pair.of(key, value);
     }
     
-    private static <T> Iterable<CharSequence> header(final Iterable<? extends MetaNamedMember<T, ?>> members) {
+    private static <T> Iterable<String> header(final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return map(MemberUtil_.memberName, members);
     }
     

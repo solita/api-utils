@@ -18,31 +18,31 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     public static final SortedSet<String> ALL_DATA = newSortedSet(Ordering.Natural(), newList(""));
     
     public final MetaNamedMember<? super T,?> original;
-    private final SortedSet<String> resolvablePropertyNames;
+    private final SortedSet<PropertyName> resolvablePropertyNames;
 
     public final Type type;
 
-    public ResolvableMember(MetaNamedMember<? super T,?> original, SortedSet<String> resolvablePropertyNames, Type type) {
+    public ResolvableMember(MetaNamedMember<? super T,?> original, SortedSet<PropertyName> resolvablePropertyNames, Type type) {
         this.original = original;
         this.resolvablePropertyNames = resolvablePropertyNames;
         this.type = type;
     }
     
     public ResolvableMember<T> combine(ResolvableMember<T> other) {
-        if (resolvablePropertyNames.equals(ALL_DATA) && exists(not(MemberUtil_.isExclusion), other.resolvablePropertyNames)) {
+        if (resolvablePropertyNames.equals(ALL_DATA) && exists(not(PropertyName_.isExclusion), other.resolvablePropertyNames)) {
             throw new RedundantPropertiesException(other.resolvablePropertyNames);
         }
-        if (other.resolvablePropertyNames.equals(ALL_DATA) && exists(not(MemberUtil_.isExclusion), resolvablePropertyNames)) {
+        if (other.resolvablePropertyNames.equals(ALL_DATA) && exists(not(PropertyName_.isExclusion), resolvablePropertyNames)) {
             throw new RedundantPropertiesException(resolvablePropertyNames);
         }
         
         Assert.equal(original, other.original);
-        SortedSet<String> newSet = newSortedSet(concat(resolvablePropertyNames, other.resolvablePropertyNames));
+        SortedSet<PropertyName> newSet = newSortedSet(concat(resolvablePropertyNames, other.resolvablePropertyNames));
         Assert.equal(resolvablePropertyNames.size() + other.resolvablePropertyNames.size(), newSet.size());
         return new ResolvableMember<T>(original, newSet, type);
     }
     
-    public SortedSet<String> getResolvablePropertyNames() {
+    public SortedSet<PropertyName> getResolvablePropertyNames() {
         return resolvablePropertyNames;
     }
     

@@ -7,7 +7,6 @@ import static fi.solita.utils.functional.Collections.newMapOfSize;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSetOfSize;
 import static fi.solita.utils.functional.Collections.newSortedSet;
-import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.exists;
@@ -23,6 +22,7 @@ import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
+import static fi.solita.utils.functional.FunctionalA.filter;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.Option.None;
@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,29 +68,29 @@ public class MemberUtil {
     private static final Logger logger = LoggerFactory.getLogger(MemberUtil.class);
     
     public static class RedundantPropertiesException extends RuntimeException {
-        public final SortedSet<String> propertyNames;
+        public final SortedSet<PropertyName> propertyNames;
     
-        public RedundantPropertiesException(SortedSet<String> propertyNames) {
-            super(mkString(",", propertyNames));
+        public RedundantPropertiesException(SortedSet<PropertyName> propertyNames) {
+            super(mkString(",", map(PropertyName_.toString, propertyNames)));
             this.propertyNames = propertyNames;
         }
     }
 
     public static class UnknownPropertyNameException extends RuntimeException {
-        public final String propertyName;
+        public final PropertyName propertyName;
     
-        public UnknownPropertyNameException(String propertyName) {
-            super(propertyName);
+        public UnknownPropertyNameException(PropertyName propertyName) {
+            super(propertyName.toString());
             this.propertyName = propertyName;
         }
     }
     
     public static class InvalidResolvableExclusionException extends RuntimeException {
-        public final String propertyName;
+        public final MetaNamedMember<?,?> member;
     
-        public InvalidResolvableExclusionException(String propertyName) {
-            super(propertyName);
-            this.propertyName = propertyName;
+        public InvalidResolvableExclusionException(MetaNamedMember<?,?> member) {
+            super(member.getName());
+            this.member = member;
         }
     }
     
@@ -172,7 +171,7 @@ public class MemberUtil {
      * @param propertyNames Filtering given by the API user. Empty if not given.
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, SerializationFormat format, Iterable<String> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         
@@ -181,10 +180,10 @@ public class MemberUtil {
         }
         
         if (propertyNames != null && (Functional.isEmpty(propertyNames) ||
-                                      size(propertyNames) == 1 && head(propertyNames).isEmpty())) {
+                                      size(propertyNames) == 1 && head(propertyNames).isEmpty(fp))) {
             // propertyNames is empty or contains only the empty string
             ret = emptyList();
-        } else if (propertyNames == null || forall(MemberUtil_.isExclusion, propertyNames)) {
+        } else if (propertyNames == null || forall(PropertyName_.isExclusion, propertyNames)) {
             // if no propertyNames given, or given but contains only exclusions:
             
             // For PNG exclude everything (geometry included back in the end)
@@ -209,16 +208,16 @@ public class MemberUtil {
             }
             includesEverything = true;
         } else {
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, withNestedMembers(members, Include.All, builders)), filter(not(MemberUtil_.isExclusion), propertyNames)));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, withNestedMembers(members, Include.All, builders)), filter(not(PropertyName_.isExclusion), propertyNames)));
         }
         
         // Exclusions
-        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, withNestedMembers(members, Include.All, builders)), map(Transformers.tailStr, filter(MemberUtil_.isExclusion, propertyNames))));
+        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, withNestedMembers(members, Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, propertyNames))));
         ret = newList(subtract(ret, toRemove));
         if (toRemove != null) {
             for (MetaNamedMember<?,?> m: toRemove) {
                 if (ResolvableMemberProvider.isResolvableMember(m)) {
-                    throw new InvalidResolvableExclusionException(m.getName());
+                    throw new InvalidResolvableExclusionException(m);
                 }
             }
         }
@@ -242,7 +241,7 @@ public class MemberUtil {
             case XML:
         }
         
-        final Map<CharSequence, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
+        final Map<String, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
 
         ret = newList(distinct(map(new Apply<MetaNamedMember<? super T,?>, MetaNamedMember<? super T,?>>() {
             @Override
@@ -257,10 +256,6 @@ public class MemberUtil {
         }, ret)));
         
         return new Includes<T>(ret, geometries, includesEverything, builders);
-    }
-    
-    public static boolean isExclusion(String propertyName) {
-        return propertyName.startsWith("-");
     }
     
     @SuppressWarnings("unchecked")
@@ -337,42 +332,52 @@ public class MemberUtil {
         }
         return ret;
     }
-
-    public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes) {
-        return includes.includesEverything ? Function.<T>id() : MemberUtil_.<T>withProperties_topLevel().ap(newList(Functional.map(MemberUtil_.memberNameWithDot, includes)), Arrays.asList(includes.builders));
+    
+    public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes, FunctionProvider fp) {
+        return includes.includesEverything ? Function.<T>id() : MemberUtil_.<T>withProperties_topLevel().ap(newList(map(MemberUtil_.propertyNameFromMember, includes)), fp, Arrays.asList(includes.builders));
     }
     
-    static boolean startsWith(String s, String prefix) {
-        return s.startsWith(prefix);
+    static PropertyName propertyNameFromMember(MetaNamedMember<?,?> member) {
+        if (member instanceof FunctionCallMember) {
+            return ((FunctionCallMember<?>) member).propertyName;
+        } else {
+            return new PropertyName(memberName(member));
+        }
     }
     
     static boolean isEmpty(String s) {
         return s.isEmpty();
     }
 
-    static final <T> T withProperties_topLevel(Collection<String> propertyNames, Iterable<Builder<?>> builders, T t) {
+    static final <T> T withProperties_topLevel(Collection<PropertyName> propertyNames, FunctionProvider fp, Iterable<Builder<?>> builders, T t) {
         Assert.defined(findBuilderFor(builders, t.getClass()), "No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
-        return withProperties(propertyNames, builders, t);
+        return withProperties(propertyNames, builders, fp, t);
     }
     
     @SuppressWarnings("unchecked")
-    static final <T> T withProperties(Collection<String> propertyNames, Iterable<Builder<?>> builders, T t) {
+    static final <T> T withProperties(Collection<PropertyName> propertyNames, Iterable<Builder<?>> builders, FunctionProvider fp, T t) {
         logger.debug("Including properties {} in {}", propertyNames, t);
         for (Builder<T> builder: findBuilderFor(builders, (Class<T>)t.getClass())) {
             logger.debug("Found Builder for {}", t.getClass());
             for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);
-                List<String> subs = newList(filter(MemberUtil_.startsWith.apply(Function.__, memberNameWithDot(member)), propertyNames));
+                List<PropertyName> subs = newList(filter(PropertyName_.startsWith.apply(Function.__, fp, memberName(member)), propertyNames));
                 logger.debug("Relevant properties: {}", propertyNames);
                 if (!subs.isEmpty()) {
                     Object value = member.apply(t);
                     logger.debug("Got value: {}", value);
                     if (value != null) {
-                        List<String> subProps = newList(filter(not(MemberUtil_.isEmpty), Functional.map(MemberUtil_.removeFirstPart, subs)));
+                        List<PropertyName> subProps = newList(filter(not(PropertyName_.isEmpty.apply(Function.__, fp)), Functional.map(PropertyName_.removeFirstPart.apply(Function.__, fp), subs)));
                         logger.debug("Relevant properties for nested: {}", subProps);
                         
-                        Object nested = subProps.isEmpty() ? value : withProperties(subProps, builders, value);
+                        Object nested;
+                        if (subProps.isEmpty()) {
+                            nested = fp.apply(Assert.singleton(subs), value);
+                        } else {
+                            nested = withProperties(subProps, builders, fp, value);
+                        }
                         logger.debug("Builder.with({},{})", member, nested);
+                        
                         builder = builder.with(member, nested);
                     }
                 }
@@ -385,7 +390,7 @@ public class MemberUtil {
             logger.debug("Object is a SortedSet: {}", t.getClass());
             SortedSet<Object> ret = newSortedSet(((SortedSet<Object>) t).comparator());
             for (Object o: (SortedSet<Object>)t) {
-                ret.add(withProperties(propertyNames, builders, o));
+                ret.add(withProperties(propertyNames, builders, fp, o));
             }
             if (((SortedSet<?>) t).size() != ret.size()) {
                 throw new IllegalStateException("Something wrong");
@@ -395,7 +400,7 @@ public class MemberUtil {
             logger.debug("Object is a Set: {}", t.getClass());
             Set<Object> ret = newSetOfSize(((Set<?>) t).size());
             for (Object o: (Set<Object>)t) {
-                ret.add(withProperties(propertyNames, builders, o));
+                ret.add(withProperties(propertyNames, builders, fp, o));
             }
             if (((Set<?>) t).size() != ret.size()) {
                 throw new IllegalStateException("Something wrong");
@@ -405,14 +410,14 @@ public class MemberUtil {
             logger.debug("Object is a List/Collection: {}", t.getClass());
             List<Object> ret = newListOfSize(((Collection<?>) t).size());
             for (Object o: (List<Object>)t) {
-                ret.add(withProperties(propertyNames, builders, o));
+                ret.add(withProperties(propertyNames, builders, fp, o));
             }
             return (T) ret;
         } else if (t instanceof Map) {
             logger.debug("Object is a Map: {}", t.getClass());
             Map<Object,Object> ret = newMapOfSize(((Map<?,?>) t).size());
             for (Map.Entry<Object, Object> o: ((Map<Object,Object>)t).entrySet()) {
-                ret.put(o.getKey(), withProperties(propertyNames, builders, o.getValue()));
+                ret.put(o.getKey(), withProperties(propertyNames, builders, fp, o.getValue()));
             }
             if (((Map<?,?>) t).size() != ret.size()) {
                 throw new IllegalStateException("Something wrong");
@@ -420,7 +425,7 @@ public class MemberUtil {
             return (T) ret;
         } else if (t instanceof Option) {
             logger.debug("Object is an Option: {}", t.getClass());
-            return (T)((Option<T>) t).map(MemberUtil_.withProperties().ap(propertyNames, builders));
+            return (T)((Option<T>) t).map(MemberUtil_.withProperties().ap(propertyNames, builders, fp));
         }
         
         logger.debug("No builder found for {}", t.getClass());
@@ -457,17 +462,22 @@ public class MemberUtil {
         };
     }
     
-    static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider resolvableMemberProvider, Iterable<? extends MetaNamedMember<? super T,?>> fields, String propertyName) throws UnknownPropertyNameException {
-        List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberNameWithDot.andThen(MemberUtil_.startsWith.apply(__, propertyName + ".")), fields));
+    static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider resolvableMemberProvider, FunctionProvider fp, Iterable<? extends MetaNamedMember<? super T,?>> fields, PropertyName propertyName) throws UnknownPropertyNameException {
+        List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberName.andThen(PropertyName_.isPrefixOf.ap(propertyName, fp)), fields));
         if (ret.isEmpty()) {
             // Exactly the requested property was not found. Check if the property was resolvable, for example a reference to an external API
             Iterable<? extends MetaNamedMember<? super T, ?>> allResolvableMembers = filter(ResolvableMemberProvider_.isResolvable.ap(resolvableMemberProvider), fields);
-            Iterable<? extends MetaNamedMember<? super T, ?>> potentialPrefixes = filter(MemberUtil_.memberNameWithDot.andThen(MemberUtil_.startsWith.ap(propertyName)), allResolvableMembers);
+            Iterable<? extends MetaNamedMember<? super T, ?>> potentialPrefixes = filter(MemberUtil_.memberName.andThen(PropertyName_.startsWith.ap(propertyName, fp)), allResolvableMembers);
             for (MetaNamedMember<? super T, ?> prefix: sort(Compare.by(MemberUtil_.memberName.andThen(MemberUtil_.stringLength)), potentialPrefixes)) {
-                return newList(new ResolvableMember<T>(prefix, newSortedSet(Ordering.<String>natural(), newList(propertyName.replaceFirst(Pattern.quote(prefix.getName() + "."), ""))), resolvableMemberProvider.resolveType(prefix)));
+                return newList(new ResolvableMember<T>(prefix, newSortedSet(Ordering.<PropertyName>natural(), newList(propertyName.stripPrefix(fp, memberName(prefix)))), resolvableMemberProvider.resolveType(prefix)));
             }
             throw new MemberUtil.UnknownPropertyNameException(propertyName);
         }
+        
+        if (fp.isFunctionCall(propertyName)) {
+            return newList(map(FunctionCallMember_.<T>$().ap(propertyName), ret));
+        }
+        
         return ret;
     }
 
@@ -485,11 +495,6 @@ public class MemberUtil {
         return member.getMember() instanceof Field ? ((Field)member.getMember()).getDeclaringClass().getName() : ((Method)member.getMember()).getDeclaringClass().getName();
     }
     
-    static String removeFirstPart(String str) {
-        int i = str.indexOf('.');
-        return i == -1 ? "" : str.substring(i+1);
-    }
-
     @SuppressWarnings("unchecked")
     static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Class<T> clazz) {
         for (Builder<?> b: builders) {
@@ -500,7 +505,7 @@ public class MemberUtil {
         return None();
     }
 
-    public static CharSequence memberName(Apply<?, ?> member) {
+    public static String memberName(Apply<?, ?> member) {
         return ((MetaNamedMember<?,?>)member).getName();
     }
     

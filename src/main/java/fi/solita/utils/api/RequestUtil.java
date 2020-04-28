@@ -224,12 +224,13 @@ public abstract class RequestUtil {
     @SuppressWarnings("unchecked")
     @Deprecated
     public static final <T> List<MetaNamedMember<T,?>> toFields(List<? extends MetaNamedMember<? super T,?>> members, Iterable<String> propertyNames) {
-        if (propertyNames == null) {
+        Iterable<PropertyName> ps = map(PropertyName_.$, propertyNames);
+        if (ps == null) {
             return (List<MetaNamedMember<T, ?>>) members;
         }
-        if (size(propertyNames) == 1 && head(propertyNames).isEmpty()) {
+        if (size(ps) == 1 && head(ps).isEmpty(FunctionProvider.NONE)) {
             return emptyList();
         }
-        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, members), propertyNames));
+        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, FunctionProvider.NONE, members), ps));
     }
 }

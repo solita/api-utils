@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fi.solita.utils.api.PropertyName;
 import fi.solita.utils.api.types.Filters_.Filter_;
 import fi.solita.utils.functional.Option;
 
@@ -87,21 +88,21 @@ public final class Filters {
         for (Pattern p: newList(EQUAL, NOT_EQUAL, LT, GT, LTE, GTE)) {
             Matcher matcher = p.matcher(cql_filter);
             while (matcher.find()) {
-                filters.add(new Filter(p, matcher.group(1), stripLiteral(matcher.group(2))));
+                filters.add(new Filter(p, new PropertyName(matcher.group(1)), stripLiteral(matcher.group(2))));
             }
         }
         
         for (Pattern p: newList(BETWEEN, NOT_BETWEEN)) {
             Matcher matcher = p.matcher(cql_filter);
             while (matcher.find()) {
-                filters.add(new Filter(p, matcher.group(1), stripLiteral(matcher.group(2)), stripLiteral(matcher.group(3))));
+                filters.add(new Filter(p, new PropertyName(matcher.group(1)), stripLiteral(matcher.group(2)), stripLiteral(matcher.group(3))));
             }
         }
         
         for (Pattern p: newList(LIKE, NOT_LIKE, ILIKE, NOT_ILIKE)) {
             Matcher matcher = p.matcher(cql_filter);
             while (matcher.find()) {
-                filters.add(new Filter(p, matcher.group(1), stripLiteral(matcher.group(2))));
+                filters.add(new Filter(p, new PropertyName(matcher.group(1)), stripLiteral(matcher.group(2))));
             }
         }
         
@@ -113,14 +114,14 @@ public final class Filters {
                 while (m.find()) {
                     inargs.add(m.group(1));
                 }
-                filters.add(new Filter(p, matcher.group(1), newArray(String.class, map(Filters_.stripLiteral, inargs))));
+                filters.add(new Filter(p, new PropertyName(matcher.group(1)), newArray(String.class, map(Filters_.stripLiteral, inargs))));
             }
         }
         
         for (Pattern p: newList(NULL, NOT_NULL)) {
             Matcher matcher = p.matcher(cql_filter);
             while (matcher.find()) {
-                filters.add(new Filter(p, matcher.group(1)));
+                filters.add(new Filter(p, new PropertyName(matcher.group(1))));
             }
         }
         
@@ -129,7 +130,7 @@ public final class Filters {
             while (matcher.find()) {
                 String wkt = matcher.group(2);
                 checkWKT(wkt);
-                filters.add(new Filter(p, matcher.group(1), wkt));
+                filters.add(new Filter(p, new PropertyName(matcher.group(1)), wkt));
             }
         }
         
@@ -199,10 +200,10 @@ public final class Filters {
 
     public static final class Filter {
         public final Pattern pattern;
-        public final String property;
+        public final PropertyName property;
         public final List<String> values;
         
-        Filter(Pattern pattern, String property, String... values) {
+        Filter(Pattern pattern, PropertyName property, String... values) {
             this.pattern = pattern;
             this.property = property;
             this.values = newList(values);

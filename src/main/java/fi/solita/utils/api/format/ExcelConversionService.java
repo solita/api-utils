@@ -118,7 +118,7 @@ public class ExcelConversionService {
         return serialize(res, filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
     
-    private byte[] serialize(HttpServletResponse res, String filename, Iterable<CharSequence> tableHeader, Iterable<Iterable<Pair<Object,Class<Object>>>> tableBody) {
+    private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Pair<Object,Class<Object>>>> tableBody) {
         res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".xlsx");
         
         XSSFWorkbook wb = new XSSFWorkbook();
@@ -180,8 +180,8 @@ public class ExcelConversionService {
         return out.toByteArray();
     }
     
-    private void createHeader(Iterable<CharSequence> tableHeader, Iterable<Cells> row, Row header, CellStyle headerStyle) {
-        Iterator<CharSequence> fieldNames = tableHeader.iterator();
+    private void createHeader(Iterable<String> tableHeader, Iterable<Cells> row, Row header, CellStyle headerStyle) {
+        Iterator<String> fieldNames = tableHeader.iterator();
         int column = 0;
         for (Cells cells: row) {
             CharSequence currentFieldName = fieldNames.next();
@@ -231,7 +231,7 @@ public class ExcelConversionService {
         return Pair.of(key, value);
     }
     
-    static <T> Iterable<CharSequence> header(final Iterable<? extends MetaNamedMember<T, ?>> members) {
+    static <T> Iterable<String> header(final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return map(MemberUtil_.memberName, members);
     }
     

@@ -47,10 +47,12 @@ import fi.solita.utils.meta.MetaNamedMember;
 public class Filtering {
     private final HttpModule httpModule;
     final ResolvableMemberProvider resolvableMemberProvider;
+    final FunctionProvider fp;
     
-    public Filtering(HttpModule httpModule, ResolvableMemberProvider resolvableMemberProvider) {
+    public Filtering(HttpModule httpModule, ResolvableMemberProvider resolvableMemberProvider, FunctionProvider fp) {
         this.httpModule = httpModule;
         this.resolvableMemberProvider = resolvableMemberProvider;
+        this.fp = fp;
     }
     
     @SuppressWarnings("unchecked")
@@ -74,7 +76,7 @@ public class Filtering {
             for (Filter filter: f.getValue()) {
                 MetaNamedMember<T,Object> member;
                 try {
-                    member = (MetaNamedMember<T, Object>) Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, includes.includes, filter.property));
+                    member = (MetaNamedMember<T, Object>) Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, fp, includes.includes, filter.property));
                 } catch (UnknownPropertyNameException e) {
                     throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
                 }
@@ -90,10 +92,10 @@ public class Filtering {
     
     public static class SpatialFilteringRequiresGeometryPropertyException extends RuntimeException {
         public final String filteringProperty;
-        public final Set<CharSequence> geometryProperties;
+        public final Set<String> geometryProperties;
 
-        public SpatialFilteringRequiresGeometryPropertyException(String filteringProperty, Set<CharSequence> geometryProperties) {
-            this.filteringProperty = filteringProperty;
+        public SpatialFilteringRequiresGeometryPropertyException(PropertyName filteringProperty, Set<String> geometryProperties) {
+            this.filteringProperty = filteringProperty.value;
             this.geometryProperties = geometryProperties;
         }
     }
@@ -101,9 +103,9 @@ public class Filtering {
     public static class FilterPropertyNotFoundException extends RuntimeException {
         public final String filterProperty;
 
-        public FilterPropertyNotFoundException(String filterProperty, Throwable cause) {
-            super(filterProperty, cause);
-            this.filterProperty = filterProperty;
+        public FilterPropertyNotFoundException(PropertyName filterProperty, Throwable cause) {
+            super(filterProperty.value, cause);
+            this.filterProperty = filterProperty.value;
         }
     }
     
@@ -161,14 +163,14 @@ public class Filtering {
         
         for (Filter filter: filters.filters) {
             if (filter.pattern == Filters.INTERSECTS) {
-                if (MemberUtil.toMembers(resolvableMemberProvider, geometryMembers, filter.property).isEmpty()) {
+                if (MemberUtil.toMembers(resolvableMemberProvider, fp, geometryMembers, filter.property).isEmpty()) {
                     throw new SpatialFilteringRequiresGeometryPropertyException(filter.property, newSet(map(MemberUtil_.memberName, geometryMembers)));
                 }
                 // filtering is skipped here. Assuming it's been already done in the DB
             } else {
                 MetaNamedMember<? super T,?> member;
                 try {
-                    member = Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, includes, filter.property));
+                    member = Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, fp, includes, filter.property));
                 } catch (UnknownPropertyNameException e) {
                     throw new FilterPropertyNotFoundException(filter.property, e);
                 }
