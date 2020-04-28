@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
@@ -23,7 +24,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.core.convert.converter.Converter;
 
 import fi.solita.utils.api.Assert;
-import fi.solita.utils.api.base.HttpSerializers.InvalidTimeZoneException;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.Revision;
@@ -288,6 +288,9 @@ public class HttpSerializers {
     });
     
     public final Map.Entry<? extends Class<?>, ? extends Converter<String,DateTime>> ajanhetki = Pair.of(DateTime.class, new Converter<String, DateTime>() {
+        private final DateTime VALID_BEGIN = VALID.getStart();
+        private final DateTime VALID_END = VALID.getEnd();
+        
         @Override
         public DateTime convert(String source) throws InvalidDateTimeException, DateTimeNotWithinLimitsException {
             DateTime ret;
@@ -297,8 +300,8 @@ public class HttpSerializers {
                 throw new InvalidDateTimeException(source);
             }
             
-            if (!VALID.contains(ret)) {
-                throw new IntervalNotWithinLimitsException(dateTimeParser.print(VALID.getStart()), dateTimeParser.print(VALID.getEnd()));
+            if (ret.isBefore(VALID_BEGIN) || ret.isAfter(VALID_END)) {
+                throw new IntervalNotWithinLimitsException(dateTimeParser.print(VALID_BEGIN), dateTimeParser.print(VALID_END));
             }
             
             return ret;
