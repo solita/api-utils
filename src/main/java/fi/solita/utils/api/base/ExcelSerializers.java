@@ -92,8 +92,8 @@ public class ExcelSerializers {
     
     protected static Cells merge(ExcelModule module, Row row, int columnIndex, Tuple3<?, ?, ?> tuple, Apply<? super String,String> mapFirst, Apply<? super String,String> mapSecond) {
         Cells a = module.serialize(row, columnIndex, tuple._1);
-        Cells b = module.serialize(row, columnIndex+1, tuple._2);
-        Cells c = module.serialize(row, columnIndex+2, tuple._3);
+        Cells b = module.serialize(row, columnIndex+a.cells.size(), tuple._2);
+        Cells c = module.serialize(row, columnIndex+a.cells.size()+b.cells.size(), tuple._3);
         return new Cells(concat(a.cells, b.cells, c.cells), mapFirst.apply(cells2str(a)) + mapSecond.apply(cells2str(b)) + cells2str(c)).withUnit(a.unit);
     }
     
