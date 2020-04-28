@@ -2,10 +2,10 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
     window.onhashchange = function() {
         window.location.hash.split('#').map(function(h) { return decodeURIComponent(h); }).forEach(function(h) {
             let s = searchUrlFunction(h);
-            if (s) {
-                let layer = olstuff.newVectorLayerNoTile(s, 'Haku', 'Search');
+            if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
+                let layer = olstuff.newVectorLayerNoTile(s, h, h, h);
                 layer.setVisible(true);
-                layer.setMap(map);
+                map.addLayer(layer);
                 layer.on('change', function(e) {
                     map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                 });

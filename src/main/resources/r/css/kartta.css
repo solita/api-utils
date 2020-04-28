@@ -66,6 +66,7 @@
 
 #list {
   max-height: 75%;
+  max-width: 33%;
   right: 0;
   bottom: 0.9em;
   border: 1px solid #cccccc;

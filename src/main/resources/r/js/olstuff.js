@@ -79,13 +79,15 @@ var olstuff = function(constants, util) {
         
         actualLayers: function(mapOrGroup) {
             var results = [];
-            mapOrGroup.getLayers().forEach(function(groupOrLayer) {
-                if (groupOrLayer.getLayers) {
-                    results = results.concat(ret.actualLayers(groupOrLayer));
-                } else {
-                    results.push(groupOrLayer);
-                }
-            });
+            if (mapOrGroup.getLayers) {
+                mapOrGroup.getLayers().forEach(function(groupOrLayer) {
+                    if (groupOrLayer.getLayers) {
+                        results = results.concat(ret.actualLayers(groupOrLayer));
+                    } else {
+                        results.push(groupOrLayer);
+                    }
+                });
+            }
             return results;
         },
         
@@ -164,21 +166,27 @@ var olstuff = function(constants, util) {
                     try {
                         selectInteraction.getFeatures().clear();
                     } catch (e) {
-                        // ignore
+                        console.log(e);
                     }
-                    selectInteraction.getFeatures().push(feature);
-                    select(feature);
+                    if (feature) {
+                        selectInteraction.getFeatures().push(feature);
+                        select(feature);
+                    }
                 }, function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
-                    unselect([feature]);
+                    if (feature) {
+                        unselect([feature]);
+                    }
                 }).click(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
-                    if (click) {
-                        click(feature);
+                    if (feature) {
+                        if (click) {
+                            click(feature);
+                        }
+                        map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                     }
-                    map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                 });
             };
             map.on("moveend", f);
@@ -303,7 +311,7 @@ var olstuff = function(constants, util) {
                 }
             });
             var layer = new ol.layer.Vector({
-                title: '<span class="fi">' + title_fi + '</span><span class="en">' + title_en + '</span>',
+                title: ret.mkLayerTitle(title_fi, title_en),
                 shortName: shortName,
                 source: source,
                 opacity: opacity || 1.0,
@@ -315,6 +323,10 @@ var olstuff = function(constants, util) {
             });
             layer.setVisible(false);
             return layer;
+        },
+        
+        mkLayerTitle: function(title_fi, title_en) {
+            return '<span class="fi">' + title_fi + '</span><span class="en">' + title_en + '</span>';
         },
         
         newPngLayer: function(url, title, opacity, propertyName, typeNames) {
