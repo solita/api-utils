@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newListOfSize;
 import static fi.solita.utils.functional.Collections.newMapOfSize;
 import static fi.solita.utils.functional.Collections.newSetOfSize;
+import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
 
 import org.slf4j.Logger;
@@ -82,17 +84,18 @@ public class ModificationUtils {
             for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);
                 List<PropertyName> subs = newList(filter(PropertyName_.startsWith.apply(Function.__, fp, MemberUtil.memberName(member)), propertyNames));
+                String memberName = MemberUtil.memberName(member);
                 logger.debug("Relevant properties: {}", propertyNames);
                 if (!subs.isEmpty()) {
                     Object value = member.apply(t);
                     logger.debug("Got value: {}", value);
                     if (value != null) {
-                        List<PropertyName> subProps = newList(filter(not(PropertyName_.isEmpty.apply(Function.__, fp)), Functional.map(PropertyName_.removeFirstPart.apply(Function.__, fp), subs)));
+                        List<PropertyName> subProps = newList(filter(not(PropertyName_.isEmpty.apply(Function.__, fp)), Functional.map(PropertyName_.stripPrefix.apply(Function.__, fp, memberName), subs)));
                         logger.debug("Relevant properties for nested: {}", subProps);
                         
                         Object nested;
                         if (subProps.isEmpty()) {
-                            nested = fp.apply(Assert.singleton(subs), value);
+                            nested = Assert.singleton(subs).applyFunction(fp, value);
                         } else {
                             nested = withProperties(subProps, builders, fp, value);
                         }
@@ -131,6 +134,16 @@ public class ModificationUtils {
             List<Object> ret = newListOfSize(((Collection<?>) t).size());
             for (Object o: (List<Object>)t) {
                 ret.add(withProperties(propertyNames, builders, fp, o));
+            }
+            return (T) ret;
+        } else if (t instanceof SortedMap) {
+            logger.debug("Object is a SortedMap: {}", t.getClass());
+            SortedMap<Object,Object> ret = newSortedMap(((SortedMap<Object,Object>) t).comparator());
+            for (SortedMap.Entry<Object, Object> o: ((SortedMap<Object,Object>)t).entrySet()) {
+                ret.put(o.getKey(), withProperties(propertyNames, builders, fp, o.getValue()));
+            }
+            if (((SortedMap<?,?>) t).size() != ret.size()) {
+                throw new IllegalStateException("Something wrong");
             }
             return (T) ret;
         } else if (t instanceof Map) {

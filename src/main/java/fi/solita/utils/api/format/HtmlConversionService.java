@@ -63,11 +63,11 @@ public abstract class HtmlConversionService {
         this.htmlModule = htmlModule;
     }
     
-    public static HtmlTitle title(final String title) {
+    public HtmlTitle title(final String title) {
         return title(title, Option.<Count>None(), Option.<StartIndex>None());
     }
     
-    public static HtmlTitle title(final String title, final Option<Count> count, final Option<StartIndex> startIndex) {
+    public HtmlTitle title(final String title, final Option<Count> count, final Option<StartIndex> startIndex) {
         return new HtmlTitle(title) {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {

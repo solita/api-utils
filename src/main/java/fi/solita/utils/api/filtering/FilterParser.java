@@ -83,7 +83,7 @@ public class FilterParser {
                                        p == GT        ? FilterType.GT :
                                        p == LTE       ? FilterType.LTE :
                                        p == GTE       ? FilterType.GTE : null,
-                                       new PropertyName(matcher.group(1)), stripLiteral(matcher.group(2))));
+                                       PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2))));
             }
         }
         
@@ -92,7 +92,7 @@ public class FilterParser {
             while (matcher.find()) {
                 filters.add(new Filter(p == BETWEEN     ? FilterType.BETWEEN :
                                        p == NOT_BETWEEN ? FilterType.NOT_BETWEEN : null,
-                                       new PropertyName(matcher.group(1)), stripLiteral(matcher.group(2)), stripLiteral(matcher.group(3))));
+                                       PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2)), stripLiteral(matcher.group(3))));
             }
         }
         
@@ -103,7 +103,7 @@ public class FilterParser {
                                        p == NOT_LIKE  ? FilterType.NOT_LIKE :
                                        p == ILIKE     ? FilterType.ILIKE :
                                        p == NOT_ILIKE ? FilterType.NOT_ILIKE : null,
-                                       new PropertyName(matcher.group(1)), stripLiteral(matcher.group(2))));
+                                       PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2))));
             }
         }
         
@@ -117,7 +117,7 @@ public class FilterParser {
                 }
                 filters.add(new Filter(p == IN     ? FilterType.IN :
                                        p == NOT_IN ? FilterType.NOT_IN : null,
-                                       new PropertyName(matcher.group(1)), newArray(String.class, map(FilterParser_.stripLiteral, inargs))));
+                                       PropertyName.of(matcher.group(1)), newArray(String.class, map(FilterParser_.stripLiteral, inargs))));
             }
         }
         
@@ -126,7 +126,7 @@ public class FilterParser {
             while (matcher.find()) {
                 filters.add(new Filter(p == NULL     ? FilterType.NULL :
                                        p == NOT_NULL ? FilterType.NOT_NULL : null,
-                                       new PropertyName(matcher.group(1))));
+                                       PropertyName.of(matcher.group(1))));
             }
         }
         
@@ -135,7 +135,7 @@ public class FilterParser {
             while (matcher.find()) {
                 String wkt = matcher.group(2);
                 checkWKT(wkt);
-                filters.add(new Filter(FilterType.INTERSECTS, new PropertyName(matcher.group(1)), wkt));
+                filters.add(new Filter(FilterType.INTERSECTS, PropertyName.of(matcher.group(1)), wkt));
             }
         }
         

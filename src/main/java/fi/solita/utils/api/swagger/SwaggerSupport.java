@@ -1,4 +1,4 @@
-package fi.solita.utils.api;
+package fi.solita.utils.api.swagger;
 
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.head;
@@ -25,7 +25,6 @@ import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
-import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.core.Ordered;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,9 +35,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
-import fi.solita.utils.api.SwaggerSupport_.CustomTypeParameterBuilder_;
+import fi.solita.utils.api.swagger.SwaggerSupport_.CustomTypeParameterBuilder_;
 import fi.solita.utils.api.base.VersionBase;
-import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
@@ -49,6 +47,7 @@ import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
 import springfox.documentation.RequestHandler;
@@ -79,9 +78,7 @@ import springfox.documentation.swagger.web.SwaggerResourcesProvider;
 
 public abstract class SwaggerSupport extends ApiResourceController {
     
-    public static final String API_KEY = "Api-Key";
-    
-    public static final SecurityConfiguration SECURITY_CONFIGURATION = new SecurityConfiguration(null, null, null, null, null, ApiKeyVehicle.HEADER, API_KEY, ",");
+    public static final SecurityConfiguration SECURITY_CONFIGURATION = new SecurityConfiguration(null, null, null, null, null, ApiKeyVehicle.HEADER, RequestUtil.API_KEY, ",");
     
     public SwaggerSupport(final String groupName) {
         super(new SwaggerResourcesProvider() {
@@ -161,13 +158,13 @@ public abstract class SwaggerSupport extends ApiResourceController {
         protected void apply(String name, Class<?> clazz, AnnotatedElement ae, ModelPropertyBuilder builder) {
             if (clazz.equals(DateTime.class)) {
                 builder.description(DESCRIPTION_DateTime)
-                       .example(now());
+                       .example(RequestUtil.now());
             } else if (clazz.equals(Character.class)) {
                 builder.description("character")
                        .example("c");
             } else if (clazz.equals(Interval.class)) {
                 builder.description(DESCRIPTION_Interval)
-                       .example(intervalNow());
+                       .example(RequestUtil.intervalNow());
             } else if (clazz.equals(Count.class)) {
                 builder.example(1);
             } else if (clazz.equals(StartIndex.class)) {
@@ -228,19 +225,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             return SwaggerPluginSupport.pluginDoesApply(delimiter);
         }
     }
-    
-    public static final String now() {
-        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC).toString(ISODateTimeFormat.dateTimeNoMillis());
-    }
-    
-    public static final String intervalNow() {
-        return now() + "/" + now();
-    }
-    
-    public static final String intervalInfinity() {
-        return HttpSerializers.VALID.getStart().toString(ISODateTimeFormat.dateTimeNoMillis()) + "/" + HttpSerializers.VALID.getEnd().toString(ISODateTimeFormat.dateTimeNoMillis());
-    }
-    
     
     /**
      * Rekisteröi kuvauksia jne globaalisti tunnetuille parametrityypeille
@@ -371,16 +355,16 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     return contextPath;
                 }
             })
-            .securitySchemes(newList(new ApiKey(API_KEY, API_KEY, ApiKeyVehicle.HEADER.getValue())))
+            .securitySchemes(newList(new ApiKey(RequestUtil.API_KEY, RequestUtil.API_KEY, ApiKeyVehicle.HEADER.getValue())))
             .useDefaultResponseMessages(false)
             .genericModelSubstitutes(Option.class)
             
             // Http-parametreissa käytetyt tyypit, jotka eivät välttämättä satu tulemaan JsonModulen kautta
             .directModelSubstitute(Count.class, int.class)
             .directModelSubstitute(StartIndex.class, int.class)
-            .directModelSubstitute(Filters.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
-            .directModelSubstitute(PropertyName.class, String[].class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
-            .directModelSubstitute(SRSName.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
+            .directModelSubstitute(Filters.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
+            .directModelSubstitute(PropertyName.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
+            .directModelSubstitute(SRSName.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             
             .ignoredParameterTypes(Revision.class)
             .globalOperationParameters(newList(new ParameterBuilder()

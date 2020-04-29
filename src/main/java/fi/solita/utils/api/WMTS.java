@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Tuple4;
 
 public class WMTS {
@@ -56,7 +57,7 @@ public class WMTS {
                         ret.add(
                             WMTS.LAYER_URL_TEMPLATE
                                 .replace("{{name}}", layer._1)
-                                .replace("{{time}}", SwaggerSupport.intervalNow())
+                                .replace("{{time}}", RequestUtil.intervalNow())
                                 .replace("{{path}}", layer._2)
                                 .replace("{{qsPreTime}}", "")
                                 .replace("{{qsPostTime}}", layer._4)
@@ -106,7 +107,7 @@ public class WMTS {
         for (Tuple4<String, String, String, String> layer: wmtsLayers) {
             layers.append(WMTS.LAYER_TEMPLATE
                         .replace("{{name}}", layer._1)
-                        .replace("{{time}}", SwaggerSupport.intervalNow())
+                        .replace("{{time}}", RequestUtil.intervalNow())
                         .replace("{{path}}", layer._2)
                         .replace("{{qsPreTime}}", "")
                         .replace("{{qsPostTime}}", layer._4)

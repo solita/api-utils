@@ -20,7 +20,7 @@ import fi.solita.utils.functional.Ordering;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
-    public static final SortedSet<String> ALL_DATA = newSortedSet(Ordering.Natural(), newList(""));
+    public static final SortedSet<PropertyName> ALL_DATA = newSortedSet(Ordering.Natural(), newList(PropertyName.of("")));
     
     public final MetaNamedMember<? super T,?> original;
     private final SortedSet<PropertyName> resolvablePropertyNames;
@@ -39,16 +39,22 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     }
     
     public ResolvableMember<T> combine(ResolvableMember<T> other) {
-        if (resolvablePropertyNames.equals(ALL_DATA) && exists(not(PropertyName_.isExclusion), other.resolvablePropertyNames)) {
+        Assert.equal(original, other.original);
+        
+        if (isAllData() && other.isAllData()) {
+            return this;
+        }
+        
+        if (isAllData() && exists(not(PropertyName_.isExclusion), other.resolvablePropertyNames)) {
             throw new RedundantPropertiesException(other.resolvablePropertyNames);
         }
-        if (other.resolvablePropertyNames.equals(ALL_DATA) && exists(not(PropertyName_.isExclusion), resolvablePropertyNames)) {
+        if (other.isAllData() && exists(not(PropertyName_.isExclusion), resolvablePropertyNames)) {
             throw new RedundantPropertiesException(resolvablePropertyNames);
         }
         
-        Assert.equal(original, other.original);
         SortedSet<PropertyName> newSet = newSortedSet(concat(resolvablePropertyNames, other.resolvablePropertyNames));
         Assert.equal(resolvablePropertyNames.size() + other.resolvablePropertyNames.size(), newSet.size());
+        
         return new ResolvableMember<T>(original, newSet, type);
     }
     
@@ -69,6 +75,10 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     @Override
     public String getName() {
         return original.getName();
+    }
+    
+    public boolean isAllData() {
+        return resolvablePropertyNames.equals(ALL_DATA);
     }
 
     @Override

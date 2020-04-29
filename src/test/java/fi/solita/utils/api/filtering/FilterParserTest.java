@@ -14,7 +14,7 @@ import fi.solita.utils.api.types.PropertyName;
 
 public class FilterParserTest {
     
-    private static final PropertyName FOO = new PropertyName("foo");
+    private static final PropertyName FOO = PropertyName.of("foo");
 
     private List<Filter> someFilter(String value) {
         return newList(new Filter(FilterType.EQUAL, FOO, value));

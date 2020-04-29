@@ -32,12 +32,16 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.NotFoundException;
+import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.util.RequestUtil_;
 import fi.solita.utils.api.format.SerializationFormat;
@@ -230,14 +234,27 @@ public abstract class RequestUtil {
 
     @SuppressWarnings("unchecked")
     @Deprecated
-    public static final <T> List<MetaNamedMember<T,?>> toFields(List<? extends MetaNamedMember<? super T,?>> members, Iterable<String> propertyNames) {
-        Iterable<PropertyName> ps = map(PropertyName_.$, propertyNames);
-        if (ps == null) {
+    public static final <T> List<MetaNamedMember<T,?>> toFields(List<? extends MetaNamedMember<? super T,?>> members, Iterable<PropertyName> propertyNames) {
+        if (propertyNames == null) {
             return (List<MetaNamedMember<T, ?>>) members;
         }
-        if (size(ps) == 1 && head(ps).isEmpty(FunctionProvider.NONE)) {
+        if (size(propertyNames) == 1 && head(propertyNames).isEmpty(FunctionProvider.NONE)) {
             return emptyList();
         }
-        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, FunctionProvider.NONE, members), ps));
+        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, FunctionProvider.NONE, members), propertyNames));
+    }
+
+    public static final String API_KEY = "Api-Key";
+
+    public static final String now() {
+        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC).toString(ISODateTimeFormat.dateTimeNoMillis());
+    }
+
+    public static final String intervalNow() {
+        return now() + "/" + now();
+    }
+
+    public static final String intervalInfinity() {
+        return HttpSerializers.VALID.getStart().toString(ISODateTimeFormat.dateTimeNoMillis()) + "/" + HttpSerializers.VALID.getEnd().toString(ISODateTimeFormat.dateTimeNoMillis());
     }
 }

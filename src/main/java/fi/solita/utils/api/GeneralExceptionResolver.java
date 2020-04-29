@@ -1,5 +1,6 @@
 package fi.solita.utils.api;
 
+import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 
 import java.io.IOException;
@@ -16,7 +17,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import fi.solita.utils.api.filtering.FilterParser;
 import fi.solita.utils.api.filtering.Filtering;
+import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
+import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.util.ExceptionUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RedundantPropertiesException;
@@ -80,7 +83,7 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 return new ModelAndView();
             }
             for (Filtering.SpatialFilteringRequiresGeometryPropertyException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.SpatialFilteringRequiresGeometryPropertyException.class)) {
-                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Spatial filtering can only be done for a geometry column. Not '" + e.filteringProperty + "' but one of: " + mkString(",", e.geometryProperties));
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Spatial filtering can only be done for a geometry column. Not '" + e.filteringProperty.getValue() + "' but one of: " + mkString(",", e.geometryProperties));
                 return new ModelAndView();
             }
             for (Filtering.CannotFilterByResolvableException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.CannotFilterByResolvableException.class)) {
@@ -88,11 +91,11 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 return new ModelAndView();
             }
             for (MemberUtil.UnknownPropertyNameException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.UnknownPropertyNameException.class)) {
-                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unknown propertyName: " + e.propertyName);
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unknown propertyName: " + e.propertyName.getValue());
                 return new ModelAndView();
             }
             for (RedundantPropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, RedundantPropertiesException.class)) {
-                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + e.propertyNames);
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + mkString(",", map(PropertyName_.getValue, e.propertyNames)));
                 return new ModelAndView();
             }
             for (Includes.InvalidResolvableExclusionException e: ExceptionUtils.findCauseFromHierarchy(ex, Includes.InvalidResolvableExclusionException.class)) {
@@ -100,11 +103,11 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 return new ModelAndView();
             }
             for (ResolvableMemberProvider.CannotResolveAsFormatException e: ExceptionUtils.findCauseFromHierarchy(ex, ResolvableMemberProvider.CannotResolveAsFormatException.class)) {
-                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Cannot use resolvable properties with " + e.format);
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Cannot use resolvable properties with " + e.format.name());
                 return new ModelAndView();
             }
             for (Filtering.FilterPropertyNotFoundException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.FilterPropertyNotFoundException.class)) {
-                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Property used for filtering (" + e.filterProperty + ") not found in result. Use 'propertyName' parameter to define suitable set of properties");
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Property used for filtering (" + e.filterProperty.getValue() + ") not found in result. Use 'propertyName' parameter to define suitable set of properties");
                 return new ModelAndView();
             }
             
@@ -118,6 +121,15 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
             }
             for (FilterParser.FirstCoordinateMustEqualLastCoordinateException e: ExceptionUtils.findCauseFromHierarchy(ex, FilterParser.FirstCoordinateMustEqualLastCoordinateException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "First coordinate of a polygon must match the last coordinate in filtering: " + e.first + " / " + e.last);
+                return new ModelAndView();
+            }
+            
+            for (FunctionProvider.UnknownFunctionException e: ExceptionUtils.findCauseFromHierarchy(ex, FunctionProvider.UnknownFunctionException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unknown function: " + e.functionName);
+                return new ModelAndView();
+            }
+            for (FunctionProvider.UnsupportedFunctionForPropertyException e: ExceptionUtils.findCauseFromHierarchy(ex, FunctionProvider.UnsupportedFunctionForPropertyException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unsupported function '" + e.functionName + "' for property: " + e.propertyName);
                 return new ModelAndView();
             }
         } catch (IOException e) {

@@ -82,7 +82,7 @@ public class MemberUtil {
         if (member instanceof FunctionCallMember) {
             return ((FunctionCallMember<?>) member).propertyName;
         } else {
-            return new PropertyName(memberName(member));
+            return PropertyName.of(memberName(member));
         }
     }
     
@@ -102,7 +102,7 @@ public class MemberUtil {
             throw new MemberUtil.UnknownPropertyNameException(propertyName);
         }
         
-        if (fp.isFunctionCall(propertyName)) {
+        if (propertyName.isFunctionCall()) {
             return newList(map(FunctionCallMember_.<T>$().ap(propertyName), ret));
         }
         

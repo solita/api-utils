@@ -96,21 +96,21 @@ public class Filtering {
     }
     
     public static class SpatialFilteringRequiresGeometryPropertyException extends RuntimeException {
-        public final String filteringProperty;
+        public final PropertyName filteringProperty;
         public final Set<String> geometryProperties;
 
         public SpatialFilteringRequiresGeometryPropertyException(PropertyName filteringProperty, Set<String> geometryProperties) {
-            this.filteringProperty = filteringProperty.value;
+            this.filteringProperty = filteringProperty;
             this.geometryProperties = geometryProperties;
         }
     }
     
     public static class FilterPropertyNotFoundException extends RuntimeException {
-        public final String filterProperty;
+        public final PropertyName filterProperty;
 
         public FilterPropertyNotFoundException(PropertyName filterProperty, Throwable cause) {
-            super(filterProperty.value, cause);
-            this.filterProperty = filterProperty.value;
+            super(filterProperty.toString(), cause);
+            this.filterProperty = filterProperty;
         }
     }
     

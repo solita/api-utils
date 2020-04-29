@@ -195,7 +195,7 @@ public class HttpSerializers {
     public final Map.Entry<? extends Class<?>, ? extends Converter<String,PropertyName>> propertyName = Pair.of(PropertyName.class, new Converter<String, PropertyName>() {
         @Override
         public PropertyName convert(String source) {
-            return new PropertyName(source);
+            return PropertyName.of(source);
         }
     });
     

@@ -30,6 +30,7 @@ import java.util.Map;
 
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
+import fi.solita.utils.api.functions.FunctionProvider_;
 import fi.solita.utils.api.resolving.ResolvableMember;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
@@ -40,6 +41,7 @@ import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
+import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Transformers;
@@ -94,8 +96,8 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         
-        if (propertyNames != null && newList(propertyNames).size() > newSet(propertyNames).size()) {
-            throw new RedundantPropertiesException(newSortedSet(flatten(filter(Transformers.size.andThen(greaterThan(1l)), group(sort(propertyNames))))));
+        if (propertyNames != null && newList(propertyNames).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames)).size()) {
+            throw new RedundantPropertiesException(newSortedSet(flatten(filter(Transformers.size.andThen(greaterThan(1l)), group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames)))))));
         }
         
         if (propertyNames != null && (Functional.isEmpty(propertyNames) ||
@@ -177,7 +179,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         return new Includes<T>(ret, geometries, includesEverything, builders);
     }
     
-    private enum Include {
+    public enum Include {
         All,
         OnlyLeaf,
         NoBuildable
@@ -192,7 +194,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      * <p>would return [a, a.b, a.b.a, b, b.a, c]
      */
     @SuppressWarnings("unchecked")
-    private static <T> List<MetaNamedMember<? super T, ?>> withNestedMembers(Collection<? extends MetaNamedMember<? super T, ?>> members, Includes.Include include, Builder<?>... builders) {
+    public static <T> List<MetaNamedMember<? super T, ?>> withNestedMembers(Collection<? extends MetaNamedMember<? super T, ?>> members, Includes.Include include, Builder<?>... builders) {
         List<MetaNamedMember<? super T, ?>> ret = newList();
         for (MetaNamedMember<? super T, ?> member: members) {
             ret.add(member);

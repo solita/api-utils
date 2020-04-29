@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import ar.com.hjg.pngj.FilterType;
-import fi.solita.utils.api.SwaggerSupport;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
@@ -89,7 +88,7 @@ public class PngConversionService {
     
     public byte[] render(HttpServletRequest req, ReferencedEnvelope paikka, String layerName) {
         URI uri = baseURI.resolve(req.getContextPath() + RequestUtil.getContextRelativePath(req).replaceFirst(".png", ".geojson") + Option.of(req.getQueryString()).map(prepend("?")).getOrElse(""));
-        return render(uri, paikka, layerName, Option.of(req.getHeader(SwaggerSupport.API_KEY)));
+        return render(uri, paikka, layerName, Option.of(req.getHeader(RequestUtil.API_KEY)));
     }
     
     public byte[] render(URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) {
@@ -109,7 +108,7 @@ public class PngConversionService {
         
         URLConnection connection = uri.toURL().openConnection();
         for (String key: apikey) {
-            connection.setRequestProperty(SwaggerSupport.API_KEY, key);
+            connection.setRequestProperty(RequestUtil.API_KEY, key);
         }
         
         Reader in = new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8"));

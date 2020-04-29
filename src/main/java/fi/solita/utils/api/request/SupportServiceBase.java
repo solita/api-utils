@@ -8,7 +8,6 @@ import static fi.solita.utils.functional.Option.Some;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import fi.solita.utils.api.SwaggerSupport;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
@@ -18,7 +17,7 @@ import fi.solita.utils.functional.Pair;
 public class SupportServiceBase {
 
     public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
-        ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", SwaggerSupport.intervalNow())));
+        ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.intervalNow())));
     }
 
     public Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {

@@ -6,70 +6,147 @@ import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Predicate;
 
-public class PropertyName implements Comparable<PropertyName> {
+public abstract class PropertyName implements Comparable<PropertyName> {
 
-    public final String value;
+    protected final String value;
 
-    public PropertyName(String value) {
+    PropertyName(String value) {
         this.value = value;
+    }
+    
+    public static final PropertyName of(String value) {
+        if (FunctionProvider.isFunctionCall(value)) {
+            return new FunctionCallPropertyName(value);
+        } else {
+            return new RegularPropertyName(value);
+        }
+    }
+    
+    private static class RegularPropertyName extends PropertyName {
+        RegularPropertyName(String value) {
+            super(value);
+        }
+        
+        public boolean isEmpty(FunctionProvider fp) {
+            return value.isEmpty();
+        }
+        
+        public boolean isPrefixOf(FunctionProvider fp, final String longer) {
+            return (longer + ".").startsWith(value + ".");
+        }
+        
+        public boolean isFunctionCall() {
+            return false;
+        }
+        
+        public PropertyName omitExclusion() {
+            if (isExclusion()) {
+                return new RegularPropertyName(value.substring(1));
+            }
+            throw new IllegalStateException("Was not an exclusion: " + this);
+        }
+        
+        public PropertyName stripPrefix(FunctionProvider fp, final String prefix) {
+            return new RegularPropertyName(value.equals(prefix) ? "" : value.replaceFirst(Pattern.quote(prefix + "."), ""));
+        }
+        
+        public boolean startsWith(FunctionProvider fp, final String prefix) {
+            return (value + ".").startsWith(prefix + ".");
+        }
+        
+        public PropertyName toProperty(FunctionProvider fp) {
+            return this;
+        }
+        
+        public Object applyFunction(FunctionProvider fp, Object obj) {
+            return obj;
+        }
+    }
+    
+    private static class FunctionCallPropertyName extends PropertyName {
+        FunctionCallPropertyName(String value) {
+            super(value);
+        }
+
+        public boolean isEmpty(FunctionProvider fp) {
+            return fp.argumentMatches(value, new Predicate<String>() {
+                @Override
+                public boolean accept(String candidate) {
+                    return candidate.isEmpty();
+                }
+            });
+        }
+        
+        public boolean isPrefixOf(FunctionProvider fp, final String longer) {
+            return fp.argumentMatches(value, new Predicate<String>() {
+                @Override
+                public boolean accept(String candidate) {
+                    return (longer + ".").startsWith(candidate + ".");
+                }
+            });
+        }
+        
+        public boolean isFunctionCall() {
+            return true;
+        }
+        
+        public PropertyName omitExclusion() {
+            if (isExclusion()) {
+                return PropertyName.of(value.substring(1));
+            }
+            throw new IllegalStateException("Was not an exclusion: " + this);
+        }
+        
+        public PropertyName stripPrefix(FunctionProvider fp, final String prefix) {
+            return new FunctionCallPropertyName(fp.mapArgument(value, new Function1<String,String>() {
+                @Override
+                public String apply(String t) {
+                    return t.equals(prefix) ? "" : t.replaceFirst(Pattern.quote(prefix + "."), "");
+                }
+            }));
+        }
+        
+        public boolean startsWith(FunctionProvider fp, final String prefix) {
+            return fp.argumentMatches(value, new Predicate<String>() {
+                @Override
+                public boolean accept(String candidate) {
+                    return (candidate + ".").startsWith(prefix + ".");
+                }
+            });
+        }
+        
+        public PropertyName toProperty(FunctionProvider fp) {
+            return new RegularPropertyName(fp.toArgument(value));
+        }
+        
+        public Object applyFunction(FunctionProvider fp, Object obj) {
+            return fp.apply(value, obj);
+        }
+    }
+    
+    public String getValue() {
+        return value;
     }
     
     public boolean isExclusion() {
         return value.startsWith("-");
     }
     
-    public boolean isEmpty(FunctionProvider fp) {
-        return fp.argumentMatches(value, new Predicate<String>() {
-            @Override
-            public boolean accept(String candidate) {
-                return candidate.isEmpty();
-            }
-        });
-    }
+    public abstract boolean isEmpty(FunctionProvider fp);
     
-    public boolean isPrefixOf(FunctionProvider fp, final String longer) {
-        return fp.argumentMatches(value, new Predicate<String>() {
-            @Override
-            public boolean accept(String candidate) {
-                return (longer + ".").startsWith(candidate + ".");
-            }
-        });
-    }
+    public abstract boolean isPrefixOf(FunctionProvider fp, final String longer);
     
-    public PropertyName omitExclusion() {
-        if (isExclusion()) {
-            return new PropertyName(value.substring(1));
-        }
-        throw new IllegalStateException("Was not an exclusion: " + this);
-    }
+    public abstract boolean isFunctionCall();
     
-    public PropertyName stripPrefix(FunctionProvider fp, final String prefix) {
-        return new PropertyName(fp.mapArgument(value, new Function1<String,String>() {
-            @Override
-            public String apply(String t) {
-                return t.replaceFirst(Pattern.quote(prefix), "");
-            }
-        }));
-    }
+    public abstract PropertyName omitExclusion();
     
-    public boolean startsWith(FunctionProvider fp, final String prefix) {
-        return fp.argumentMatches(value, new Predicate<String>() {
-            @Override
-            public boolean accept(String candidate) {
-                return (candidate + ".").startsWith(prefix + ".");
-            }
-        });
-    }
+    public abstract PropertyName stripPrefix(FunctionProvider fp, final String prefix);
     
-    public PropertyName removeFirstPart(FunctionProvider fp) {
-        return new PropertyName(fp.mapArgument(value, new Function1<String,String>() {
-            @Override
-            public String apply(String t) {
-                int i = t.indexOf('.');
-                return i == -1 ? "" : t.substring(i+1);
-            }
-        }));
-    }
+    public abstract boolean startsWith(FunctionProvider fp, final String prefix);
+    
+    public abstract PropertyName toProperty(FunctionProvider fp);
+    
+    public abstract Object applyFunction(FunctionProvider fp, Object obj);
 
     @Override
     public int hashCode() {
