@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
@@ -24,6 +23,8 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.core.convert.converter.Converter;
 
 import fi.solita.utils.api.base.Serializers;
+import fi.solita.utils.api.filtering.Filter;
+import fi.solita.utils.api.filtering.FilterParser;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
@@ -201,8 +202,9 @@ public class HttpSerializers {
     public final Map.Entry<? extends Class<?>, ? extends Converter<String,Filters>> filter = Pair.of(Filters.class, new Converter<String, Filters>() {
         @Override
         public Filters convert(String source) {
-            for (Filters fs: Filters.parse(source)) {
-                return fs;
+            List<Filter> filters = FilterParser.parse(source);
+            if (!filters.isEmpty()) {
+                return new Filters(filters);
             }
             throw new InvalidFilterException(Filters.SUPPORTED_OPERATIONS);
         }

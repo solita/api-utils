@@ -18,13 +18,6 @@ public class PropertyName implements Comparable<PropertyName> {
         return value.startsWith("-");
     }
     
-    public PropertyName omitExclusion() {
-        if (isExclusion()) {
-            return new PropertyName(value.substring(1));
-        }
-        throw new IllegalStateException("Was not an exclusion: " + this);
-    }
-    
     public boolean isEmpty(FunctionProvider fp) {
         return fp.argumentMatches(value, new Predicate<String>() {
             @Override
@@ -41,6 +34,13 @@ public class PropertyName implements Comparable<PropertyName> {
                 return (longer + ".").startsWith(candidate + ".");
             }
         });
+    }
+    
+    public PropertyName omitExclusion() {
+        if (isExclusion()) {
+            return new PropertyName(value.substring(1));
+        }
+        throw new IllegalStateException("Was not an exclusion: " + this);
     }
     
     public PropertyName stripPrefix(FunctionProvider fp, final String prefix) {

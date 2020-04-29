@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
-import fi.solita.utils.api.Filtering;
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.base.csv.CsvModule;
 import fi.solita.utils.api.base.csv.CsvSerializers;
@@ -30,13 +29,14 @@ import fi.solita.utils.api.base.json.JsonSerializers;
 import fi.solita.utils.api.base.xml.XmlMetadataSource;
 import fi.solita.utils.api.base.xml.XmlModule;
 import fi.solita.utils.api.base.xml.XmlSerializers;
+import fi.solita.utils.api.filtering.Filtering;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.api.types.Filters_.Filter_;
-import fi.solita.utils.api.util.MemberUtil;
+import fi.solita.utils.api.filtering.Filter_;
+import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
 import fi.solita.utils.functional.Pair;
@@ -123,15 +123,15 @@ public abstract class VersionBase {
         return FunctionalM.map(new Transformer<Map.Entry<K,? extends Iterable<T>>,Map.Entry<K,Iterable<T>>>() {
             @Override
             public Map.Entry<K, Iterable<T>> transform(Map.Entry<K, ? extends Iterable<T>> source) {
-                return Pair.of(source.getKey(), map(MemberUtil.<T>withPropertiesF(includes, functionProvider()), source.getValue()));
+                return Pair.of(source.getKey(), map(ModificationUtils.<T>withPropertiesF(includes, functionProvider()), source.getValue()));
             }
         }, ts);
     }
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
-        return FunctionalM.map(MemberUtil.<T>withPropertiesF(includes, functionProvider()), ts);
+        return FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider()), ts);
     }
     public final <T> Iterable<T> filterColumns(Includes<T> includes, Iterable<T> ts) {
-        return map(MemberUtil.<T>withPropertiesF(includes, functionProvider()), ts);
+        return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider()), ts);
     }
     
     public <K,T> Map<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,? extends Iterable<T>> ts) {
@@ -148,7 +148,7 @@ public abstract class VersionBase {
     }
     
     public final <T> T filter(HttpServletRequest req, Includes<T> includes, T t) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, MemberUtil.<T>withPropertiesF(includes, functionProvider()).apply(t));
+        return resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider()).apply(t));
     }
     
     public FunctionProvider functionProvider() {
@@ -156,8 +156,8 @@ public abstract class VersionBase {
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
-        Includes<T> includesFromPropertyNames = MemberUtil.resolveIncludes(resolvableMemberProvider(), functionProvider(), format, propertyNames, members, builders, geometries);
-        Includes<T> includesFromFilters = filters == null ? Includes.<T>none() : MemberUtil.resolveIncludes(resolvableMemberProvider(), functionProvider(), format, map(Filter_.property, filters.filters), members, builders, geometries);
+        Includes<T> includesFromPropertyNames = Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(), format, propertyNames, members, builders, geometries);
+        Includes<T> includesFromFilters = filters == null ? Includes.<T>none() : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(), format, map(Filter_.property, filters.filters), members, builders, geometries);
         return new Includes<T>(distinct(concat(includesFromPropertyNames.includes, includesFromFilters.includes)), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, builders);
     }
     

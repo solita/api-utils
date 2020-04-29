@@ -1,4 +1,4 @@
-package fi.solita.utils.api.common;
+package fi.solita.utils.api.request;
 
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;

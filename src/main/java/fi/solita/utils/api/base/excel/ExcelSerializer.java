@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
-import fi.solita.utils.api.base.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Option;
 

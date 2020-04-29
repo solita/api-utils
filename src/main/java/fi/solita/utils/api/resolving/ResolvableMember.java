@@ -4,16 +4,18 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.exists;
+import static fi.solita.utils.functional.Functional.fold;
 import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.List;
 import java.util.SortedSet;
 
 import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider.Type;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.api.util.MemberUtil.RedundantPropertiesException;
+import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Ordering;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -29,6 +31,11 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
         this.original = original;
         this.resolvablePropertyNames = resolvablePropertyNames;
         this.type = type;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> ResolvableMember<T> combineAll(List<MetaNamedMember<? super T, ?>> xs) {
+        return fold(ResolvableMember_.<T>combine(), (List<ResolvableMember<T>>)(Object)xs).get();
     }
     
     public ResolvableMember<T> combine(ResolvableMember<T> other) {

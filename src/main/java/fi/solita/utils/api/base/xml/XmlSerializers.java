@@ -27,6 +27,7 @@ public class XmlSerializers {
         this.s = s;
     }
     
+    @SuppressWarnings("unchecked")
     public Map<Class<?>, XmlAdapter<?,?>> adapters() { return
             (Map<Class<?>, XmlAdapter<?,?>>)(Object)newMap(
                     Pair.of(Option.class, new OptionAdapter<Object>().with(s)),

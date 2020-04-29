@@ -1,4 +1,4 @@
-package fi.solita.utils.api;
+package fi.solita.utils.api.filtering;
 
 import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
@@ -11,6 +11,7 @@ import org.junit.Test;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.http.HttpModule;
 import fi.solita.utils.api.base.http.HttpSerializers;
+import fi.solita.utils.api.filtering.Filtering;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.functional.Option;

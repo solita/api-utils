@@ -1,7 +1,6 @@
 package fi.solita.utils.api.format.geojson;
 
 import static fi.solita.utils.functional.Collections.newMap;
-import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
 import com.fasterxml.jackson.annotation.JsonValue;

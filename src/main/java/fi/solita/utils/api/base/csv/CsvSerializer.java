@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newList;
 
 import java.util.List;
 
-import fi.solita.utils.api.base.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Option;
 

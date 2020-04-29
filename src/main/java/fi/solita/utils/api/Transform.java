@@ -12,11 +12,12 @@ import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.MathTransform;
 
+import fi.solita.utils.api.filtering.Filter;
+import fi.solita.utils.api.filtering.FilterType;
+import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.types.Filters;
-import fi.solita.utils.api.types.Filters.Filter;
-import fi.solita.utils.api.types.Filters_.Filter_;
-import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.types.SRSName;
+import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.Function;
@@ -29,7 +30,7 @@ public class Transform {
         if (filters != null) {
             List<Filter> spatialFilters = filters.spatialFilters();
             Assert.lessThanOrEqual(spatialFilters.size(), 1);
-            for (Filter intersect: filter(Filter_.pattern.andThen(equalTo(Filters.INTERSECTS)), spatialFilters)) {
+            for (Filter intersect: filter(Filter_.pattern.andThen(equalTo(FilterType.INTERSECTS)), spatialFilters)) {
                 Assert.Null(bbox, "BBOX cannot be given together with spatial filtering");
                 String wkt = Assert.singleton(intersect.values);
                 return fromWKT.apply(wkt);

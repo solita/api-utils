@@ -1,4 +1,4 @@
-package fi.solita.utils.api.common;
+package fi.solita.utils.api.request;
 
 import static fi.solita.utils.api.util.ResponseUtil.redirectToRevision;
 import static fi.solita.utils.functional.Option.None;

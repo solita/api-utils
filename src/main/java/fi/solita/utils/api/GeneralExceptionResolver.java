@@ -14,10 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
+import fi.solita.utils.api.filtering.FilterParser;
+import fi.solita.utils.api.filtering.Filtering;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
-import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.util.ExceptionUtils;
 import fi.solita.utils.api.util.MemberUtil;
+import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
 
@@ -89,11 +91,11 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Unknown propertyName: " + e.propertyName);
                 return new ModelAndView();
             }
-            for (MemberUtil.RedundantPropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.RedundantPropertiesException.class)) {
+            for (RedundantPropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, RedundantPropertiesException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + e.propertyNames);
                 return new ModelAndView();
             }
-            for (MemberUtil.InvalidResolvableExclusionException e: ExceptionUtils.findCauseFromHierarchy(ex, MemberUtil.InvalidResolvableExclusionException.class)) {
+            for (Includes.InvalidResolvableExclusionException e: ExceptionUtils.findCauseFromHierarchy(ex, Includes.InvalidResolvableExclusionException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Invalid exclusion of resolvable member: " + e.member.getName() + ". Put the negation sign in front of the external propertyname, e.g. instead of '-foo.bar' use 'foo.-bar'");
                 return new ModelAndView();
             }
@@ -106,15 +108,15 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 return new ModelAndView();
             }
             
-            for (Filters.IllegalPointException e: ExceptionUtils.findCauseFromHierarchy(ex, Filters.IllegalPointException.class)) {
+            for (FilterParser.IllegalPointException e: ExceptionUtils.findCauseFromHierarchy(ex, FilterParser.IllegalPointException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal coordinate in filtering: " + e.point);
                 return new ModelAndView();
             }
-            for (Filters.IllegalPolygonException e: ExceptionUtils.findCauseFromHierarchy(ex, Filters.IllegalPolygonException.class)) {
+            for (FilterParser.IllegalPolygonException e: ExceptionUtils.findCauseFromHierarchy(ex, FilterParser.IllegalPolygonException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Illegal polygon in filtering: " + e.polygon);
                 return new ModelAndView();
             }
-            for (Filters.FirstCoordinateMustEqualLastCoordinateException e: ExceptionUtils.findCauseFromHierarchy(ex, Filters.FirstCoordinateMustEqualLastCoordinateException.class)) {
+            for (FilterParser.FirstCoordinateMustEqualLastCoordinateException e: ExceptionUtils.findCauseFromHierarchy(ex, FilterParser.FirstCoordinateMustEqualLastCoordinateException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "First coordinate of a polygon must match the last coordinate in filtering: " + e.first + " / " + e.last);
                 return new ModelAndView();
             }

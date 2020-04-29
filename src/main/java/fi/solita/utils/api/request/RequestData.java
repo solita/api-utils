@@ -1,4 +1,4 @@
-package fi.solita.utils.api.common;
+package fi.solita.utils.api.request;
 
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil.ETags;

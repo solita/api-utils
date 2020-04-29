@@ -29,17 +29,15 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import fi.solita.utils.api.base.json.JsonSerializers_;
-import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.Serializers_;
+import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
-import fi.solita.utils.meta.MetaField;
 import fi.solita.utils.meta.MetaNamedMember;
 
 /**
