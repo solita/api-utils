@@ -20,6 +20,7 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.ParserConfigurationException;
@@ -109,14 +110,21 @@ public class PngConversionService {
         URLConnection connection = uri.toURL().openConnection();
         for (String key: apikey) {
             connection.setRequestProperty(RequestUtil.API_KEY, key);
+            connection.setRequestProperty("Accept-Encoding", "gzip");
         }
         
-        Reader in = new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8"));
+        Option<String> contentEncoding = Option.of(connection.getContentEncoding());
+        InputStream in = connection.getInputStream();
+        if (contentEncoding.isDefined() && contentEncoding.get().equals("gzip")) {
+            in = new GZIPInputStream(in);
+        }
+        
+        Reader reader = new InputStreamReader(in, Charset.forName("UTF-8"));
         FeatureCollection<?,?> featureCollection;
         try {
-            featureCollection = io.readFeatureCollection(in);
+            featureCollection = io.readFeatureCollection(reader);
         } finally {
-            in.close();
+            reader.close();
         }
         
         if (featureCollection.isEmpty()) {
