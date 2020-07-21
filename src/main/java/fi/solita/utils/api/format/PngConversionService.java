@@ -110,8 +110,8 @@ public class PngConversionService {
         URLConnection connection = uri.toURL().openConnection();
         for (String key: apikey) {
             connection.setRequestProperty(RequestUtil.API_KEY, key);
-            connection.setRequestProperty("Accept-Encoding", "gzip");
         }
+        connection.setRequestProperty("Accept-Encoding", "gzip");
         
         Option<String> contentEncoding = Option.of(connection.getContentEncoding());
         InputStream in = connection.getInputStream();
