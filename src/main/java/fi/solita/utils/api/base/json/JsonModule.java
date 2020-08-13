@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.BeanDeserializer;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.deser.std.DelegatingDeserializer;
@@ -56,7 +57,14 @@ public class JsonModule extends SimpleModule {
             @Override
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
                 final JsonDeserializer<?> des = super.modifyDeserializer(config, beanDesc, deserializer);
-                return new Delegater(des);
+                // ilmeisesti 2.10:ssä muuttui käyttäytyminen:
+                // "Since 2.10 this is also called for custom deserializers for types not deemed to be of any more specific (reference, enum, array, collection(-like), map(-like), node type)"
+                if (deserializer instanceof BeanDeserializer) {
+                    return new Delegater(des);
+                } else {
+                    return des;
+                }
+
             }
         });
 

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.cfg.DeserializerFactoryConfig;
 import com.fasterxml.jackson.databind.cfg.SerializerFactoryConfig;
@@ -219,6 +220,7 @@ public class JsonObjectMapper extends ObjectMapper {
         configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, false);
         configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
         configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, true);
+        configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
     }
 
     @Override
