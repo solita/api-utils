@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
@@ -137,7 +136,7 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
         }
         
         // just in case the next resolver doesn't set this
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        ResponseUtil.setAccessControlHeaders(response);
         return null;
     }
 

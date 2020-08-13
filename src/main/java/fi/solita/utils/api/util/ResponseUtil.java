@@ -33,6 +33,8 @@ import fi.solita.utils.functional.Transformers;
 
 public abstract class ResponseUtil {
     
+    public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "*";
+    
     private static final DateTime started = DateTime.now();
     
     public static void respond(HttpServletResponse response, int status, String responseText, Pair<String,String>... headers) throws IOException {
@@ -40,8 +42,12 @@ public abstract class ResponseUtil {
         for (Pair<String,String> header: headers) {
             response.setHeader(header.left(), header.right());
         }
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        setAccessControlHeaders(response);
         response.getWriter().write(responseText);
+    }
+
+    public static void setAccessControlHeaders(HttpServletResponse response) {
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_ALLOW_ORIGIN);
     }
 
     public static void respondWithEternalCaching(HttpServletResponse response, byte[] data, ETags etags) {
@@ -68,7 +74,7 @@ public abstract class ResponseUtil {
                 }
                 response.setStatus(HttpStatus.OK.value());
                 response.setHeader(HttpHeaders.ETAG, etag);
-                response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+                setAccessControlHeaders(response);
                 response.setHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(data.length));
                 
                 ServletOutputStream os = response.getOutputStream();
@@ -122,7 +128,7 @@ public abstract class ResponseUtil {
     }
     
     public static void respondError(HttpServletResponse response, int status, String errorMsg) throws IOException {
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        setAccessControlHeaders(response);
         response.sendError(status, errorMsg);
     }
 
