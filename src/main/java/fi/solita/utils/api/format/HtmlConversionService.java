@@ -358,7 +358,7 @@ public abstract class HtmlConversionService {
         };
     };
     
-    protected Renderable pageHeader(final HtmlTitle title) {
+    public static Renderable pageHeader(final HtmlTitle title) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
