@@ -32,18 +32,17 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers;
-import fi.solita.utils.api.types.PropertyName_;
-import fi.solita.utils.api.util.RequestUtil_;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
@@ -246,8 +245,17 @@ public abstract class RequestUtil {
 
     public static final String API_KEY = "Api-Key";
 
+    public static final String instant2string(DateTime instant) {
+        return instant.toString(ISODateTimeFormat.dateTimeNoMillis());
+    }
+    
+    public static final String interval2stringRestrictedToInfinity(Interval interval) {
+        return instant2string(interval.getStart().isBefore(HttpSerializers.VALID.getStart()) ? HttpSerializers.VALID.getStart() : interval.getStart()) + "/" + 
+               instant2string(interval.getEnd()  .isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd()   : interval.getEnd());
+    }
+    
     public static final String now() {
-        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC).toString(ISODateTimeFormat.dateTimeNoMillis());
+        return instant2string(LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC));
     }
 
     public static final String intervalNow() {
@@ -255,6 +263,6 @@ public abstract class RequestUtil {
     }
 
     public static final String intervalInfinity() {
-        return HttpSerializers.VALID.getStart().toString(ISODateTimeFormat.dateTimeNoMillis()) + "/" + HttpSerializers.VALID.getEnd().toString(ISODateTimeFormat.dateTimeNoMillis());
+        return interval2stringRestrictedToInfinity(HttpSerializers.VALID);
     }
 }

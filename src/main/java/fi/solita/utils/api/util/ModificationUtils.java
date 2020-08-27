@@ -18,11 +18,13 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
+import org.joda.time.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.functions.FunctionProvider;
+import fi.solita.utils.api.resolving.ResolvingInterval;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.functional.Apply;
@@ -32,6 +34,7 @@ import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.functional.lens.Setter;
+import fi.solita.utils.meta.MetaField;
 
 public class ModificationUtils {
     
@@ -104,6 +107,11 @@ public class ModificationUtils {
                         builder = builder.with(member, nested);
                     }
                 }
+            }
+            if (t instanceof ResolvingInterval) {
+                logger.debug("Keeping ResolvingInterval property");
+                MetaField<T,Interval> resolvingInterval = ((ResolvingInterval<T>) t).getResolvingInterval();
+                builder = builder.with(resolvingInterval, resolvingInterval.apply(t));
             }
             logger.debug("Building new object");
             return builder.buildAllowIncomplete();
