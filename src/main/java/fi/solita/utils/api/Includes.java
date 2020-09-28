@@ -30,7 +30,6 @@ import java.util.Map;
 
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
-import fi.solita.utils.api.functions.FunctionProvider_;
 import fi.solita.utils.api.resolving.ResolvableMember;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
@@ -83,6 +82,14 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     @Override
     public Iterator<MetaNamedMember<T, ?>> iterator() {
         return includes.iterator();
+    }
+    
+    /**
+     * Convert to Includes of a subtype
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public <SUB extends T> Includes<SUB> cast(Builder<?>[] subtypeBuilders) {
+        return new Includes(includes, geometryMembers, false, subtypeBuilders);
     }
 
     /**
