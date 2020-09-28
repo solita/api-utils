@@ -81,7 +81,7 @@ public class Filtering {
             for (Filter filter: f.getValue()) {
                 MetaNamedMember<T,Object> member;
                 try {
-                    member = (MetaNamedMember<T, Object>) Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, fp, includes.includes, filter.property));
+                    member = (MetaNamedMember<T, Object>) Assert.singleton(filter(MemberUtil_.memberName.andThen(equalTo(filter.property.getValue())), includes.includes));
                 } catch (UnknownPropertyNameException e) {
                     throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
                 }
@@ -175,7 +175,7 @@ public class Filtering {
             } else {
                 MetaNamedMember<? super T,?> member;
                 try {
-                    member = Assert.singleton(MemberUtil.toMembers(resolvableMemberProvider, fp, includes, filter.property));
+                    member = Assert.singleton(filter(MemberUtil_.memberName.andThen(equalTo(filter.property.getValue())), includes));
                 } catch (UnknownPropertyNameException e) {
                     throw new FilterPropertyNotFoundException(filter.property, e);
                 }
