@@ -251,6 +251,14 @@ concat(text("Esimerkiksi "), link(href("lp-graph.txt"), text("näin")))
 "How can I produce a picture representing the graph of stations (Liikennepaikka) and Station intervals (Liikennepaikkaväli)?",
 concat(text("For example like "), link(href("lp-graph.txt"), text("this")))
                  ))
+                   
+                   .render(definition_fi(
+"Miksi jotkut otsikot HTML-muodossa ovat punaisia?",
+"Punaiset kentät ovat laskennallista dataa, eli mahdollisesti raskaampia muodostaa. Nämä kannattaa jättää ottamatta jos et niitä tarvitse."
+                 )).render(definition_en(
+"Why are some headers red in HTML format?",
+"Red properties are calculated data. They may be slow to produce and thus you might want to exclude them if you don't need them."
+                 ))
               ._dl()
           ._section();
     }

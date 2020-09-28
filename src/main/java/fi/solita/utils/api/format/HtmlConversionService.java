@@ -169,6 +169,10 @@ public abstract class HtmlConversionService {
         return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request);
     }
     
+    protected String extraStyle() {
+        return "";
+    }
+    
     protected Renderable pageHead(final HtmlTitle title) {
         return new Renderable() {
             @SuppressWarnings("unchecked")
@@ -279,6 +283,8 @@ public abstract class HtmlConversionService {
                                 + "  table li:first-child { border-left: none; }"
                                 + "  .fi i, .en i   { display: inline; padding-left: 0.25em; margin-left: 0.25em; border-left: 1px solid #eee; }"),
                              newList((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {").andThen(append("}")), (Apply<String,String>)HtmlConversionService_.split.apply(Function.__, "}").andThen(HtmlConversionService_.<String>toList()).andThen(Transformers.map(prepend(".nested ").andThen(HtmlConversionService_.replaceAll.apply(__, ",", ", .nested ")).andThen(append("}")))).andThen(HtmlConversionService_.join.ap(" ")) )))
+                                    
+                            + extraStyle()
                           , false)
                     ._style()
                     .script(type("text/javascript"))
@@ -463,17 +469,22 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 for (MetaNamedMember<T, ?> member: members) {
                     boolean pseudo = member.getName().isEmpty();
+                    String extraClasses = pseudo ? "" : extraClasses(member.getMember());
                     html.th()
-                        .span(class_("fi").title(pseudo ? null : docDescription(member.getMember()).getOrElse(null)))
+                        .span(class_("fi " + extraClasses).title(pseudo ? null : docDescription(member.getMember()).getOrElse(null)))
                             .write(member.getName())
                         ._span();
-                    html.span(class_("en").title(pseudo ? null : docDescription_en(member.getMember()).getOrElse(null)))
+                    html.span(class_("en " + extraClasses).title(pseudo ? null : docDescription_en(member.getMember()).getOrElse(null)))
                             .write(pseudo ? member.getName() : docName_en(member.getMember()).getOrElse(member.getName()))
                         ._span();
                     html._th();
                 }
             }
         };
+    }
+    
+    protected String extraClasses(AccessibleObject member) {
+        return "";
     }
     
     protected abstract Option<String> docName_en(AccessibleObject member);
