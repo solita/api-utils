@@ -1,9 +1,11 @@
 package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Collections.newListOfSize;
-import static fi.solita.utils.functional.Collections.newMapOfSize;
-import static fi.solita.utils.functional.Collections.newSetOfSize;
+import static fi.solita.utils.functional.Collections.newMutableListOfSize;
+import static fi.solita.utils.functional.Collections.newMutableMapOfSize;
+import static fi.solita.utils.functional.Collections.newMutableSetOfSize;
+import static fi.solita.utils.functional.Collections.newMutableSortedMap;
+import static fi.solita.utils.functional.Collections.newMutableSortedSet;
 import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
@@ -119,7 +121,7 @@ public class ModificationUtils {
         
         if (t instanceof SortedSet) {
             logger.debug("Object is a SortedSet: {}", t.getClass());
-            SortedSet<Object> ret = newSortedSet(((SortedSet<Object>) t).comparator());
+            SortedSet<Object> ret = newMutableSortedSet(((SortedSet<Object>) t).comparator());
             for (Object o: (SortedSet<Object>)t) {
                 ret.add(withProperties(propertyNames, builders, fp, o));
             }
@@ -129,7 +131,7 @@ public class ModificationUtils {
             return (T) ret;
         } else if (t instanceof Set) {
             logger.debug("Object is a Set: {}", t.getClass());
-            Set<Object> ret = newSetOfSize(((Set<?>) t).size());
+            Set<Object> ret = newMutableSetOfSize(((Set<?>) t).size());
             for (Object o: (Set<Object>)t) {
                 ret.add(withProperties(propertyNames, builders, fp, o));
             }
@@ -139,14 +141,14 @@ public class ModificationUtils {
             return (T) ret;
         } else if (t instanceof List || t instanceof Collection) {
             logger.debug("Object is a List/Collection: {}", t.getClass());
-            List<Object> ret = newListOfSize(((Collection<?>) t).size());
+            List<Object> ret = newMutableListOfSize(((Collection<?>) t).size());
             for (Object o: (List<Object>)t) {
                 ret.add(withProperties(propertyNames, builders, fp, o));
             }
             return (T) ret;
         } else if (t instanceof SortedMap) {
             logger.debug("Object is a SortedMap: {}", t.getClass());
-            SortedMap<Object,Object> ret = newSortedMap(((SortedMap<Object,Object>) t).comparator());
+            SortedMap<Object,Object> ret = newMutableSortedMap(((SortedMap<Object,Object>) t).comparator());
             for (SortedMap.Entry<Object, Object> o: ((SortedMap<Object,Object>)t).entrySet()) {
                 ret.put(o.getKey(), withProperties(propertyNames, builders, fp, o.getValue()));
             }
@@ -156,7 +158,7 @@ public class ModificationUtils {
             return (T) ret;
         } else if (t instanceof Map) {
             logger.debug("Object is a Map: {}", t.getClass());
-            Map<Object,Object> ret = newMapOfSize(((Map<?,?>) t).size());
+            Map<Object,Object> ret = newMutableMapOfSize(((Map<?,?>) t).size());
             for (Map.Entry<Object, Object> o: ((Map<Object,Object>)t).entrySet()) {
                 ret.put(o.getKey(), withProperties(propertyNames, builders, fp, o.getValue()));
             }

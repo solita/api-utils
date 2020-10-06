@@ -2,6 +2,7 @@ package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static org.junit.Assert.*;
@@ -59,7 +60,7 @@ public abstract class SpreadsheetConversionServiceTestBase {
     
     @JsonSerializeAsBean
     public static class CollectionEmptyDto {
-        public final Collection<String> collectionEmpty = newList();
+        public final Collection<String> collectionEmpty = newMutableList();
     }
     
     @JsonSerializeAsBean

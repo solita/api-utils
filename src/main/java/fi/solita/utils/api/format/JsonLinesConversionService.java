@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -43,7 +44,7 @@ public class JsonLinesConversionService {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), Charset.forName("UTF-8")));
             String line;
-            List<T> ret = newList();
+            List<T> ret = newMutableList();
             while ((line = reader.readLine()) != null) {
                 ret.add(json.deserialize(targetClass, line));
             } 
@@ -57,7 +58,7 @@ public class JsonLinesConversionService {
         try {
             BufferedReader reader = new BufferedReader(new StringReader(str));
             String line;
-            List<T> ret = newList();
+            List<T> ret = newMutableList();
             while ((line = reader.readLine()) != null) {
                 ret.add(json.deserialize(targetClass, line));
             } 

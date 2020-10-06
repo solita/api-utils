@@ -1,6 +1,7 @@
 package fi.solita.utils.api.base.excel;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalS.range;
 import static fi.solita.utils.functional.Option.None;
@@ -36,7 +37,7 @@ public class ExcelModule {
 
     public <T> Cells serialize(Row row, int columnIndex, T obj, Class<?> type) {
         if (obj == null || !Option.class.isAssignableFrom(type) && obj instanceof Option && !((Option<?>)obj).isDefined()) {
-            List<Cell> cells = newList();
+            List<Cell> cells = newMutableList();
             List<String> cols = columns(type);
             for (int index: range(0, cols.size()-1)) {
                 Cell cell = row.createCell(columnIndex + index);

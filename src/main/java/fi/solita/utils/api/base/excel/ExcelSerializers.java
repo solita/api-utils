@@ -3,6 +3,7 @@ package fi.solita.utils.api.base.excel;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -161,8 +162,8 @@ public class ExcelSerializers {
             if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
                 return module.serialize(row, columnIndex, ((Enum<?>)value).name());
             } else {
-                List<Cell> cells = newList();
-                List<String> headers = newList();
+                List<Cell> cells = newMutableList();
+                List<String> headers = newMutableList();
                 StringBuilder sb = new StringBuilder();
                 for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                     Object val;
@@ -221,7 +222,7 @@ public class ExcelSerializers {
     public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> array = Pair.of(Array.class, new ExcelSerializer<Object>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
-            List<Object> vals = newList();
+            List<Object> vals = newMutableList();
             for (int i = 0; i < Array.getLength(value); ++i) {
                 vals.add(Array.get(value, i));
             }
@@ -239,7 +240,7 @@ public class ExcelSerializers {
     public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> tuple = Pair.of(Tuple.class, new ExcelSerializer<Tuple>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Tuple value) {
-            List<Cell> cells = newList();
+            List<Cell> cells = newMutableList();
             StringBuilder sb = new StringBuilder();
             for (Object v: value.toArray()) {
                 Cells newCells = module.serialize(row, columnIndex, v);

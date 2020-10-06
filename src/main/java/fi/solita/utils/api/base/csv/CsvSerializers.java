@@ -3,6 +3,7 @@ package fi.solita.utils.api.base.csv;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -117,8 +118,8 @@ public class CsvSerializers {
                 return module.serialize(((Enum<?>)value).name());
             } else {
                 StringBuilder sb = new StringBuilder();
-                List<CharSequence> cells = newList();
-                List<String> headers = newList();
+                List<CharSequence> cells = newMutableList();
+                List<String> headers = newMutableList();
                 for (Field f: sort(Compare.by(CsvSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                     Object val;
                     try {
@@ -174,7 +175,7 @@ public class CsvSerializers {
     public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> array = Pair.of(Array.class, new CsvSerializer<Object>() {
         @Override
         public Cells render(CsvModule module, Object value) {
-            List<Object> vals = newList();
+            List<Object> vals = newMutableList();
             for (int i = 0; i < Array.getLength(value); ++i) {
                 vals.add(Array.get(value, i));
             }
@@ -192,7 +193,7 @@ public class CsvSerializers {
     public final Map.Entry<? extends Class<?>, ? extends CsvSerializer<?>> tuple = Pair.of(Tuple.class, new CsvSerializer<Tuple>() {
         @Override
         public Cells render(CsvModule module, Tuple value) {
-            List<CharSequence> cells = newList();
+            List<CharSequence> cells = newMutableList();
             StringBuilder sb = new StringBuilder();
             for (Object v: value.toArray()) {
                 Cells newCells = module.serialize(v);

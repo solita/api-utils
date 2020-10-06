@@ -1,6 +1,7 @@
 package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.FunctionalA.concat;
@@ -82,7 +83,7 @@ public class ClassUtils {
             if ( !source.getPackage().getName().startsWith("java") ) {
                 return concat(source.getDeclaredFields(), flatMap(this, Option.of(source.getSuperclass())));
             }
-            return newList();
+            return newMutableList();
         }
     };
     

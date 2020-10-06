@@ -2,6 +2,7 @@ package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.cons;
@@ -202,7 +203,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      */
     @SuppressWarnings("unchecked")
     public static <T> List<MetaNamedMember<? super T, ?>> withNestedMembers(Collection<? extends MetaNamedMember<? super T, ?>> members, Includes.Include include, Builder<?>... builders) {
-        List<MetaNamedMember<? super T, ?>> ret = newList();
+        List<MetaNamedMember<? super T, ?>> ret = newMutableList();
         for (MetaNamedMember<? super T, ?> member: members) {
             ret.add(member);
             for (Builder<?> builder: MemberUtil.findBuilderFor(newList(builders), MemberUtil.memberClassUnwrappingGeneric(member))) {

@@ -3,6 +3,9 @@ package fi.solita.utils.api.filtering;
 import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
+import static fi.solita.utils.functional.Collections.newMutableMap;
+import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.exists;
@@ -66,7 +69,7 @@ public class Filtering {
             return Constraints.empty();
         }
         
-        Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> c = newMap();
+        Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> c = newMutableMap();
         
         Set<FilterType> spatialFilters = newSet(map(new Apply<Filter, FilterType>() {
             @Override
@@ -76,7 +79,7 @@ public class Filtering {
         }, filters.spatialFilters()));
         
         for (Entry<FilterType, List<Filter>> f: groupBy(Filter_.pattern, filters.filters).entrySet()) {
-            List<Pair<MetaNamedMember<T, Object>, List<Object>>> lst = Collections.<Pair<MetaNamedMember<T,Object>,List<Object>>>newList();
+            List<Pair<MetaNamedMember<T, Object>, List<Object>>> lst = Collections.<Pair<MetaNamedMember<T,Object>,List<Object>>>newMutableList();
             c.put(f.getKey(), lst);
             for (Filter filter: f.getValue()) {
                 MetaNamedMember<T,Object> member;
@@ -132,7 +135,7 @@ public class Filtering {
         if (filters == null) {
             return ts;
         }
-        Map<K, V> ret = newLinkedMap();
+        Map<K, V> ret = newMutableLinkedMap();
         for (Map.Entry<K,V> e: ts.entrySet()) {
             // Keeps the whole key (all values) if any value satisfies filters
             if (!isEmpty(filterData(includes, geometryMembers, filters, e.getValue()))) {
@@ -146,7 +149,7 @@ public class Filtering {
         if (filters == null) {
             return ts;
         }
-        SortedMap<K, V> ret = newSortedMap(ts.comparator());
+        SortedMap<K, V> ret = newMutableSortedMap(ts.comparator());
         for (Map.Entry<K,V> e: ts.entrySet()) {
             // Keeps the whole key (all values) if any value satisfies filters
             if (!isEmpty(filterData(includes, geometryMembers, filters, e.getValue()))) {

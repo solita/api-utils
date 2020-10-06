@@ -2,6 +2,8 @@ package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableList;
+import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Transformers.prepend;
 
@@ -65,7 +67,7 @@ public class PngConversionService {
     
     private final byte[] empty256;
     
-    private final Map<String,Style> defaultStyles = newMap();
+    private final Map<String,Style> defaultStyles = newMutableMap();
     
     private final URI baseURI;
 
@@ -134,7 +136,7 @@ public class PngConversionService {
         long started = System.nanoTime();
 
         logger.debug("Rendering data...");
-        final List<Exception> errors = newList();
+        final List<Exception> errors = newMutableList();
         final MapContent map = new MapContent();
         BufferedImage image;
         try {

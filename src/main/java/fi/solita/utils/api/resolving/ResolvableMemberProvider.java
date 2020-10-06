@@ -2,6 +2,8 @@ package fi.solita.utils.api.resolving;
 
 import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
+import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -83,7 +85,7 @@ public abstract class ResolvableMemberProvider {
     public abstract void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object object);
     
     public <K,T> Map<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        Map<K, Iterable<T>> ret = newLinkedMap();
+        Map<K, Iterable<T>> ret = newMutableLinkedMap();
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
             ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), e.getValue())));
         }
@@ -91,7 +93,7 @@ public abstract class ResolvableMemberProvider {
     }
     
     public <K,T> SortedMap<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
-        SortedMap<K, Iterable<T>> ret = newSortedMap(ts.comparator());
+        SortedMap<K, Iterable<T>> ret = newMutableSortedMap(ts.comparator());
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
             ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), e.getValue())));
         }

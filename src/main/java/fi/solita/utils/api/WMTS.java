@@ -1,6 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.min;
 import static fi.solita.utils.functional.FunctionalS.range;
 
@@ -33,7 +34,7 @@ public class WMTS {
             ma.find();
             LAYER_URL_TEMPLATE = ma.group(1);
             
-            List<Integer> layerIds = newList();
+            List<Integer> layerIds = newMutableList();
             Matcher m = Pattern.compile("<TileMatrix>\\s*<ows:Identifier>([^<]+)</ows:Identifier>").matcher(WMTS_TEMPLATE);
             while (m.find()) {
                 layerIds.add(Integer.parseInt(m.group(1).trim()));
@@ -45,7 +46,7 @@ public class WMTS {
     }
     
     public static List<String> luoWmtsSeedUrlit(String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
-        List<String> ret = newList();
+        List<String> ret = newMutableList();
         
         for (int taso: newList(WMTS.MIN_LAYER_ID)) {
             BigDecimal tasonPikseleita = jhsTasonPikseleita(taso);

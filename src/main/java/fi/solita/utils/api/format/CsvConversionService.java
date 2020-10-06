@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -110,8 +111,8 @@ public class CsvConversionService {
     private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Cells>> tableBody) {
         res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".csv");
         
-        List<CharSequence> header = newList();
-        List<Iterable<CharSequence>> body = newList();
+        List<CharSequence> header = newMutableList();
+        List<Iterable<CharSequence>> body = newMutableList();
         for (Iterable<Cells> row: tableBody) {
             if (header.isEmpty()) {
                 header = createHeader(tableHeader, row);
@@ -125,7 +126,7 @@ public class CsvConversionService {
     }
 
     private List<CharSequence> createHeader(Iterable<String> tableHeader, Iterable<Cells> row) {
-        List<CharSequence> header = newList();
+        List<CharSequence> header = newMutableList();
         Iterator<String> fieldNames = tableHeader.iterator();
         for (Cells cells: row) {
             CharSequence currentFieldName = fieldNames.next();

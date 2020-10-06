@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.drop;
 import static fi.solita.utils.functional.Functional.filter;
@@ -139,7 +140,7 @@ public class ExcelConversionService {
         for (Tuple2<Integer, Iterable<Pair<Object,Class<Object>>>> r: zipWithIndex(tableBody)) {
             Row row = sheet.createRow((short)(int)r._1 + 1);
             int column = 0;
-            List<Cells> rowCells = newList();
+            List<Cells> rowCells = newMutableList();
             for (Pair<Object,Class<Object>> c: r._2) {
                 Cells cells = module.serialize(row, column, c._1, c._2);
                 column += cells.cells.size();

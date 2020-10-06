@@ -3,6 +3,7 @@ package fi.solita.utils.api.format;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.flatMap;
 
@@ -32,7 +33,7 @@ public class XmlConversionService {
             }
         }
         try {
-            Map<String, MetadataSource> m = newMap();
+            Map<String, MetadataSource> m = newMutableMap();
             for (Class<?> clazz: rootClasses) {
                 m.put(clazz.getPackage().getName(), xmlModule.getMetadataSource());
             }
@@ -40,7 +41,7 @@ public class XmlConversionService {
                 m.put(pkg.getName(), xmlModule.getMetadataSource());
             }
 
-            Map<String, Object> properties = newMap();
+            Map<String, Object> properties = newMutableMap();
             properties.put(JAXBContextProperties.OXM_METADATA_SOURCE, m);
             
             // include .xml package to pull in jaxb.properties.

@@ -2,6 +2,7 @@ package fi.solita.utils.api.filtering;
 
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalA.head;
 import static fi.solita.utils.functional.FunctionalA.last;
@@ -72,7 +73,7 @@ public class FilterParser {
     
     public static final List<Filter> parse(String cql_filter) {
         cql_filter += " AND ";
-        List<Filter> filters = newList();
+        List<Filter> filters = newMutableList();
         
         for (Pattern p: newList(EQUAL, NOT_EQUAL, LT, GT, LTE, GTE)) {
             Matcher matcher = p.matcher(cql_filter);
@@ -110,7 +111,7 @@ public class FilterParser {
         for (Pattern p: newList(IN, NOT_IN)) {
             Matcher matcher = p.matcher(cql_filter);
             while (matcher.find()) {
-                List<String> inargs = newList();
+                List<String> inargs = newMutableList();
                 Matcher m = inlist.matcher(matcher.group(2) + ",");
                 while (m.find()) {
                     inargs.add(m.group(1));
