@@ -67,8 +67,8 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false);
     }
     
-    public static final <T> Includes<T> all(Iterable<? extends MetaNamedMember<? super T,?>> includes) {
-        return new Includes<T>(includes, Collections.<MetaNamedMember<? super T, ?>>emptyList(), true);
+    public static final <T> Includes<T> all(Collection<? extends MetaNamedMember<? super T,?>> includes, Builder<?>[] builders) {
+        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), true);
     }
     
     @SuppressWarnings("unchecked")
