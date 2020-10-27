@@ -266,7 +266,7 @@ public abstract class HtmlConversionService {
                                 + "  h1 .type-datetime { display: block; }"
                                 + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; counter-reset: none; }"
                                 + "  table tr       { border-top: none; counter-increment: none; }"
-                                + "  thead          { display: inline-block; font-size: small; max-width: 33%; overflow-x: auto; }"
+                                + "  thead          { display: inline-block; font-size: small; max-width: 33%; min-width: 5em; overflow-x: auto; }"
                                 + "  tbody          { display: inline-block; font-size: small; min-width: 67%; white-space: nowrap; }"
                                 + "  thead tr       { display: block; }"
                                 + "  tbody tr       { display: flex; flex-direction: column; vertical-align: top; }"

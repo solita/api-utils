@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.FunctionalM.mapValue;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,17 +30,16 @@ import fi.solita.utils.api.base.json.JsonSerializers;
 import fi.solita.utils.api.base.xml.XmlMetadataSource;
 import fi.solita.utils.api.base.xml.XmlModule;
 import fi.solita.utils.api.base.xml.XmlSerializers;
+import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.filtering.Filtering;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
-import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformer;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -119,13 +119,14 @@ public abstract class VersionBase {
         return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
     }
     
+    @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        return FunctionalM.map(new Transformer<Map.Entry<K,? extends Iterable<T>>,Map.Entry<K,Iterable<T>>>() {
+        return mapValue(new Transformer<Iterable<T>,Iterable<T>>() {
             @Override
-            public Map.Entry<K, Iterable<T>> transform(Map.Entry<K, ? extends Iterable<T>> source) {
-                return Pair.of(source.getKey(), map(ModificationUtils.<T>withPropertiesF(includes, functionProvider()), source.getValue()));
+            public Iterable<T> transform(Iterable<T> source) {
+                return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider()), source);
             }
-        }, ts);
+        }, (Map<K,Iterable<T>>)ts);
     }
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
         return FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider()), ts);

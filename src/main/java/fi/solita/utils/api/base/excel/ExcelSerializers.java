@@ -42,6 +42,7 @@ import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
+import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.functional.Apply;
@@ -132,7 +133,7 @@ public class ExcelSerializers {
         return cell;
     }
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> resolvedMember = Pair.of(Void.class, new ExcelSerializer<Object>() {
+    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new ExcelSerializer<Object>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
             throw new ResolvableMemberProvider.CannotResolveAsFormatException(SerializationFormat.XLSX);

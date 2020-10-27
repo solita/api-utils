@@ -125,18 +125,12 @@ public class ModificationUtils {
             for (Object o: (SortedSet<Object>)t) {
                 ret.add(withProperties(propertyNames, builders, fp, o));
             }
-            if (((SortedSet<?>) t).size() != ret.size()) {
-                throw new IllegalStateException("Something wrong");
-            }
             return (T) ret;
         } else if (t instanceof Set) {
             logger.debug("Object is a Set: {}", t.getClass());
             Set<Object> ret = newMutableSetOfSize(((Set<?>) t).size());
             for (Object o: (Set<Object>)t) {
                 ret.add(withProperties(propertyNames, builders, fp, o));
-            }
-            if (((Set<?>) t).size() != ret.size()) {
-                throw new IllegalStateException("Something wrong");
             }
             return (T) ret;
         } else if (t instanceof List || t instanceof Collection) {

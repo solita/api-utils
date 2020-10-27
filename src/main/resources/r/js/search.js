@@ -3,7 +3,9 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
         window.location.hash.split('#').map(function(h) { return decodeURIComponent(h); }).forEach(function(h) {
             let s = searchUrlFunction(h);
             if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
-                let layer = olstuff.newVectorLayerNoTile(s, h, h, h);
+                let layer = s instanceof Array ?
+                     new ol.layer.Vector({source: new ol.source.Vector({features: [new ol.format.WKT().readFeature(s[0])] })}) :
+                     olstuff.newVectorLayerNoTile(s, h, h, h);
                 layer.setVisible(true);
                 map.addLayer(layer);
                 layer.on('change', function(e) {

@@ -37,6 +37,7 @@ import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -98,7 +99,7 @@ public class JsonSerializers {
     }
     
     public static <T> Map<String,Object> toMap(T value, Iterable<? extends MetaNamedMember<T, ?>> fields) {
-        return newMap(zip(map(JsonSerializers_.fieldName, fields), sequence(value, fields)));
+        return newMap(SemiGroups.fail(), zip(map(JsonSerializers_.fieldName, fields), sequence(value, fields)));
     }
 
     static String fieldName(MetaNamedMember<?,?> field) {
