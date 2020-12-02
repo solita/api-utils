@@ -142,6 +142,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
     
     public static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String DESCRIPTION_LocalDate = "Päivämäärä / Date. yyyy-MM-dd";
     public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
     public static final String DESCRIPTION_PropertyName = "Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois. / Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields.";
     public static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
@@ -165,6 +166,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (clazz.equals(Interval.class)) {
                 builder.description(DESCRIPTION_Interval)
                        .example(RequestUtil.intervalNow());
+            } else if (clazz.equals(LocalDate.class)) {
+                builder.description(DESCRIPTION_LocalDate)
+                       .example("1982-01-22");
             } else if (clazz.equals(Count.class)) {
                 builder.example(1);
             } else if (clazz.equals(StartIndex.class)) {
@@ -181,9 +185,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (clazz.equals(URI.class)) {
                 builder.description("URI")
                        .example("https://www.liikennevirasto.fi");
-            } else if (clazz.equals(LocalDate.class)) {
-                builder.description("Päivämäärä / Date. yyyy-MM-dd")
-                       .example("2014-02-14");
             } else if (clazz.equals(LocalTime.class)) {
                 builder.description("Kellonaika / Time. HH:mm:ss")
                        .example("13:20:45");
@@ -261,6 +262,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (Interval.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(DESCRIPTION_Interval);
+            } else if (LocalDate.class.isAssignableFrom(type)) {
+                parameterContext.parameterBuilder()
+                    .description(DESCRIPTION_LocalDate);
             } else if (Count.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(doc(Count.class).getOrElse(""))
@@ -274,10 +278,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 parameterContext.parameterBuilder()
                     .defaultValue("")
                     .description(DESCRIPTION_Filters);
-            } else if (PropertyName.class.isAssignableFrom(type)) {
+            } else if (PropertyName.class.isAssignableFrom(type) || requestParamName.getOrElse("").equals("propertyName")) {
                 parameterContext.parameterBuilder()
-                .collectionFormat("csv")
-                .description(DESCRIPTION_PropertyName);
+                    .collectionFormat("csv")
+                    .description(DESCRIPTION_PropertyName);
             } else if (SRSName.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(DESCRIPTION_SRSName)
