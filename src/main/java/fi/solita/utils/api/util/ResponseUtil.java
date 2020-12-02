@@ -33,7 +33,7 @@ import fi.solita.utils.functional.Transformers;
 
 public abstract class ResponseUtil {
     
-    public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "*";
+    private static final String ACCESS_CONTROL_ALLOW_ORIGIN = "*";
     
     private static final DateTime started = DateTime.now();
     
