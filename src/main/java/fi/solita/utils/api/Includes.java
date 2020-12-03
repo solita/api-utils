@@ -140,18 +140,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), propertyNames)));
         }
         
-        // Exclusions
-        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, propertyNames))));
-        ret = newList(subtract(ret, toRemove));
-        if (toRemove != null) {
-            for (MetaNamedMember<?,?> m: toRemove) {
-                if (ResolvableMemberProvider.isResolvableMember(m)) {
-                    throw new Includes.InvalidResolvableExclusionException(m);
-                }
-            }
-        }
-        
-        // Always include geometries for png/geojson/gml
+        // Include geometries for png/geojson/gml even if not explicitly requested
         switch (format) {
             case PNG:
             case GEOJSON:
@@ -168,6 +157,17 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             case CSV:
             case XLSX:
             case XML:
+        }
+        
+        // Exclusions. Also excludes geometries if explicitly excluded.
+        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, propertyNames))));
+        ret = newList(subtract(ret, toRemove));
+        if (toRemove != null) {
+            for (MetaNamedMember<?,?> m: toRemove) {
+                if (ResolvableMemberProvider.isResolvableMember(m)) {
+                    throw new Includes.InvalidResolvableExclusionException(m);
+                }
+            }
         }
         
         final Map<String, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
