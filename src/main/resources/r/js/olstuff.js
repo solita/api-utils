@@ -204,6 +204,29 @@ var olstuff = function(constants, util) {
         },
         
         styles: {
+            // from ol source
+            defaultWithColor: function(fillColor, strokeColor) {
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        fill: new ol.style.Fill({
+                            color: fillColor
+                            }),
+                        stroke: new ol.style.Stroke({
+                            color: strokeColor,
+                            width: 1.25
+                            }),
+                        radius: 5
+                    }),
+                    fill: new ol.style.Fill({
+                        color: fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: strokeColor,
+                        width: 1.25
+                    })
+                });
+            },
+            
             circle: function(radius, color) {
                 var vcolor = ol.color.asArray(color);
                 vcolor[3] = 1.0;
