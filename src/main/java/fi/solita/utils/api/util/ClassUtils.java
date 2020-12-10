@@ -1,6 +1,5 @@
 package fi.solita.utils.api.util;
 
-import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -13,6 +12,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
@@ -38,9 +38,13 @@ public class ClassUtils {
     public static Class<?> typeClass(Type type) {
         if (type instanceof ParameterizedType) {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
-            return args.length == 0 ? typeClass(((ParameterizedType)type).getRawType()) : typeClass(args[0]);
+            return args.length == 0         ? (Class<?>)((ParameterizedType)type).getRawType() :
+                   args[0] instanceof Class ? (Class<?>)args[0]                                :
+                                              (Class<?>)((ParameterizedType)args[0]).getRawType();
         } else if (type instanceof Class) {
             return (Class<?>) type;
+        } else if (type instanceof TypeVariable<?>) {
+            return typeClass(((TypeVariable<?>) type).getBounds()[0]);
         } else {
             throw new IllegalArgumentException("Could not handle Type: " + type.getClass());
         }
