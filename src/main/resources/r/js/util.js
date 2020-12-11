@@ -31,7 +31,7 @@ var util = function(customPrettyPrinting) {
                 if (!r) {
                     r = '';
                     for (var key in obj) {
-                        if (obj.hasOwnProperty(key)) {
+                        if (obj.hasOwnProperty(key) && !key.startsWith('_')) {
                             if (r === '') {
                                 r = '<ul>';
                             }
