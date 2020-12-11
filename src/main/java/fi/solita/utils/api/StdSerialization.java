@@ -33,7 +33,6 @@ import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
 import fi.solita.utils.api.resolving.GeojsonResolver;
 import fi.solita.utils.api.types.SRSName;
-import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.RequestUtil.UnavailableContentTypeException;
 import fi.solita.utils.functional.Apply;

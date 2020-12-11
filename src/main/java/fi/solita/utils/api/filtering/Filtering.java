@@ -1,13 +1,10 @@
 package fi.solita.utils.api.filtering;
 
-import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.forall;

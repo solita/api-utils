@@ -8,7 +8,7 @@ import org.springframework.http.MediaType;
 import fi.solita.utils.functional.Option;
 
 public enum SerializationFormat {
-    JSON(MediaType.APPLICATION_JSON_UTF8_VALUE),
+    JSON(MediaType.APPLICATION_JSON_VALUE),
     GEOJSON("application/vnd.geo+json;charset=UTF-8"),
     JSONL("application/x-ndjson"),
     HTML(MediaType.TEXT_HTML_VALUE + ";charset=UTF-8"),

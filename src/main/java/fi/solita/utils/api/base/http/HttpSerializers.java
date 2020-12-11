@@ -390,7 +390,7 @@ public class HttpSerializers {
         }
     });
     
-    public Map<Class<?>,? extends Converter<?,?>> converters() { return newMap(
+    public Map<Class<?>,Converter<String,?>> converters() { return newMap(
             revision,
             propertyName,
             filter,

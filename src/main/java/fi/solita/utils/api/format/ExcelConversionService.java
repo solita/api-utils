@@ -28,8 +28,10 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.WorkbookUtil;
@@ -37,11 +39,11 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpHeaders;
 
-import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.base.excel.ExcelModule;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.MemberUtil;
+import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple2;
@@ -127,7 +129,7 @@ public class ExcelConversionService {
         Sheet sheet = wb.createSheet(safeName);
 
         CellStyle headerStyle = wb.createCellStyle();
-        headerStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        headerStyle.setBorderBottom(BorderStyle.THIN);
         XSSFFont headerFont = wb.createFont();
         headerFont.setBold(true);
         headerStyle.setFont(headerFont);
@@ -156,7 +158,7 @@ public class ExcelConversionService {
             
             int maxLines = 1;
             for (Cell cell: row) {
-                if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+                if (cell.getCellType().equals(CellType.STRING)) {
                     cell.setCellStyle(wrapStyle);
                     maxLines = max(maxLines, cell.getStringCellValue().split("\r\n").length);
                 }
@@ -174,6 +176,7 @@ public class ExcelConversionService {
         try {
             wb.write(out);
             out.close();
+            wb.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

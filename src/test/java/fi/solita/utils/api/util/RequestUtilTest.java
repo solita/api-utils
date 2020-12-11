@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Pair;
 
 public class RequestUtilTest {

@@ -1,7 +1,8 @@
 package fi.solita.utils.api.html;
 
 import static fi.solita.utils.functional.Option.Some;
-import static org.rendersnake.HtmlAttributesFactory.*;
+import static org.rendersnake.HtmlAttributesFactory.class_;
+import static org.rendersnake.HtmlAttributesFactory.href;
 
 import java.io.IOException;
 

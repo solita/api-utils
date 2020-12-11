@@ -7,6 +7,7 @@ import static fi.solita.utils.functional.FunctionalS.range;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,8 +28,8 @@ public class WMTS {
     public static final int MIN_LAYER_ID;
     static {
         try {
-            WMTS_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/wmts_template.xml"));
-            LAYER_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/layer_template.xml"));
+            WMTS_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/wmts_template.xml"), Charset.forName("UTF-8"));
+            LAYER_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/layer_template.xml"), Charset.forName("UTF-8"));
             
             Matcher ma = Pattern.compile("template=\"([^\"]+)\"").matcher(LAYER_TEMPLATE);
             ma.find();

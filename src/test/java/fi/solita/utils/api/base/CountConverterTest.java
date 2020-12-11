@@ -3,7 +3,6 @@ package fi.solita.utils.api.base;
 import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 
-import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.types.Count;
 

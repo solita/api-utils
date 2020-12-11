@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.cfg.DeserializerFactoryConfig;
 import com.fasterxml.jackson.databind.cfg.SerializerFactoryConfig;
@@ -43,9 +42,8 @@ import com.fasterxml.jackson.databind.ser.std.DateSerializer;
 import com.fasterxml.jackson.databind.ser.std.EnumSerializer;
 import com.fasterxml.jackson.databind.ser.std.SqlDateSerializer;
 import com.fasterxml.jackson.databind.ser.std.SqlTimeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializer;
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.type.SimpleType;
 
 import fi.solita.utils.api.JsonDeserializeAsBean;
 import fi.solita.utils.api.JsonSerializeAsBean;
@@ -175,8 +173,6 @@ public class JsonObjectMapper extends ObjectMapper {
             return (JsonSerializer<Object>) candidate;
         }
 
-        private static final StdKeySerializer stdKeySerializer = new StdKeySerializer();
-
         @SuppressWarnings("unchecked")
         @Override
         public JsonSerializer<Object> createKeySerializer(final SerializationConfig config, JavaType type, final JsonSerializer<Object> defaultImpl) {
@@ -185,9 +181,9 @@ public class JsonObjectMapper extends ObjectMapper {
                 return new StdSerializer<Object>((Class<Object>)type.getRawClass()) {
                     @Override
                     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
-                        JsonSerializer<Object> ser = createKeySerializer(config, SimpleType.construct(value.getClass()), defaultImpl);
+                        JsonSerializer<Object> ser = createKeySerializer(config, provider.getTypeFactory().constructType(value.getClass()), defaultImpl);
                         if (value.getClass() == String.class) {
-                            ser = stdKeySerializer;
+                            ser = StdKeySerializers.getStdKeySerializer(config, value.getClass(), true);
                         } else if (ser == null || ser.getClass() == this.getClass()) {
                             throw new SerializingDeserializingProhibitedException("Ei KeySerializeria arvolle '" + value + "'. Anna Modulessa KeySerializer tyypille " + value.getClass());
                         }

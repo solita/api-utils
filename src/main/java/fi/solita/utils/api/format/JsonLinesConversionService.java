@@ -1,6 +1,5 @@
 package fi.solita.utils.api.format;
 
-import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 
 import java.io.BufferedReader;

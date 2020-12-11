@@ -1,12 +1,13 @@
 package fi.solita.utils.api.format;
 
+import java.io.IOException;
+
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import fi.solita.utils.api.base.Cells;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.excel.ExcelModule;
 import fi.solita.utils.api.base.excel.ExcelSerializers;
-import fi.solita.utils.api.format.ExcelConversionService;
 
 public class ExcelConversionServiceTest extends SpreadsheetConversionServiceTestBase {
 
@@ -15,6 +16,15 @@ public class ExcelConversionServiceTest extends SpreadsheetConversionServiceTest
     
     @Override
     protected Cells<?> serialize(Object o) {
-        return module.serialize(new XSSFWorkbook().createSheet().createRow(0), 0, o);
+        XSSFWorkbook wb = new XSSFWorkbook();
+        try {
+            return module.serialize(wb.createSheet().createRow(0), 0, o);
+        } finally {
+            try {
+                wb.close();
+            } catch (IOException e) {
+                throw new RuntimeException();
+            }
+        }
     }
 }

@@ -35,8 +35,6 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
-import fi.solita.utils.api.base.excel.ExcelModule_;
-import fi.solita.utils.api.base.excel.ExcelSerializers_;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
@@ -80,7 +78,7 @@ public class ExcelSerializers {
                 if (sb.length() > 0) {
                     sb.append(" ");
                 }
-                sb.append(CellFormat.GENERAL_FORMAT.apply(c).text);
+                sb.append(CellFormat.getInstance("General").apply(c).text);
             }
             return sb.toString();
         }
@@ -144,7 +142,7 @@ public class ExcelSerializers {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
             Cell cell = row.createCell(columnIndex);
-            cell.setCellType(Cell.CELL_TYPE_BLANK);
+            cell.setBlank();
             return new Cells(cell);
         }
     });
@@ -339,7 +337,7 @@ public class ExcelSerializers {
                 return module.serialize(row, columnIndex, value.get());
             } else {
                 Cell cell = row.createCell(columnIndex);
-                cell.setCellType(Cell.CELL_TYPE_BLANK);
+                cell.setBlank();
                 return new Cells(cell);
             }
         }

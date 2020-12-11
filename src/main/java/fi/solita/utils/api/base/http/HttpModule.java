@@ -9,10 +9,11 @@ import fi.solita.utils.api.base.StringToCollectionConverter;
 
 public final class HttpModule extends FormattingConversionService {
 
-    public HttpModule(Map<Class<?>,? extends Converter<?,?>> converters) {
+    @SuppressWarnings("unchecked")
+    public HttpModule(Map<Class<?>, Converter<String,?>> converters) {
         addConverter(new StringToCollectionConverter(this));
-        for (Map.Entry<Class<?>, ? extends Converter<?, ?>> e: converters.entrySet()) {
-            addConverter(String.class, e.getKey(), e.getValue());
+        for (Map.Entry<Class<?>, Converter<String, ?>> e: converters.entrySet()) {
+            addConverter(String.class, (Class<Object>)e.getKey(), e.getValue());
         }
     }
 }

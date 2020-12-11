@@ -1,9 +1,11 @@
 package fi.solita.utils.api.swagger;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 
 import java.lang.reflect.AccessibleObject;
@@ -15,9 +17,14 @@ import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -31,13 +38,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import com.fasterxml.classmate.TypeResolver;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 
-import fi.solita.utils.api.swagger.SwaggerSupport_.CustomTypeParameterBuilder_;
 import fi.solita.utils.api.base.VersionBase;
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.api.swagger.SwaggerSupport_.CustomTypeParameterBuilder_;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
@@ -63,11 +67,15 @@ import springfox.documentation.service.PathDecorator;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
 import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
+import springfox.documentation.spi.service.OperationBuilderPlugin;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
 import springfox.documentation.spi.service.contexts.DocumentationContext;
+import springfox.documentation.spi.service.contexts.OperationContext;
 import springfox.documentation.spi.service.contexts.ParameterContext;
 import springfox.documentation.spi.service.contexts.PathContext;
-import springfox.documentation.spring.web.paths.AbstractPathProvider;
+import springfox.documentation.spi.service.contexts.RequestMappingContext;
+import springfox.documentation.spring.web.WebMvcRequestHandler;
+import springfox.documentation.spring.web.paths.DefaultPathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger.common.SwaggerPluginSupport;
 import springfox.documentation.swagger.web.ApiKeyVehicle;
@@ -91,6 +99,38 @@ public abstract class SwaggerSupport extends ApiResourceController {
             }
         });
     }
+    
+    // This is horrible...
+    public static class NonInheritingOperationDeprecatedReader implements OperationBuilderPlugin {
+      @Override
+      public void apply(OperationContext context) {
+        WebMvcRequestHandler handler;
+        try {
+            Field field = OperationContext.class.getDeclaredField("requestContext");
+            field.setAccessible(true);
+            RequestMappingContext c = (RequestMappingContext) field.get(context);
+            Field field2 = RequestMappingContext.class.getDeclaredField("handler");
+            field2.setAccessible(true);
+            handler = (WebMvcRequestHandler) field2.get(c);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        boolean annotationOnMethod = handler.getHandlerMethod().getMethod().isAnnotationPresent(Deprecated.class);
+        boolean annotationOnController = handler.declaringClass().isAnnotationPresent(Deprecated.class);
+          
+        context.operationBuilder().deprecated(String.valueOf(annotationOnMethod || annotationOnController));
+      }
+
+      @Override
+      public boolean supports(DocumentationType delimiter) {
+        return true;
+      }
+    }
+
     
     // To fix incorrect stripping of regex parts
     public static class PathSanitizerFixer implements PathDecorator, Ordered {
@@ -250,8 +290,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
         @Override
         public final void apply(ParameterContext parameterContext) {
             Class<?> type = parameterContext.resolvedMethodParameter().getParameterType().getErasedType();
-            Option<String> pathVariableName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orNull()).map(CustomTypeParameterBuilder_.pathVariableName);
-            Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orNull()).map(CustomTypeParameterBuilder_.requestParamName);
+            Option<String> pathVariableName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orElse(null)).map(CustomTypeParameterBuilder_.pathVariableName);
+            Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orElse(null)).map(CustomTypeParameterBuilder_.requestParamName);
             apply(parameterContext, type, pathVariableName, requestParamName);
         }
         
@@ -334,29 +374,28 @@ public abstract class SwaggerSupport extends ApiResourceController {
               .apis(RequestHandlerSelectors.basePackage(publishedVersion.getBasePackage()))
               .apis(new Predicate<RequestHandler>() {
                 @Override
-                public boolean apply(RequestHandler rh) {
+                public boolean test(RequestHandler rh) {
                     // only document publid methods
                     return Modifier.isPublic(rh.getHandlerMethod().getMethod().getModifiers());
                 }
             }).build()
-            .pathProvider(new AbstractPathProvider() {
+            .pathProvider(new DefaultPathProvider() {
                 @Override
                 public String getOperationPath(String operationPath) {
-                    return super.getOperationPath(operationPath)
-                            .replace("{revision}/", "")      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
-                            .replace("{*****}", "")          // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
-                            .replace("{asterisk}", "*"); // Keino lisätä Springissä polkuun tähtönen, niin että tulee swagger-kuvaukseenkin oikein.
+                    if (operationPath.startsWith(contextPath)) {
+                        // Due to springfox bug: https://github.com/springfox/springfox/issues/3030
+                        operationPath = operationPath.substring(contextPath.length());
+                    }
+                    String ret = super.getOperationPath(operationPath);
+                    return ret.replace("{revision}/", "")      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
+                              .replace("{*****}", "")          // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+                              .replace("{asterisk}", "*"); // Keino lisätä Springissä polkuun tähtönen, niin että tulee swagger-kuvaukseenkin oikein.
 
-                }
-
-                @Override
-                protected String applicationPath() {
-                    return contextPath;
                 }
 
                 @Override
                 protected String getDocumentationPath() {
-                    return contextPath;
+                    return contextPath + "/";
                 }
             })
             .securitySchemes(newList(new ApiKey(RequestUtil.API_KEY, RequestUtil.API_KEY, ApiKeyVehicle.HEADER.getValue())))
@@ -402,6 +441,16 @@ public abstract class SwaggerSupport extends ApiResourceController {
             docket.alternateTypeRules(AlternateTypeRules.newRule(
                 typeResolver.resolve(Collection.class, dms.getKey()),
                 typeResolver.resolve(Collection.class, dms.getValue()), Ordered.HIGHEST_PRECEDENCE + 2));
+            
+            // Due to a Springfox bug: https://github.com/springfox/springfox/issues/3452
+            for (Class<?> keyClass: cons(String.class, publishedVersion.jsonModule.keySerializers.keySet())) {
+                docket.alternateTypeRules(AlternateTypeRules.newRule(
+                        typeResolver.resolve(Map.class, keyClass, dms.getKey()),
+                        typeResolver.resolve(Map.class, keyClass, dms.getValue()), Ordered.LOWEST_PRECEDENCE));
+                docket.alternateTypeRules(AlternateTypeRules.newRule(
+                        typeResolver.resolve(SortedMap.class, keyClass, dms.getKey()),
+                        typeResolver.resolve(SortedMap.class, keyClass, dms.getValue()), Ordered.LOWEST_PRECEDENCE - 1));
+            }
         }
         
         return docket;

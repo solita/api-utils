@@ -10,7 +10,6 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
@@ -25,7 +24,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriUtils;
 
-import fi.solita.utils.api.util.ResponseUtil_;
 import fi.solita.utils.api.util.RequestUtil.ETags;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Pair;
@@ -179,19 +177,11 @@ public abstract class ResponseUtil {
     }
     
     static String encodeUrlPath(String component) {
-        try {
-            return UriUtils.encodePath(component, "UTF-8").replace("'", "%27");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return UriUtils.encodePath(component, "UTF-8").replace("'", "%27");
     }
     
     static String encodeUrlQueryString(String component) {
-        try {
-            return UriUtils.encodeQuery(component, "UTF-8").replace("'", "%27");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return UriUtils.encodeQuery(component, "UTF-8").replace("'", "%27");
     }
 
 }

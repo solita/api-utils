@@ -6,8 +6,6 @@ import static fi.solita.utils.functional.Collections.newMutableMapOfSize;
 import static fi.solita.utils.functional.Collections.newMutableSetOfSize;
 import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newMutableSortedSet;
-import static fi.solita.utils.functional.Collections.newSortedMap;
-import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Predicates.not;

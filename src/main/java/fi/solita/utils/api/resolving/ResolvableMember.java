@@ -11,9 +11,9 @@ import java.lang.reflect.AccessibleObject;
 import java.util.List;
 import java.util.SortedSet;
 
-import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider.Type;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Ordering;

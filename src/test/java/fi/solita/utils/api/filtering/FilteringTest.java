@@ -4,14 +4,13 @@ import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.http.HttpModule;
 import fi.solita.utils.api.base.http.HttpSerializers;
-import fi.solita.utils.api.filtering.Filtering;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.functional.Option;

@@ -38,7 +38,6 @@ public abstract class CsvSerializer<T> {
 
     public abstract Cells render(CsvModule module, T value);
     
-    @SuppressWarnings("unused")
     public List<String> columns(CsvModule module, Class<T> type) {
         return newList("");
     }

@@ -1,6 +1,9 @@
 package fi.solita.utils.api.html;
 
-import static fi.solita.utils.api.html.UI.*;
+import static fi.solita.utils.api.html.UI.concat;
+import static fi.solita.utils.api.html.UI.definition_en;
+import static fi.solita.utils.api.html.UI.definition_fi;
+import static fi.solita.utils.api.html.UI.link;
 import static fi.solita.utils.api.html.UI.text;
 import static fi.solita.utils.functional.Functional.mkString;
 import static org.rendersnake.HtmlAttributesFactory.href;

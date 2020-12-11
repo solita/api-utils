@@ -1,10 +1,8 @@
 package fi.solita.utils.api.resolving;
 
-import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
 import static fi.solita.utils.functional.Collections.newMutableSortedMap;
-import static fi.solita.utils.functional.Collections.newSortedMap;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.foreach;
@@ -29,7 +27,6 @@ import org.joda.time.Duration;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.NestedMember;
-import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.MemberUtil;

@@ -9,7 +9,6 @@ import static fi.solita.utils.functional.Functional.flatMap;
 import java.util.Collection;
 
 import fi.solita.utils.api.Includes;
-import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
 import fi.solita.utils.api.format.geojson.FeatureObject;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.meta.MetaNamedMember;

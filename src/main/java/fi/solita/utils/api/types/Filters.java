@@ -7,7 +7,6 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import java.util.List;
 
 import fi.solita.utils.api.filtering.Filter;
-import fi.solita.utils.api.filtering.FilterParser;
 import fi.solita.utils.api.filtering.FilterType;
 import fi.solita.utils.api.filtering.Filter_;
 

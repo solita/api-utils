@@ -1,6 +1,5 @@
 package fi.solita.utils.api.format;
 
-import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
@@ -43,7 +42,7 @@ import org.geotools.styling.ResourceLocator;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyledLayer;
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.xml.Parser;
+import org.geotools.xsd.Parser;
 import org.joda.time.Duration;
 import org.opengis.feature.simple.SimpleFeature;
 import org.picocontainer.MutablePicoContainer;

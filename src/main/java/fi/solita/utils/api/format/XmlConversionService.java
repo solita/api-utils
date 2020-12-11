@@ -2,7 +2,6 @@ package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.flatMap;
