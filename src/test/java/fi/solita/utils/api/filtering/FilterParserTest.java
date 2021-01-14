@@ -1,8 +1,7 @@
 package fi.solita.utils.api.filtering;
 
 import static fi.solita.utils.functional.Collections.newList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -172,5 +171,10 @@ public class FilterParserTest {
     @Test(expected = FilterParser.FirstCoordinateMustEqualLastCoordinateException.class)
     public void doesNotParseOpenPolygon() {
         FilterParser.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20)))");
+    }
+    
+    @Test
+    public void parsesFunction() throws Exception {
+        assertFalse(FilterParser.parse("round(foo)=1").isEmpty());
     }
 }

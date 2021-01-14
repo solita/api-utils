@@ -37,35 +37,39 @@ public class FilterParser {
             this.last = last;
         }
     }
-    private static final String attribute = "([a-z][a-zA-Z0-9_.]*)";
-    private static final String polygon = "(POLYGON\\s*\\(.+?\\))";
-    private static final String literal = "(-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'|\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ|P\\d+Y(?:\\d+M(?:\\d+D(?:T\\d+H(?:\\d+M(?:\\d+S))))))";
-    private static final String like_pattern = "('(?:[^']|'')*')";
+    private static final String plainAttribute = "(?:[a-z][a-zA-Z0-9_.]*)";
+    private static final String functionCall   = "[a-zA-Z_]+\\(" + plainAttribute + "\\)";
+    private static final String attribute      = "(" + plainAttribute + "|" + functionCall + ")";
+    private static final String polygon        = "(POLYGON\\s*\\(.+?\\))";
+    private static final String time           = "\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ";
+    private static final String period         = time + "/" + time;
+    private static final String literal        = "(-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'|" + time + "|" + period + "|P\\d+Y(?:\\d+M(?:\\d+D(?:T\\d+H(?:\\d+M(?:\\d+S))))))";
+    private static final String like_pattern   = "('(?:[^']|'')*')";
     
-    private static final Pattern EQUAL       = Pattern.compile(FilterParser.attribute + "="  + literal + " AND ");
-    private static final Pattern NOT_EQUAL   = Pattern.compile(FilterParser.attribute + "<>" + literal + " AND ");
-    private static final Pattern LT          = Pattern.compile(FilterParser.attribute + "<"  + literal + " AND ");
-    private static final Pattern GT          = Pattern.compile(FilterParser.attribute + ">"  + literal + " AND ");
-    private static final Pattern LTE         = Pattern.compile(FilterParser.attribute + "<=" + literal + " AND ");
-    private static final Pattern GTE         = Pattern.compile(FilterParser.attribute + ">=" + literal + " AND ");
+    private static final Pattern EQUAL         = Pattern.compile(FilterParser.attribute + "="  + literal + " AND ");
+    private static final Pattern NOT_EQUAL     = Pattern.compile(FilterParser.attribute + "<>" + literal + " AND ");
+    private static final Pattern LT            = Pattern.compile(FilterParser.attribute + "<"  + literal + " AND ");
+    private static final Pattern GT            = Pattern.compile(FilterParser.attribute + ">"  + literal + " AND ");
+    private static final Pattern LTE           = Pattern.compile(FilterParser.attribute + "<=" + literal + " AND ");
+    private static final Pattern GTE           = Pattern.compile(FilterParser.attribute + ">=" + literal + " AND ");
     
-    private static final Pattern BETWEEN     = Pattern.compile(FilterParser.attribute + " BETWEEN " + literal + " AND " + literal + " AND ");
-    private static final Pattern NOT_BETWEEN = Pattern.compile(FilterParser.attribute + " NOT BETWEEN " + literal + " AND " + literal + " AND ");
+    private static final Pattern BETWEEN       = Pattern.compile(FilterParser.attribute + " BETWEEN " + literal + " AND " + literal + " AND ");
+    private static final Pattern NOT_BETWEEN   = Pattern.compile(FilterParser.attribute + " NOT BETWEEN " + literal + " AND " + literal + " AND ");
     
-    private static final Pattern LIKE        = Pattern.compile(FilterParser.attribute + " LIKE " + like_pattern + " AND ");
-    private static final Pattern NOT_LIKE    = Pattern.compile(FilterParser.attribute + " NOT LIKE " + like_pattern + " AND ");
-    private static final Pattern ILIKE       = Pattern.compile(FilterParser.attribute + " ILIKE " + like_pattern + " AND ");
-    private static final Pattern NOT_ILIKE   = Pattern.compile(FilterParser.attribute + " NOT ILIKE " + like_pattern + " AND ");
+    private static final Pattern LIKE          = Pattern.compile(FilterParser.attribute + " LIKE " + like_pattern + " AND ");
+    private static final Pattern NOT_LIKE      = Pattern.compile(FilterParser.attribute + " NOT LIKE " + like_pattern + " AND ");
+    private static final Pattern ILIKE         = Pattern.compile(FilterParser.attribute + " ILIKE " + like_pattern + " AND ");
+    private static final Pattern NOT_ILIKE     = Pattern.compile(FilterParser.attribute + " NOT ILIKE " + like_pattern + " AND ");
     
-    private static final Pattern IN          = Pattern.compile(FilterParser.attribute + " IN \\((" + literal + "(?:," + literal + ")*)\\) AND ");
-    private static final Pattern NOT_IN      = Pattern.compile(FilterParser.attribute + " NOT IN \\((" + literal + "(?:," + literal + ")*)\\) AND ");
+    private static final Pattern IN            = Pattern.compile(FilterParser.attribute + " IN \\((" + literal + "(?:," + literal + ")*)\\) AND ");
+    private static final Pattern NOT_IN        = Pattern.compile(FilterParser.attribute + " NOT IN \\((" + literal + "(?:," + literal + ")*)\\) AND ");
     
-    private static final Pattern NULL        = Pattern.compile(FilterParser.attribute + " IS NULL AND ");
-    private static final Pattern NOT_NULL    = Pattern.compile(FilterParser.attribute + " IS NOT NULL AND ");
+    private static final Pattern NULL          = Pattern.compile(FilterParser.attribute + " IS NULL AND ");
+    private static final Pattern NOT_NULL      = Pattern.compile(FilterParser.attribute + " IS NOT NULL AND ");
     
-    private static final Pattern INTERSECTS  = Pattern.compile("INTERSECTS\\(" + FilterParser.attribute + "," + FilterParser.polygon + "\\) AND ");
+    private static final Pattern INTERSECTS    = Pattern.compile("INTERSECTS\\(" + FilterParser.attribute + "," + FilterParser.polygon + "\\) AND ");
 
-    private static final Pattern inlist = Pattern.compile("(" + literal + "),");
+    private static final Pattern inlist        = Pattern.compile("(" + literal + "),");
     
     static String stripLiteral(String expr) {
         return (expr.startsWith("'") && expr.endsWith("'") ? init(tail(expr)) : expr).replace("''", "'");

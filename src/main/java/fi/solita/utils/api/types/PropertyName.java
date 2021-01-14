@@ -162,7 +162,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
             return true;
         if (obj == null)
             return false;
-        if (getClass() != obj.getClass())
+        if (!PropertyName.class.isInstance(obj))
             return false;
         PropertyName other = (PropertyName) obj;
         if (value == null) {

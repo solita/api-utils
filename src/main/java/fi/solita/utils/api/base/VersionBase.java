@@ -110,13 +110,13 @@ public abstract class VersionBase {
     }
     
     public <K,T,V extends Iterable<T>> Map<K,V> filterRows(Includes<T> includes, Filters filters, Map<K,V> ts) {
-        return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
+        return filtering().filterData(includes.includes, includes.geometryMembers, filters, functionProvider(), ts);
     }
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterRows(Includes<T> includes, Filters filters, SortedMap<K,V> ts) {
-        return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
+        return filtering().filterData(includes.includes, includes.geometryMembers, filters, functionProvider(), ts);
     }
     public <T> Iterable<T> filterRows(Includes<T> includes, Filters filters, Iterable<T> ts) {
-        return filtering().filterData(includes.includes, includes.geometryMembers, filters, ts);
+        return filtering().filterData(includes.includes, includes.geometryMembers, filters, functionProvider(), ts);
     }
     
     @SuppressWarnings("unchecked")
@@ -178,26 +178,26 @@ public abstract class VersionBase {
     
     @Deprecated
     public <K,T,V extends Iterable<T>> Map<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Map<K,V> ts) {
-        return filtering().filterData(includes, newList(geometry), filters, ts);
+        return filtering().filterData(includes, newList(geometry), filters, functionProvider(), ts);
     }
     @Deprecated
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, SortedMap<K,V> ts) {
-        return filtering().filterData(includes, newList(geometry), filters, ts);
+        return filtering().filterData(includes, newList(geometry), filters, functionProvider(), ts);
     }
     @Deprecated
     public <K,T,V extends Iterable<T>> Map<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Map<K,V> ts) {
-        return filtering().filterData(includes, newList(geometry, geometry2), filters, ts);
+        return filtering().filterData(includes, newList(geometry, geometry2), filters, functionProvider(), ts);
     }
     @Deprecated
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, SortedMap<K,V> ts) {
-        return filtering().filterData(includes, newList(geometry, geometry2), filters, ts);
+        return filtering().filterData(includes, newList(geometry, geometry2), filters, functionProvider(), ts);
     }
     @Deprecated
     public <T> Iterable<T> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Iterable<T> ts) {
-        return filtering().filterData(includes, newList(geometry), filters, ts);
+        return filtering().filterData(includes, newList(geometry), filters, functionProvider(), ts);
     }
     @Deprecated
     public <T> Iterable<T> filter(Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Iterable<T> ts) {
-        return filtering().filterData(includes, newList(geometry, geometry2), filters, ts);
+        return filtering().filterData(includes, newList(geometry, geometry2), filters, functionProvider(), ts);
     }
 }

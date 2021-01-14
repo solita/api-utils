@@ -53,4 +53,9 @@ public final class Filter {
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "Filter [pattern=" + pattern + ", property=" + property + ", values=" + values + "]";
+    }
 }
