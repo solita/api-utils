@@ -16,6 +16,13 @@ import java.util.regex.Pattern;
 import fi.solita.utils.api.types.PropertyName;
 
 public class FilterParser {
+    
+    public static final class IllegalFilterException extends RuntimeException {
+        public final String illegal;
+        public IllegalFilterException(String illegal) {
+            this.illegal = illegal;
+        }
+    }
 
     public static final class IllegalPolygonException extends RuntimeException {
         public final String polygon;
@@ -39,11 +46,12 @@ public class FilterParser {
     }
     private static final String plainAttribute = "(?:[a-z][a-zA-Z0-9_.]*)";
     private static final String functionCall   = "[a-zA-Z_]+\\(" + plainAttribute + "\\)";
+    private static final String functionCall0  = "[a-zA-Z_]+\\(\\)";
     private static final String attribute      = "(" + plainAttribute + "|" + functionCall + ")";
     private static final String polygon        = "(POLYGON\\s*\\(.+?\\))";
     private static final String time           = "\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ";
     private static final String period         = time + "/" + time;
-    private static final String literal        = "(-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'|" + time + "|" + period + "|P\\d+Y(?:\\d+M(?:\\d+D(?:T\\d+H(?:\\d+M(?:\\d+S))))))";
+    private static final String literal        = "(-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'|" + time + "|" + period + "|" + functionCall0 + "|P\\d+Y(?:\\d+M(?:\\d+D(?:T\\d+H(?:\\d+M(?:\\d+S))))))";
     private static final String like_pattern   = "('(?:[^']|'')*')";
     
     private static final Pattern EQUAL         = Pattern.compile(FilterParser.attribute + "="  + literal + " AND ");
@@ -75,7 +83,7 @@ public class FilterParser {
         return (expr.startsWith("'") && expr.endsWith("'") ? init(tail(expr)) : expr).replace("''", "'");
     }
     
-    public static final List<Filter> parse(String cql_filter) {
+    public static final List<Filter> parse(String cql_filter) throws IllegalFilterException {
         cql_filter += " AND ";
         List<Filter> filters = newMutableList();
         
@@ -90,6 +98,7 @@ public class FilterParser {
                                        p == GTE       ? FilterType.GTE : null,
                                        PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2))));
             }
+            cql_filter = matcher.replaceAll("");
         }
         
         for (Pattern p: newList(BETWEEN, NOT_BETWEEN)) {
@@ -99,6 +108,7 @@ public class FilterParser {
                                        p == NOT_BETWEEN ? FilterType.NOT_BETWEEN : null,
                                        PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2)), stripLiteral(matcher.group(3))));
             }
+            cql_filter = matcher.replaceAll("");
         }
         
         for (Pattern p: newList(LIKE, NOT_LIKE, ILIKE, NOT_ILIKE)) {
@@ -110,6 +120,7 @@ public class FilterParser {
                                        p == NOT_ILIKE ? FilterType.NOT_ILIKE : null,
                                        PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2))));
             }
+            cql_filter = matcher.replaceAll("");
         }
         
         for (Pattern p: newList(IN, NOT_IN)) {
@@ -124,6 +135,7 @@ public class FilterParser {
                                        p == NOT_IN ? FilterType.NOT_IN : null,
                                        PropertyName.of(matcher.group(1)), newArray(String.class, map(FilterParser_.stripLiteral, inargs))));
             }
+            cql_filter = matcher.replaceAll("");
         }
         
         for (Pattern p: newList(NULL, NOT_NULL)) {
@@ -133,6 +145,7 @@ public class FilterParser {
                                        p == NOT_NULL ? FilterType.NOT_NULL : null,
                                        PropertyName.of(matcher.group(1))));
             }
+            cql_filter = matcher.replaceAll("");
         }
         
         for (Pattern p: newList(INTERSECTS)) {
@@ -142,6 +155,11 @@ public class FilterParser {
                 checkWKT(wkt);
                 filters.add(new Filter(FilterType.INTERSECTS, PropertyName.of(matcher.group(1)), wkt));
             }
+            cql_filter = matcher.replaceAll("");
+        }
+        
+        if (!cql_filter.trim().isEmpty()) {
+            throw new IllegalFilterException(cql_filter);
         }
         
         return filters;

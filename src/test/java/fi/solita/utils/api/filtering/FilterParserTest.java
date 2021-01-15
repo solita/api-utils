@@ -173,8 +173,18 @@ public class FilterParserTest {
         FilterParser.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20)))");
     }
     
+    @Test(expected = FilterParser.IllegalFilterException.class)
+    public void doesNotParseIfAdditionalStuff() throws Exception {
+        FilterParser.parse("foo IS NULL AND blah blah");
+    }
+    
     @Test
     public void parsesFunction() throws Exception {
         assertFalse(FilterParser.parse("round(foo)=1").isEmpty());
+    }
+    
+    @Test
+    public void parsesFunction0() throws Exception {
+        assertFalse(FilterParser.parse("foo=f()").isEmpty());
     }
 }
