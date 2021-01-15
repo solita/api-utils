@@ -110,13 +110,13 @@ public abstract class VersionBase {
     }
     
     public <K,T,V extends Iterable<T>> Map<K,V> filterRows(Includes<T> includes, Filters filters, Map<K,V> ts) {
-        return filtering().filterData(includes.includes, includes.geometryMembers, filters, functionProvider(), ts);
+        return filtering().filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, functionProvider(), ts);
     }
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterRows(Includes<T> includes, Filters filters, SortedMap<K,V> ts) {
-        return filtering().filterData(includes.includes, includes.geometryMembers, filters, functionProvider(), ts);
+        return filtering().filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, functionProvider(), ts);
     }
     public <T> Iterable<T> filterRows(Includes<T> includes, Filters filters, Iterable<T> ts) {
-        return filtering().filterData(includes.includes, includes.geometryMembers, filters, functionProvider(), ts);
+        return filtering().filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, functionProvider(), ts);
     }
     
     @SuppressWarnings("unchecked")
@@ -159,7 +159,7 @@ public abstract class VersionBase {
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         Includes<T> includesFromPropertyNames = Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(), format, propertyNames, members, builders, geometries);
         Includes<T> includesFromFilters = filters == null || filters.filters.isEmpty() ? Includes.<T>none() : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(), format, distinct(map(Filter_.property, filters.filters)), members, builders, geometries);
-        return new Includes<T>(distinct(concat(includesFromPropertyNames.includes, includesFromFilters.includes)), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, builders);
+        return new Includes<T>(includesFromPropertyNames.includes(), includesFromFilters.includes(), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, builders);
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters) {

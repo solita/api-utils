@@ -137,13 +137,13 @@ public abstract class StdSerialization<BOUNDS> {
             response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
             break;
         case HTML:
-            response = html.serialize(req, title, mapValues(dataTransformer, data.get()), includes);
+            response = html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes);
+            response = csv.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes);
+            response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -191,13 +191,13 @@ public abstract class StdSerialization<BOUNDS> {
             response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
             break;
         case HTML:
-            response = html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes, key);
+            response = html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case CSV:
-            response = csv.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes, key);
+            response = csv.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case XLSX:
-            response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes, key);
+            response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -259,13 +259,13 @@ public abstract class StdSerialization<BOUNDS> {
             response = jsonlines.serialize(map(dataTransformer, data.get()));
             break;
         case HTML:
-            response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
+            response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+            response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+            response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -325,13 +325,13 @@ public abstract class StdSerialization<BOUNDS> {
                 response = jsonlines.serialize(map(dataTransformer, data.get()));
                 break;
             case HTML:
-                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
+                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case PNG:
             case GML:
@@ -389,13 +389,13 @@ public abstract class StdSerialization<BOUNDS> {
                 response = jsonlines.serialize(newList(dataTransformer.apply(data.get())));
                 break;
             case HTML:
-                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
+                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
+                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
+                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case PNG:
             case GML:
@@ -435,13 +435,13 @@ public abstract class StdSerialization<BOUNDS> {
             response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
             break;
         case HTML:
-            response = html.serialize(req, title, mapValues(dataTransformer, data.get()), includes);
+            response = html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes);
+            response = csv.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes);
+            response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case PNG:
         case GML:
@@ -482,13 +482,13 @@ public abstract class StdSerialization<BOUNDS> {
             response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
             break;
         case HTML:
-            response = html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes, key);
+            response = html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case CSV:
-            response = csv.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes, key);
+            response = csv.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case XLSX:
-            response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes, key);
+            response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case PNG:
         case GML:
@@ -528,13 +528,13 @@ public abstract class StdSerialization<BOUNDS> {
                 response = jsonlines.serialize(map(dataTransformer, data.get()));
                 break;
             case HTML:
-                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
+                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case PNG:
             case GML:
@@ -572,13 +572,13 @@ public abstract class StdSerialization<BOUNDS> {
                 response = jsonlines.serialize(newList(dataTransformer.apply(data.get())));
                 break;
             case HTML:
-                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes);
+                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
+                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes);
+                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case PNG:
             case GML:

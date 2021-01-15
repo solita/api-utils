@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedSet;
+import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.exists;
@@ -59,22 +60,29 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         }
     }
 
-    public final List<MetaNamedMember<T, ?>> includes;
+    public final List<MetaNamedMember<T, ?>> includesFromColumnFiltering;
+    public final List<MetaNamedMember<T, ?>> includesFromRowFiltering;
+    
     public final List<MetaNamedMember<T, ?>> geometryMembers;
     public final Builder<?>[] builders;
     public final boolean includesEverything;
+    
+    public final List<MetaNamedMember<T, ?>> includes() {
+        return newList(distinct(concat(includesFromColumnFiltering, includesFromRowFiltering)));
+    }
 
     public static final <T> Includes<T> none() {
-        return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false);
+        return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false);
     }
     
     public static final <T> Includes<T> all(Collection<? extends MetaNamedMember<? super T,?>> includes, Builder<?>[] builders) {
-        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), true);
+        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), true);
     }
     
     @SuppressWarnings("unchecked")
-    public Includes(Iterable<? extends MetaNamedMember<? super T,?>> includes, Iterable<? extends MetaNamedMember<? super T, ?>> geometryMembers, boolean includesEverything, Builder<?>... builders) {
-        this.includes = newList((Iterable<MetaNamedMember<T, ?>>) includes);
+    public Includes(Iterable<? extends MetaNamedMember<? super T,?>> includesColumn, Iterable<? extends MetaNamedMember<? super T,?>> includesRow, Iterable<? extends MetaNamedMember<? super T, ?>> geometryMembers, boolean includesEverything, Builder<?>... builders) {
+        this.includesFromColumnFiltering = newList((Iterable<MetaNamedMember<T, ?>>) includesColumn);
+        this.includesFromRowFiltering = newList((Iterable<MetaNamedMember<T, ?>>) includesRow);
         this.geometryMembers = newList((Iterable<MetaNamedMember<T, ?>>) geometryMembers);
         this.builders = builders;
         this.includesEverything = includesEverything;
@@ -82,7 +90,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     
     @Override
     public Iterator<MetaNamedMember<T, ?>> iterator() {
-        return includes.iterator();
+        return includes().iterator();
     }
     
     /**
@@ -90,7 +98,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <SUB extends T> Includes<SUB> cast(Builder<?>[] subtypeBuilders) {
-        return new Includes(includes, geometryMembers, false, subtypeBuilders);
+        return new Includes(includesFromColumnFiltering, includesFromRowFiltering, geometryMembers, false, subtypeBuilders);
     }
 
     /**
@@ -184,7 +192,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             }
         }, ret)));
         
-        return new Includes<T>(ret, geometries, includesEverything, builders);
+        return new Includes<T>(ret, ret, geometries, includesEverything, builders);
     }
     
     public enum Include {

@@ -61,7 +61,7 @@ public class Filtering {
         this.fp = fp;
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     public <T> Constraints<T> with(Filters filters, Includes<T> includes) {
         if (filters == null) {
             return Constraints.empty();
@@ -81,7 +81,7 @@ public class Filtering {
                     member = (MetaNamedMember<T, Object>) Assert.singleton(
                         newSet(map(Filtering_.<T>unwrapFunctionCallMember(),
                             filter(MemberUtil_.memberName.andThen(equalTo(filter.property.toProperty(fp).getValue())),
-                                includes.includes))));
+                                includes.includesFromRowFiltering))));
                 } catch (UnknownPropertyNameException e) {
                     throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
                 }

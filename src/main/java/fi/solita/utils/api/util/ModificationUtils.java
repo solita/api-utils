@@ -71,7 +71,7 @@ public class ModificationUtils {
     }
 
     public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes, FunctionProvider fp) {
-        return includes.includesEverything ? Function.<T>id() : ModificationUtils_.<T>withProperties_topLevel().ap(newList(map(MemberUtil_.propertyNameFromMember, includes)), fp, Arrays.asList(includes.builders));
+        return includes.includesEverything ? Function.<T>id() : ModificationUtils_.<T>withProperties_topLevel().ap(newList(map(MemberUtil_.propertyNameFromMember, includes.includesFromColumnFiltering)), fp, Arrays.asList(includes.builders));
     }
 
     static final <T> T withProperties_topLevel(Collection<PropertyName> propertyNames, FunctionProvider fp, Iterable<Builder<?>> builders, T t) {
