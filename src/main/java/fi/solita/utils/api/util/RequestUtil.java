@@ -254,8 +254,12 @@ public abstract class RequestUtil {
                instant2string(interval.getEnd()  .isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd()   : interval.getEnd());
     }
     
+    public static final DateTime currentTime() {
+        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC);
+    }
+    
     public static final String now() {
-        return instant2string(LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        return instant2string(currentTime());
     }
 
     public static final String intervalNow() {

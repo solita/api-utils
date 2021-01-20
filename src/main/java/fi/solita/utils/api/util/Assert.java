@@ -70,6 +70,17 @@ public abstract class Assert {
         return True(condition, "Condition was false");
     }
     
+    public static boolean False(boolean condition, CharSequence message) {
+        if (condition) {
+            throw new IllegalArgumentException(message.toString());
+        }
+        return condition;
+    }
+
+    public static boolean False(boolean condition) {
+        return False(condition, "Condition was true");
+    }
+    
     public static <T extends Comparable<T>> void greaterThan(T c1, T c2) {
         if (c1.compareTo(c2) <= 0) {
             throw new IllegalArgumentException(c1 + " must be greater than " + c2);

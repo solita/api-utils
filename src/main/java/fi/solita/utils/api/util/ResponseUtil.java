@@ -1,5 +1,9 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.emptyMap;
+import static fi.solita.utils.functional.Collections.emptySet;
+import static fi.solita.utils.functional.Functional.concat;
+import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sort;
@@ -11,6 +15,7 @@ import static fi.solita.utils.functional.Predicates.not;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -161,11 +166,16 @@ public abstract class ResponseUtil {
     
     @SuppressWarnings("unchecked")
     public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response, Map<String,String> additionalUnescapedQueryParams) {
+        redirect307(contextRelativePath, request, response, additionalUnescapedQueryParams, Collections.<String>emptySet());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
         String path = request.getContextPath() +
                       (contextRelativePath.startsWith("/") ? contextRelativePath : "/" + contextRelativePath);
         Iterable<String> params = map(Transformers.join("=").andThen(ResponseUtil_.encodeUrlQueryString), additionalUnescapedQueryParams.entrySet());
         if (request.getQueryString() != null && !request.getQueryString().isEmpty()) {
-            params = sort(concat(request.getQueryString().split("&"), params));
+            params = sort(concat(filter(ResponseUtil_.acceptParam.ap(queryParamsToExclude), request.getQueryString().split("&")), params));
         }
         String query = mkString("&", params);
         String uri = response.encodeRedirectURL(encodeUrlPath(path) + (query.isEmpty() ? "" : "?" + query));
@@ -174,6 +184,15 @@ public abstract class ResponseUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    static boolean acceptParam(Set<String> queryParamsToExclude, String param) {
+        for (String exclude: queryParamsToExclude) {
+            if (param.equals(exclude) || param.startsWith(exclude + "=")) {
+                return false;
+            }
+        }
+        return true;
     }
     
     static String encodeUrlPath(String component) {
