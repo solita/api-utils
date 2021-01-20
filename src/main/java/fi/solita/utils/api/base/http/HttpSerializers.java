@@ -18,6 +18,7 @@ import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.core.convert.converter.Converter;
@@ -319,12 +320,78 @@ public class HttpSerializers {
         }
     });
     
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,Interval>> interval = Pair.of(Interval.class, new Converter<String, Interval>() {
+        @Override
+        public Interval convert(String source) throws InvalidIntervalException, IntervalNotWithinLimitsException {
+            String[] parts = source.split("/");
+            
+            Interval ret;
+            try {
+                Assert.True(parts.length == 2);
+                
+                DateTime begin;
+                DateTime end;
+                try {
+                    begin = dateTimeParser.parseDateTime(parts[0]);
+                    // alku oli aikaleima
+                    try {
+                        end = dateTimeParser.parseDateTime(parts[1]);
+                    } catch (IllegalArgumentException e) {
+                        // loppu ei ollut aikaleima, kokeillaan onko duration
+                        try {
+                            end = begin.plus(kesto.getValue().convert(parts[1]));
+                        } catch (InvalidDurationException e1) {
+                            // loppu ei ollut duration, oletetaan että oli period
+                            end = begin.plus(jakso.getValue().convert(parts[1]));
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    // alku ei ollut aikaleima, oletetaan että loppu on aikaleima
+                    end = dateTimeParser.parseDateTime(parts[1]);
+                    try {
+                        // kokeillaan onko alku duration
+                        begin = end.minus(kesto.getValue().convert(parts[0]));
+                    } catch (InvalidDurationException e1) {
+                        // alku ei ollut duration, oletetaan että oli period
+                        begin = end.minus(jakso.getValue().convert(parts[0]));
+                    }
+                }
+                
+                Assert.equal(begin.getZone(), end.getZone());
+                Assert.equal(begin.getZone(), DateTimeZone.UTC);
+                
+                ret = new Interval(begin, end);
+            } catch (RuntimeException e) {
+                throw new InvalidIntervalException();
+            }
+            
+            if (!VALID.contains(ret)) {
+                throw new IntervalNotWithinLimitsException(dateTimeParser.print(VALID.getStart()), dateTimeParser.print(VALID.getEnd()));
+            }
+            
+            return ret;
+        }
+    });
+    
     public final Map.Entry<? extends Class<?>, ? extends Converter<String,Duration>> kesto = Pair.of(Duration.class, new Converter<String, Duration>() {
         @Override
         public Duration convert(String source) throws InvalidDurationException {
             Duration ret;
             try {
                 ret = Duration.parse(source);
+            } catch (Exception e) {
+                throw new InvalidDurationException(source);
+            }
+            return ret;
+        }
+    });
+    
+    public final Map.Entry<? extends Class<?>, ? extends Converter<String,Period>> jakso = Pair.of(Period.class, new Converter<String, Period>() {
+        @Override
+        public Period convert(String source) throws InvalidDurationException {
+            Period ret;
+            try {
+                ret = Period.parse(source);
             } catch (Exception e) {
                 throw new InvalidDurationException(source);
             }
@@ -405,9 +472,11 @@ public class HttpSerializers {
             startIndex,
             srsName,
             ajanhetki,
+            interval,
             paiva,
             kellonaika,
             kesto,
+            jakso,
             zone,
             uri
         );
