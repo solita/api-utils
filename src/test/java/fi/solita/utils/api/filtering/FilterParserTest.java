@@ -16,7 +16,7 @@ public class FilterParserTest {
     private static final PropertyName FOO = PropertyName.of("foo");
 
     private List<Filter> someFilter(String value) {
-        return newList(new Filter(FilterType.EQUAL, FOO, value));
+        return newList(new Filter(FilterType.EQUAL, FOO, Literal.of(value)));
     }
     
     @Test
@@ -39,10 +39,11 @@ public class FilterParserTest {
     
     @Test
     public void parsesStrings() {
-        assertEquals(someFilter(""), FilterParser.parse("foo=''"));
-        assertEquals(someFilter("a"), FilterParser.parse("foo='a'"));
-        assertEquals(someFilter("'a'b'"), FilterParser.parse("foo='''a''b'''"));
-        assertEquals(someFilter(";"), FilterParser.parse("foo=';'"));
+        assertEquals(someFilter("''"), FilterParser.parse("foo=''"));
+        assertEquals(someFilter("'a'"), FilterParser.parse("foo='a'"));
+        assertEquals(someFilter("'''a''b'''"), FilterParser.parse("foo='''a''b'''"));
+        assertEquals(someFilter("';'"), FilterParser.parse("foo=';'"));
+        assertEquals(someFilter("'+'"), FilterParser.parse("foo='+'"));
     }
     
     @Test
@@ -58,14 +59,14 @@ public class FilterParserTest {
     
     @Test
     public void parsesPolygon() {
-        assertEquals(newList(new Filter(FilterType.INTERSECTS, FOO, "POLYGON((30 10,40 40,20 40,10 20,30 10))")), FilterParser.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20,30 10)))"));
+        assertEquals(newList(new Filter(FilterType.INTERSECTS, FOO, Literal.of("POLYGON((30 10,40 40,20 40,10 20,30 10))"))), FilterParser.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20,30 10)))"));
     }
     
     @Test
     public void parsesMultiple() {
-        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, "1"), new Filter(FilterType.EQUAL, FOO, "2")), FilterParser.parse("foo=1 AND foo=2"));
-        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, "1"), new Filter(FilterType.EQUAL, FOO, "2"), new Filter(FilterType.EQUAL, FOO, "3")), FilterParser.parse("foo=1 AND foo=2 AND foo=3"));
-        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, "1"), new Filter(FilterType.EQUAL, FOO, "2"), new Filter(FilterType.EQUAL, FOO, "3"), new Filter(FilterType.EQUAL, FOO, "4"), new Filter(FilterType.EQUAL, FOO, "5")), FilterParser.parse("foo=1 AND foo=2 AND foo=3 AND foo=4 AND foo=5"));
+        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2"))), FilterParser.parse("foo=1 AND foo=2"));
+        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")), new Filter(FilterType.EQUAL, FOO, Literal.of("3"))), FilterParser.parse("foo=1 AND foo=2 AND foo=3"));
+        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")), new Filter(FilterType.EQUAL, FOO, Literal.of("3")), new Filter(FilterType.EQUAL, FOO, Literal.of("4")), new Filter(FilterType.EQUAL, FOO, Literal.of("5"))), FilterParser.parse("foo=1 AND foo=2 AND foo=3 AND foo=4 AND foo=5"));
     }
     
     @Test

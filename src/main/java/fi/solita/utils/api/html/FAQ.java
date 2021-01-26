@@ -214,6 +214,14 @@ concat(text("This common problem is avoided by letting the user decide. srsName=
 "What does 'cql_filter'-parameter do?",
 "Filter result rows based on given conditions. Multiple conditions can be combined with AND-keyword. A subset of ECQL-filters are implemented: " + mkString(", ", Filters.SUPPORTED_OPERATIONS) + ". INTERSECTS requires a geometry property as its first value and a literal WKT polygon as the second."
                  ))
+                   
+                   .render(definition_fi(
+"Mitä funktioita 'cql_filter' ja 'propertyName' tukevat?",
+"Ymmärtää rajoitetuissa paikoissa funktioita 'round', 'start', 'end' ja 'duration' sekä aritmetiikkaoperaatioita '+', '-', '*', '/'. 'start' ja 'end' voivat tietokenttien lisäksi viitata request-parametriin."
+                 )).render(definition_en(
+"What functions do 'cql_filter' and 'propertyName' support?",
+"Understands the following functions in limited locations: 'round', 'start', 'end' and 'duration' as well as arithmetic operators '+', '-', '*', '/'. 'start' and 'end' can refer to a request parameter in addition to data fields."
+                 ))
 
                    .render(definition_fi(
 "Mistä saan WKT-muotoisia polygoneja?",

@@ -73,172 +73,172 @@ public class FilteringTest {
     
     @Test
     public void equal() {
-        assertEquals(newList(data), newList(filtering.equal(FilteringTest_.Data_.required, "1", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.equal(FilteringTest_.Data_.required, "2", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.equal(FilteringTest_.Data_.required, Literal.of("1"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.equal(FilteringTest_.Data_.required, Literal.of("2"), String.class, newList(data))));
     }
     
     @Test
     public void equalDefined() {
-        assertEquals(newList(data), newList(filtering.equal(FilteringTest_.Data_.defined, "1", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.equal(FilteringTest_.Data_.defined, "2", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.equal(FilteringTest_.Data_.defined, Literal.of("1"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.equal(FilteringTest_.Data_.defined, Literal.of("2"), String.class, newList(data))));
     }
     
     @Test
     public void equalUndefined() {
-        assertEquals(emptyList(), newList(filtering.equal(FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.equal(FilteringTest_.Data_.undefined, "1", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.equal(FilteringTest_.Data_.undefined, Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.equal(FilteringTest_.Data_.undefined, Literal.of("1"), String.class, newList(data))));
     }
     
     
     
     @Test
     public void notEqual() {
-        assertEquals(newList(data), newList(filtering.notEqual(FilteringTest_.Data_.required, "2", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.notEqual(FilteringTest_.Data_.required, "1", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.notEqual(FilteringTest_.Data_.required, Literal.of("2"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.notEqual(FilteringTest_.Data_.required, Literal.of("1"), String.class, newList(data))));
     }
     
     @Test
     public void notEqualDefined() {
-        assertEquals(newList(data), newList(filtering.notEqual(FilteringTest_.Data_.defined, "2", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.notEqual(FilteringTest_.Data_.defined, "1", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.notEqual(FilteringTest_.Data_.defined, Literal.of("2"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.notEqual(FilteringTest_.Data_.defined, Literal.of("1"), String.class, newList(data))));
     }
     
     @Test
     public void notEqualUndefined() {
-        assertEquals(emptyList(), newList(filtering.notEqual(FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.notEqual(FilteringTest_.Data_.undefined, "2", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.notEqual(FilteringTest_.Data_.undefined, Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.notEqual(FilteringTest_.Data_.undefined, Literal.of("2"), String.class, newList(data))));
     }
     
     
     
     @Test
     public void lt() {
-        assertEquals(newList(data), newList(filtering.lt(FilteringTest_.Data_.required, "2", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.lt(FilteringTest_.Data_.required, "1", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.lt(FilteringTest_.Data_.required, Literal.of("2"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.lt(FilteringTest_.Data_.required, Literal.of("1"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void ltDefined() {
-        assertEquals(newList(data), newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "2", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "1", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("2"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("1"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void ltUndefined() {
-        assertEquals(emptyList(), newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, "2", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.lt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of("2"), String.class, newList(data))));
     }
     
     
     
     @Test
     public void lte() {
-        assertEquals(newList(data), newList(filtering.lte(FilteringTest_.Data_.required, "1", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.lte(FilteringTest_.Data_.required, "0", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.lte(FilteringTest_.Data_.required, Literal.of("1"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.lte(FilteringTest_.Data_.required, Literal.of("0"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void lteDefined() {
-        assertEquals(newList(data), newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "1", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "0", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("1"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("0"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void lteUndefined() {
-        assertEquals(emptyList(), newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, "1", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.lte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of("1"), String.class, newList(data))));
     }
     
     
     
     @Test
     public void gt() {
-        assertEquals(newList(data), newList(filtering.gt(FilteringTest_.Data_.required, "0", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.gt(FilteringTest_.Data_.required, "1", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.gt(FilteringTest_.Data_.required, Literal.of("0"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.gt(FilteringTest_.Data_.required, Literal.of("1"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void gtDefined() {
-        assertEquals(newList(data), newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "0", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "1", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("0"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("1"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void gtUndefined() {
-        assertEquals(emptyList(), newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, "0", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.gt((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of("0"), String.class, newList(data))));
     }
     
 
     
     @Test
     public void gte() {
-        assertEquals(newList(data), newList(filtering.gte(FilteringTest_.Data_.required, "1", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.gte(FilteringTest_.Data_.required, "2", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.gte(FilteringTest_.Data_.required, Literal.of("1"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.gte(FilteringTest_.Data_.required, Literal.of("2"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void gteDefined() {
-        assertEquals(newList(data), newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "1", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "2", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("1"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("2"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void gteUndefined() {
-        assertEquals(emptyList(), newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, "1", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.gte((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of("1"), String.class, newList(data))));
     }
     
     
     
     @Test
     public void between() {
-        assertEquals(newList(data), newList(filtering.between(FilteringTest_.Data_.required, "1", "2", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.between(FilteringTest_.Data_.required, "2", "3", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.between(FilteringTest_.Data_.required, Literal.of("1"), Literal.of("2"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.between(FilteringTest_.Data_.required, Literal.of("2"), Literal.of("3"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void betweenDefined() {
-        assertEquals(newList(data), newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "1", "2", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "2", "3", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("1"), Literal.of("2"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("2"), Literal.of("3"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void betweenUndefined() {
-        assertEquals(emptyList(), newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, null, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, "1", "2", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of(null), Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.between((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of("1"), Literal.of("2"), String.class, newList(data))));
     }
     
     
     
     @Test
     public void notBetween() {
-        assertEquals(newList(data), newList(filtering.notBetween(FilteringTest_.Data_.required, "2", "3", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.notBetween(FilteringTest_.Data_.required, "1", "2", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.notBetween(FilteringTest_.Data_.required, Literal.of("2"), Literal.of("3"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.notBetween(FilteringTest_.Data_.required, Literal.of("1"), Literal.of("2"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void notBetweenDefined() {
-        assertEquals(newList(data), newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "2", "3", String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, "1", "2", String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("2"), Literal.of("3"), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.defined, Literal.of("1"), Literal.of("2"), String.class, newList(data))));
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void notBetweenUndefined() {
-        assertEquals(emptyList(), newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, null, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, "2", "3", String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of(null), Literal.of(null), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.notBetween((MetaNamedMember<Data,String>)(Object)FilteringTest_.Data_.undefined, Literal.of("2"), Literal.of("3"), String.class, newList(data))));
     }
     
     
@@ -365,38 +365,38 @@ public class FilteringTest {
     
     @Test
     public void in() {
-        assertEquals(newList(data), newList(filtering.in(FilteringTest_.Data_.required, newList("1"), String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.in(FilteringTest_.Data_.required, newList("2"), String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.in(FilteringTest_.Data_.required, newList(Literal.of("1")), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.in(FilteringTest_.Data_.required, newList(Literal.of("2")), String.class, newList(data))));
     }
     
     @Test
     public void inDefined() {
-        assertEquals(newList(data), newList(filtering.in(FilteringTest_.Data_.defined, newList("1"), String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.in(FilteringTest_.Data_.defined, newList("2"), String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.in(FilteringTest_.Data_.defined, newList(Literal.of("1")), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.in(FilteringTest_.Data_.defined, newList(Literal.of("2")), String.class, newList(data))));
     }
     
     @Test
     public void inUndefined() {
-        assertEquals(emptyList(), newList(filtering.in(FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.in(FilteringTest_.Data_.undefined, newList("1"), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.in(FilteringTest_.Data_.undefined, newList(Literal.of(null)), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.in(FilteringTest_.Data_.undefined, newList(Literal.of("1")), String.class, newList(data))));
     }
     
     
     @Test
     public void notIn() {
-        assertEquals(newList(data), newList(filtering.notIn(FilteringTest_.Data_.required, newList("2"), String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.notIn(FilteringTest_.Data_.required, newList("1"), String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.notIn(FilteringTest_.Data_.required, newList(Literal.of("2")), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.notIn(FilteringTest_.Data_.required, newList(Literal.of("1")), String.class, newList(data))));
     }
     
     @Test
     public void notInDefined() {
-        assertEquals(newList(data), newList(filtering.notIn(FilteringTest_.Data_.defined, newList("2"), String.class, newList(data))));
-        assertEquals(emptyList()  , newList(filtering.notIn(FilteringTest_.Data_.defined, newList("1"), String.class, newList(data))));
+        assertEquals(newList(data), newList(filtering.notIn(FilteringTest_.Data_.defined, newList(Literal.of("2")), String.class, newList(data))));
+        assertEquals(emptyList()  , newList(filtering.notIn(FilteringTest_.Data_.defined, newList(Literal.of("1")), String.class, newList(data))));
     }
     
     @Test
     public void notInUndefined() {
-        assertEquals(emptyList(), newList(filtering.notIn(FilteringTest_.Data_.undefined, null, String.class, newList(data))));
-        assertEquals(emptyList(), newList(filtering.notIn(FilteringTest_.Data_.undefined, newList("2"), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.notIn(FilteringTest_.Data_.undefined, newList(Literal.of(null)), String.class, newList(data))));
+        assertEquals(emptyList(), newList(filtering.notIn(FilteringTest_.Data_.undefined, newList(Literal.of("2")), String.class, newList(data))));
     }
 }

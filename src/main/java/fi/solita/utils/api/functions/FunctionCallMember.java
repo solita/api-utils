@@ -30,8 +30,8 @@ public class FunctionCallMember<T> implements MetaNamedMember<T,Object> {
         return original.getName();
     }
     
-    public FunctionCallMember<T> applied(Apply<?,?> f, Class<?> resultType) {
-        return new AppliedFunctionCallMember(propertyName, original, f, resultType);
+    public FunctionCallMember<T> applied(Apply<?,?> f) {
+        return new AppliedFunctionCallMember<T>(propertyName, original, f);
     }
 
     @Override
@@ -70,13 +70,11 @@ public class FunctionCallMember<T> implements MetaNamedMember<T,Object> {
 
 class AppliedFunctionCallMember<T> extends FunctionCallMember<T> {
     private final Apply<Object,Object> f;
-    private final Class<?> resultType;
 
     @SuppressWarnings("unchecked")
-    public <V> AppliedFunctionCallMember(PropertyName propertyName, MetaNamedMember<? super T,?> original, Apply<?,?> f, Class<?> resultType) {
+    public <V> AppliedFunctionCallMember(PropertyName propertyName, MetaNamedMember<? super T,?> original, Apply<?,?> f) {
         super(propertyName, original);
         this.f = (Apply<Object, Object>) f;
-        this.resultType = resultType;
     }
     
     @Override

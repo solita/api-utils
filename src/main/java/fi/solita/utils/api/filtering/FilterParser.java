@@ -6,8 +6,6 @@ import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalA.head;
 import static fi.solita.utils.functional.FunctionalA.last;
-import static fi.solita.utils.functional.FunctionalC.init;
-import static fi.solita.utils.functional.FunctionalC.tail;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -15,6 +13,9 @@ import java.util.regex.Pattern;
 
 import fi.solita.utils.api.types.PropertyName;
 
+/**
+ * Yes, it's a Regex parser, OMG!
+ */
 public class FilterParser {
     
     public static final class IllegalFilterException extends RuntimeException {
@@ -45,13 +46,15 @@ public class FilterParser {
         }
     }
     private static final String plainAttribute = "(?:[a-z][a-zA-Z0-9_.]*)";
-    private static final String functionCall   = "[a-zA-Z_]+\\(" + plainAttribute + "\\)";
-    private static final String functionCall0  = "[a-zA-Z_]+\\(\\)";
-    private static final String attribute      = "(" + plainAttribute + "|" + functionCall + ")";
-    private static final String polygon        = "(POLYGON\\s*\\(.+?\\))";
+    public  static final String functionCall   = "[a-zA-Z_]+\\(" + plainAttribute + "\\)";
+    public  static final String functionCall0  = "[a-zA-Z_]+\\(\\)";
+            static final String polygon        = "(POLYGON\\s*\\(.+?\\))";
     private static final String time           = "\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ";
-    private static final String period         = time + "/" + time;
-    private static final String literal        = "(-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'|" + time + "|" + period + "|" + functionCall0 + "|P\\d+Y(?:\\d+M(?:\\d+D(?:T\\d+H(?:\\d+M(?:\\d+S))))))";
+            static final String duration       = "P(?:\\d+Y)?(?:\\d+M)?(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?";
+    private static final String interval       = "(?:" + time + "/" + time + ")|(?:" + time + "/" + duration + ")|(?:" + duration + "/" + time + ")";
+    public  static final String plainLiteral   = interval + "|" + time + "|" + functionCall + "|" + functionCall0 + "|" + "-?\\d+(?:\\.\\d+)?|true|false|'(?:[^']|'')*'" + "|" + duration;
+    private static final String attribute      = "(" + plainAttribute + "|" + functionCall + ")";
+    private static final String literal        = "((?:" + plainLiteral + ")(?:[" + Literal.OPERATORS + "](?:" + plainLiteral + "))?)";
     private static final String like_pattern   = "('(?:[^']|'')*')";
     
     private static final Pattern EQUAL         = Pattern.compile(FilterParser.attribute + "="  + literal + " AND ");
@@ -79,10 +82,6 @@ public class FilterParser {
 
     private static final Pattern inlist        = Pattern.compile("(" + literal + "),");
     
-    static String stripLiteral(String expr) {
-        return (expr.startsWith("'") && expr.endsWith("'") ? init(tail(expr)) : expr).replace("''", "'");
-    }
-    
     public static final List<Filter> parse(String cql_filter) throws IllegalFilterException {
         cql_filter += " AND ";
         List<Filter> filters = newMutableList();
@@ -96,7 +95,7 @@ public class FilterParser {
                                        p == GT        ? FilterType.GT :
                                        p == LTE       ? FilterType.LTE :
                                        p == GTE       ? FilterType.GTE : null,
-                                       PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2))));
+                                       PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2))));
             }
             cql_filter = matcher.replaceAll("");
         }
@@ -106,7 +105,7 @@ public class FilterParser {
             while (matcher.find()) {
                 filters.add(new Filter(p == BETWEEN     ? FilterType.BETWEEN :
                                        p == NOT_BETWEEN ? FilterType.NOT_BETWEEN : null,
-                                       PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2)), stripLiteral(matcher.group(3))));
+                                       PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2)), Literal.of(matcher.group(3))));
             }
             cql_filter = matcher.replaceAll("");
         }
@@ -118,7 +117,7 @@ public class FilterParser {
                                        p == NOT_LIKE  ? FilterType.NOT_LIKE :
                                        p == ILIKE     ? FilterType.ILIKE :
                                        p == NOT_ILIKE ? FilterType.NOT_ILIKE : null,
-                                       PropertyName.of(matcher.group(1)), stripLiteral(matcher.group(2))));
+                                       PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2))));
             }
             cql_filter = matcher.replaceAll("");
         }
@@ -133,7 +132,7 @@ public class FilterParser {
                 }
                 filters.add(new Filter(p == IN     ? FilterType.IN :
                                        p == NOT_IN ? FilterType.NOT_IN : null,
-                                       PropertyName.of(matcher.group(1)), newArray(String.class, map(FilterParser_.stripLiteral, inargs))));
+                                       PropertyName.of(matcher.group(1)), newArray(Literal.class, map(Literal_.of, inargs))));
             }
             cql_filter = matcher.replaceAll("");
         }
@@ -153,7 +152,7 @@ public class FilterParser {
             while (matcher.find()) {
                 String wkt = matcher.group(2);
                 checkWKT(wkt);
-                filters.add(new Filter(FilterType.INTERSECTS, PropertyName.of(matcher.group(1)), wkt));
+                filters.add(new Filter(FilterType.INTERSECTS, PropertyName.of(matcher.group(1)), Literal.of(wkt)));
             }
             cql_filter = matcher.replaceAll("");
         }

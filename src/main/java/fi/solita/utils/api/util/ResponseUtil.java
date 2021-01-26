@@ -1,13 +1,10 @@
 package fi.solita.utils.api.util;
 
-import static fi.solita.utils.functional.Collections.emptyMap;
-import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Functional.concat;
-import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sort;
-import static fi.solita.utils.functional.FunctionalA.concat;
+import static fi.solita.utils.functional.FunctionalA.filter;
 import static fi.solita.utils.functional.FunctionalC.drop;
 import static fi.solita.utils.functional.FunctionalC.span;
 import static fi.solita.utils.functional.Predicates.equalTo;
@@ -40,6 +37,7 @@ public abstract class ResponseUtil {
     
     private static final DateTime started = DateTime.now();
     
+    @SafeVarargs
     public static void respond(HttpServletResponse response, int status, String responseText, Pair<String,String>... headers) throws IOException {
         response.setStatus(status);
         for (Pair<String,String> header: headers) {
@@ -61,7 +59,6 @@ public abstract class ResponseUtil {
         respond(response, data, etags, false);
     }
     
-    @SuppressWarnings("unchecked")
     private static void respond(HttpServletResponse response, byte[] data, ETags etags, boolean cacheOKForInfinity) {
         try {
             String etag = calculateETag(data);
@@ -123,6 +120,7 @@ public abstract class ResponseUtil {
         }
     }
    
+    @SafeVarargs
     public static void respondError(HttpServletResponse response, HttpStatus status, Pair<String,String>... headers) throws IOException {
         for (Pair<String,String> header: headers) {
             response.setHeader(header.left(), header.right());
@@ -164,12 +162,10 @@ public abstract class ResponseUtil {
         redirect307(contextRelativePath, request, response, Collections.<String,String>emptyMap());
     }
     
-    @SuppressWarnings("unchecked")
     public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response, Map<String,String> additionalUnescapedQueryParams) {
         redirect307(contextRelativePath, request, response, additionalUnescapedQueryParams, Collections.<String>emptySet());
     }
     
-    @SuppressWarnings("unchecked")
     public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
         String path = request.getContextPath() +
                       (contextRelativePath.startsWith("/") ? contextRelativePath : "/" + contextRelativePath);

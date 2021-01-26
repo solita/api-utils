@@ -15,6 +15,7 @@ import org.opengis.referencing.operation.MathTransform;
 import fi.solita.utils.api.filtering.Filter;
 import fi.solita.utils.api.filtering.FilterType;
 import fi.solita.utils.api.filtering.Filter_;
+import fi.solita.utils.api.filtering.Literal;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.util.Assert;
@@ -32,8 +33,8 @@ public class Transform {
             Assert.lessThanOrEqual(spatialFilters.size(), 1);
             for (Filter intersect: filter(Filter_.pattern.andThen(equalTo(FilterType.INTERSECTS)), spatialFilters)) {
                 Assert.Null(bbox, "BBOX cannot be given together with spatial filtering");
-                String wkt = Assert.singleton(intersect.values);
-                return fromWKT.apply(wkt);
+                Literal wkt = Assert.singleton(intersect.literals);
+                return fromWKT.apply(wkt.getValue().left.get());
             }
         }
         return bbox;
