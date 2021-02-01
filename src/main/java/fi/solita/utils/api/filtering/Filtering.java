@@ -117,23 +117,23 @@ public class Filtering {
     
     @SuppressWarnings({ "unchecked", "static-access" })
     <T> T convert(Class<?> targetType, Literal value) {
-        if (value != null && value.getValue().isLeft() && fp.isFunctionCall(value.getValue().left.get())) {
+        if (value != null && value.getValue().isLeft() && !value.isStringLiteral() && fp.isFunctionCall(value.getValue().left.get())) {
             return (T) fp.apply(value.getValue().left.get(), fp.toArgument(value.getValue().left.get()));
         } else if (value != null && value.getValue().isRight()) {
-            Tuple3<String, Character, String> val = value.getValue().right.get();
+            Tuple3<Literal, Character, Literal> val = value.getValue().right.get();
             return (T) fp.applyFunction(Character.toString(val._2),
                                         Option.<String>None(),
-                                        Pair.of(fp.isFunctionCall(val._1) ? fp.apply(val._1, val._1) : httpModule.convert(val._1, adjustTargetType(val._1, targetType)),
-                                                                            fp.isFunctionCall(val._3) ? fp.apply(val._3, val._3) : httpModule.convert(val._3, adjustTargetType(val._3, targetType))));
+                                        Pair.of(convert(adjustTargetType(val._1, targetType), val._1),
+                                                convert(adjustTargetType(val._3, targetType), val._3)));
         }
         return (T)httpModule.convert(value == null ? value : value.getValue().left.get(), targetType);
     }
 
-    private static final Class<? extends Object> adjustTargetType(String value, Class<?> targetType) {
-        if (DURATION_COMPATIBLE.contains(targetType)) {
-            return DURATION_PATTERN.matcher(value).matches() ? Duration.class : 
-                     PERIOD_PATTERN.matcher(value).matches() ? Period.class :
-                                                               targetType;
+    private static final Class<? extends Object> adjustTargetType(Literal literal, Class<?> targetType) {
+        if (DURATION_COMPATIBLE.contains(targetType) && !literal.isStringLiteral() && literal.getValue().isLeft()) {
+            return DURATION_PATTERN.matcher(literal.getValue().left.get()).matches() ? Duration.class : 
+                     PERIOD_PATTERN.matcher(literal.getValue().left.get()).matches() ? Period.class :
+                                                                                       targetType;
         }
         return targetType;
     }
