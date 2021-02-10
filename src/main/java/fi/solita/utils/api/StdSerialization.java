@@ -635,7 +635,7 @@ public abstract class StdSerialization<BOUNDS> {
             HttpServletRequest req,
             HttpServletResponse res,
             SerializationFormat format,
-            Iterable<? extends MetaNamedMember<DTO, ?>> includes,
+            Includes<DTO> includes,
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
@@ -643,6 +643,17 @@ public abstract class StdSerialization<BOUNDS> {
         switch (format) {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
+                break;
+            case GEOJSON:
+                Iterable<DTO> d = data.get();
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
+                response = geoJson.serialize(new FeatureCollection(
+                    concat(map(Feature_.$1, map(
+                            Function.constant(Option.<GeometryObject>None()),
+                            Function.id(),
+                            Function.constant(Option.<Crs>None()),
+                            map(dataTransformer, data.get()))), resolvables),
+                    Option.<Crs>None()));
                 break;
             case JSONL:
                 response = jsonlines.serialize(map(dataTransformer, data.get()));
@@ -658,7 +669,6 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case PNG:
             case XML:
-            case GEOJSON: 
             case GML:
                 throw new RequestUtil.UnavailableContentTypeException();
             default:
@@ -679,6 +689,16 @@ public abstract class StdSerialization<BOUNDS> {
             case JSON:
                 response = json.serialize(map(dataTransformer, data.get()));
                 break;
+            case GEOJSON:
+                Iterable<DTO> d = map(dataTransformer, data.get());
+                response = geoJson.serialize(new FeatureCollection(
+                    map(Feature_.$1, map(
+                            Function.constant(Option.<GeometryObject>None()),
+                            Function.id(),
+                            Function.constant(Option.<Crs>None()),
+                            d)),
+                    Option.<Crs>None()));
+                break;
             case JSONL:
                 response = jsonlines.serialize(map(dataTransformer, data.get()));
                 break;
@@ -693,7 +713,6 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case PNG:
             case XML:
-            case GEOJSON: 
             case GML:
                 throw new RequestUtil.UnavailableContentTypeException();
             default:
