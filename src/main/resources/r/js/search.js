@@ -1,12 +1,12 @@
 var search = function(map, searchUrlFunction, searchInput, olstuff, select, unselect) {
-    var searchStyles = [[0,0,255,0.4], [0,255,0,0.4], [255,0,0,0.4], [255,255,0,0.4], [0,255,255,0.4], [255,0,255,0.4]].map(function(c) {
+    var searchStyles = [[0,255,0,0.4], [0,0,255,0.4], [255,0,0,0.4], [255,255,0,0.4], [0,255,255,0.4], [255,0,255,0.4]].map(function(c) {
         var stroke = [...c];
         stroke[3] = 1;
         return olstuff.styles.defaultWithColor(c,stroke);
     });
 
     window.onhashchange = function() {
-        window.location.hash.split('#').map(function(h) { return decodeURIComponent(h); }).forEach(function(h,index) {
+        window.location.hash.split('#').filter(x => x != '').map(function(h) { return decodeURIComponent(h); }).forEach(function(h,index) {
             let s = searchUrlFunction(h);
             if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
                 let layer = s instanceof Array ?

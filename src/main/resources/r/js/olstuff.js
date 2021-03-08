@@ -160,7 +160,7 @@ var olstuff = function(constants, util) {
                         $(this).siblings().hide();
                     }
                 });
-                $('ul > li > span > span > ul', elem).hover(function() {
+                $('ul > li > span > span > ul:not(:has(ul))', elem).hover(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
                     try {
@@ -180,6 +180,37 @@ var olstuff = function(constants, util) {
                     }
                 }).click(function() {
                     var tunniste = $('.key:contains("tunniste")', this).siblings().text();
+                    var feature = ret.getFeatureByTunniste(map, tunniste);
+                    if (feature) {
+                        if (click) {
+                            click(feature);
+                        }
+                        map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
+                    }
+                });
+                
+                $('ul > li > span > span > ul a.oid', elem).hover(function() {
+                    var tunniste = $(this).text();
+                    var feature = ret.getFeatureByTunniste(map, tunniste);
+                    try {
+                        selectInteraction.getFeatures().clear();
+                    } catch (e) {
+                        console.log(e);
+                    }
+                    if (feature) {
+                        selectInteraction.getFeatures().push(feature);
+                    }
+                    select(feature, null, tunniste);
+                }, function() {
+                    var tunniste = $(this).text();
+                    var feature = ret.getFeatureByTunniste(map, tunniste);
+                    if (feature) {
+                        unselect([feature]);
+                    } else {
+                        unselect([]);
+                    }
+                }).click(function() {
+                    var tunniste = $(this).text();
                     var feature = ret.getFeatureByTunniste(map, tunniste);
                     if (feature) {
                         if (click) {
@@ -295,7 +326,7 @@ var olstuff = function(constants, util) {
         },
         
         newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
-            var u1 = url + (url.indexOf('?') < 0 ? '?' : '&');
+            var u1 = url;
             u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1; 
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
