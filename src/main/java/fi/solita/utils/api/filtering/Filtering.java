@@ -390,7 +390,8 @@ public class Filtering {
     }
     
     static boolean isNullOrEmpty(Object x) {
-        return x instanceof Option<?> && !((Option<?>)x).isDefined() ||
+        return x == null ||
+               x instanceof Option<?> && !((Option<?>)x).isDefined() ||
                x instanceof Collection<?> && ((Collection<?>)x).isEmpty();
     }
     
