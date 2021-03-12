@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
+import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Set;
@@ -32,23 +33,28 @@ public class SupportServiceBase {
     
     public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, String durationOrPeriod) {
         Duration d;
+        boolean negate = false;
+        if (durationOrPeriod.startsWith("-")) {
+            negate = true;
+            durationOrPeriod = tail(durationOrPeriod);
+        }
         try {
             d = Duration.parse(durationOrPeriod);
         } catch (Exception e) {
-            redirectToCurrentInterval(req, res, Period.parse(durationOrPeriod), newSet("duration"));
+            redirectToCurrentInterval(req, res, Period.parse(durationOrPeriod), negate, newSet("duration"));
             return;
         }
-        redirectToCurrentInterval(req, res, d, newSet("duration"));
+        redirectToCurrentInterval(req, res, d, negate, newSet("duration"));
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Duration duration, Set<String> queryParamsToExclude) {
+    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Duration duration, boolean negate, Set<String> queryParamsToExclude) {
         DateTime now = RequestUtil.currentTime();
-        redirectToCurrentInterval(req, res, new Interval(now, now.plus(duration)), queryParamsToExclude);
+        redirectToCurrentInterval(req, res, negate ? new Interval(now.minus(duration), now) : new Interval(now, now.plus(duration)), queryParamsToExclude);
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Period period, Set<String> queryParamsToExclude) {
+    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Period period, boolean negate, Set<String> queryParamsToExclude) {
         DateTime now = RequestUtil.currentTime();
-        redirectToCurrentInterval(req, res, new Interval(now, now.plus(period)), queryParamsToExclude);
+        redirectToCurrentInterval(req, res, negate ? new Interval(now.minus(period), now) : new Interval(now, now.plus(period)), queryParamsToExclude);
     }
     
     public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
