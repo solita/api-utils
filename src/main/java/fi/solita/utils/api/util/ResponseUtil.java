@@ -94,7 +94,8 @@ public abstract class ResponseUtil {
     }
     
     public static final void cacheForInfinity(HttpServletResponse response) {
-        cacheFor(Duration.standardDays(360), response);
+        // must be 365 days to get 31536000. Otherwise at least safari might refuse to cache content.
+        cacheFor(Duration.standardDays(365), response);
     }
     
     public static final void disableCaching(HttpServletResponse response) {
