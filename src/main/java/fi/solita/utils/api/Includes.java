@@ -143,7 +143,9 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     ret = Includes.withNestedMembers(members, Includes.Include.All, builders);
                     break;
             }
-            includesEverything = true;
+            if (propertyNames == null) {
+                includesEverything = true;
+            }
         } else {
             ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), propertyNames)));
         }
