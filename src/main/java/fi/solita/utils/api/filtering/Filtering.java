@@ -42,6 +42,7 @@ import fi.solita.utils.api.resolving.ResolvableMember;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil.UnknownPropertyNameException;
@@ -81,14 +82,13 @@ public class Filtering {
         for (Entry<FilterType, List<Filter>> f: groupBy(Filter_.pattern, filters.filters).entrySet()) {
             List<Pair<MetaNamedMember<T, Object>, List<Object>>> lst = Collections.<Pair<MetaNamedMember<T,Object>,List<Object>>>newMutableList();
             c.put(f.getKey(), lst);
-            for (Filter filter: f.getValue()) {
+            // leave out function calls, since the functions aren't found in the database anyway
+            for (Filter filter: filter(not(Filter_.property.andThen(PropertyName_.isFunctionCall)), f.getValue())) {
                 MetaNamedMember<T,Object> member;
                 try {
-                    // leave out function calls
                     member = (MetaNamedMember<T, Object>) Assert.singleton(
-                        newSet(map(Filtering_.<T>unwrapFunctionCallMember(),
-                            filter(MemberUtil_.memberName.andThen(equalTo(filter.property.toProperty(fp).getValue())),
-                                includes.includesFromRowFiltering))));
+                        newSet(filter(MemberUtil_.memberName.andThen(equalTo(filter.property.toProperty(fp).getValue())),
+                            includes.includesFromRowFiltering)));
                 } catch (UnknownPropertyNameException e) {
                     throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
                 }
