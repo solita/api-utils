@@ -471,11 +471,11 @@ public abstract class HtmlConversionService {
                     boolean pseudo = member.getName().isEmpty();
                     String extraClasses = pseudo ? "" : extraClasses(member.getMember());
                     html.th()
-                        .span(class_("fi " + extraClasses).title(pseudo ? null : docDescription(member.getMember()).getOrElse(null)))
-                            .write(member.getName())
+                        .span(class_("fi " + extraClasses).title(pseudo ? null : docDescription(member).getOrElse(null)))
+                            .write(pseudo ? member.getName() : docName(member).getOrElse(member.getName()))
                         ._span();
-                    html.span(class_("en " + extraClasses).title(pseudo ? null : docDescription_en(member.getMember()).getOrElse(null)))
-                            .write(pseudo ? member.getName() : docName_en(member.getMember()).getOrElse(member.getName()))
+                    html.span(class_("en " + extraClasses).title(pseudo ? null : docDescription_en(member).getOrElse(null)))
+                            .write(pseudo ? member.getName() : docName_en(member).getOrElse(member.getName()))
                         ._span();
                     html._th();
                 }
@@ -487,11 +487,13 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected abstract Option<String> docName_en(AccessibleObject member);
+    protected abstract Option<String> docName(MetaNamedMember<?, ?> member);
+    
+    protected abstract Option<String> docName_en(MetaNamedMember<?, ?> member);
 
-    protected abstract Option<String> docDescription_en(AccessibleObject member);
-
-    protected abstract Option<String> docDescription(AccessibleObject member);
+    protected abstract Option<String> docDescription(MetaNamedMember<?, ?> member);
+    
+    protected abstract Option<String> docDescription_en(MetaNamedMember<?, ?> member);
 
     private final <T> Renderable regularBody(final Iterable<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return new Renderable() {
