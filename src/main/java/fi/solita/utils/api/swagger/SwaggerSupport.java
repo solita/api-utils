@@ -1,10 +1,12 @@
 package fi.solita.utils.api.swagger;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 
 import java.lang.reflect.AccessibleObject;
@@ -15,6 +17,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,6 +56,9 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
+import io.swagger.models.properties.Property;
+import io.swagger.models.properties.StringProperty;
 import springfox.documentation.RequestHandler;
 import springfox.documentation.builders.ModelPropertyBuilder;
 import springfox.documentation.builders.ParameterBuilder;
@@ -97,6 +103,38 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 return newList(resource);
             }
         });
+        
+        // Seems that if custom mappings are added to Properties.TYPE_FACTORY, it allows specifying 
+        // custom "format"s for string types.
+        // Oh dear lord...
+        try {
+            Class<?> clazz = Class.forName("springfox.documentation.swagger2.mappers.Properties");
+            Field field = clazz.getDeclaredField("TYPE_FACTORY");
+            field.setAccessible(true);
+            // must remove final specifier to set a new map to the field.
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            @SuppressWarnings("unchecked")
+            Map<String, Function<String, ? extends Property>> map = (Map<String, Function<String, ? extends Property>>) field.get(null);
+            Map<String, Function<String, ? extends Property>> newMap = new HashMap<>();
+            for (final Map.Entry<String, String> format: additionalStringFormats().entrySet()) {
+                newMap.put(format.getKey(), new com.google.common.base.Function<String, Property>() {
+                    @Override
+                    public Property apply(String input) {
+                        return new StringProperty(format.getValue());
+                    }
+                });
+            }
+            newMap.putAll(map);
+            field.set(null, newMap);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    protected Map<String,String> additionalStringFormats() {
+        return newMap(Pair.of("interval","interval"), Pair.of("uri","uri"), Pair.of("localtime","time"), Pair.of("duration","duration"), Pair.of("datetimezone", "timezone"));
     }
     
     // This is horrible...
@@ -179,7 +217,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    public static final String DESCRIPTION_DateTime = "Ajanhetki, ilmaistuna aikavälinä / Instant, expressed as an interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String DESCRIPTION_DateTime = "Ajanhetki / Instant. yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_LocalDate = "Päivämäärä / Date. yyyy-MM-dd";
     public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
@@ -203,7 +241,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.description("character")
                        .example("c");
             } else if (clazz.equals(Interval.class)) {
-                builder.description(DESCRIPTION_Interval)
+                builder.qualifiedType("interval")
+                       .description(DESCRIPTION_Interval)
                        .example(RequestUtil.intervalNow());
             } else if (clazz.equals(LocalDate.class)) {
                 builder.description(DESCRIPTION_LocalDate)
@@ -222,16 +261,20 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.description(DESCRIPTION_SRSName)
                        .example(SRSName.EPSG3067.value);
             } else if (clazz.equals(URI.class)) {
-                builder.description("URI")
+                builder.qualifiedType("uri")
+                       .description("URI")
                        .example("https://www.liikennevirasto.fi");
             } else if (clazz.equals(LocalTime.class)) {
-                builder.description("Kellonaika / Time. HH:mm:ss")
+                builder.qualifiedType("localtime")
+                       .description("Kellonaika / Time. HH:mm:ss")
                        .example("13:20:45");
             } else if (clazz.equals(Duration.class)) {
-                builder.description("Kesto sekunneissa ja millisekunneissa / Duration in seconds and milliseconds. ISO8601")
+                builder.qualifiedType("duration")
+                       .description("Kesto sekunneissa ja millisekunneissa / Duration in seconds and milliseconds. ISO8601")
                        .example("PT72.345S");
             } else if (clazz.equals(DateTimeZone.class)) {
-                builder.description("Aikavyöhykekoodi / Time zone code")
+                builder.qualifiedType("datetimezone")
+                       .description("Aikavyöhykekoodi / Time zone code")
                        .example("Europe/Helsinki");
             }
         }

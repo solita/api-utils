@@ -180,16 +180,9 @@ public class JsonSerializers {
     
     // Näiden pitäisi vastata sarjallistusten lopullisia raakatyyppejä
     public Map<Class<?>,Class<?>> rawTypes() { return Collections.<Class<?>,Class<?>>newMap(
-            // tuple?
-            Pair.of(URI.class, String.class),
             Pair.of(Character.class, String.class),
-            Pair.of(LocalDate.class, String.class),
-            Pair.of(LocalTime.class, String.class),
-            Pair.of(DateTime.class, String.class),
-            Pair.of(Interval.class, String.class),
-            Pair.of(Duration.class, String.class),
-            Pair.of(DateTimeZone.class, String.class)
-            );
+            Pair.of(LocalDate.class, java.sql.Date.class),
+            Pair.of(DateTime.class, java.util.Date.class));
     }
 }
 
