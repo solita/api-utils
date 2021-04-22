@@ -110,7 +110,7 @@ public class ModificationUtils {
             }
             if (t instanceof ResolvingInterval) {
                 logger.debug("Keeping ResolvingInterval property");
-                MetaField<T,Interval> resolvingInterval = ((ResolvingInterval<T>) t).getResolvingInterval();
+                MetaField<T,Interval> resolvingInterval = ((ResolvingInterval<T>) t).resolvingInterval();
                 builder = builder.with(resolvingInterval, resolvingInterval.apply(t));
             }
             logger.debug("Building new object");
