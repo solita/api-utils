@@ -2,10 +2,12 @@ package fi.solita.utils.api.types;
 
 import java.util.regex.Pattern;
 
+import fi.solita.utils.api.Documentation;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Predicate;
 
+@Documentation(name_en = "PropertyName", description = "Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois", description_en = "Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields")
 public abstract class PropertyName implements Comparable<PropertyName> {
 
     protected final String value;

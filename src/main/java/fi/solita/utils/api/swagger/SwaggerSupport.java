@@ -6,8 +6,9 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
+import static fi.solita.utils.functional.Option.None;
+import static fi.solita.utils.functional.Option.Some;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
@@ -41,6 +42,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 
 import com.fasterxml.classmate.TypeResolver;
 
+import fi.solita.utils.api.Documentation;
 import fi.solita.utils.api.base.VersionBase;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.swagger.SwaggerSupport_.CustomTypeParameterBuilder_;
@@ -119,7 +121,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             Map<String, Function<String, ? extends Property>> map = (Map<String, Function<String, ? extends Property>>) field.get(null);
             Map<String, Function<String, ? extends Property>> newMap = new HashMap<>();
             for (final Map.Entry<String, String> format: additionalStringFormats().entrySet()) {
-                newMap.put(format.getKey(), new com.google.common.base.Function<String, Property>() {
+                newMap.put(format.getKey(), new Function<String, Property>() {
                     @Override
                     public Property apply(String input) {
                         return new StringProperty(format.getValue());
@@ -221,8 +223,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
     public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_LocalDate = "Päivämäärä / Date. yyyy-MM-dd";
     public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
-    public static final String DESCRIPTION_PropertyName = "Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois. / Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields.";
-    public static final String DESCRIPTION_SRSName = "Vastauksen koordinaattien SRS / SRS for response coordinates";
     
     public static abstract class DocumentingModelPropertyBuilder implements ModelPropertyBuilderPlugin {
         protected static <T extends Enum<T>> void enumValue(ModelPropertyBuilder builder, Apply<T,String> f, Class<T> clazz) {
@@ -231,7 +231,12 @@ public abstract class SwaggerSupport extends ApiResourceController {
                    .example(head(vals));
         }
         
-        protected abstract Option<String> doc(AnnotatedElement ae);
+        protected Option<String> doc(AnnotatedElement ae) {
+            for (Documentation doc: Option.of(ae.getAnnotation(Documentation.class))) {
+                return Some(doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
+            }
+            return None();
+        }
         
         protected void apply(String name, Class<?> clazz, AnnotatedElement ae, ModelPropertyBuilder builder) {
             if (clazz.equals(DateTime.class)) {
@@ -248,18 +253,19 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.description(DESCRIPTION_LocalDate)
                        .example("1982-01-22");
             } else if (clazz.equals(Count.class)) {
-                builder.example(1);
+                builder.description(doc(Count.class).getOrElse(""))
+                        .example(1);
             } else if (clazz.equals(StartIndex.class)) {
-                builder.example(1);
+                builder.description(doc(StartIndex.class).getOrElse(""))
+                       .example(1);
             } else if (clazz.equals(Filters.class)) {
                 builder.description(DESCRIPTION_Filters)
                        .example("tunniste<>1.2.246.578.2.3.4");
             } else if (clazz.equals(PropertyName.class)) {
-                builder.description(DESCRIPTION_PropertyName)
+                builder.description(doc(PropertyName.class).getOrElse(""))
                        .example("tunniste<>1.2.246.578.2.3.4");
             } else if (clazz.equals(SRSName.class)) {
-                builder.description(DESCRIPTION_SRSName)
-                       .example(SRSName.EPSG3067.value);
+                builder.example(SRSName.EPSG3067.value);
             } else if (clazz.equals(URI.class)) {
                 builder.qualifiedType("uri")
                        .description("URI")
@@ -309,6 +315,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
+    public static Option<String> str2option(String s) {
+        return s.isEmpty() ? Option.<String>None() : Option.Some(s);
+    }
+    
     /**
      * Rekisteröi kuvauksia jne globaalisti tunnetuille parametrityypeille
      */
@@ -327,7 +337,12 @@ public abstract class SwaggerSupport extends ApiResourceController {
             return rp.value();
         }
         
-        protected abstract Option<String> doc(Class<?> clazz);
+        protected Option<String> doc(Class<?> clazz) {
+            for (Documentation doc: Option.of(clazz.getAnnotation(Documentation.class))) {
+                return Some(doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
+            }
+            return None();
+        }
         
         @Override
         public final void apply(ParameterContext parameterContext) {
@@ -360,13 +375,13 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 parameterContext.parameterBuilder()
                     .defaultValue("")
                     .description(DESCRIPTION_Filters);
-            } else if (PropertyName.class.isAssignableFrom(type) || requestParamName.getOrElse("").equals("propertyName")) {
+            } else if (requestParamName.getOrElse("").equals("propertyName")) {
                 parameterContext.parameterBuilder()
                     .collectionFormat("csv")
-                    .description(DESCRIPTION_PropertyName);
+                    .description(doc(PropertyName.class).getOrElse(""));
             } else if (SRSName.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .description(DESCRIPTION_SRSName)
+                    .description(doc(SRSName.class).getOrElse(""))
                     .allowableValues(new AllowableListValues(newList(map(SRSName_.value, SRSName.validValues)), "string"));
             } else if (requestParamName.getOrElse("").equals("typeNames")) {
                 parameterContext.parameterBuilder()
@@ -448,7 +463,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             .directModelSubstitute(Count.class, int.class)
             .directModelSubstitute(StartIndex.class, int.class)
             .directModelSubstitute(Filters.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
-            .directModelSubstitute(PropertyName.class, String.class) // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             .directModelSubstitute(SRSName.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             
             .ignoredParameterTypes(Revision.class)

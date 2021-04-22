@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.resolving.ResolvedMember;
+import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
@@ -178,11 +179,14 @@ public class JsonSerializers {
         );
     }
     
-    // Näiden pitäisi vastata sarjallistusten lopullisia raakatyyppejä
+    // Näiden pitäisi vastata sarjallistusten lopullisia raakatyyppejä.
+    // Tähän pitää laittaa sellaiset tyypit, jotka haluaa sarjallistettavan suoraan jonkin toisen tyypin kaltaisena.
+    // Toteutus varmistaa, että nämä sitten toimivat myös generics-luokkien sisälle käärittyinä (mihin pelkkä direcModelSubstitutes ei riitä).
     public Map<Class<?>,Class<?>> rawTypes() { return Collections.<Class<?>,Class<?>>newMap(
             Pair.of(Character.class, String.class),
             Pair.of(LocalDate.class, java.sql.Date.class),
-            Pair.of(DateTime.class, java.util.Date.class));
+            Pair.of(DateTime.class, java.util.Date.class),
+            Pair.of(PropertyName.class, String.class));
     }
 }
 
