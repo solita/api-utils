@@ -16,6 +16,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
@@ -57,6 +59,7 @@ import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import io.swagger.models.properties.Property;
@@ -282,6 +285,13 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.qualifiedType("datetimezone")
                        .description("Aikavyöhykekoodi / Time zone code")
                        .example("Europe/Helsinki");
+            } else if (Either.class.isAssignableFrom(clazz)) {
+                Type type = ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType();
+                if (type instanceof ParameterizedType && ((ParameterizedType)type).getRawType().getClass().getName().equals(Either.class.getName())) {
+                    // delegate to both parts inversely, so left overrides right if they set same stuff
+                    apply(name, MemberUtil.typeClass(((ParameterizedType) type).getActualTypeArguments()[1]), ae, builder);
+                    apply(name, MemberUtil.typeClass(((ParameterizedType) type).getActualTypeArguments()[0]), ae, builder);
+                }
             }
         }
         
@@ -292,7 +302,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 AnnotatedElement ae = definition.get();
                 if (ae instanceof AccessibleObject) {
                     String name = ((Member)ae).getName();
-                    Class<?> clazz = MemberUtil.memberTypeUnwrappingOptionAndEither((AccessibleObject)ae);
+                    Class<?> clazz = MemberUtil.memberTypeUnwrappingOption((AccessibleObject)ae);
                     
                     ModelPropertyBuilder builder = context.getBuilder();
                     if (Option.class.isAssignableFrom(clazz)) {
