@@ -135,89 +135,106 @@ var olstuff = function(constants, util) {
                 map.mystate = {};
                 map.mystate.closed = {};
             }
-            $(document).keydown(function() {
-                if ($('input:not(#rajoita):focus').size() == 0) {
-                    $('#rajoita').focus();
+            document.onkeydown = function() {
+                if (!document.querySelector('input:not(#rajoita):focus')) {
+                    document.getElementById('rajoita').focus();
                 }
-            });
+            };
             var f = function(evt) {
-                elem.get(0).innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(ret.featuresOnScreen(map));
-                $('input', elem).keyup(function() {
-                    $('ul > li > span > span > ul:contains("' + $(this).val() + '")', elem).show();
-                    $('ul > li > span > span > ul:not(:contains("' + $(this).val() + '"))', elem).hide();
-                });
-                $(elem).children().children().children('.key').each(function() {
-                    if (map.mystate.closed[$(this).text()]) {
-                        $(this).siblings().hide();
+                elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(ret.featuresOnScreen(map));
+                var input = elem.querySelector('input');
+                input.onkeyup = function() {
+                    [...elem.querySelectorAll('ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
+                    [...elem.querySelectorAll('ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) < 0;  }).forEach(function(x) { x.style.display = 'none'; });
+                };
+                elem.querySelectorAll('* > * > .key').forEach(function(x) {
+                    if (map.mystate.closed[x.textContent]) {
+                        util.getSiblings(x).forEach(function(y) { y.style.display = 'none'; });
                     }
                 });
-                $(elem).children().children().children('.key').click(function() {
-                    if (map.mystate.closed[$(this).text()]) {
-                        map.mystate.closed[$(this).text()] = undefined;
-                        $(this).siblings().show();
-                    } else {
-                        map.mystate.closed[$(this).text()] = true;
-                        $(this).siblings().hide();
-                    }
-                });
-                $('ul > li > span > span > ul:not(:has(ul))', elem).hover(function() {
-                    var tunniste = $('.key:contains("tunniste")', this).siblings().text();
-                    var feature = ret.getFeatureByTunniste(map, tunniste);
-                    try {
-                        selectInteraction.getFeatures().clear();
-                    } catch (e) {
-                        console.log(e);
-                    }
-                    if (feature) {
-                        selectInteraction.getFeatures().push(feature);
-                        select(feature);
-                    }
-                }, function() {
-                    var tunniste = $('.key:contains("tunniste")', this).siblings().text();
-                    var feature = ret.getFeatureByTunniste(map, tunniste);
-                    if (feature) {
-                        unselect([feature]);
-                    }
-                }).click(function() {
-                    var tunniste = $('.key:contains("tunniste")', this).siblings().text();
-                    var feature = ret.getFeatureByTunniste(map, tunniste);
-                    if (feature) {
-                        if (click) {
-                            click(feature);
+                elem.querySelectorAll('* > * > .key').forEach(function(x) {
+                    x.onclick = function() {
+                        if (map.mystate.closed[x.textContent]) {
+                            map.mystate.closed[x.textContent] = undefined;
+                            util.getSiblings(x).forEach(function(y) { y.style.display = 'block'; });
+                        } else {
+                            map.mystate.closed[x.textContent] = true;
+                            util.getSiblings(x).forEach(function(y) { y.style.display = 'none'; });
                         }
-                        map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
-                    }
+                    };
+                });
+                [...elem.querySelectorAll('ul > li > span > span > ul')].filter(function(x) { return !x.querySelector('ul');}).forEach(function(x) {
+                    x.onmouseover = function() {
+                        [...x.querySelectorAll('.key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; }).forEach(function(tunnisteElem) {
+                            var tunniste = util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
+                            var feature = ret.getFeatureByTunniste(map, tunniste);
+                            try {
+                                selectInteraction.getFeatures().clear();
+                            } catch (e) {
+                                console.log(e);
+                            }
+                            if (feature) {
+                                selectInteraction.getFeatures().push(feature);
+                                select(feature);
+                            }
+                        });
+                    };
+                    x.onmouseout = function() {
+                        [...x.querySelectorAll('.key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; }).forEach(function(tunnisteElem) {
+                            var tunniste = util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
+                            var feature = ret.getFeatureByTunniste(map, tunniste);
+                            if (feature) {
+                                unselect([feature]);
+                            }
+                        });
+                    };
+                    x.onclick = function() {
+                        [...x.querySelectorAll('.key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; }).forEach(function(tunnisteElem) {
+                            var tunniste = util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
+                            var feature = ret.getFeatureByTunniste(map, tunniste);
+                            if (feature) {
+                                if (click) {
+                                    click(feature);
+                                }
+                                map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
+                            }
+                        });
+                    };
                 });
                 
-                $('ul > li > span > span > ul a.oid', elem).hover(function() {
-                    var tunniste = $(this).text();
-                    var feature = ret.getFeatureByTunniste(map, tunniste);
-                    try {
-                        selectInteraction.getFeatures().clear();
-                    } catch (e) {
-                        console.log(e);
-                    }
-                    if (feature) {
-                        selectInteraction.getFeatures().push(feature);
-                    }
-                    select(feature, null, tunniste);
-                }, function() {
-                    var tunniste = $(this).text();
-                    var feature = ret.getFeatureByTunniste(map, tunniste);
-                    if (feature) {
-                        unselect([feature]);
-                    } else {
-                        unselect([]);
-                    }
-                }).click(function() {
-                    var tunniste = $(this).text();
-                    var feature = ret.getFeatureByTunniste(map, tunniste);
-                    if (feature) {
-                        if (click) {
-                            click(feature);
+                elem.querySelectorAll('ul > li > span > span > ul a.oid').forEach(function(x) {
+                    x.onmouseover = function() {
+                        var tunniste = x.textContent;
+                        var feature = ret.getFeatureByTunniste(map, tunniste);
+                        try {
+                            selectInteraction.getFeatures().clear();
+                        } catch (e) {
+                            console.log(e);
                         }
-                        map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
-                    }
+                        if (feature) {
+                            selectInteraction.getFeatures().push(feature);
+                        }
+                        select(feature, null, tunniste);
+                    };
+                    x.onmouseout = function() {
+                        var tunniste = x.textContent;
+                        var feature = ret.getFeatureByTunniste(map, tunniste);
+                        if (feature) {
+                            unselect([feature]);
+                        } else {
+                            unselect([]);
+                        }
+                    };
+                    x.onclick = function() {
+                        var tunniste = x.textContent;
+                        var feature = ret.getFeatureByTunniste(map, tunniste);
+                        if (feature) {
+                            if (click) {
+                                click(feature);
+                            }
+                            map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
+                        }
+                    };
                 });
             };
             map.on("moveend", f);
@@ -225,13 +242,15 @@ var olstuff = function(constants, util) {
         },
         
         createPopup: function(elem) {
-            var $popupcontent = $(elem).children();
-            $popupcontent.mouseover(function() {
-                $popupcontent.stop().show().css({opacity:'100'});
-            }).mouseout(function() {
-                $popupcontent.fadeOut(2000);
-            });
-            return $popupcontent;
+            var popupcontent = elem.querySelector('#popup-content');
+            popupcontent.onmouseover = function() {
+                popupcontent.style.display = 'block';
+                popupcontent.style.opacity = '100';
+            };
+            popupcontent.onmouseout = function() {
+                popupcontent.style.display = 'none';
+            };
+            return popupcontent;
         },
         
         styles: {
@@ -345,10 +364,9 @@ var olstuff = function(constants, util) {
                         return;
                     }
                     var kaavio = document.getElementById('kaavio');
-                    $.ajax({
-                        url: (u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'),
-                        dataType: 'json',
-                        success: function(response) {
+                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'))
+                        .then(function(response) { return response.json(); })
+                        .then(function(response) {
                           var features = ret.format.readFeatures(response);
                           if (styleOrHandler instanceof Function) {
                               if (styleOrHandler.length == 1) {
@@ -360,8 +378,7 @@ var olstuff = function(constants, util) {
                               }
                           }
                           source.addFeatures(features);
-                        }
-                    });
+                        });
                 }
             });
             var layer = new ol.layer.Vector({
@@ -448,7 +465,7 @@ var olstuff = function(constants, util) {
               };
             };
             
-            $.ajax(url).then(createLayer(matrix));
+            fetch(url).then(function(x) { return x.text(); }).then(createLayer(matrix));
             
             return group;
         },
@@ -492,10 +509,10 @@ var olstuff = function(constants, util) {
                 var kiinteisto = baseurl + '/rasteripalvelu-mml/wmts/kiinteisto/1.0.0/WMTSCapabilities.xml';
                 var basic = baseurl + '/rasteripalvelu/service/wmts?request=getcapabilities';
                 
-                $.ajax(maasto).then(createLayer('ETRS-TM35FIN', host));
-                $.ajax(teema).then(createLayer('ETRS-TM35FIN', host));
-                $.ajax(kiinteisto).then(createLayer('ETRS-TM35FIN', host));
-                $.ajax(basic).then(createLayer('EPSG:3067_PTP', host));
+                fetch(maasto)    .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
+                fetch(teema)     .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
+                fetch(kiinteisto).then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
+                fetch(basic)     .then(function(x) { return x.text(); }).then(createLayer('EPSG:3067_PTP', host));
             }
             return group;
         },
