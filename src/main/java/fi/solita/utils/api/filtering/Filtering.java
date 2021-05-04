@@ -303,11 +303,11 @@ public class Filtering {
             @SuppressWarnings("unchecked")
             @Override
             public boolean accept(T candidate) {
-                if (candidate instanceof Collection) {
+                if (candidate instanceof Iterable) {
                     switch (matchAction) {
-                        case All: return forall(pred, (Collection<T>)candidate);
-                        case Any: return exists(pred, (Collection<T>)candidate);
-                        case One: return 1 == size(filter(pred, (Collection<T>)candidate));
+                        case All: return forall(pred, (Iterable<T>)candidate);
+                        case Any: return exists(pred, (Iterable<T>)candidate);
+                        case One: return 1 == size(filter(pred, (Iterable<T>)candidate));
                     }
                     throw new IllegalStateException("Shouldn't be here!");
                 } else {
