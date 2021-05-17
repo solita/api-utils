@@ -6,12 +6,15 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
+import static fi.solita.utils.functional.Functional.fold;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
+import static fi.solita.utils.functional.Functional.tail;
+import static fi.solita.utils.functional.Functional.zip;
 import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalA.last;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
@@ -47,6 +50,7 @@ import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.meta.MetaMethod;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -129,6 +133,10 @@ public abstract class RequestUtil {
         assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), acceptedParams);
     }
     
+    static boolean inOrder(String a, String b) {
+        return a.compareToIgnoreCase(b) <= 0;
+    }
+    
     static void assertQueryStringValid(Map<String, String[]> parameters, List<String> parameterNames, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
         List<String> unknownParameters = newList(subtract(parameterNames, newSet(acceptedParams)));
         if (!unknownParameters.isEmpty()) {
@@ -139,7 +147,7 @@ public abstract class RequestUtil {
             throw new RequestUtil.QueryParametersMustNotBeDuplicatedException();
         }
         
-        if (!newList(sort(parameterNames)).equals(parameterNames)) {
+        if (size(filter(not(Function.<Boolean>id()), map(RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
             throw new RequestUtil.QueryParametersMustBeInAlphabeticalOrderException();
         }
         

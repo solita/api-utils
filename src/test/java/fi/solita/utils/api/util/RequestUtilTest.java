@@ -34,8 +34,22 @@ public class RequestUtilTest {
         RequestUtil.assertQueryStringValid(paramMap, newList("foo", "foo"), null, "foo");
     }
     
-    @Test(expected = RequestUtil.QueryParametersMustBeInAlphabeticalOrderException.class)
-    public void parametritOltavaAakkosjarjestyksessa() {
-        RequestUtil.assertQueryStringValid(paramMap, newList("b", "a"), "a", "b");
+    @Test
+    public void parametritOltavaAakkosjarjestyksessaYhdessaTaiKahdessaOsassa() {
+        RequestUtil.assertQueryStringValid(paramMap, newList("c", "d"), "a", "c", "d");
+        RequestUtil.assertQueryStringValid(paramMap, newList("c", "d", "a"), "a", "c", "d");
+        RequestUtil.assertQueryStringValid(paramMap, newList("c", "d", "a", "b"), "a", "b", "c", "d");
+        
+        try {
+            RequestUtil.assertQueryStringValid(paramMap, newList("b", "a"), "a", "b");
+        } catch (RequestUtil.QueryParametersMustBeInAlphabeticalOrderException e) {
+            // ok
+        }
+        
+        try {
+            RequestUtil.assertQueryStringValid(paramMap, newList("d", "b", "c", "a"), "a", "b", "c", "d");
+        } catch (RequestUtil.QueryParametersMustBeInAlphabeticalOrderException e) {
+            // ok
+        }
     }
 }
