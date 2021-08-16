@@ -6,6 +6,9 @@ import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 
 import fi.solita.utils.api.base.Serializers;
@@ -13,6 +16,7 @@ import fi.solita.utils.api.base.http.HttpModule;
 import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -22,6 +26,10 @@ public class FilteringTest {
         String required = "1";
         Option<String> defined = Some("1");
         Option<String> undefined = None();
+        List<String> nonemptylist = newList("1");
+        List<String> emptylist = emptyList();
+        List<List<String>> listofnonemptylist = Arrays.asList(newList("1"));
+        List<List<String>> listofemptylist = Arrays.asList(Collections.<String>emptyList());
 
         @Override
         public int hashCode() {
@@ -398,5 +406,29 @@ public class FilteringTest {
     public void notInUndefined() {
         assertEquals(emptyList(), newList(filtering.notIn(FilteringTest_.Data_.undefined, newList(Literal.of(null)), String.class, newList(data))));
         assertEquals(emptyList(), newList(filtering.notIn(FilteringTest_.Data_.undefined, newList(Literal.of("2")), String.class, newList(data))));
+    }
+    
+    
+    
+    @Test
+    public void isNull() {
+        assertEquals(emptyList(), newList(filtering.isNull(FilteringTest_.Data_.defined, newList(data))));
+        assertEquals(emptyList(), newList(filtering.isNull(FilteringTest_.Data_.nonemptylist, newList(data))));
+        assertEquals(emptyList(), newList(filtering.isNull(FilteringTest_.Data_.listofnonemptylist, newList(data))));
+        
+        assertEquals(newList(data), newList(filtering.isNull(FilteringTest_.Data_.undefined, newList(data))));
+        assertEquals(newList(data), newList(filtering.isNull(FilteringTest_.Data_.emptylist, newList(data))));
+        assertEquals(newList(data), newList(filtering.isNull(FilteringTest_.Data_.listofemptylist, newList(data))));
+    }
+    
+    @Test
+    public void isNotNull() {
+        assertEquals(newList(data), newList(filtering.isNotNull(FilteringTest_.Data_.defined, newList(data))));
+        assertEquals(newList(data), newList(filtering.isNotNull(FilteringTest_.Data_.nonemptylist, newList(data))));
+        assertEquals(newList(data), newList(filtering.isNotNull(FilteringTest_.Data_.listofnonemptylist, newList(data))));
+        
+        assertEquals(emptyList(), newList(filtering.isNotNull(FilteringTest_.Data_.undefined, newList(data))));
+        assertEquals(emptyList(), newList(filtering.isNotNull(FilteringTest_.Data_.emptylist, newList(data))));
+        assertEquals(emptyList(), newList(filtering.isNotNull(FilteringTest_.Data_.listofemptylist, newList(data))));
     }
 }

@@ -7,7 +7,9 @@ import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.forall;
+import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
@@ -265,7 +267,7 @@ public class Filtering {
                     if (!filter.literals.isEmpty()) {
                         throw new IllegalArgumentException("Should be empty");
                     }
-                    ts = isNull((MetaNamedMember<? super T,Option<Object>>)member, ts);
+                    ts = isNull(member, ts);
                 } else if (filter.pattern == FilterType.NOT_NULL) {
                     if (!filter.literals.isEmpty()) {
                         throw new IllegalArgumentException("Should be empty");
@@ -381,7 +383,7 @@ public class Filtering {
         return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, targetType), values))))))), ts);
     }
     
-    public <T,V> Iterable<T> isNull(MetaNamedMember<? super T,Option<V>> member, Iterable<T> ts) {
+    public <T,V> Iterable<T> isNull(MetaNamedMember<? super T,?> member, Iterable<T> ts) {
         return filter(Function.of(member).andThen(Filtering_.isNullOrEmpty), ts);
     }
     
@@ -389,10 +391,25 @@ public class Filtering {
         return filter(Function.of(member).andThen(not(Filtering_.isNullOrEmpty)), ts);
     }
     
+    @SuppressWarnings("unchecked")
     static boolean isNullOrEmpty(Object x) {
-        return x == null ||
-               x instanceof Option<?> && !((Option<?>)x).isDefined() ||
-               x instanceof Collection<?> && ((Collection<?>)x).isEmpty();
+        if (x == null) {
+            return true;
+        }
+        if (x instanceof Option<?> && !((Option<?>)x).isDefined()) {
+            return true;
+        }
+        if (x instanceof Iterable<?>) {
+            Option<?> first = headOption((Iterable<?>)x);
+            if (!first.isDefined()) {
+                return true;
+            } else {
+                if (first.get() instanceof Iterable) {
+                    return isNullOrEmpty(flatten((Iterable<Iterable<?>>)x));
+                }
+            }
+        }
+        return false;
     }
     
     static boolean matches(String str, String regex) {
