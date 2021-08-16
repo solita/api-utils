@@ -119,9 +119,9 @@ var olstuff = function(constants, util) {
             for (var i = 0; i < layers.length; i++) {
                 var layer = layers[i];
                 if (layer.getSource && layer.getSource().getFeatures) {
-                    var features = layer.getSource().getFeatures(tunniste);
+                    var features = layer.getSource().getFeatures();
                     for (var j = 0; j < features.length; ++j) {
-                        if (features[j].getProperties().tunniste == tunniste) {
+                        if (features[j].getProperties().tunniste == tunniste || features[j].getProperties()._tunniste == tunniste) {
                             return features[j];
                         }
                     }
@@ -142,17 +142,17 @@ var olstuff = function(constants, util) {
             };
             var f = function(evt) {
                 elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(ret.featuresOnScreen(map));
-                var input = elem.querySelector('input');
+                var input = elem.querySelector(':scope input');
                 input.onkeyup = function() {
-                    [...elem.querySelectorAll('ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
-                    [...elem.querySelectorAll('ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) < 0;  }).forEach(function(x) { x.style.display = 'none'; });
+                    [...elem.querySelectorAll(':scope ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
+                    [...elem.querySelectorAll(':scope ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) < 0;  }).forEach(function(x) { x.style.display = 'none'; });
                 };
-                elem.querySelectorAll('* > * > .key').forEach(function(x) {
+                elem.querySelectorAll(':scope * > * > .key').forEach(function(x) {
                     if (map.mystate.closed[x.textContent]) {
                         util.getSiblings(x).forEach(function(y) { y.style.display = 'none'; });
                     }
                 });
-                elem.querySelectorAll('* > * > .key').forEach(function(x) {
+                elem.querySelectorAll(':scope * > * > .key').forEach(function(x) {
                     x.onclick = function() {
                         if (map.mystate.closed[x.textContent]) {
                             map.mystate.closed[x.textContent] = undefined;
@@ -163,10 +163,14 @@ var olstuff = function(constants, util) {
                         }
                     };
                 });
-                [...elem.querySelectorAll('ul > li > span > span > ul')].filter(function(x) { return !x.querySelector('ul');}).forEach(function(x) {
-                    x.onmouseover = function() {
-                        [...x.querySelectorAll('.key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; }).forEach(function(tunnisteElem) {
-                            var tunniste = util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
+                [...elem.querySelectorAll(':scope ul > li > span > span > ul')].forEach(function(x) {
+                    x.onmouseenter = function() {
+                        [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
+                                                                     .slice(0, 1)
+                                                                     .forEach(function(tunnisteElem) {
+                            var tunniste = tunnisteElem.textContent == '_tunniste'
+                                ? util.getSiblings(tunnisteElem).map(function(y) { return y.innerHTML; }).join()
+                                : util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
                             var feature = ret.getFeatureByTunniste(map, tunniste);
                             try {
                                 selectInteraction.getFeatures().clear();
@@ -179,18 +183,26 @@ var olstuff = function(constants, util) {
                             }
                         });
                     };
-                    x.onmouseout = function() {
-                        [...x.querySelectorAll('.key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; }).forEach(function(tunnisteElem) {
-                            var tunniste = util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
-                            var feature = ret.getFeatureByTunniste(map, tunniste);
-                            if (feature) {
-                                unselect([feature]);
-                            }
-                        });
+                    x.onmouseleave = function() {
+                        var features = [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
+                                                                                    .slice(0, 1)
+                                                                                    .map(function(tunnisteElem) {
+                            var tunniste = tunnisteElem.textContent == '_tunniste'
+                                ? util.getSiblings(tunnisteElem).map(function(y) { return y.innerHTML; }).join()
+                                : util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
+                            return ret.getFeatureByTunniste(map, tunniste);
+                        }).filter(x => x);
+                        if (features.length > 0) {
+                            unselect(features);
+                        }
                     };
                     x.onclick = function() {
-                        [...x.querySelectorAll('.key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; }).forEach(function(tunnisteElem) {
-                            var tunniste = util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
+                        [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
+                                                                     .slice(0, 1)
+                                                                     .forEach(function(tunnisteElem) {
+                            var tunniste = tunnisteElem.textContent == '_tunniste'
+                                ? util.getSiblings(tunnisteElem).map(function(y) { return y.innerHTML; }).join()
+                                : util.getSiblings(tunnisteElem).map(function(y) { return y.textContent; }).join();
                             var feature = ret.getFeatureByTunniste(map, tunniste);
                             if (feature) {
                                 if (click) {
@@ -202,8 +214,8 @@ var olstuff = function(constants, util) {
                     };
                 });
                 
-                elem.querySelectorAll('ul > li > span > span > ul a.oid').forEach(function(x) {
-                    x.onmouseover = function() {
+                elem.querySelectorAll(':scope ul > li > span > span > ul a.oid').forEach(function(x) {
+                    x.onmouseenter = function() {
                         var tunniste = x.textContent;
                         var feature = ret.getFeatureByTunniste(map, tunniste);
                         try {
@@ -216,7 +228,7 @@ var olstuff = function(constants, util) {
                         }
                         select(feature, null, tunniste);
                     };
-                    x.onmouseout = function() {
+                    x.onmouseleave = function() {
                         var tunniste = x.textContent;
                         var feature = ret.getFeatureByTunniste(map, tunniste);
                         if (feature) {
@@ -352,6 +364,7 @@ var olstuff = function(constants, util) {
                      (url.indexOf('time=') >= 0 ? '' : '&time=' + instant + '/' + instant) +
                      (!typeNames ? '' : '&typeNames=' + typeNames);
 
+            var layerTitle = ret.mkLayerTitle(title_fi, title_en);
             var source = new ol.source.Vector({
                 format: ret.format,
                 projection: ret.projection,
@@ -368,6 +381,13 @@ var olstuff = function(constants, util) {
                         .then(function(response) { return response.json(); })
                         .then(function(response) {
                           var features = ret.format.readFeatures(response);
+                          features.forEach(f => {
+                            if (!f.getProperties().tunniste) {
+                                var newProps = f.getProperties();
+                                newProps._tunniste = layerTitle;
+                                f.setProperties(newProps);
+                            }
+                          });
                           if (styleOrHandler instanceof Function) {
                               if (styleOrHandler.length == 1) {
                                   // on feature load
@@ -382,7 +402,7 @@ var olstuff = function(constants, util) {
                 }
             });
             var layer = new ol.layer.Vector({
-                title: ret.mkLayerTitle(title_fi, title_en),
+                title: layerTitle,
                 shortName: shortName,
                 source: source,
                 opacity: opacity || 1.0,
@@ -397,7 +417,14 @@ var olstuff = function(constants, util) {
         },
         
         mkLayerTitle: function(title_fi, title_en) {
-            return '<span class="fi">' + title_fi + '</span><span class="en">' + title_en + '</span>';
+            return '<span class="fi">' + ret.modifyLayerTitle(title_fi) + '</span><span class="en">' + ret.modifyLayerTitle(title_en) + '</span>';
+        },
+        
+        modifyLayerTitle: function(title) {
+            if (title.indexOf('=:') > 0 || title.indexOf('*:') > 0) {
+                return title.replaceAll(',', ', ');
+            }
+            return title;
         },
         
         newPngLayer: function(url, title, opacity, propertyName, typeNames) {

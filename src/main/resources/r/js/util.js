@@ -31,7 +31,7 @@ var util = function(customPrettyPrinting) {
                 if (!r) {
                     r = '';
                     for (var key in obj) {
-                        if (obj.hasOwnProperty(key) && !key.startsWith('_')) {
+                        if (obj.hasOwnProperty(key)) {
                             if (r === '') {
                                 r = '<ul>';
                             }
@@ -40,7 +40,7 @@ var util = function(customPrettyPrinting) {
                                 // skip empty arrays
                             } else {
                                 var printedVal = (val && typeof val === 'object') ? ret.prettyPrint(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
-                                r += '<li>' + '<span class="key">' + key + '</span><span class="value">' + (printedVal ? printedVal : val) + '</span></li>';
+                                r += '<li ' + (key.startsWith('_') ? 'style="display: none"' : '') + '>' + '<span class="key">' + key + '</span><span class="value">' + (printedVal ? printedVal : val) + '</span></li>';
                             }
                         }
                     }
