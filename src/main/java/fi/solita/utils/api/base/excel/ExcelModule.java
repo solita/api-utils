@@ -112,7 +112,7 @@ public class ExcelModule {
             return Some((ExcelSerializer<T>)serializers.get(Array.class));
         }
         
-        // try a Dto
+        // try a class explicitly marked to be serialized as a bean
         if (type.isAnnotationPresent(JsonSerializeAsBean.class)) {
             return Some((ExcelSerializer<T>)serializers.get(JsonSerializeAsBean.class));
         }

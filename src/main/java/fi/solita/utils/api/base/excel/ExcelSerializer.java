@@ -43,4 +43,24 @@ public abstract class ExcelSerializer<T> {
     public List<String> columns(ExcelModule module, Class<T> type) {
         return newList("");
     }
+    
+    public ExcelSerializer<T> withUnit(final Option<String> unit) {
+        final ExcelSerializer<T> self = this;
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return self.render(module, row, columnIndex, value).withUnit(unit);
+            }
+        };
+    }
+    
+    public ExcelSerializer<T> withHeaders(final List<String> headers) {
+        final ExcelSerializer<T> self = this;
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return self.render(module, row, columnIndex, value).withHeaders(headers);
+            }
+        };
+    }
 }

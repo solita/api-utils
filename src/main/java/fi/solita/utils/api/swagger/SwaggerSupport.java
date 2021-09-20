@@ -6,6 +6,7 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
@@ -139,7 +140,11 @@ public abstract class SwaggerSupport extends ApiResourceController {
     }
     
     protected Map<String,String> additionalStringFormats() {
-        return newMap(Pair.of("interval","interval"), Pair.of("uri","uri"), Pair.of("localtime","time"), Pair.of("duration","duration"), Pair.of("datetimezone", "timezone"));
+        return newMap(Pair.of("interval","interval"),
+                      Pair.of("uri","uri"),
+                      Pair.of("localtime","time"),
+                      Pair.of("duration","duration"),
+                      Pair.of("datetimezone", "timezone"));
     }
     
     // This is horrible...

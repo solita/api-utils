@@ -33,6 +33,7 @@ import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.Period;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.Serializers;
@@ -46,6 +47,7 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
+import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
@@ -60,7 +62,15 @@ public class ExcelSerializers {
         this.s = s;
     }
     
-    public static final <T> ExcelSerializer<T> stdSerializer(final Apply<T, ? extends CharSequence> f) {
+    
+    
+    
+    
+    /**
+     * Some primitive serializers, to be used as helper functions for actual serialization
+     */
+    
+    public static final <T> ExcelSerializer<T> stringSerializer(final Apply<T, ? extends CharSequence> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -68,6 +78,137 @@ public class ExcelSerializers {
             }
         };
     }
+    public static final <T> ExcelSerializer<T> charSerializer(final Apply<T, Character> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, Character.toString(f.apply(value))));
+            }
+        };
+    }
+    
+    public static final <T> ExcelSerializer<T> shortSerializer(final Apply<T, Short> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
+    public static final <T> ExcelSerializer<T> intSerializer(final Apply<T, Integer> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
+    public static final <T> ExcelSerializer<T> longSerializer(final Apply<T, Long> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
+    public static final <T> ExcelSerializer<T> bigIntegerSerializer(final Apply<T, BigInteger> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
+    public static final <T> ExcelSerializer<T> bigDecimalSerializer(final Apply<T, BigDecimal> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
+    public static final <T> ExcelSerializer<T> booleanSerializer(final Apply<T, Boolean> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
+    
+    public static final <T> ExcelSerializer<T> beanSerializer() {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
+                if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
+                    return module.serialize(row, columnIndex, ((Enum<?>)value).name());
+                } else {
+                    List<Cell> cells = newMutableList();
+                    List<String> headers = newMutableList();
+                    StringBuilder sb = new StringBuilder();
+                    for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                        Object val;
+                        try {
+                            val = f.get(value);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        
+                        @SuppressWarnings("unchecked")
+                        Class<Object> type = (Class<Object>) MemberUtil.memberTypeUnwrappingOptionAndEither(f);
+                        String[] arr = newArray(String.class, repeat("", module.columns(type).size()));
+                        Cells newCells = val == null || val instanceof Option && !((Option<?>)val).isDefined() ? module.serialize(row, columnIndex, Tuple.of((Object[])arr)) : module.serialize(row, columnIndex, val, type);
+                        cells.addAll(newCells.cells);
+                        
+                        List<String> newHeaders = newCells.headers.isEmpty() ? module.columns(type) : newCells.headers;
+                        newHeaders = newList(map(prepend(f.getName() + " ").andThen(ExcelSerializers_.trim), newHeaders));
+                        headers.addAll(newHeaders);
+                        
+                        columnIndex += newCells.cells.size();
+                        
+                        if (val != null && (!(val instanceof Option) || ((Option<?>)val).isDefined())) {
+                            if (sb.length() > 0) {
+                                sb.append(", ");
+                            }
+                            sb.append(f.getName() + ": " + cells2str(newCells));
+                        }
+                    }
+                    return new Cells(cells, sb.toString()).withHeaders(headers);
+                }
+            }
+            
+            @Override
+            public List<String> columns(ExcelModule module, Class<T> type) {
+                if (ClassUtils.getEnumType(type).isDefined()) {
+                    return newList("");
+                } else {
+                    Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    return newList(flatMap(ExcelSerializers_.fieldColumn.ap(module), fields));
+                }
+            }
+        };
+    }
+    
+    static String fieldName(Field f) {
+        return f.getName();
+    }
+    
+    static String trim(String s) {
+        return s.trim();
+    }
+    
+    static List<String> fieldColumn(ExcelModule module, Field field) {
+        List<String> ret = module.columns(MemberUtil.memberTypeUnwrappingOptionAndEither(field));
+        return ret.isEmpty() || ret.equals(newList("")) ? newList(field.getName()) : ret;
+    }
+    
+    
+    
+    
+    
+    /**
+     * Some helper functions
+     */
     
     public static String cells2str(Cells cells) {
         if (cells.stringRepresentation.isDefined()) {
@@ -131,94 +272,38 @@ public class ExcelSerializers {
         return cell;
     }
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new ExcelSerializer<Object>() {
+    
+    
+    
+    
+    /**
+     * Some concrete serializers for common types
+     */
+    
+    private final ExcelSerializer<ResolvedMember> resolvedMember = new ExcelSerializer<ResolvedMember>() {
         @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
+        public Cells render(ExcelModule module, Row row, int columnIndex, ResolvedMember value) {
             throw new ResolvableMemberProvider.CannotResolveAsFormatException(SerializationFormat.XLSX);
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> nullValue = Pair.of(Void.class, new ExcelSerializer<Object>() {
+    private final ExcelSerializer<?> nullValue = new ExcelSerializer<Object>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
             Cell cell = row.createCell(columnIndex);
             cell.setBlank();
             return new Cells(cell);
         }
-    });
+    };
     
-    static String fieldName(Field f) {
-        return f.getName();
-    }
-    
-    static String trim(String s) {
-        return s.trim();
-    }
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> jsonOutput = Pair.of(JsonSerializeAsBean.class, new ExcelSerializer<Object>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
-            if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
-                return module.serialize(row, columnIndex, ((Enum<?>)value).name());
-            } else {
-                List<Cell> cells = newMutableList();
-                List<String> headers = newMutableList();
-                StringBuilder sb = new StringBuilder();
-                for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
-                    Object val;
-                    try {
-                        val = f.get(value);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    
-                    @SuppressWarnings("unchecked")
-                    Class<Object> type = (Class<Object>) MemberUtil.memberTypeUnwrappingOptionAndEither(f);
-                    String[] arr = newArray(String.class, repeat("", module.columns(type).size()));
-                    Cells newCells = val == null || val instanceof Option && !((Option<?>)val).isDefined() ? module.serialize(row, columnIndex, Tuple.of((Object[])arr)) : module.serialize(row, columnIndex, val, type);
-                    cells.addAll(newCells.cells);
-                    
-                    List<String> newHeaders = newCells.headers.isEmpty() ? module.columns(type) : newCells.headers;
-                    newHeaders = newList(map(prepend(f.getName() + " ").andThen(ExcelSerializers_.trim), newHeaders));
-                    headers.addAll(newHeaders);
-                    
-                    columnIndex += newCells.cells.size();
-                    
-                    if (val != null && (!(val instanceof Option) || ((Option<?>)val).isDefined())) {
-                        if (sb.length() > 0) {
-                            sb.append(", ");
-                        }
-                        sb.append(f.getName() + ": " + cells2str(newCells));
-                    }
-                }
-                return new Cells(cells, sb.toString()).withHeaders(headers);
-            }
-        }
-        
-        @Override
-        public List<String> columns(ExcelModule module, Class<Object> type) {
-            if (ClassUtils.getEnumType(type).isDefined()) {
-                return newList("");
-            } else {
-                Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(type)));
-                return newList(flatMap(ExcelSerializers_.fieldColumn.ap(module), fields));
-            }
-        }
-    });
-    
-    static List<String> fieldColumn(ExcelModule module, Field field) {
-        List<String> ret = module.columns(MemberUtil.memberTypeUnwrappingOptionAndEither(field));
-        return ret.isEmpty() || ret.equals(newList("")) ? newList(field.getName()) : ret;
-    }
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> map_ = Pair.of(Map.class, new ExcelSerializer<Map<?,?>>() {
+    private final ExcelSerializer<Map<?,?>> map_ = new ExcelSerializer<Map<?,?>>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Map<?, ?> value) {
             return new Cells(newCell(row, columnIndex, mkString("\r\n", map(ExcelModule_.serialize().ap(module, row, columnIndex).andThen(ExcelSerializers_.cells2str), value.entrySet()))));
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> array = Pair.of(Array.class, new ExcelSerializer<Object>() {
+    private final ExcelSerializer<?> array = new ExcelSerializer<Object>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Object value) {
             List<Object> vals = newMutableList();
@@ -227,16 +312,16 @@ public class ExcelSerializers {
             }
             return module.serialize(row, columnIndex, vals);
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> iterable = Pair.of(Iterable.class, new ExcelSerializer<Iterable<?>>() {
+    private final ExcelSerializer<Iterable<?>> iterable = new ExcelSerializer<Iterable<?>>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Iterable<?> value) {
             return new Cells(newCell(row, columnIndex, mkString("\r\n", map(ExcelModule_.serialize().ap(module, row, columnIndex).andThen(ExcelSerializers_.cells2str), value))));
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> tuple = Pair.of(Tuple.class, new ExcelSerializer<Tuple>() {
+    private final ExcelSerializer<Tuple> tuple = new ExcelSerializer<Tuple>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Tuple value) {
             List<Cell> cells = newMutableList();
@@ -258,79 +343,23 @@ public class ExcelSerializers {
         public List<String> columns(ExcelModule module, Class<Tuple> type) {
             return newList(repeat("", type.getTypeParameters().length));
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> entry = Pair.of(Map.Entry.class, new ExcelSerializer<Map.Entry<?,?>>() {
+    private final ExcelSerializer<Map.Entry<?, ?>> entry = new ExcelSerializer<Map.Entry<?,?>>() {
         @SuppressWarnings("unchecked")
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Map.Entry<?,?> value) {
-            return ((ExcelSerializer<Pair<?,?>>)tuple.getValue()).render(module, row, columnIndex, Pair.of(value.getKey(), value.getValue()));
+            return ((ExcelSerializer<Pair<?,?>>)(Object)tuple).render(module, row, columnIndex, Pair.of(value.getKey(), value.getValue()));
         }
         
         @SuppressWarnings("unchecked")
         @Override
         public List<String> columns(ExcelModule module, Class<Map.Entry<?,?>> type) {
-            return ((ExcelSerializer<Map.Entry<?,?>>)tuple.getValue()).columns(module, type);
+            return ((ExcelSerializer<Map.Entry<?,?>>)(Object)tuple).columns(module, type);
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> bool = Pair.of(Boolean.class, new ExcelSerializer<Boolean>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Boolean value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> charSequence = Pair.of(CharSequence.class, new ExcelSerializer<CharSequence>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, CharSequence value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> shortInteger = Pair.of(Short.class, new ExcelSerializer<Short>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Short value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> integer = Pair.of(Integer.class, new ExcelSerializer<Integer>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Integer value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> longInteger = Pair.of(Long.class, new ExcelSerializer<Long>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Long value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> bigDecimal = Pair.of(BigDecimal.class, new ExcelSerializer<BigDecimal>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, BigDecimal value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> bigInteger = Pair.of(BigInteger.class, new ExcelSerializer<BigInteger>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, BigInteger value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> character = Pair.of(Character.class, new ExcelSerializer<Character>() {
-        @Override
-        public Cells render(ExcelModule module, Row row, int columnIndex, Character value) {
-            return new Cells(newCell(row, columnIndex, value));
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> option = Pair.of(Option.class, new ExcelSerializer<Option<?>>() {
+    private final ExcelSerializer<Option<?>> option = new ExcelSerializer<Option<?>>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Option<?> value) {
             if (value.isDefined()) {
@@ -346,16 +375,16 @@ public class ExcelSerializers {
         public List<String> columns(ExcelModule module, Class<Option<?>> type) {
             throw new UnsupportedOperationException();
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> either = Pair.of(Either.class, new ExcelSerializer<Either<?,?>>() {
+    private final ExcelSerializer<Either<?,?>> either = new ExcelSerializer<Either<?,?>>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Either<?, ?> value) {
             return module.serialize(row, columnIndex, value.isLeft() ? value.left.get() : value.right.get());
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> localdate = Pair.of(LocalDate.class, new ExcelSerializer<LocalDate>() {
+    private final ExcelSerializer<LocalDate> localdate = new ExcelSerializer<LocalDate>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, LocalDate value) {
             Cell cell = row.createCell(columnIndex);
@@ -365,9 +394,9 @@ public class ExcelSerializers {
             cell.setCellStyle(style);
             return new Cells(cell, value.toString());
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> localtime = Pair.of(LocalTime.class, new ExcelSerializer<LocalTime>() {
+    private final ExcelSerializer<LocalTime> localtime = new ExcelSerializer<LocalTime>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, LocalTime value) {
             Cell cell = row.createCell(columnIndex);
@@ -378,9 +407,9 @@ public class ExcelSerializers {
             cell.setCellStyle(style);
             return new Cells(cell, s.ser(value));
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> datetime = Pair.of(DateTime.class, new ExcelSerializer<DateTime>() {
+    private final ExcelSerializer<DateTime> datetime = new ExcelSerializer<DateTime>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, DateTime value) {
             Cell cell = row.createCell(columnIndex);
@@ -391,9 +420,9 @@ public class ExcelSerializers {
             cell.setCellStyle(style);
             return new Cells(cell, s.serZoned(value));
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends ExcelSerializer<?>> interval = Pair.of(Interval.class, new ExcelSerializer<Interval>() {
+    private final ExcelSerializer<Interval> interval = new ExcelSerializer<Interval>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, Interval value) {
             return merge(module, row, columnIndex, s.ser(value), " - ");
@@ -403,34 +432,40 @@ public class ExcelSerializers {
         public List<String> columns(ExcelModule module, Class<Interval> type) {
             return newList("alku", "loppu");
         }
-    });
+    };
+    
+    
+    
+    
     
     public Map<Class<?>, ExcelSerializer<?>> serializers() { return newMap(
-            resolvedMember,
-            nullValue,
-            jsonOutput,
-            map_,
-            array,
-            iterable,
-            tuple,
-            entry,
-            bool,
-            charSequence,
-            shortInteger,
-            integer,
-            longInteger,
-            bigDecimal,
-            bigInteger,
-            character,
-            option,
-            either,
-            Pair.of(URI.class, stdSerializer(Serializers_.ser.ap(s))),
-            localdate,
-            localtime,
-            datetime,
-            interval,
-            Pair.of(Duration.class, stdSerializer(Serializers_.ser5.ap(s))),
-            Pair.of(DateTimeZone.class, stdSerializer(Serializers_.ser6.ap(s)))
-        );
+        Pair.of(ResolvedMember.class, resolvedMember),
+        Pair.of(Option.class, option),
+        Pair.of(Either.class, either),
+        Pair.of(Tuple.class, tuple),
+        Pair.of(URI.class, stringSerializer(Serializers_.ser.ap(s))),
+        Pair.of(LocalDate.class, localdate),
+        Pair.of(LocalTime.class, localtime),
+        Pair.of(DateTime.class, datetime),
+        Pair.of(Interval.class, interval),
+        Pair.of(Duration.class, stringSerializer(Serializers_.ser5.ap(s))),
+        Pair.of(Period.class, stringSerializer(Serializers_.ser6.ap(s))),
+        Pair.of(DateTimeZone.class, stringSerializer(Serializers_.ser7.ap(s))),
+        
+        Pair.of(Map.Entry.class, entry),
+        Pair.of(Boolean.class, booleanSerializer(Function.<Boolean>id())),
+        Pair.of(CharSequence.class, stringSerializer(Function.<CharSequence>id())),
+        Pair.of(Short.class, shortSerializer(Function.<Short>id())),
+        Pair.of(Integer.class, intSerializer(Function.<Integer>id())),
+        Pair.of(Long.class, longSerializer(Function.<Long>id())),
+        Pair.of(BigDecimal.class, bigDecimalSerializer(Function.<BigDecimal>id())),
+        Pair.of(BigInteger.class, bigIntegerSerializer(Function.<BigInteger>id())),
+        Pair.of(Character.class, charSerializer(Function.<Character>id())),
+        Pair.of(Void.class, nullValue),
+        Pair.of(JsonSerializeAsBean.class, beanSerializer()),
+        Pair.of(Map.class, map_),
+        Pair.of(Array.class, array),
+        Pair.of(Iterable.class, iterable)
+    );
     }
 }

@@ -8,14 +8,15 @@ import fi.solita.utils.api.types.Count;
 
 public class CountConverterTest {
 
-    private Converter<String,Count> c = new HttpSerializers(new Serializers()).count.getValue();
+    @SuppressWarnings("unchecked")
+    private Converter<String,Count> c = (Converter<String, Count>) new HttpSerializers(new Serializers()).converters().get(Count.class);
     
     @Test
     public void hyvaksyyValidinArvon() {
         c.convert(Integer.toString(10));
     }
     
-    @Test(expected = HttpSerializers.InvalidCountException.class)
+    @Test(expected = HttpSerializers.InvalidValueException.class)
     public void eiHyvaksyMuutaArvoa() {
         c.convert(Integer.toString(11));
     }

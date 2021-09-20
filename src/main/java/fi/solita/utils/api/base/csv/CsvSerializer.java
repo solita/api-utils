@@ -41,4 +41,24 @@ public abstract class CsvSerializer<T> {
     public List<String> columns(CsvModule module, Class<T> type) {
         return newList("");
     }
+    
+    public CsvSerializer<T> withUnit(final Option<String> unit) {
+        final CsvSerializer<T> self = this;
+        return new CsvSerializer<T>() {
+            @Override
+            public Cells render(CsvModule module, T value) {
+                return self.render(module, value).withUnit(unit);
+            }
+        };
+    }
+    
+    public CsvSerializer<T> withHeaders(final List<String> headers) {
+        final CsvSerializer<T> self = this;
+        return new CsvSerializer<T>() {
+            @Override
+            public Cells render(CsvModule module, T value) {
+                return self.render(module, value).withHeaders(headers);
+            }
+        };
+    }
 }

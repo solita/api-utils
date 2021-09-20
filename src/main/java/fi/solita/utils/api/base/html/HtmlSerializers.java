@@ -23,6 +23,7 @@ import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.Period;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 
@@ -32,8 +33,9 @@ import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.ApplyBiVoid;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function2;
+import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
@@ -48,7 +50,34 @@ public abstract class HtmlSerializers {
         this.s = s;
     }
     
-    public static final <T> HtmlSerializer<T> stringSerializer(final Apply<T,String> f, final String cssTypeName) {
+    
+    
+    
+    
+    /**
+     * Some primitive serializers, to be used as helper functions for actual serialization
+     */
+    
+    public static final <T> HtmlSerializer<T> serializer(final ApplyBiVoid<T,HtmlCanvas> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                f.accept(value, html);
+            }
+        };
+    }
+    
+    public static final <T> HtmlSerializer<T> stringSerializer(final String cssTypeName, final Apply<T,? extends CharSequence> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(f.apply(value).toString())
+                    ._span();
+            }
+        };
+    }
+    public static final <T> HtmlSerializer<T> charSerializer(final String cssTypeName, final Apply<T,Character> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -59,7 +88,17 @@ public abstract class HtmlSerializers {
         };
     }
     
-    public static final <T> HtmlSerializer<T> intSerializer(final Apply<T,Integer> f, final String cssTypeName) {
+    public static final <T> HtmlSerializer<T> shortSerializer(final String cssTypeName, final Apply<T,Short> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write((int)f.apply(value))
+                    ._span();
+            }
+        };
+    }
+    public static final <T> HtmlSerializer<T> intSerializer(final String cssTypeName, final Apply<T,Integer> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -69,8 +108,49 @@ public abstract class HtmlSerializers {
             }
         };
     }
+    public static final <T> HtmlSerializer<T> longSerializer(final String cssTypeName, final Apply<T, Long> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(Long.toString(f.apply(value)))
+                    ._span();
+            }
+        };
+    }
+    public static final <T> HtmlSerializer<T> bigIntegerSerializer(final String cssTypeName, final Apply<T, BigInteger> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(f.apply(value).toString())
+                    ._span();
+            }
+        };
+    }
+    public static final <T> HtmlSerializer<T> bigDecimalSerializer(final String cssTypeName, final Apply<T, BigDecimal> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(f.apply(value).toPlainString())
+                    ._span();
+            }
+        };
+    }
+    public static final <T> HtmlSerializer<T> booleanSerializer(final String cssTypeName, final Apply<T, Boolean> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                Boolean x = f.apply(value);
+                html.span(class_("type-" + cssTypeName).title(x ? "true" : "false"))
+                      .write(x ? "&#9989;" : "&#9940;", false)
+                    ._span();
+            }
+        };
+    }
     
-    public static final <T> HtmlSerializer<T> delegateSerializer(final Apply<T,?> f, final String cssTypeName) {
+    public static final <T> HtmlSerializer<T> delegateSerializer(final String cssTypeName, final Apply<T,?> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -81,27 +161,84 @@ public abstract class HtmlSerializers {
         };
     }
     
+    /**
+     * @param useValueAlsoForEnglish Defaults to false, in which case docName_en(value) is preferred for English.
+     */
+    public final <T extends Enum<T>> HtmlSerializer<T> enumSerializer(final String typeClassSuffix, final Apply<T,String> valueProducer, final boolean useValueAlsoForEnglish) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("fi type-" + typeClassSuffix).title(docDescription(value).getOrElse(null)))
+                        .write(valueProducer.apply(value))
+                    ._span()
+                    .span(class_("en type-" + typeClassSuffix).title(docDescription_en(value).getOrElse(null)))
+                        .write(useValueAlsoForEnglish ? valueProducer.apply(value) : docName_en(value).getOrElse(valueProducer.apply(value)))
+                    ._span();
+            }
+        };
+    }
+    
+    public final <T extends Enum<T>> HtmlSerializer<T> enumSerializer(final String typeClassSuffix, final Apply<T,String> f) {
+        return enumSerializer(typeClassSuffix, f, false);
+    }
+    
+    public final <T> HtmlSerializer<T> beanSerializer() {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(final Object value, HtmlCanvas html, final HtmlModule module) throws IOException {
+                if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
+                    html.span(class_("fi").title(docDescription((Enum<?>)value).getOrElse(((Enum<?>)value).name())))
+                            .write(((Enum<?>)value).name())
+                        ._span()
+                        .span(class_("en").title(docName_en((Enum<?>)value).getOrElse(docDescription_en((Enum<?>)value).getOrElse(null))))
+                            .write(((Enum<?>)value).name())
+                        ._span();
+                } else {
+                    html.table()
+                        .render(new Renderable() {
+                          @Override
+                          public void renderOn(HtmlCanvas html) throws IOException {
+                            for (Field f: filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass()))) {
+                                Object val;
+                                try {
+                                    val = f.get(value);
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                                if (val != null) {
+                                    html.tr()
+                                          .th()
+                                            .write(f.getName())
+                                          ._th()
+                                          .td()
+                                            .render(module.toRenderable(val))
+                                          ._td()
+                                        ._tr();
+                                }
+                            }
+                          }
+                        })
+                    ._table();
+                }
+            }
+        };
+    }
+    
     protected abstract <T extends Enum<?>> Option<String> docName_en(T member);
 
     protected abstract <T extends Enum<?>> Option<String> docDescription_en(T member);
 
     protected abstract <T extends Enum<?>> Option<String> docDescription(T member);
     
-    public final <T extends Enum<T>, S extends Serializers> HtmlSerializer<T> enumSerializer(final S s, final String typeClassSuffix, final Function2<S,T,String> serializer) {
-        return new HtmlSerializer<T>() {
-            @Override
-            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_("fi type-" + typeClassSuffix).title(docDescription(value).getOrElse(null)))
-                        .write(serializer.ap(s).apply(value))
-                    ._span()
-                    .span(class_("en type-" + typeClassSuffix).title(docDescription_en(value).getOrElse(null)))
-                        .write(docName_en(value).getOrElse(serializer.ap(s).apply(value)))
-                    ._span();
-            }
-        };
-    }
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> resolvedMember = Pair.of(ResolvedMember.class, new HtmlSerializer<ResolvedMember>() {
+    
+    
+    
+    /**
+     * Some concrete serializers for common types
+     */
+    
+    private final HtmlSerializer<ResolvedMember> resolvedMember = new HtmlSerializer<ResolvedMember>() {
         @Override
         public void renderOn(ResolvedMember value, HtmlCanvas html, HtmlModule module) throws IOException {
             try {
@@ -113,59 +250,18 @@ public abstract class HtmlSerializers {
                 throw new RuntimeException(e);
             }
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> nullValue = Pair.of(Void.class, new HtmlSerializer<Object>() {
+    private final HtmlSerializer<?> nullValue = new HtmlSerializer<Object>() {
         @Override
         public void renderOn(Object value, HtmlCanvas html, HtmlModule module) throws IOException {
             html.span(class_("null"))
                 ._span();
         }
-    });
+    };
     
-    // for @JsonOutputs serialize all public instance fields as a table
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> jsonOutput = Pair.of(JsonSerializeAsBean.class, new HtmlSerializer<Object>() {
-        @Override
-        public void renderOn(final Object value, HtmlCanvas html, final HtmlModule module) throws IOException {
-            if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
-                html.span(class_("fi").title(docDescription((Enum<?>)value).getOrElse(((Enum<?>)value).name())))
-                        .write(((Enum<?>)value).name())
-                    ._span()
-                    .span(class_("en").title(docName_en((Enum<?>)value).getOrElse(docDescription_en((Enum<?>)value).getOrElse(null))))
-                        .write(((Enum<?>)value).name())
-                    ._span();
-            } else {
-                html.table()
-                    .render(new Renderable() {
-                      @Override
-                      public void renderOn(HtmlCanvas html) throws IOException {
-                        for (Field f: filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass()))) {
-                            Object val;
-                            try {
-                                val = f.get(value);
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                            if (val != null) {
-                                html.tr()
-                                      .th()
-                                        .write(f.getName())
-                                      ._th()
-                                      .td()
-                                        .render(module.toRenderable(val))
-                                      ._td()
-                                    ._tr();
-                            }
-                        }
-                      }
-                    })
-                ._table();
-            }
-        }
-    });
-    
-    // render a Map as a nested table
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> map = Pair.of(Map.class, new HtmlSerializer<Map<?,?>>() {
+    // renders a Map as a nested table
+    private final HtmlSerializer<Map<?,?>> map_ = new HtmlSerializer<Map<?,?>>() {
         @Override
         public void renderOn(final Map<?,?> value, HtmlCanvas html, final HtmlModule module) throws IOException {
             if (!value.isEmpty()) {
@@ -188,9 +284,9 @@ public abstract class HtmlSerializers {
                   ._table();
             }
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> array = Pair.of(Array.class, new HtmlSerializer<Object>() {
+    private final HtmlSerializer<?> array = new HtmlSerializer<Object>() {
         @Override
         public void renderOn(Object value, HtmlCanvas html, HtmlModule module) throws IOException {
             html.ul();
@@ -201,9 +297,9 @@ public abstract class HtmlSerializers {
             }
             html._ul();
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> iterable = Pair.of(Iterable.class, new HtmlSerializer<Iterable<?>>() {
+    private final HtmlSerializer<Iterable<?>> iterable = new HtmlSerializer<Iterable<?>>() {
         @Override
         public void renderOn(Iterable<?> value, HtmlCanvas html, HtmlModule module) throws IOException {
             html.ul();
@@ -214,89 +310,24 @@ public abstract class HtmlSerializers {
             }
             html._ul();
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> tuple = Pair.of(Tuple.class, new HtmlSerializer<Tuple>() {
+    private final HtmlSerializer<Tuple> tuple = new HtmlSerializer<Tuple>() {
         @SuppressWarnings("unchecked")
         @Override
         public void renderOn(Tuple value, HtmlCanvas html, HtmlModule module) throws IOException {
-            ((HtmlSerializer<Object>)array.getValue()).renderOn(value.toArray(), html, module);
+            ((HtmlSerializer<Object>)array).renderOn(value.toArray(), html, module);
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> bool = Pair.of(Boolean.class, new HtmlSerializer<Boolean>() {
+    private final HtmlSerializer<Map.Entry<?,?>> entry = new HtmlSerializer<Map.Entry<?,?>>() {
         @Override
-        public void renderOn(Boolean value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-boolean").title(value ? "true" : "false"))
-                  .write(value ? "&#9989;" : "&#9940;", false)
-                ._span();
+        public void renderOn(Map.Entry<?,?> value, HtmlCanvas html, HtmlModule module) throws IOException {
+            html.render(module.toRenderable(Pair.of(value)));
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> charSequence = Pair.of(CharSequence.class, new HtmlSerializer<CharSequence>() {
-        @Override
-        public void renderOn(CharSequence value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-string"))
-                  .write(value.toString())
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> shortInteger = Pair.of(Short.class, new HtmlSerializer<Short>() {
-        @Override
-        public void renderOn(Short value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-integer"))
-                  .write(Short.toString(value))
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> integer = Pair.of(Integer.class, new HtmlSerializer<Integer>() {
-        @Override
-        public void renderOn(Integer value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-integer"))
-                  .write(value)
-                ._span();
-        }
-    });
-
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> longInteger = Pair.of(Long.class, new HtmlSerializer<Long>() {
-        @Override
-        public void renderOn(Long value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-integer"))
-                  .write(Long.toString(value))
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> bigDecimal = Pair.of(BigDecimal.class, new HtmlSerializer<BigDecimal>() {
-        @Override
-        public void renderOn(BigDecimal value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-decimal"))
-                  .write(value.toPlainString())
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> bigInteger = Pair.of(BigInteger.class, new HtmlSerializer<BigInteger>() {
-        @Override
-        public void renderOn(BigInteger value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-integer"))
-                  .write(value.toString())
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> character = Pair.of(Character.class, new HtmlSerializer<Character>() {
-        @Override
-        public void renderOn(Character value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-char"))
-                  .write(value)
-                ._span();
-        }
-    });
-    
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> option = Pair.of(Option.class, new HtmlSerializer<Option<?>>() {
+    private final HtmlSerializer<Option<?>> option = new HtmlSerializer<Option<?>>() {
         @Override
         public void renderOn(Option<?> value, HtmlCanvas html, HtmlModule module) throws IOException {
             if (value.isDefined()) {
@@ -307,9 +338,9 @@ public abstract class HtmlSerializers {
                     ._span();
             }
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> either = Pair.of(Either.class, new HtmlSerializer<Either<?,?>>() {
+    private final HtmlSerializer<Either<?,?>> either = new HtmlSerializer<Either<?,?>>() {
         @Override
         public void renderOn(Either<?,?> value, HtmlCanvas html, HtmlModule module) throws IOException {
             if (value.isLeft()) {
@@ -318,9 +349,9 @@ public abstract class HtmlSerializers {
                 html.render(module.toRenderable(value.right.get()));
             }
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> uri = Pair.of(URI.class, new HtmlSerializer<URI>() {
+    private final HtmlSerializer<URI> uri = new HtmlSerializer<URI>() {
         @Override
         public void renderOn(URI value, HtmlCanvas html, HtmlModule module) throws IOException {
             if (value.getPath().endsWith(".svg") || value.getPath().endsWith(".png") || value.getPath().endsWith(".gif") || value.getPath().endsWith(".jpg")) {
@@ -335,9 +366,9 @@ public abstract class HtmlSerializers {
                     ._span();
             }
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> datetime = Pair.of(DateTime.class, new HtmlSerializer<DateTime>() {
+    private final HtmlSerializer<DateTime> datetime = new HtmlSerializer<DateTime>() {
         public final DateTime END_OF_ALL_TIMES = new DateTime(3000, 12, 31, 21, 59, DateTimeZone.UTC);
         public final DateTime START_OF_TIME = new DateTime(1921, 12, 31, 22, 0, DateTimeZone.UTC);
         
@@ -355,9 +386,9 @@ public abstract class HtmlSerializers {
                   .write(isBeginOfTime(value) || isEndOfAllTimes(value) ? "∞" : s.serZoned(value))
                 ._span();
         }
-    });
+    };
     
-    public final Map.Entry<? extends Class<?>, ? extends HtmlSerializer<?>> interval = Pair.of(Interval.class, new HtmlSerializer<Interval>() {
+    private final HtmlSerializer<Interval> interval = new HtmlSerializer<Interval>() {
         @Override
         public void renderOn(Interval value, HtmlCanvas html, HtmlModule module) throws IOException {
             Pair<DateTime,DateTime> i = s.ser(value);
@@ -367,33 +398,40 @@ public abstract class HtmlSerializers {
                   .render(module.toRenderable(i.right()))
                 ._span();
         }
-    });
+    };
+    
+    
+    
+    
     
     public Map<Class<?>, HtmlSerializer<?>> serializers() { return newMap(
-            resolvedMember,
-            nullValue,
-            jsonOutput,
-            map,
-            array,
-            iterable,
-            tuple,
-            bool,
-            charSequence,
-            shortInteger,
-            integer,
-            longInteger,
-            bigDecimal,
-            bigInteger,
-            character,
-            option,
-            either,
-            uri,
-            Pair.of(LocalDate.class, stringSerializer(Serializers_.ser1.ap(s), "date")),
-            Pair.of(LocalTime.class, stringSerializer(Serializers_.ser2.ap(s), "time")),
-            datetime,
-            interval,
-            Pair.of(Duration.class, stringSerializer(Serializers_.ser5.ap(s), "duration")),
-            Pair.of(DateTimeZone.class, stringSerializer(Serializers_.ser6.ap(s), "timezone"))
-        );
+        Pair.of(ResolvedMember.class, resolvedMember),
+        Pair.of(Option.class, option),
+        Pair.of(Either.class, either),
+        Pair.of(Tuple.class, tuple),
+        Pair.of(URI.class, uri),
+        Pair.of(LocalDate.class, stringSerializer("date", Serializers_.ser1.ap(s))),
+        Pair.of(LocalTime.class, stringSerializer("time", Serializers_.ser2.ap(s))),
+        Pair.of(DateTime.class, datetime),
+        Pair.of(Interval.class, interval),
+        Pair.of(Duration.class, stringSerializer("duration", Serializers_.ser5.ap(s))),
+        Pair.of(Period.class, stringSerializer("period", Serializers_.ser6.ap(s))),
+        Pair.of(DateTimeZone.class, stringSerializer("timezone", Serializers_.ser7.ap(s))),
+        
+        Pair.of(Map.Entry.class, entry),
+        Pair.of(Boolean.class, booleanSerializer("boolean", Function.<Boolean>id())),
+        Pair.of(CharSequence.class, stringSerializer("string", Function.<String>id())),
+        Pair.of(Short.class, shortSerializer("integer", Function.<Short>id())),
+        Pair.of(Integer.class, intSerializer("integer", Function.<Integer>id())),
+        Pair.of(Long.class, longSerializer("integer", Function.<Long>id())),
+        Pair.of(BigDecimal.class, bigDecimalSerializer("decimal", Function.<BigDecimal>id())),
+        Pair.of(BigInteger.class, bigIntegerSerializer("integer", Function.<BigInteger>id())),
+        Pair.of(Character.class, charSerializer("char", Function.<Character>id())),
+        Pair.of(Void.class, nullValue),
+        Pair.of(JsonSerializeAsBean.class, beanSerializer()),
+        Pair.of(Map.class, map_),
+        Pair.of(Array.class, array),
+        Pair.of(Iterable.class, iterable)
+    );
     }
 }

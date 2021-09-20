@@ -8,7 +8,8 @@ import fi.solita.utils.api.types.StartIndex;
 
 public class StartIndexConverterTest {
 
-    private Converter<String,StartIndex> c = new HttpSerializers(new Serializers()).startIndex.getValue();
+    @SuppressWarnings("unchecked")
+    private Converter<String,StartIndex> c = (Converter<String, StartIndex>) new HttpSerializers(new Serializers()).converters().get(StartIndex.class);
     
     @Test
     public void hyvaksyyValidinArvon() {

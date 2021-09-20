@@ -1,6 +1,6 @@
 package fi.solita.utils.api.filtering;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 

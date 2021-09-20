@@ -12,6 +12,7 @@ import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
@@ -69,6 +70,10 @@ public class Serializers {
     }
     
     public String ser(Duration v) {
+        return v.toString();
+    }
+    
+    public String ser(Period v) {
         return v.toString();
     }
     

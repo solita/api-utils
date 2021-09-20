@@ -102,7 +102,7 @@ public class CsvModule {
             return Some((CsvSerializer<T>)serializers.get(Array.class));
         }
         
-        // try a Dto
+        // try a class explicitly marked to be serialized as a bean
         if (type.isAnnotationPresent(JsonSerializeAsBean.class)) {
             return Some((CsvSerializer<T>)serializers.get(JsonSerializeAsBean.class));
         }

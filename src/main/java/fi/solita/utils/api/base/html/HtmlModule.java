@@ -56,7 +56,7 @@ public class HtmlModule {
             return ((HtmlSerializer<T>)renderables.get(Array.class)).toRenderable(this, obj);
         }
         
-        // try a Dto
+        // try a class explicitly marked to be serialized as a bean
         if (obj.getClass().isAnnotationPresent(JsonSerializeAsBean.class)) {
             return ((HtmlSerializer<T>)renderables.get(JsonSerializeAsBean.class)).toRenderable(this, obj);
         }
