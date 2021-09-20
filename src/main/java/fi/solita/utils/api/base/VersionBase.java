@@ -111,6 +111,9 @@ public abstract class VersionBase {
         return new Filtering(httpModule, resolvableMemberProvider(), functionProvider(Some(req)));
     }
     
+    public <K,T> Map<K,T> filterRowsSingle(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,T> ts) {
+        return filtering(req).filterDataSingle(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
+    }
     public <K,T,V extends Iterable<T>> Map<K,V> filterRows(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,V> ts) {
         return filtering(req).filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
@@ -121,6 +124,14 @@ public abstract class VersionBase {
         return filtering(req).filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
     
+    public <K,T> Map<K,T> filterColumnsSingle(final Includes<T> includes, Map<K,T> ts) {
+        return mapValue(new Transformer<T,T>() {
+            @Override
+            public T transform(T source) {
+                return ModificationUtils.withPropertiesF(includes, functionProvider(Option.<HttpServletRequest>None())).apply(source);
+            }
+        }, ts);
+    }
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
         return mapValue(new Transformer<Iterable<T>,Iterable<T>>() {

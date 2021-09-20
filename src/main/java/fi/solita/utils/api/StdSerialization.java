@@ -6,7 +6,7 @@ import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.FunctionalM.mapValues;
+import static fi.solita.utils.functional.FunctionalM.*;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Collection;
@@ -220,6 +220,109 @@ public abstract class StdSerialization<BOUNDS> {
         }
         return response;
     }
+    
+    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMapSingle(
+        HttpServletRequest req,
+        HttpServletResponse res,
+        BOUNDS bbox,
+        SRSName srsName,
+        SerializationFormat format,
+        Includes<DTO> includes,
+        ApplyZero<Map<KEY, DTO>> data,
+        Apply<DTO,DTO> dataTransformer,
+        HtmlTitle title,
+        Apply<? super DTO, ? super DTO> excluding,
+        Apply<? super DTO, ? extends SPATIAL> toGeojson,
+        Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+    byte[] response;
+    switch (format) {
+    case JSON:
+        response = json.serialize(mapValue(dataTransformer, data.get()));
+        break;
+    case GEOJSON:
+        Map<KEY, DTO> d = data.get();
+        Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
+        response = geoJson.serialize(new FeatureCollection(
+                concat(map(toFeature, map(
+                        toGeojson,
+                        excluding,
+                        Function.constant(Option.<Crs>None()),
+                        mapValue(dataTransformer, data.get()).values())), resolvables),
+                Some(Crs.of(srsName))));
+        break;
+    case JSONL:
+        response = jsonlines.serialize(mapValue(dataTransformer, data.get()));
+        break;
+    case HTML:
+        response = html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        break;
+    case CSV:
+        response = csv.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        break;
+    case XLSX:
+        response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        break;
+    case PNG:
+        response = png.render(req, bounds2envelope(bbox), title2layerName(title));
+        break;
+    case GML:
+    case XML:
+        throw new UnavailableContentTypeException();
+    default:
+        throw new IllegalStateException();
+    }
+    return response;
+}
+    
+    public <DTO, KEY, SPATIAL> byte[] stdSpatialMapSingle(
+            HttpServletRequest req,
+            HttpServletResponse res,
+            SRSName srsName,
+            SerializationFormat format,
+            Includes<DTO> includes,
+            ApplyZero<Map<KEY, DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
+            HtmlTitle title,
+            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+        byte[] response;
+        switch (format) {
+        case JSON:
+            response = json.serialize(mapValue(dataTransformer, data.get()));
+            break;
+        case GEOJSON:
+            Map<KEY, DTO> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
+            response = geoJson.serialize(new FeatureCollection(
+                    concat(map(toFeature, map(
+                            toGeojson,
+                            excluding,
+                            Function.constant(Option.<Crs>None()),
+                            mapValue(dataTransformer, data.get()).values())), resolvables),
+                    Some(Crs.of(srsName))));
+            break;
+        case JSONL:
+            response = jsonlines.serialize(mapValue(dataTransformer, data.get()));
+            break;
+        case HTML:
+            response = html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case CSV:
+            response = csv.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case XLSX:
+            response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case PNG:
+        case GML:
+        case XML:
+            throw new UnavailableContentTypeException();
+        default:
+            throw new IllegalStateException();
+        }
+    return response;
+}
     
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedCollection(
             HttpServletRequest req,

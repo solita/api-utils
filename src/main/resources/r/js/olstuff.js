@@ -107,7 +107,7 @@ var olstuff = function(constants, util) {
                 if (layer.getSource && layer.getSource().getFeaturesInExtent) {
                     var props = layer.getProperties();
                     results[props.title] = layer.getSource().getFeaturesInExtent(mapExtent).map(function(x) {
-                        return util.withoutProp(x.getProperties(), 'geometry');
+                        return util.withoutProp(util.withoutProp(x.getProperties(), 'geometry'), 'labelPoint');
                     }).filter(onlyUnique);
                 }
             });
@@ -141,7 +141,7 @@ var olstuff = function(constants, util) {
                 }
             };
             var f = function(evt) {
-                elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(ret.featuresOnScreen(map));
+                elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'labelPoint'));
                 var input = elem.querySelector(':scope input');
                 input.onkeyup = function() {
                     [...elem.querySelectorAll(':scope ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });

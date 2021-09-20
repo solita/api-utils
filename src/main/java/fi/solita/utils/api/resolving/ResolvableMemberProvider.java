@@ -81,6 +81,14 @@ public abstract class ResolvableMemberProvider {
      */
     public abstract void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object object);
     
+    public <K,T> Map<K,T> mutateResolvablesSingle(HttpServletRequest request, Includes<T> includes, Map<K,T> ts) {
+        Map<K,T> ret = newMutableLinkedMap();
+        for (Map.Entry<K,T> e: ts.entrySet()) {
+            ret.put(e.getKey(), mutateResolvables(request, includes, e.getValue()));
+        }
+        return ret;
+    }
+    
     public <K,T> Map<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
         Map<K, Iterable<T>> ret = newMutableLinkedMap();
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {

@@ -140,6 +140,10 @@ public abstract class HtmlConversionService {
         return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request);
     }
     
+    public <K,V> byte[] serializeSingle(HttpServletRequest request, HtmlTitle title, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request);
+    }
+    
     @SuppressWarnings("unchecked")
     public <K,V> byte[] serializeWithKey(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;

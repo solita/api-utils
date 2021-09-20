@@ -9,7 +9,6 @@ import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.forall;
-import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
@@ -22,7 +21,6 @@ import static fi.solita.utils.functional.Predicates.lessThan;
 import static fi.solita.utils.functional.Predicates.lessThanOrEqualTo;
 import static fi.solita.utils.functional.Predicates.not;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -166,6 +164,19 @@ public class Filtering {
             super(filterProperty);
             this.filterProperty = filterProperty;
         }
+    }
+    
+    public <K,T> Map<K,T> filterDataSingle(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Map<K,T> ts) {
+        if (filters == null) {
+            return ts;
+        }
+        Map<K, T> ret = newMutableLinkedMap();
+        for (Map.Entry<K,T> e: ts.entrySet()) {
+            if (!isEmpty(filterData(includes, geometryMembers, filters, e.getValue()))) {
+                ret.put(e.getKey(), e.getValue());
+            }
+        }
+        return ret;
     }
     
     public <K,T,V extends Iterable<T>> Map<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Map<K,V> ts) {

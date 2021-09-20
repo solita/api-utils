@@ -92,6 +92,10 @@ public class ExcelConversionService {
         return serialize(res, filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), flatten(obj.values())));
     }
     
+    public <K,V> byte[] serializeSingle(HttpServletResponse res, String filename, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(res, filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), obj.values()));
+    }
+    
     @SuppressWarnings("unchecked")
     public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;

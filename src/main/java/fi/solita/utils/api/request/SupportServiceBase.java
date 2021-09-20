@@ -4,7 +4,8 @@ import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
-import static fi.solita.utils.functional.Functional.tail;
+import static fi.solita.utils.functional.FunctionalA.cons;
+import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Set;
