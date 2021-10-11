@@ -50,6 +50,7 @@ import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function;
+import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Match;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
@@ -312,15 +313,16 @@ public class Filtering {
     }
     
     static <T> Predicate<T> doFilter(final MatchAction matchAction, final Apply<T,Boolean> pred) {
+        final Function1<T, Boolean> unwrappedPred = Filtering_.<T>unwrapOption().andThen(not(Predicates.<T>isNull()).and(pred));
         return new Predicate<T>() {
             @SuppressWarnings("unchecked")
             @Override
             public boolean accept(T candidate) {
                 if (candidate instanceof Iterable) {
                     switch (matchAction) {
-                        case All: return forall(pred, (Iterable<T>)candidate);
-                        case Any: return exists(pred, (Iterable<T>)candidate);
-                        case One: return 1 == size(filter(pred, (Iterable<T>)candidate));
+                        case All: return forall(unwrappedPred, (Iterable<T>)candidate);
+                        case Any: return exists(unwrappedPred, (Iterable<T>)candidate);
+                        case One: return 1 == size(filter(unwrappedPred, (Iterable<T>)candidate));
                     }
                     throw new IllegalStateException("Shouldn't be here!");
                 } else {
