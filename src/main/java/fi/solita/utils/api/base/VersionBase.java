@@ -76,12 +76,12 @@ public abstract class VersionBase {
         return new Serializers();
     }
     
-    protected HttpSerializers httpSerializers() { return new HttpSerializers(serializers()); }
-    protected JsonSerializers jsonSerializers() { return new JsonSerializers(serializers()); }
-    protected abstract HtmlSerializers htmlSerializers();
-    protected CsvSerializers csvSerializers() { return new CsvSerializers(serializers()); }
-    protected ExcelSerializers excelSerializers() { return new ExcelSerializers(serializers()); }
-    protected XmlSerializers xmlSerializers() { return new XmlSerializers(serializers()); }
+    public HttpSerializers httpSerializers() { return new HttpSerializers(serializers()); }
+    public JsonSerializers jsonSerializers() { return new JsonSerializers(serializers()); }
+    public abstract HtmlSerializers htmlSerializers();
+    public CsvSerializers csvSerializers() { return new CsvSerializers(serializers()); }
+    public ExcelSerializers excelSerializers() { return new ExcelSerializers(serializers()); }
+    public XmlSerializers xmlSerializers() { return new XmlSerializers(serializers()); }
     
     public final HttpModule httpModule = new HttpModule(httpSerializers().converters());
     public final JsonModule jsonModule = new JsonModule(jsonSerializers().serializers(), jsonSerializers().keySerializers(), jsonSerializers().deserializers(), jsonSerializers().rawTypes());

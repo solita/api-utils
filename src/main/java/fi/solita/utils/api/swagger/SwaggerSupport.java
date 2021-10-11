@@ -99,12 +99,12 @@ public abstract class SwaggerSupport extends ApiResourceController {
     
     public static final SecurityConfiguration SECURITY_CONFIGURATION = new SecurityConfiguration(null, null, null, null, null, ApiKeyVehicle.HEADER, RequestUtil.API_KEY, ",");
     
-    public SwaggerSupport(final String groupName) {
+    public SwaggerSupport(final String groupName, final boolean ignoreRevision) {
         super(new SwaggerResourcesProvider() {
             @Override
             public List<SwaggerResource> get() {
                 SwaggerResource resource = new SwaggerResource();
-                resource.setLocation("/../v2/api-docs?group=" + groupName);
+                resource.setLocation("/../v2/api-docs?group=" + groupName + (ignoreRevision ? "" : ".extended"));
                 resource.setSwaggerVersion("2.0");
                 return newList(resource);
             }
@@ -418,11 +418,12 @@ public abstract class SwaggerSupport extends ApiResourceController {
         return Integer.toString(i);
     }
     
-    public static void addResourceHandler(ResourceHandlerRegistry registry, String version) {
+    public static void addResourceHandler(ResourceHandlerRegistry registry, String version, boolean ignoreRevision) {
         try {
-            registry.addResourceHandler("/" + version + "/swagger*.html")
+            String path = version + (ignoreRevision ? "" : ".extended");
+            registry.addResourceHandler("/" + path + "/swagger*.html")
                     .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
-            registry.addResourceHandler("/" + version + "/webjars/**")
+            registry.addResourceHandler("/" + path + "/webjars/**")
                     .addResourceLocations("classpath:/META-INF/resources/webjars/");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -439,9 +440,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info) {
+    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info, final boolean ignoreRevision) {
         Docket docket = new Docket(DocumentationType.SWAGGER_2)
-            .groupName(publishedVersion.getVersion())
+            .groupName(publishedVersion.getVersion() + (ignoreRevision ? "" : ".extended"))
             .select()
               .apis(RequestHandlerSelectors.basePackage(publishedVersion.getBasePackage()))
               .apis(new Predicate<RequestHandler>() {
@@ -459,8 +460,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
                         operationPath = operationPath.substring(contextPath.length());
                     }
                     String ret = super.getOperationPath(operationPath);
-                    return ret.replace("{revision}/", "")      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
-                              .replace("{*****}", "")          // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+                    if (ignoreRevision) {
+                        ret = ret.replace("{revision}/", "");      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
+                    }
+                    return ret.replace("{*****}", "")          // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
                               .replace("{asterisk}", "*"); // Keino lisätä Springissä polkuun tähtönen, niin että tulee swagger-kuvaukseenkin oikein.
 
                 }
@@ -480,7 +483,6 @@ public abstract class SwaggerSupport extends ApiResourceController {
             .directModelSubstitute(Filters.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             .directModelSubstitute(SRSName.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             
-            .ignoredParameterTypes(Revision.class)
             .globalOperationParameters(newList(new ParameterBuilder()
                 .name("format")
                 .defaultValue("json")
@@ -491,6 +493,11 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML)))), "String"))
                 .build()
             ));
+        if (ignoreRevision) {
+            docket = docket.ignoredParameterTypes(Revision.class);
+        } else {
+            docket = docket.directModelSubstitute(Revision.class, long.class);
+        }
         
         for (Entry<Class<?>, Class<?>> dms: publishedVersion.jsonModule.rawTypes.entrySet()) {
             docket.directModelSubstitute(dms.getKey(), dms.getValue());
