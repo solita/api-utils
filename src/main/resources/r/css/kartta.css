@@ -17,14 +17,27 @@
   font-size: 12px;
   line-height: 1em;
 }
-.layer-switcher .panel input {
-  margin: 1px 4px;
+.layer-switcher.shown {
+  max-height: 80%;
+  overflow-y: auto;
 }
 .ol-popup {
   max-width: 50%;
   position: absolute;
   background-color: white;
   overflow: auto;
+}
+.ol-rotate {
+  top: 18.5em;
+  left: 0.5em;
+}
+.rotate-left {
+  top: 20em;
+  left: 0.5em;
+}
+.rotate-right {
+  top: 21.5em;
+  left: 0.5em;
 }
 
 .ol-popup iframe {
