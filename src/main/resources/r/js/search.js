@@ -14,7 +14,7 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
                      olstuff.newVectorLayerNoTile(s, h, h, h, undefined, undefined, searchStyles[index % searchStyles.length]);
                 layer.setVisible(true);
                 map.addLayer(layer);
-                layer.on('change', function(e) {
+                layer.once('change', function(e) {
                     map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                 });
                 hover(map, [layer], select, unselect);
