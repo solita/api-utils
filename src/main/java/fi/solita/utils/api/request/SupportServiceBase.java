@@ -56,20 +56,58 @@ public class SupportServiceBase {
         redirectToCurrentInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, String durationOrPeriod) {
-        Duration d;
+    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, String durationOrPeriod) throws InvalidValueException {
+        String[] parts = durationOrPeriod.split("/");
+        
+        if (parts.length == 1) {
+            // create an interval either starting from or ending to current time.
+            Pair<Either<Duration, Period>, Boolean> dp = parse(parts[0]);
+            for (Duration d: dp.left().left) {
+                redirectToCurrentInterval(req, res, d, dp.right(), newSet("duration"));
+            }
+            for (Period p: dp.left().right) {
+                redirectToCurrentInterval(req, res, p, dp.right(), newSet("duration"));
+            }
+        } else if (parts.length == 2) {
+            // create an interval where start and end are separately related to current time.
+            Pair<Either<Duration, Period>, Boolean> start = parse(parts[0]);
+            Pair<Either<Duration, Period>, Boolean> end = parse(parts[1]);
+            
+            final DateTime now = currentTime();
+            DateTime start_ = start.left().fold(SupportServiceBase_.relate.ap(now, start.right()), SupportServiceBase_.relate1.ap(now, start.right()));
+            DateTime end_   = end  .left().fold(SupportServiceBase_.relate.ap(now, end  .right()), SupportServiceBase_.relate1.ap(now, end  .right()));
+            if (start_.isAfter(end_)) {
+                throw new InvalidValueException("duration", durationOrPeriod);
+            }
+            redirectToCurrentInterval(req, res, new Interval(start_, end_), newSet("duration"));
+        } else {
+            throw new InvalidValueException("duration", durationOrPeriod);
+        }
+    }
+    
+    static DateTime relate(DateTime now, boolean negate, Duration d) {
+        return negate ? now.minus(d) : now.plus(d);
+    }
+    
+    static DateTime relate(DateTime now, boolean negate, Period p) {
+        return negate ? now.minus(p) : now.plus(p);
+    }
+    
+    private static Pair<Either<Duration,Period>,Boolean> parse(String durationOrPeriod) throws InvalidValueException {
         boolean negate = false;
         if (durationOrPeriod.startsWith("-")) {
             negate = true;
             durationOrPeriod = tail(durationOrPeriod);
         }
         try {
-            d = Duration.parse(durationOrPeriod);
+            return Pair.of(Either.<Duration,Period>left(Duration.parse(durationOrPeriod)), negate);
         } catch (Exception e) {
-            redirectToCurrentInterval(req, res, Period.parse(durationOrPeriod), negate, newSet("duration"));
-            return;
+            try {
+                return Pair.of(Either.<Duration,Period>right(Period.parse(durationOrPeriod)), negate);
+            } catch (Exception e1) {
+                throw new InvalidValueException("duration", durationOrPeriod);
+            }
         }
-        redirectToCurrentInterval(req, res, d, negate, newSet("duration"));
     }
     
     public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Duration duration, boolean negate, Set<String> queryParamsToExclude) {
