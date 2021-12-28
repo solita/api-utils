@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 
-import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Tuple4;
 
 public class WMTS {
@@ -46,7 +45,7 @@ public class WMTS {
         }
     }
     
-    public static List<String> luoWmtsSeedUrlit(String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
+    public static List<String> luoWmtsSeedUrlit(String time, String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
         List<String> ret = newMutableList();
         
         for (int taso: newList(WMTS.MIN_LAYER_ID)) {
@@ -59,7 +58,7 @@ public class WMTS {
                         ret.add(
                             WMTS.LAYER_URL_TEMPLATE
                                 .replace("{{name}}", layer._1)
-                                .replace("{{time}}", RequestUtil.intervalNow())
+                                .replace("{{time}}", time)
                                 .replace("{{path}}", layer._2)
                                 .replace("{{qsPreTime}}", "")
                                 .replace("{{qsPostTime}}", layer._4)
@@ -104,12 +103,12 @@ public class WMTS {
         };
 
     
-    public static String luoWmtsKuvaus(String title, String requestURI, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
+    public static String luoWmtsKuvaus(String time, String title, String requestURI, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
         StringBuilder layers = new StringBuilder();
         for (Tuple4<String, String, String, String> layer: wmtsLayers) {
             layers.append(WMTS.LAYER_TEMPLATE
                         .replace("{{name}}", layer._1)
-                        .replace("{{time}}", RequestUtil.intervalNow())
+                        .replace("{{time}}", time)
                         .replace("{{path}}", layer._2)
                         .replace("{{qsPreTime}}", "")
                         .replace("{{qsPostTime}}", layer._4)

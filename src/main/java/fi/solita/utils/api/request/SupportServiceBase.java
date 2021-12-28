@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
-import static fi.solita.utils.functional.FunctionalA.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.Option.Some;
 
@@ -14,21 +13,46 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
+import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
+import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.functional.Collections;
+import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 
 public class SupportServiceBase {
+    
+    /**
+     * @return Current time. Previous UTC midnight by default.
+     */
+    public DateTime currentTime() {
+        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC);
+    }
+    
+    /**
+     * @return currentTime() as ISO String.
+     */
+    public final String now() {
+        return RequestUtil.instant2string(currentTime());
+    }
+    
+    /**
+     * @return currentTime() as ISO interval.
+     */
+    public final String intervalNow() {
+        return now() + "/" + now();
+    }
 
     public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
-        DateTime now = RequestUtil.currentTime();
+        DateTime now = currentTime();
         redirectToCurrentInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
     }
     
@@ -49,12 +73,12 @@ public class SupportServiceBase {
     }
     
     public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Duration duration, boolean negate, Set<String> queryParamsToExclude) {
-        DateTime now = RequestUtil.currentTime();
+        DateTime now = currentTime();
         redirectToCurrentInterval(req, res, negate ? new Interval(now.minus(duration), now) : new Interval(now, now.plus(duration)), queryParamsToExclude);
     }
     
     public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Period period, boolean negate, Set<String> queryParamsToExclude) {
-        DateTime now = RequestUtil.currentTime();
+        DateTime now = currentTime();
         redirectToCurrentInterval(req, res, negate ? new Interval(now.minus(period), now) : new Interval(now, now.plus(period)), queryParamsToExclude);
     }
     

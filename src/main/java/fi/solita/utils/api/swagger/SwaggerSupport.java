@@ -249,14 +249,14 @@ public abstract class SwaggerSupport extends ApiResourceController {
         protected void apply(String name, Class<?> clazz, AnnotatedElement ae, ModelPropertyBuilder builder) {
             if (clazz.equals(DateTime.class)) {
                 builder.description(DESCRIPTION_DateTime)
-                       .example(RequestUtil.now());
+                       .example(RequestUtil.instant2string(DateTime.now()));
             } else if (clazz.equals(Character.class)) {
                 builder.description("character")
                        .example("c");
             } else if (clazz.equals(Interval.class)) {
                 builder.qualifiedType("interval")
                        .description(DESCRIPTION_Interval)
-                       .example(RequestUtil.intervalNow());
+                       .example(RequestUtil.interval2stringRestrictedToInfinity(new Interval(DateTime.now(), DateTime.now().plusHours(1))));
             } else if (clazz.equals(LocalDate.class)) {
                 builder.description(DESCRIPTION_LocalDate)
                        .example("1982-01-22");

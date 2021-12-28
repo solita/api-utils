@@ -35,9 +35,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
-import org.joda.time.LocalDate;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -259,18 +257,6 @@ public abstract class RequestUtil {
     public static final String interval2stringRestrictedToInfinity(Interval interval) {
         return instant2string(interval.getStart().isBefore(HttpSerializers.VALID.getStart()) ? HttpSerializers.VALID.getStart() : interval.getStart()) + "/" + 
                instant2string(interval.getEnd()  .isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd()   : interval.getEnd());
-    }
-    
-    public static final DateTime currentTime() {
-        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC);
-    }
-    
-    public static final String now() {
-        return instant2string(currentTime());
-    }
-
-    public static final String intervalNow() {
-        return now() + "/" + now();
     }
 
     public static final String intervalInfinity() {
