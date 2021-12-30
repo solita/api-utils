@@ -9,7 +9,6 @@
   width: 100%;
 }
 .layer-switcher {
-  z-index: 999;
   max-width: 30%;
 }
 .layer-switcher .panel label {
@@ -20,6 +19,9 @@
 .layer-switcher.shown {
   max-height: 80%;
   overflow-y: auto;
+}
+.ol-overlaycontainer-stopevent {
+    z-index: 10 !important; /* to make layer-switcher be on top of listview */
 }
 .ol-popup {
   max-width: 50%;
