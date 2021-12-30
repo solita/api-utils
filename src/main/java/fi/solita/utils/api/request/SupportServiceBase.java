@@ -53,7 +53,7 @@ public class SupportServiceBase {
 
     public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
         DateTime now = currentTime();
-        redirectToCurrentInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
+        redirectToInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
     }
     
     public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, String durationOrPeriod) throws InvalidValueException {
@@ -63,23 +63,22 @@ public class SupportServiceBase {
             // create an interval either starting from or ending to current time.
             Pair<Either<Duration, Period>, Boolean> dp = parse(parts[0]);
             for (Duration d: dp.left().left) {
-                redirectToCurrentInterval(req, res, d, dp.right(), newSet("duration"));
+                redirectToInterval(req, res, intervalForRedirect(currentTime(), d, dp.right()), newSet("duration"));
             }
             for (Period p: dp.left().right) {
-                redirectToCurrentInterval(req, res, p, dp.right(), newSet("duration"));
+                redirectToInterval(req, res, intervalForRedirect(currentTime(), p, dp.right()), newSet("duration"));
             }
         } else if (parts.length == 2) {
             // create an interval where start and end are separately related to current time.
             Pair<Either<Duration, Period>, Boolean> start = parse(parts[0]);
             Pair<Either<Duration, Period>, Boolean> end = parse(parts[1]);
-            
-            final DateTime now = currentTime();
-            DateTime start_ = start.left().fold(SupportServiceBase_.relate.ap(now, start.right()), SupportServiceBase_.relate1.ap(now, start.right()));
-            DateTime end_   = end  .left().fold(SupportServiceBase_.relate.ap(now, end  .right()), SupportServiceBase_.relate1.ap(now, end  .right()));
-            if (start_.isAfter(end_)) {
+            Interval interval;
+            try {
+                interval = intervalForRedirect(currentTime(), start, end);
+            } catch (RuntimeException e) {
                 throw new InvalidValueException("duration", durationOrPeriod);
             }
-            redirectToCurrentInterval(req, res, new Interval(start_, end_), newSet("duration"));
+            redirectToInterval(req, res, interval, newSet("duration"));
         } else {
             throw new InvalidValueException("duration", durationOrPeriod);
         }
@@ -93,7 +92,7 @@ public class SupportServiceBase {
         return negate ? now.minus(p) : now.plus(p);
     }
     
-    private static Pair<Either<Duration,Period>,Boolean> parse(String durationOrPeriod) throws InvalidValueException {
+    static Pair<Either<Duration,Period>,Boolean> parse(String durationOrPeriod) throws InvalidValueException {
         boolean negate = false;
         if (durationOrPeriod.startsWith("-")) {
             negate = true;
@@ -110,17 +109,21 @@ public class SupportServiceBase {
         }
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Duration duration, boolean negate, Set<String> queryParamsToExclude) {
-        DateTime now = currentTime();
-        redirectToCurrentInterval(req, res, negate ? new Interval(now.minus(duration), now) : new Interval(now, now.plus(duration)), queryParamsToExclude);
+    static Interval intervalForRedirect(DateTime now, Duration duration, boolean negate) {
+        return negate ? new Interval(now.minus(duration), now) : new Interval(now, now.plus(duration));
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Period period, boolean negate, Set<String> queryParamsToExclude) {
-        DateTime now = currentTime();
-        redirectToCurrentInterval(req, res, negate ? new Interval(now.minus(period), now) : new Interval(now, now.plus(period)), queryParamsToExclude);
+    static Interval intervalForRedirect(DateTime now, Period period, boolean negate) {
+        return negate ? new Interval(now.minus(period), now) : new Interval(now, now.plus(period));
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
+    static Interval intervalForRedirect(DateTime now, Pair<Either<Duration, Period>, Boolean> start, Pair<Either<Duration, Period>, Boolean> end) {
+        DateTime start_ = start.left().fold(SupportServiceBase_.relate.ap(now, start.right()), SupportServiceBase_.relate1.ap(now, start.right()));
+        DateTime end_   = end  .left().fold(SupportServiceBase_.relate.ap(now, end  .right()), SupportServiceBase_.relate1.ap(now, end  .right()));
+        return new Interval(start_, end_);
+    }
+    
+    public static void redirectToInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
         ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
 
