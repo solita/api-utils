@@ -20,6 +20,23 @@
   max-height: 80%;
   overflow-y: auto;
 }
+.layer-switcher[data-loading]:not([data-loading='0']) button {
+    animation: round-and-round 1s linear infinite;
+}
+.layer-switcher[data-loading]:not([data-loading='0']) button:after {
+    content: 'loading';
+    font-size: 0.8em;
+    color: Black;
+    font-weight: lighter;
+}
+@keyframes round-and-round {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+}
 .ol-overlaycontainer-stopevent {
     z-index: 10 !important; /* to make layer-switcher be on top of listview */
 }

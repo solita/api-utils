@@ -361,6 +361,8 @@ var olstuff = function(constants, util) {
                      (!typeNames ? '' : '&typeNames=' + typeNames);
 
             var layerTitle = ret.mkLayerTitle(title_fi, title_en);
+            var aborter = new AbortController();
+            var layer;
             var source = new ol.source.Vector({
                 format: ret.format,
                 projection: ret.projection,
@@ -373,9 +375,11 @@ var olstuff = function(constants, util) {
                         return;
                     }
                     var kaavio = document.getElementById('kaavio');
-                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'))
+                    layer.dispatchEvent("loadStart");
+                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal})
                         .then(function(response) { return response.json(); })
                         .then(function(response) {
+                          layer.dispatchEvent("loadSuccess");
                           var features = ret.format.readFeatures(response);
                           features.forEach(f => {
                             if (!f.getProperties().tunniste) {
@@ -394,10 +398,21 @@ var olstuff = function(constants, util) {
                               }
                           }
                           source.addFeatures(features);
+                        })
+                        .catch(err => {
+                            if (err.name == 'AbortError') {
+                                layer.dispatchEvent("loadAbort");
+                            } else {
+                                layer.dispatchEvent("loadFail");
+                            }
                         });
                 }
             });
-            var layer = new ol.layer.Vector({
+            source.on('clear', () => {
+                aborter.abort();
+                aborter = new AbortController();
+            });
+            layer = new ol.layer.Vector({
                 title: layerTitle,
                 shortName: shortName,
                 source: source,
@@ -409,6 +424,20 @@ var olstuff = function(constants, util) {
                 updateWhileAnimating: true
             });
             layer.setVisible(false);
+            let update = diff => {
+                let e = document.querySelector('.layer-switcher');
+                e.setAttribute('data-loading', parseInt(e.getAttribute('data-loading') || '0') + diff);
+            };
+            
+            layer.on('loadStart', () => update(1));
+            layer.on('loadSuccess', () => update(-1));
+            layer.on('loadFail', () => update(-1));
+            layer.on('loadAbort', () => update(-1));
+            
+            layer.on('loadStart', () => { layer.setVisible(true); });
+            layer.on('loadFail',  () => { layer.setVisible(false); });
+            layer.on('loadAbort', () => { layer.setVisible(false); });
+            
             return layer;
         },
         
