@@ -2,11 +2,7 @@ var olstuff = function(constants, util) {
     proj4.defs("EPSG:3067", "+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs");
     ol.proj.proj4.register(proj4);
     
-    var instant = new URLSearchParams(window.location.search).get('time') || util.now();
-    
     var ret = {
-        instant: instant,
-        
         projection: ol.proj.get('EPSG:3067'),
         
         geojsonProjection: ol.proj.get('EPSG:4326'),
@@ -149,7 +145,7 @@ var olstuff = function(constants, util) {
                     }
                 });
                 elem.querySelectorAll(':scope * > * > .key').forEach(function(x) {
-                    x.onclick = function() {
+                    x.onmouseup = function() {
                         if (map.mystate.closed[x.textContent]) {
                             map.mystate.closed[x.textContent] = undefined;
                             util.getSiblings(x).forEach(function(y) { y.style.display = 'block'; });
@@ -192,7 +188,7 @@ var olstuff = function(constants, util) {
                             unselect(features);
                         }
                     };
-                    x.onclick = function() {
+                    x.onmouseup = function() {
                         [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
                                                                      .slice(0, 1)
                                                                      .forEach(function(tunnisteElem) {
@@ -233,7 +229,7 @@ var olstuff = function(constants, util) {
                             unselect([]);
                         }
                     };
-                    x.onclick = function() {
+                    x.onmouseup = function() {
                         var tunniste = x.textContent;
                         var feature = ret.getFeatureByTunniste(map, tunniste);
                         if (feature) {
@@ -247,18 +243,6 @@ var olstuff = function(constants, util) {
             };
             map.on("moveend", f);
             f();
-        },
-        
-        createPopup: function(elem) {
-            var popupcontent = elem.querySelector('#popup-content');
-            popupcontent.onmouseover = function() {
-                popupcontent.style.display = 'block';
-                popupcontent.style.opacity = '100';
-            };
-            popupcontent.onmouseout = function() {
-                popupcontent.style.display = 'none';
-            };
-            return popupcontent;
         },
         
         styles: {
@@ -354,10 +338,11 @@ var olstuff = function(constants, util) {
         
         newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '');
-            u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1; 
+            u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1;
+            var instant = new URLSearchParams(window.location.search).get('time');
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
-                     (url.indexOf('time=') >= 0 ? '' : '&time=' + instant + '/' + instant) +
+                     (url.indexOf('time=') >= 0 || !instant ? '' : '&time=' + instant + '/' + instant) +
                      (!typeNames ? '' : '&typeNames=' + typeNames);
 
             var layerTitle = ret.mkLayerTitle(title_fi, title_en);
@@ -454,6 +439,7 @@ var olstuff = function(constants, util) {
         
         newPngLayer: function(url, title, opacity, propertyName, typeNames) {
             var u1 = url + '.png?';
+            var instant = new URLSearchParams(window.location.search).get('time');
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') + (propertyName === null ? '' : '&propertyName=' + propertyName) + '&time=' + instant + '/' + instant;
             u2 += (typeNames ? '&typeNames=' + typeNames : '');
 
@@ -501,7 +487,8 @@ var olstuff = function(constants, util) {
             var parser = new ol.format.WMTSCapabilities();
             var group = new ol.layer.Group({
                 title: title,
-                layers: []
+                layers: [],
+                fold: 'close'
             });
             
             var createLayer = function(matrix) { return function(response) {
@@ -532,7 +519,8 @@ var olstuff = function(constants, util) {
                          ret.tileLayer('Grid', new ol.source.TileImage({projection: ret.projection, tileGrid: ret.tileGrid, tileUrlFunction: function(extent, resolution, projection) {var size = ret.tileGrid.getTileSize(extent[0]); return 'https://placehold.it/' + size + '?text=' + extent + ' (' + size + 'x' + size + ')&w=' + size + '&h=' + size + '';} }), opacity),
                          ret.tileLayer('Debug', new ol.source.TileDebug({projection: ret.projection, tileGrid: ret.tileGrid}, opacity)),
                          osm
-                        ]
+                        ],
+                fold: 'close'
             });
             
             var createLayer = function(matrix, host) { return function(response) {

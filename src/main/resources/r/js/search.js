@@ -1,4 +1,4 @@
-var search = function(map, searchUrlFunction, searchInput, olstuff, select, unselect) {
+var search = function(map, searchUrlFunction, searchInput, olstuff, select, unselect, peek, unpeek) {
     var searchStyles = [[0,255,0,0.4], [0,0,255,0.4], [255,0,0,0.4], [255,255,0,0.4], [0,255,255,0.4], [255,0,255,0.4]].map(function(c) {
         var stroke = [...c];
         stroke[3] = 1;
@@ -17,7 +17,8 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
                 layer.once('change', function(e) {
                     map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                 });
-                hover(map, [layer], select, unselect);
+                hover(map, [layer], peek, unpeek);
+                click(map, [layer], select, unselect);
             }
         });
     }

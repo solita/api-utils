@@ -60,7 +60,6 @@
 }
 
 .ol-popup iframe {
-  height: 100%;
   width: 42em;
 }
 
@@ -78,9 +77,6 @@
 #hovertitle > * > ul > li > .key {
   font-weight: bold;
 }
-#hovertitle .value {
-  margin-left: 20px;
-}
 
 #popup {
   left: 0;
@@ -91,10 +87,14 @@
   height: 100%;
 }
 #popup-content {
-  opacity: 1;
-  display: none;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch;
   background-color: white;
   height: 95%;
+}
+#popup-content > * {
+    flex: auto;
 }
 
 #list {
