@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.deser.std.EnumDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
+import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
 import com.fasterxml.jackson.databind.ser.std.CalendarSerializer;
 import com.fasterxml.jackson.databind.ser.std.DateSerializer;
@@ -43,6 +44,8 @@ import com.fasterxml.jackson.databind.ser.std.EnumSerializer;
 import com.fasterxml.jackson.databind.ser.std.SqlDateSerializer;
 import com.fasterxml.jackson.databind.ser.std.SqlTimeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdKeySerializers;
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Dynamic;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import fi.solita.utils.api.JsonDeserializeAsBean;
@@ -50,12 +53,6 @@ import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.functional.Option;
 
-/**
- * Projektiperheen yleinen objectmapper. Rajoittaa Jacksonia tekemästä typeryyksiä.
- * Käytä tätä kaikkiin tarkoituksiin default-ObjectMapperin sijaan.
- *
- * Sovellusten sisäiseen liikenteeseen käytä InternalObjectMapper/InternalJsonSerializationService joka rekisteröityy automaattisesti Springille beaniksi.
- */
 public class JsonObjectMapper extends ObjectMapper {
 
     public static class SerializingDeserializingProhibitedException extends RuntimeException {
@@ -156,7 +153,9 @@ public class JsonObjectMapper extends ObjectMapper {
         @Override
         public JsonSerializer<Object> createSerializer(SerializerProvider prov, JavaType origType) throws JsonMappingException {
             JsonSerializer<?> candidate = super.createSerializer(prov, origType);
-            if (candidate instanceof EnumSerializer && !ClassUtils.getEnumType(origType.getRawClass()).get().isAnnotationPresent(JsonSerializeAsBean.class)) {
+            if (candidate instanceof Dynamic || candidate instanceof Default) {
+                throw new SerializingDeserializingProhibitedException("Tyypille " + origType.getRawClass().getName() + " ei ole rekisteröity serializaria!");
+            } else if (candidate instanceof EnumSerializer && !ClassUtils.getEnumType(origType.getRawClass()).get().isAnnotationPresent(JsonSerializeAsBean.class)) {
                 throw new SerializingDeserializingProhibitedException("Enumille " + ClassUtils.getEnumType(origType.getRawClass()).get().getName() + " ei ole rekisteröity serializaria!");
             } else if (candidate instanceof CalendarSerializer) {
                 throw new SerializingDeserializingProhibitedException("Ei pitäisi käyttää Calendaria!");
@@ -172,18 +171,19 @@ public class JsonObjectMapper extends ObjectMapper {
 
             return (JsonSerializer<Object>) candidate;
         }
+        
+        private static final JsonSerializer<Object> stdStringKeySerializer = StdKeySerializers.getStdKeySerializer(null, String.class, false);
 
-        @SuppressWarnings("unchecked")
         @Override
-        public JsonSerializer<Object> createKeySerializer(final SerializationConfig config, JavaType type, final JsonSerializer<Object> defaultImpl) {
-            JsonSerializer<Object> serializer = super.createKeySerializer(config, type, defaultImpl);
-            if (serializer == null) {
+        public JsonSerializer<Object> createKeySerializer(final SerializerProvider ctxt, JavaType type, final JsonSerializer<Object> defaultImpl) throws JsonMappingException {
+            JsonSerializer<Object> serializer = super.createKeySerializer(ctxt, type, defaultImpl);
+            if (serializer == null || serializer instanceof Dynamic || serializer instanceof Default) {
                 return new StdSerializer<Object>((Class<Object>)type.getRawClass()) {
                     @Override
                     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
-                        JsonSerializer<Object> ser = createKeySerializer(config, provider.getTypeFactory().constructType(value.getClass()), defaultImpl);
+                        JsonSerializer<Object> ser = createKeySerializer(ctxt, provider.getTypeFactory().constructType(value.getClass()), defaultImpl);
                         if (value.getClass() == String.class) {
-                            ser = StdKeySerializers.getStdKeySerializer(config, value.getClass(), true);
+                            ser = stdStringKeySerializer;
                         } else if (ser == null || ser.getClass() == this.getClass()) {
                             throw new SerializingDeserializingProhibitedException("Ei KeySerializeria arvolle '" + value + "'. Anna Modulessa KeySerializer tyypille " + value.getClass());
                         }
@@ -203,8 +203,6 @@ public class JsonObjectMapper extends ObjectMapper {
     public JsonObjectMapper() {
         super(null, null, new DefaultDeserializationContext.Impl(new CustomBeanDeserializerFactory(BeanDeserializerFactory.instance.getFactoryConfig())));
 
-        setSerializerFactory(new CustomBeanSerializerFactory(BeanSerializerFactory.instance.getFactoryConfig()));
-
         // leave nulls out. This way we can restrict the serialized properties while using the same Dto.
         setSerializationInclusion(Include.NON_NULL);
 
@@ -217,6 +215,10 @@ public class JsonObjectMapper extends ObjectMapper {
         configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
         configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, true);
         configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
+        
+        // ugh...
+        setSerializerFactory(new CustomBeanSerializerFactory(BeanSerializerFactory.instance.getFactoryConfig()));
+        setSerializerProvider(new DefaultSerializerProvider.Impl().createInstance(getSerializationConfig(), getSerializerFactory()));
     }
 
     @Override
