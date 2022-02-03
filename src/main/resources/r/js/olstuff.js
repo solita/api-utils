@@ -544,10 +544,10 @@ var olstuff = function(constants, util) {
             if (window.location.hostname != 'localhost' && window.location.hostname != '127.0.0.1' && window.location.hostname.indexOf('digitraffic.fi') == -1) {
                 var host = window.location.hostname;
                 var baseurl = window.location.protocol + '//' + host;
-                var maasto = baseurl + '/rasteripalvelu-mml/wmts/maasto/1.0.0/WMTSCapabilities.xml';
-                var teema = baseurl + '/rasteripalvelu-mml/wmts/teema/1.0.0/WMTSCapabilities.xml';
-                var kiinteisto = baseurl + '/rasteripalvelu-mml/wmts/kiinteisto/1.0.0/WMTSCapabilities.xml';
-                var basic = baseurl + '/rasteripalvelu/service/wmts?request=getcapabilities';
+                var maasto = baseurl + '/mml/maasto/wmts/1.0.0/WMTSCapabilities.xml';
+                var teema = baseurl + '/mml/teema/wmts/1.0.0/WMTSCapabilities.xml';
+                var kiinteisto = baseurl + '/mml/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
+                var basic = baseurl + '/mml/service/wmts?request=getcapabilities';
                 
                 fetch(maasto)    .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
                 fetch(teema)     .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
