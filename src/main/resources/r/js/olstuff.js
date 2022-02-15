@@ -136,15 +136,15 @@ var olstuff = function(constants, util) {
                 elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'labelPoint'));
                 var input = elem.querySelector(':scope input');
                 input.onkeyup = function() {
-                    [...elem.querySelectorAll(':scope ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
-                    [...elem.querySelectorAll(':scope ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) < 0;  }).forEach(function(x) { x.style.display = 'none'; });
+                    [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
+                    [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) < 0;  }).forEach(function(x) { x.style.display = 'none'; });
                 };
-                elem.querySelectorAll(':scope * > * > .key').forEach(function(x) {
+                elem.querySelectorAll(':scope > * > * > .key').forEach(function(x) {
                     if (map.mystate.closed[x.textContent]) {
                         util.getSiblings(x).forEach(function(y) { y.style.display = 'none'; });
                     }
                 });
-                elem.querySelectorAll(':scope * > * > .key').forEach(function(x) {
+                elem.querySelectorAll(':scope > * > * > .key').forEach(function(x) {
                     x.onmouseup = function() {
                         if (map.mystate.closed[x.textContent]) {
                             map.mystate.closed[x.textContent] = undefined;
@@ -155,7 +155,7 @@ var olstuff = function(constants, util) {
                         }
                     };
                 });
-                [...elem.querySelectorAll(':scope ul > li > span > span > ul')].forEach(function(x) {
+                [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].forEach(function(x) {
                     x.onmouseenter = function() {
                         [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
                                                                      .slice(0, 1)
@@ -206,7 +206,7 @@ var olstuff = function(constants, util) {
                     };
                 });
                 
-                elem.querySelectorAll(':scope ul > li > span > span > ul a.oid').forEach(function(x) {
+                elem.querySelectorAll(':scope > ul > li > span > span > ul a.oid').forEach(function(x) {
                     x.onmouseenter = function() {
                         var tunniste = x.textContent;
                         var feature = ret.getFeatureByTunniste(map, tunniste);
@@ -238,6 +238,7 @@ var olstuff = function(constants, util) {
                             }
                             map.getView().fit(feature.getGeometry().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                         }
+                        return false;
                     };
                 });
             };
@@ -369,7 +370,7 @@ var olstuff = function(constants, util) {
                           features.forEach(f => {
                             if (!f.getProperties().tunniste) {
                                 var newProps = f.getProperties();
-                                newProps._tunniste = layerTitle;
+                                newProps._tunniste = newProps.etappi ? newProps.etappi : layerTitle;
                                 f.setProperties(newProps);
                             }
                           });

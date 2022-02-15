@@ -18,9 +18,10 @@ var util = function(customPrettyPrinting) {
         },
 
         prettyPrint: function(obj) {
+            var printer = customPrettyPrinting ? (x) => { var rr = customPrettyPrinting(x); return (rr === null || rr === undefined) ? ret.prettyPrint(x) : rr} : ret.prettyPrint;
             if (obj instanceof Array && obj.length > 0) {
                 return '<span class="array">' + obj.map(function(val) {
-                    var printedVal = (val && typeof val === 'object') ? ret.prettyPrint(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
+                    var printedVal = (val && typeof val === 'object') ? printer(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
                     return (printedVal ? printedVal : val) + ' ';
                 }).join('') + '</span>';
             } else {
@@ -39,7 +40,7 @@ var util = function(customPrettyPrinting) {
                             if (val instanceof Array && val.length === 0) {
                                 // skip empty arrays
                             } else {
-                                var printedVal = (val && typeof val === 'object') ? ret.prettyPrint(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
+                                var printedVal = (val && typeof val === 'object') ? printer(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
                                 r += '<li ' + (key.startsWith('_') ? 'style="display: none"' : '') + '>' + '<span class="key">' + key + '</span><span class="value">' + (printedVal ? printedVal : val) + '</span></li>';
                             }
                         }
