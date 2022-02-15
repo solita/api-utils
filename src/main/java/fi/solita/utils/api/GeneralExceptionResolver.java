@@ -24,6 +24,7 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
+import fi.solita.utils.api.util.RequestUtil.LoopsInPropertyNameException;
 
 
 public class GeneralExceptionResolver implements HandlerExceptionResolver, Ordered {
@@ -95,6 +96,10 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
             }
             for (RedundantPropertiesException e: ExceptionUtils.findCauseFromHierarchy(ex, RedundantPropertiesException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Redundant values in propertyName: " + mkString(",", map(PropertyName_.getValue, e.propertyNames)));
+                return new ModelAndView();
+            }
+            for (LoopsInPropertyNameException e: ExceptionUtils.findCauseFromHierarchy(ex, LoopsInPropertyNameException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Loops in propertyName");
                 return new ModelAndView();
             }
             for (Includes.InvalidResolvableExclusionException e: ExceptionUtils.findCauseFromHierarchy(ex, Includes.InvalidResolvableExclusionException.class)) {

@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
+import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
@@ -15,10 +16,8 @@ import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Functional.zip;
 import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalA.last;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
 import static fi.solita.utils.functional.FunctionalC.reverse;
-import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Option.None;
@@ -49,6 +48,7 @@ import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaMethod;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -87,6 +87,9 @@ public abstract class RequestUtil {
     }
     
     public static class SpatialFilteringCannotBeUsedWithBBOXException extends RuntimeException {
+    }
+    
+    public static class LoopsInPropertyNameException extends RuntimeException {
     }
 
     public static class IllegalQueryParametersException extends RuntimeException {
@@ -164,6 +167,18 @@ public abstract class RequestUtil {
                         cql_filter.contains("OVERLAPS") ||
                         cql_filter.contains("RELATE")) {
                         throw new RequestUtil.SpatialFilteringCannotBeUsedWithBBOXException();
+                    }
+                }
+            }
+        }
+        
+        for (String[] propertyNames: find("propertyName", parameters)) {
+            for (String propertyName: propertyNames) {
+                for (String pn: propertyName.split(",")) {
+                    String[] parts = pn.split("[.]");
+                    List<Pair<String, String>> pairs = newList(zip(parts, tail(parts)));
+                    if (pairs.size() != size(distinct(pairs))) {
+                        throw new RequestUtil.LoopsInPropertyNameException();
                     }
                 }
             }
