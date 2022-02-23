@@ -63,6 +63,7 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import io.swagger.annotations.ApiParam;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.StringProperty;
 import springfox.documentation.RequestHandler;
@@ -365,6 +366,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
             Option<String> pathVariableName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orElse(null)).map(CustomTypeParameterBuilder_.pathVariableName);
             Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orElse(null)).map(CustomTypeParameterBuilder_.requestParamName);
             apply(parameterContext, type, pathVariableName, requestParamName);
+            Optional<ApiParam> apiparam = parameterContext.resolvedMethodParameter().findAnnotation(ApiParam.class);
+            if (apiparam.isPresent() && !apiparam.get().value().isBlank()) {
+                parameterContext.parameterBuilder().description(apiparam.get().value() + parameterContext.parameterBuilder().build().getDescription());
+            }
         }
         
         protected void apply(ParameterContext parameterContext, Class<?> type, Option<String> pathVariableName, Option<String> requestParamName) {
