@@ -220,7 +220,7 @@ public class Filtering {
         
         for (Filter filter: filters.filters) {
             if (filter.pattern == FilterType.INTERSECTS) {
-                if (MemberUtil.toMembers(resolvableMemberProvider, fp, geometryMembers, filter.property).isEmpty()) {
+                if (MemberUtil.toMembers(resolvableMemberProvider, fp, false, geometryMembers, filter.property).isEmpty()) {
                     throw new SpatialFilteringRequiresGeometryPropertyException(filter.property, newSet(map(MemberUtil_.memberName, geometryMembers)));
                 }
                 // filtering is skipped here. Assuming it's been already done in the DB

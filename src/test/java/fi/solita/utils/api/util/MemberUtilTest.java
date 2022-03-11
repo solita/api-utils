@@ -52,7 +52,7 @@ public class MemberUtilTest {
 
     @Test
     public void toMembers_resolvableMemberIsResolved() {
-        List<? extends MetaNamedMember<? super MemberUtilTest.FooDto,?>> members = MemberUtil.toMembers(externalProvider, FunctionProvider.NONE, FooDto.FIELDS, PropertyName.of("bar.baz"));
+        List<? extends MetaNamedMember<? super MemberUtilTest.FooDto,?>> members = MemberUtil.toMembers(externalProvider, FunctionProvider.NONE, false, FooDto.FIELDS, PropertyName.of("bar.baz"));
         MetaNamedMember<? super FooDto, ?> member = Assert.singleton(members);
         Assert.True(member instanceof ResolvableMember);
         assertEquals(newList(PropertyName.of("baz")), newList(((ResolvableMember<?>)member).getResolvablePropertyNames()));
@@ -60,7 +60,7 @@ public class MemberUtilTest {
     
     @Test
     public void toMembers_functionCallMemberIsResolved() {
-        List<? extends MetaNamedMember<? super MemberUtilTest.FooDto,?>> members = MemberUtil.toMembers(externalProvider, new FunctionProvider(), FooDto.FIELDS, PropertyName.of("round(bar)"));
+        List<? extends MetaNamedMember<? super MemberUtilTest.FooDto,?>> members = MemberUtil.toMembers(externalProvider, new FunctionProvider(), false, FooDto.FIELDS, PropertyName.of("round(bar)"));
         MetaNamedMember<? super FooDto, ?> member = Assert.singleton(members);
         Assert.True(member instanceof FunctionCallMember);
         assertEquals(PropertyName.of("round(bar)"), ((FunctionCallMember<?>)member).propertyName);

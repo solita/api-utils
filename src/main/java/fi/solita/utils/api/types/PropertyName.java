@@ -37,6 +37,10 @@ public abstract class PropertyName implements Comparable<PropertyName> {
             return (longer + ".").startsWith(value + ".");
         }
         
+        public boolean isEqualTo(FunctionProvider fp, final String prefix) {
+            return value.equals(prefix);
+        }
+        
         public boolean isFunctionCall() {
             return false;
         }
@@ -84,6 +88,15 @@ public abstract class PropertyName implements Comparable<PropertyName> {
                 @Override
                 public boolean accept(String candidate) {
                     return (longer + ".").startsWith(candidate + ".");
+                }
+            });
+        }
+        
+        public boolean isEqualTo(FunctionProvider fp, final String prefix) {
+            return fp.argumentMatches(value, new Predicate<String>() {
+                @Override
+                public boolean accept(String candidate) {
+                    return candidate.equals(prefix);
                 }
             });
         }
@@ -137,6 +150,8 @@ public abstract class PropertyName implements Comparable<PropertyName> {
     public abstract boolean isEmpty(FunctionProvider fp);
     
     public abstract boolean isPrefixOf(FunctionProvider fp, final String longer);
+    
+    public abstract boolean isEqualTo(FunctionProvider fp, final String prefix);
     
     public abstract boolean isFunctionCall();
     

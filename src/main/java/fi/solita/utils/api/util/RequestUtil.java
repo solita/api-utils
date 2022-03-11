@@ -260,7 +260,7 @@ public abstract class RequestUtil {
         if (size(propertyNames) == 1 && head(propertyNames).isEmpty(FunctionProvider.NONE)) {
             return emptyList();
         }
-        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, FunctionProvider.NONE, members), propertyNames));
+        return (List<MetaNamedMember<T,?>>) (Object) newList(flatMap(MemberUtil_.<T>toMembers().ap(ResolvableMemberProvider.NONE, FunctionProvider.NONE, false, members), propertyNames));
     }
 
     public static final String API_KEY = "Api-Key";

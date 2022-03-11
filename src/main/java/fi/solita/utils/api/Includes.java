@@ -108,7 +108,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      * @param propertyNames Filtering given by the API user. Empty if not given.
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         
@@ -147,7 +147,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 includesEverything = true;
             }
         } else {
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), propertyNames)));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), propertyNames)));
         }
         
         // Include geometries for png/geojson/gml even if not explicitly requested
@@ -170,7 +170,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         }
         
         // Exclusions. Also excludes geometries if explicitly excluded.
-        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, propertyNames))));
+        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, false, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, propertyNames))));
         ret = newList(subtract(ret, toRemove));
         if (toRemove != null) {
             for (MetaNamedMember<?,?> m: toRemove) {
