@@ -318,20 +318,7 @@ public abstract class HtmlConversionService {
                     ._script()
                     .script(type("text/javascript"))
                         .cdata()
-                            /*.write("var prevScrollY = window.pageYOffset || document.documentElement.scrollTop;" +
-                                   "var scrollY = prevScrollY;" +
-                                   "window.addEventListener('scroll', function() {" +  
-                                   "    if (!document.body.classList.contains('disable-hover')) {" +
-                                   "      document.body.classList.add('disable-hover');" +
-                                   "    }" +
-                                   "}, false);" +
-                                   "setInterval(function() {" +
-                                   "  if (prevScrollY == scrollY && scrollY == (window.pageYOffset || document.documentElement.scrollTop)) {" +
-                                   "    document.body.classList.remove('disable-hover');" +
-                                   "  }" +
-                                   "  prevScrollY = scrollY;" +
-                                   "  scrollY = window.pageYOffset || document.documentElement.scrollTop;" +
-                                   "}, 1000);", false)*/
+                            .write("window.history.replaceState(undefined, undefined, window.location.toString().replace(/(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));", false)
                         ._cdata()
                     ._script()
                     .script(type("text/javascript"))
