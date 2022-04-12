@@ -32,8 +32,10 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.Period;
+import org.springframework.core.convert.ConverterNotFoundException;
 
 import fi.solita.utils.api.Includes;
+import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.http.HttpModule;
 import fi.solita.utils.api.functions.FunctionCallMember;
 import fi.solita.utils.api.functions.FunctionProvider;
@@ -127,7 +129,15 @@ public class Filtering {
                                         Pair.of(convert(adjustTargetType(val._1, targetType), val._1),
                                                 convert(adjustTargetType(val._3, targetType), val._3)));
         }
-        return (T)httpModule.convert(value == null ? value : value.getValue().left.get(), targetType);
+        try {
+            return (T)httpModule.convert(value == null ? value : value.getValue().left.get(), targetType);
+        } catch (ConverterNotFoundException e) {
+            if (targetType.isAnnotationPresent(JsonSerializeAsBean.class)) {
+                // wasn't even ment to be convertable -> client error
+                throw new CannotFilterByStructureException();
+            }
+            throw e; // something's wrong -> server error
+        }
     }
 
     private static final Class<? extends Object> adjustTargetType(Literal literal, Class<?> targetType) {
@@ -165,6 +175,9 @@ public class Filtering {
             super(filterProperty);
             this.filterProperty = filterProperty;
         }
+    }
+    
+    public static class CannotFilterByStructureException extends RuntimeException {
     }
     
     public <K,T> Map<K,T> filterDataSingle(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Map<K,T> ts) {

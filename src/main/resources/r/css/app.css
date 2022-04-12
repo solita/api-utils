@@ -8,6 +8,9 @@ body, html {
   font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 100;
 }
+body {
+  background: white;
+}
 h2 {
   font-weight: 100;
   font-size: 3em;

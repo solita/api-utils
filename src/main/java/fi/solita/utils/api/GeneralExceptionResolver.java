@@ -29,7 +29,7 @@ import fi.solita.utils.api.util.RequestUtil.LoopsInPropertyNameException;
 
 public class GeneralExceptionResolver implements HandlerExceptionResolver, Ordered {
 
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings("unused")
     @Override
     public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         try {
@@ -112,6 +112,10 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
             }
             for (Filtering.FilterPropertyNotFoundException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.FilterPropertyNotFoundException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Property used for filtering (" + e.filterProperty.getValue() + ") not found in result. Use 'propertyName' parameter to define suitable set of properties");
+                return new ModelAndView();
+            }
+            for (Filtering.CannotFilterByStructureException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.CannotFilterByStructureException.class)) {
+                ResponseUtil.respondError(response, HttpStatus.BAD_REQUEST.value(), "Cannot filter by structure");
                 return new ModelAndView();
             }
             
