@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.12.51</version>
+    <version>0.12.52</version>
     <build>
         <resources>
             <resource>
@@ -296,6 +296,12 @@
             <groupId>ar.com.hjg</groupId>
             <artifactId>pngj</artifactId>
             <version>2.1.0</version>
+        </dependency>
+        
+        <dependency>
+          <groupId>org.mnode.ical4j</groupId>
+          <artifactId>ical4j</artifactId>
+          <version>3.2.1</version>
         </dependency>
 
 

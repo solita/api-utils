@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.cfg.DeserializerFactoryConfig;
 import com.fasterxml.jackson.databind.cfg.SerializerFactoryConfig;
@@ -174,6 +173,7 @@ public class JsonObjectMapper extends ObjectMapper {
         
         private static final JsonSerializer<Object> stdStringKeySerializer = StdKeySerializers.getStdKeySerializer(null, String.class, false);
 
+        @SuppressWarnings("unchecked")
         @Override
         public JsonSerializer<Object> createKeySerializer(final SerializerProvider ctxt, JavaType type, final JsonSerializer<Object> defaultImpl) throws JsonMappingException {
             JsonSerializer<Object> serializer = super.createKeySerializer(ctxt, type, defaultImpl);

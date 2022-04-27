@@ -21,6 +21,7 @@ import fi.solita.utils.api.format.CsvConversionService;
 import fi.solita.utils.api.format.ExcelConversionService;
 import fi.solita.utils.api.format.HtmlConversionService;
 import fi.solita.utils.api.format.HtmlConversionService.HtmlTitle;
+import fi.solita.utils.api.format.ICalConversionService;
 import fi.solita.utils.api.format.JsonConversionService;
 import fi.solita.utils.api.format.JsonLinesConversionService;
 import fi.solita.utils.api.format.PngConversionService;
@@ -55,6 +56,7 @@ public abstract class StdSerialization<BOUNDS> {
     public final HtmlConversionService html;
     public final CsvConversionService csv;
     public final ExcelConversionService excel;
+    public final ICalConversionService ical;
     public final PngConversionService png;
     //public final XmlConversionService xml;
     
@@ -67,6 +69,7 @@ public abstract class StdSerialization<BOUNDS> {
         HtmlConversionService html,
         CsvConversionService csv,
         ExcelConversionService excel,
+        ICalConversionService ical,
         PngConversionService png,
         GeojsonResolver geojsonResolver) {
         this.json = json;
@@ -75,6 +78,7 @@ public abstract class StdSerialization<BOUNDS> {
         this.html = html;
         this.csv = csv;
         this.excel = excel;
+        this.ical = ical;
         this.png = png;
         this.geojsonResolver = geojsonResolver;
     }
@@ -155,6 +159,9 @@ public abstract class StdSerialization<BOUNDS> {
         case XLSX:
             response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
+        case ICS:
+            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
             break;
@@ -209,6 +216,9 @@ public abstract class StdSerialization<BOUNDS> {
         case XLSX:
             response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
+        case ICS:
+            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
             break;
@@ -262,6 +272,9 @@ public abstract class StdSerialization<BOUNDS> {
     case XLSX:
         response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
+    case ICS:
+        response = ical.serialize(res, title2fileName(title), mapValue(dataTransformer, data.get()));
+        break;
     case PNG:
         response = png.render(req, bounds2envelope(bbox), title2layerName(title));
         break;
@@ -313,6 +326,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case XLSX:
             response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case ICS:
+            response = ical.serialize(res, title2fileName(title), mapValue(dataTransformer, data.get()));
             break;
         case PNG:
         case GML:
@@ -380,6 +396,9 @@ public abstract class StdSerialization<BOUNDS> {
         case XLSX:
             response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
+        case ICS:
+            response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+            break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
             break;
@@ -446,6 +465,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+                break;
             case PNG:
             case GML:
             case XML:
@@ -510,6 +532,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), dataTransformer.apply(data.get()));
+                break;
             case PNG:
             case GML:
             case XML:
@@ -555,6 +580,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case XLSX:
             response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case ICS:
+            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
             break;
         case PNG:
         case GML:
@@ -603,6 +631,9 @@ public abstract class StdSerialization<BOUNDS> {
         case XLSX:
             response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
+        case ICS:
+            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            break;
         case PNG:
         case GML:
         case XML:
@@ -649,6 +680,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+                break;
             case PNG:
             case GML:
             case XML:
@@ -693,6 +727,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), dataTransformer.apply(data.get()));
+                break;
             case PNG:
             case GML:
             case XML:
@@ -733,6 +770,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), data);
+                break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), data);
                 break;
             case PNG:
             case GML:
@@ -780,6 +820,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+                break;
             case PNG:
             case XML:
             case GML:
@@ -823,6 +866,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
+                break;
+            case ICS:
+                response = ical.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case PNG:
             case XML:

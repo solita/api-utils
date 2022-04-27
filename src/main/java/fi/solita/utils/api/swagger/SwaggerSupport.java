@@ -6,7 +6,6 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;

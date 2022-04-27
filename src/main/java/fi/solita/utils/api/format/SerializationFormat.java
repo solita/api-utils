@@ -14,6 +14,7 @@ public enum SerializationFormat {
     HTML(MediaType.TEXT_HTML_VALUE + ";charset=UTF-8"),
     CSV("text/csv;charset=UTF-8"),
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"),
+    ICS("text/calendar"),
     PNG(MediaType.IMAGE_PNG_VALUE),
     XML(MediaType.APPLICATION_XML_VALUE),
     GML("application/gml+xml")
@@ -37,6 +38,8 @@ public enum SerializationFormat {
             return Some(SerializationFormat.CSV);
         } else if (extension.equals("xlsx")) {
             return Some(SerializationFormat.XLSX);
+        } else if (extension.equals("ics")) {
+            return Some(SerializationFormat.ICS);
         } else if (extension.equals("png")) {
             return Some(SerializationFormat.PNG);
         } else if (extension.equals("xml")) {

@@ -113,8 +113,6 @@ public class CsvConversionService {
     }
     
     private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Cells>> tableBody) {
-        res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".csv");
-        
         List<CharSequence> header = newMutableList();
         List<Iterable<CharSequence>> body = newMutableList();
         for (Iterable<Cells> row: tableBody) {
@@ -126,7 +124,9 @@ public class CsvConversionService {
             body.add(bodyRow);
         }
         
-        return mkString("\r\n", map(Transformers.map(CsvConversionService_.escape).andThen(CsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8"));
+        byte[] ret = mkString("\r\n", map(Transformers.map(CsvConversionService_.escape).andThen(CsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8"));
+        res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".csv");
+        return ret;
     }
 
     private List<CharSequence> createHeader(Iterable<String> tableHeader, Iterable<Cells> row) {

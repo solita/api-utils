@@ -126,8 +126,6 @@ public class ExcelConversionService {
     }
     
     private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Pair<Object,Class<Object>>>> tableBody) {
-        res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".xlsx");
-        
         XSSFWorkbook wb = new XSSFWorkbook();
         String safeName = WorkbookUtil.createSafeSheetName(filename);
         Sheet sheet = wb.createSheet(safeName);
@@ -185,6 +183,7 @@ public class ExcelConversionService {
             throw new RuntimeException(e);
         }
         
+        res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".xlsx");
         return out.toByteArray();
     }
     

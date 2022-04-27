@@ -7,7 +7,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
