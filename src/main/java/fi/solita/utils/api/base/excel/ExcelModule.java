@@ -109,12 +109,16 @@ public class ExcelModule {
         
         // try an array
         if (type.isArray()) {
-            return Some((ExcelSerializer<T>)serializers.get(Array.class));
+        	for (ExcelSerializer<?> csvSerializer: find(Array.class, serializers)) {
+        		return Some((ExcelSerializer<T>)csvSerializer);
+        	}
         }
         
         // try a class explicitly marked to be serialized as a bean
         if (type.isAnnotationPresent(JsonSerializeAsBean.class)) {
-            return Some((ExcelSerializer<T>)serializers.get(JsonSerializeAsBean.class));
+        	for (ExcelSerializer<?> csvSerializer: find(JsonSerializeAsBean.class, serializers)) {
+        		return Some((ExcelSerializer<T>)csvSerializer);
+        	}
         }
         
         return None();

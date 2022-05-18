@@ -99,12 +99,16 @@ public class CsvModule {
         
         // try an array
         if (type.isArray()) {
-            return Some((CsvSerializer<T>)serializers.get(Array.class));
+        	for (CsvSerializer<?> csvSerializer: find(Array.class, serializers)) {
+        		return Some((CsvSerializer<T>)csvSerializer);
+        	}
         }
         
         // try a class explicitly marked to be serialized as a bean
         if (type.isAnnotationPresent(JsonSerializeAsBean.class)) {
-            return Some((CsvSerializer<T>)serializers.get(JsonSerializeAsBean.class));
+        	for (CsvSerializer<?> csvSerializer: find(JsonSerializeAsBean.class, serializers)) {
+        		return Some((CsvSerializer<T>)csvSerializer);
+        	}
         }
         
         return None();

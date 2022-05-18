@@ -75,12 +75,16 @@ public class ICalModule {
         
         // try an array
         if (type.isArray()) {
-            return Some((ICalSerializer<T>)serializers.get(Array.class));
+        	for (ICalSerializer<?> icalSerializer: find(Array.class, serializers)) {
+                return Some((ICalSerializer<T>)icalSerializer);
+            }
         }
         
         // try a class explicitly marked to be serialized as a bean
         if (type.isAnnotationPresent(JsonSerializeAsBean.class)) {
-            return Some((ICalSerializer<T>)serializers.get(JsonSerializeAsBean.class));
+        	for (ICalSerializer<?> icalSerializer: find(JsonSerializeAsBean.class, serializers)) {
+        		return Some((ICalSerializer<T>)icalSerializer);
+        	}
         }
         
         return None();

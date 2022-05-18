@@ -53,12 +53,16 @@ public class HtmlModule {
         
         // try an array
         if (obj.getClass().isArray()) {
-            return ((HtmlSerializer<T>)renderables.get(Array.class)).toRenderable(this, obj);
+        	for (HtmlSerializer<?> htmlSerializer: find(Array.class, renderables)) {
+        		return ((HtmlSerializer<T>)htmlSerializer).toRenderable(this, obj);
+        	}
         }
         
         // try a class explicitly marked to be serialized as a bean
         if (obj.getClass().isAnnotationPresent(JsonSerializeAsBean.class)) {
-            return ((HtmlSerializer<T>)renderables.get(JsonSerializeAsBean.class)).toRenderable(this, obj);
+        	for (HtmlSerializer<?> htmlSerializer: find(JsonSerializeAsBean.class, renderables)) {
+    			return ((HtmlSerializer<T>)htmlSerializer).toRenderable(this, obj);
+        	}
         }
         
         throw new RuntimeException("No HTML serializer for type: " + obj.getClass());
