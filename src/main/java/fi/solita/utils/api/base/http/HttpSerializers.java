@@ -353,7 +353,11 @@ public class HttpSerializers {
             try {
                 ret = Duration.parse(source);
             } catch (Exception e) {
-                throw new InvalidValueException("duration", source);
+                try {
+                    ret = Period.parse(source).toStandardDuration();
+                } catch (Exception e1) {
+                    throw new InvalidValueException("duration", source);
+                }
             }
             return ret;
         }
