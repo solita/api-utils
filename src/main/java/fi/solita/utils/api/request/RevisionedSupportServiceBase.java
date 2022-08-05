@@ -11,11 +11,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.Duration;
 
+import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.functional.Option;
 
-public abstract class RevisionedSupportServiceBase extends SupportServiceBase {
+public abstract class RevisionedSupportServiceBase extends SupportServiceBase implements RevisionProvider {
     protected final Duration revisionsRedirectCached;
     private final int revisionCheckTolerance;
     
