@@ -317,6 +317,9 @@ public class HttpSerializers {
                             // loppu ei ollut duration, oletetaan että oli period
                             end = begin.plus((Period)converters().get(Period.class).convert(parts[1]));
                         }
+                        if (end.isAfter(VALID.getEnd())) {
+                            end = VALID.getEnd();
+                        }
                     }
                 } catch (IllegalArgumentException e) {
                     // alku ei ollut aikaleima, oletetaan että loppu on aikaleima
@@ -327,6 +330,9 @@ public class HttpSerializers {
                     } catch (InvalidValueException e1) {
                         // alku ei ollut duration, oletetaan että oli period
                         begin = end.minus((Period)converters().get(Period.class).convert(parts[0]));
+                    }
+                    if (begin.isBefore(VALID.getStart())) {
+                        begin = VALID.getStart();
                     }
                 }
                 
