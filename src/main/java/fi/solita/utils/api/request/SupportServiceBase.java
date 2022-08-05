@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
+import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Set;
@@ -19,6 +20,7 @@ import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
+import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
@@ -127,18 +129,16 @@ public class SupportServiceBase {
         ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
 
-    public Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
-        SerializationFormat format = RequestUtil.resolveFormat(request);
-        response.setContentType(format.mediaType);
-        return Some(new RequestData(format, RequestUtil.getETags(request)));
+    protected Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
+        Either<Option<String>, SerializationFormat> format = RequestUtil.resolveFormat(request);
+        for (SerializationFormat f: format.right) {
+            response.setContentType(f.mediaType);
+            return Some(new RequestData(f, RequestUtil.getETags(request)));
+        }
+        return None();
     }
 
-    public RequestData checkUrlAndResolveFormat(HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
-        checkUrl(request, acceptedParams);
-        return resolveFormat(request, response).get();
-    }
-    
-    public void checkUrl(HttpServletRequest request, String... acceptedParams) {
+    protected void checkUrl(HttpServletRequest request, String... acceptedParams) {
         RequestUtil.checkURL(request, newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
     }
 }

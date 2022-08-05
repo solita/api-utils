@@ -38,34 +38,47 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         redirectToRevision(getCurrentRevision().revision, req, res);
     }
     
-    public Option<Boolean> checkRevision(Revision revision, HttpServletRequest request, HttpServletResponse response) {
-        Revision currentRevision = getCurrentRevision();
+    protected Option<Void> checkRevisions(Revision currentRevision, Revision revision, HttpServletRequest request, HttpServletResponse response) {
         if (!withinTolerance(currentRevision, revision)) {
             ResponseUtil.redirectToAnotherRevision(currentRevision.revision, request, response);
             return None();
         }
-        return Some(true);
+        return Some(null);
     }
     
-    public Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
+    protected Option<Void> checkRevision(Revision revision, HttpServletRequest request, HttpServletResponse response) {
         Revision currentRevision = getCurrentRevision();
-        if (!withinTolerance(currentRevision, revision)) {
-            ResponseUtil.redirectToAnotherRevision(currentRevision.revision, request, response);
-            return None();
-        } else {
-            RequestData data = checkUrlAndResolveFormat(request, response, acceptedParams);
+        return checkRevisions(currentRevision, revision, request, response);
+    }
+    
+    protected Option<Void> checkRevisionAndUrl(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
+        for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
+            checkUrl(request, acceptedParams);
+            return Some(null);
+        }
+        return None();
+    }
+    
+    /**
+     * @throws NotFoundException for unidentified format
+     */
+    protected Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) throws NotFoundException {
+        for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
+            checkUrl(request, acceptedParams);
+            RequestData data = NotFoundException.assertFound(resolveFormat(request, response)).get();
             return Some(new RevisionedRequestData(data.format, data.etags, revision));
         }
+        return None();
     }
-
-    public Option<Boolean> checkRevisionAndUrl(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
-        Revision currentRevision = getCurrentRevision();
-        if (!withinTolerance(currentRevision, revision)) {
-            ResponseUtil.redirectToAnotherRevision(currentRevision.revision, request, response);
-            return None();
-        } else {
-            checkUrl(request, acceptedParams);
-            return Some(true);
-        }
+    
+    /**
+     * @throws NotFoundException for unidentified format
+     */
+    protected Option<RequestData> checkUrlAndResolveFormat(HttpServletRequest request, HttpServletResponse response, String... acceptedParams) throws NotFoundException {
+        checkUrl(request, acceptedParams);
+        Option<RequestData> ret = resolveFormat(request, response);
+        NotFoundException.assertFound(ret);
+        return ret;
     }
+    
 }
