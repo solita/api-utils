@@ -17,7 +17,7 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
                 layer.once('change', function(e) {
                     map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
                 });
-                hover(map, [layer], peek, unpeek);
+                hover(map, peek, unpeek);
                 click(map, [layer], select, unselect);
             }
         });
