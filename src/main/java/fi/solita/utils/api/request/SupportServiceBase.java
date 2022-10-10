@@ -50,7 +50,8 @@ public class SupportServiceBase {
      * @return currentTime() as ISO interval.
      */
     public final String intervalNow() {
-        return now() + "/" + now();
+        String n = now();
+        return n + "/" + n;
     }
 
     public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
