@@ -1,5 +1,6 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
@@ -22,6 +23,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
+import org.joda.time.Interval;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriUtils;
@@ -146,6 +148,11 @@ public abstract class ResponseUtil {
         // path.left == <API version>
         // path.right == <remaining API path, if any?>
         redirect307(path.left() + "/" + revision + path.right(), request, response);
+    }
+    
+    public static void redirectToRevisionAndInterval(HttpServletRequest req, HttpServletResponse res, long revision, Interval interval, Set<String> queryParamsToExclude) {
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(req)));
+        redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
     
     public static void redirectToAnotherRevision(long revision, HttpServletRequest request, HttpServletResponse response) {

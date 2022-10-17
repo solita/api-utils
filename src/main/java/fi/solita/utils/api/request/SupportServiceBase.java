@@ -53,6 +53,14 @@ public class SupportServiceBase {
         String n = now();
         return n + "/" + n;
     }
+    
+    public DateTime adjustTime(DateTime time) {
+        return time;
+    }
+    
+    public Interval adjustTime(Interval time) {
+        return time;
+    }
 
     public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
         DateTime now = currentTime();
@@ -66,10 +74,10 @@ public class SupportServiceBase {
             // create an interval either starting from or ending to current time.
             Pair<Either<Duration, Period>, Boolean> dp = parse(parts[0]);
             for (Duration d: dp.left().left) {
-                redirectToInterval(req, res, intervalForRedirect(currentTime(), d, dp.right()), newSet("duration"));
+                redirectToInterval(req, res, adjustTime(intervalForRedirect(currentTime(), d, dp.right())), newSet("duration"));
             }
             for (Period p: dp.left().right) {
-                redirectToInterval(req, res, intervalForRedirect(currentTime(), p, dp.right()), newSet("duration"));
+                redirectToInterval(req, res, adjustTime(intervalForRedirect(currentTime(), p, dp.right())), newSet("duration"));
             }
         } else if (parts.length == 2) {
             // create an interval where start and end are separately related to current time.
@@ -81,7 +89,7 @@ public class SupportServiceBase {
             } catch (RuntimeException e) {
                 throw new InvalidValueException("duration", durationOrPeriod);
             }
-            redirectToInterval(req, res, interval, newSet("duration"));
+            redirectToInterval(req, res, adjustTime(interval), newSet("duration"));
         } else {
             throw new InvalidValueException("duration", durationOrPeriod);
         }
