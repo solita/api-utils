@@ -280,12 +280,17 @@ public abstract class RequestUtil {
     public static final String API_KEY = "Api-Key";
 
     public static final String instant2string(DateTime instant) {
-        return instant.toString(ISODateTimeFormat.dateTimeNoMillis());
+        return limit(instant).toString(ISODateTimeFormat.dateTimeNoMillis());
     }
     
     public static final String interval2stringRestrictedToInfinity(Interval interval) {
-        return instant2string(interval.getStart().isBefore(HttpSerializers.VALID.getStart()) ? HttpSerializers.VALID.getStart() : interval.getStart()) + "/" + 
-               instant2string(interval.getEnd()  .isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd()   : interval.getEnd());
+        return instant2string(interval.getStart()) + "/" + instant2string(interval.getEnd());
+    }
+    
+    public static final DateTime limit(DateTime dt) {
+        return dt.isBefore(HttpSerializers.VALID.getStart()) ? HttpSerializers.VALID.getStart() :
+               dt.isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd() :
+               dt;
     }
 
     public static final String intervalInfinity() {
