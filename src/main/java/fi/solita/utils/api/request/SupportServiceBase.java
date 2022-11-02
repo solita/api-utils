@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
+import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Set;
@@ -19,6 +20,7 @@ import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
+import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
@@ -48,7 +50,16 @@ public class SupportServiceBase {
      * @return currentTime() as ISO interval.
      */
     public final String intervalNow() {
-        return now() + "/" + now();
+        String n = now();
+        return n + "/" + n;
+    }
+    
+    public DateTime adjustTime(DateTime time) {
+        return time;
+    }
+    
+    public Interval adjustTime(Interval time) {
+        return time;
     }
 
     public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
@@ -63,10 +74,10 @@ public class SupportServiceBase {
             // create an interval either starting from or ending to current time.
             Pair<Either<Duration, Period>, Boolean> dp = parse(parts[0]);
             for (Duration d: dp.left().left) {
-                redirectToInterval(req, res, intervalForRedirect(currentTime(), d, dp.right()), newSet("duration"));
+                redirectToInterval(req, res, adjustTime(intervalForRedirect(currentTime(), d, dp.right())), newSet("duration"));
             }
             for (Period p: dp.left().right) {
-                redirectToInterval(req, res, intervalForRedirect(currentTime(), p, dp.right()), newSet("duration"));
+                redirectToInterval(req, res, adjustTime(intervalForRedirect(currentTime(), p, dp.right())), newSet("duration"));
             }
         } else if (parts.length == 2) {
             // create an interval where start and end are separately related to current time.
@@ -78,7 +89,7 @@ public class SupportServiceBase {
             } catch (RuntimeException e) {
                 throw new InvalidValueException("duration", durationOrPeriod);
             }
-            redirectToInterval(req, res, interval, newSet("duration"));
+            redirectToInterval(req, res, adjustTime(interval), newSet("duration"));
         } else {
             throw new InvalidValueException("duration", durationOrPeriod);
         }
@@ -127,18 +138,16 @@ public class SupportServiceBase {
         ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
 
-    public Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
-        SerializationFormat format = RequestUtil.resolveFormat(request);
-        response.setContentType(format.mediaType);
-        return Some(new RequestData(format, RequestUtil.getETags(request)));
+    protected Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
+        Either<Option<String>, SerializationFormat> format = RequestUtil.resolveFormat(request);
+        for (SerializationFormat f: format.right) {
+            response.setContentType(f.mediaType);
+            return Some(new RequestData(f, RequestUtil.getETags(request)));
+        }
+        return None();
     }
 
-    public RequestData checkUrlAndResolveFormat(HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
-        checkUrl(request, acceptedParams);
-        return resolveFormat(request, response).get();
-    }
-    
-    public void checkUrl(HttpServletRequest request, String... acceptedParams) {
+    protected void checkUrl(HttpServletRequest request, String... acceptedParams) {
         RequestUtil.checkURL(request, newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
     }
 }

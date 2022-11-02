@@ -1,9 +1,8 @@
-var hover = function(map, layers, callbackOver, callbackOut, callbackMultiple) {
+var hover = function(map, callbackOver, callbackOut, callbackMultiple) {
     var hoverInteraction = new ol.interaction.Select({
         hitTolerance: 3,
         multi: true,
-        condition: ol.events.condition.pointerMove,
-        layers: [].concat.apply([], layers.map(function(l) { return (l instanceof ol.layer.Group) ? l.getLayers().getArray() : l; }))
+        condition: ol.events.condition.pointerMove
     });
     map.addInteraction(hoverInteraction);
 

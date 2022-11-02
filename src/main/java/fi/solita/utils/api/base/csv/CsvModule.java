@@ -37,6 +37,10 @@ public class CsvModule {
             return new Cells(repeat("", cols.size()), "").withHeaders(cols);
         }
         
+        if (!Option.class.isAssignableFrom(type) && obj instanceof Option && ((Option<?>)obj).isDefined()) {
+            return serialize(((Option<?>)obj).get(), type);
+        }
+        
         for (CsvSerializer<Object> ser: resolveSerializer(obj.getClass())) {
             Cells ret = ser.render(this, obj);
             if (obj instanceof Option) {

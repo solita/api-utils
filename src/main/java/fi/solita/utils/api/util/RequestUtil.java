@@ -16,8 +16,12 @@ import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Functional.zip;
 import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalA.last;
+import static fi.solita.utils.functional.FunctionalA.map;
+import static fi.solita.utils.functional.FunctionalA.tail;
+import static fi.solita.utils.functional.FunctionalA.zip;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
 import static fi.solita.utils.functional.FunctionalC.reverse;
+import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Option.None;
@@ -46,6 +50,7 @@ import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
@@ -229,14 +234,23 @@ public abstract class RequestUtil {
         return takeWhile(not(equalTo('/')), tail(paths[0]));
     }
 
-    public static final String resolveExtension(String path) {
+    public static final Option<String> resolveExtension(String path) {
         String[] paths = path.split("/");
-        return reverse(takeWhile(not(equalTo('.')), reverse(last(paths))));
+        String lastPathPart = last(paths);
+        if (!lastPathPart.contains(".")) {
+            return None();
+        }
+        return Some(reverse(takeWhile(not(equalTo('.')), reverse(lastPathPart))));
     }
 
-    public static final SerializationFormat resolveFormat(HttpServletRequest request) throws NotFoundException {
-        String extension = resolveExtension(getContextRelativePath(request));
-        return NotFoundException.assertFound(SerializationFormat.valueOfExtension(extension)).get();
+    public static final Either<Option<String>,SerializationFormat> resolveFormat(HttpServletRequest request) throws NotFoundException {
+        for (String extension: resolveExtension(getContextRelativePath(request))) {
+            for (SerializationFormat ext: SerializationFormat.valueOfExtension(extension)) {
+                return Either.right(ext);
+            }
+            return Either.left(Some(extension));
+        }
+        return Either.left(Option.<String>None());
     }
     
     public static final String[] resolveQueryParams(MetaMethod<?, ?> requestMethod) {
@@ -266,12 +280,17 @@ public abstract class RequestUtil {
     public static final String API_KEY = "Api-Key";
 
     public static final String instant2string(DateTime instant) {
-        return instant.toString(ISODateTimeFormat.dateTimeNoMillis());
+        return limit(instant).toString(ISODateTimeFormat.dateTimeNoMillis());
     }
     
     public static final String interval2stringRestrictedToInfinity(Interval interval) {
-        return instant2string(interval.getStart().isBefore(HttpSerializers.VALID.getStart()) ? HttpSerializers.VALID.getStart() : interval.getStart()) + "/" + 
-               instant2string(interval.getEnd()  .isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd()   : interval.getEnd());
+        return instant2string(interval.getStart()) + "/" + instant2string(interval.getEnd());
+    }
+    
+    public static final DateTime limit(DateTime dt) {
+        return dt.isBefore(HttpSerializers.VALID.getStart()) ? HttpSerializers.VALID.getStart() :
+               dt.isAfter (HttpSerializers.VALID.getEnd())   ? HttpSerializers.VALID.getEnd() :
+               dt;
     }
 
     public static final String intervalInfinity() {

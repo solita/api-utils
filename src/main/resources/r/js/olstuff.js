@@ -339,7 +339,7 @@ var olstuff = function(constants, util) {
         
         newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '');
-            u1 = u1.indexOf('.geojson') < 0 ? u1.replace('?', '.geojson?') : u1;
+            u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http') && !u1.startsWith('mml/') ? u1.replace('?', '.geojson?') : u1;
             var instant = new URLSearchParams(window.location.search).get('time');
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
@@ -510,7 +510,7 @@ var olstuff = function(constants, util) {
             return group;
         },
         
-        taustaGroup: function(opacity) {
+        taustaGroup: function(opacity, baseUrl) {
             var parser = new ol.format.WMTSCapabilities();
             var osm = ret.tileLayer('OpenStreetMap', new ol.source.OSM());
             osm.setVisible(true);
@@ -534,7 +534,7 @@ var olstuff = function(constants, util) {
                         if (host !== null) {
                             options.urls[0] = options.urls[0].replace(/[-a-z]+\.[a-z]+\.local/, host)
                                                              .replace(/\d+\.\d+\.\d+\.\d+/, host)
-                                                             .replace('oag.vayla.fi', host);
+                                                             .replace(/[^.]+.maanmittauslaitos.fi/, host);
                         }
                         group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), opacity));
                     }
@@ -542,19 +542,33 @@ var olstuff = function(constants, util) {
               };
             };
             
-            if (window.location.hostname != 'localhost' && window.location.hostname != '127.0.0.1' && window.location.hostname.indexOf('digitraffic.fi') == -1) {
-                var host = window.location.hostname;
-                var baseurl = window.location.protocol + '//' + host;
-                var maasto = baseurl + '/mml/maasto/wmts/1.0.0/WMTSCapabilities.xml';
-                var teema = baseurl + '/mml/teema/wmts/1.0.0/WMTSCapabilities.xml';
-                var kiinteisto = baseurl + '/mml/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
-                var basic = baseurl + '/mml/service/wmts?request=getcapabilities';
-                
-                fetch(maasto)    .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
-                fetch(teema)     .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
-                fetch(kiinteisto).then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', host));
-                fetch(basic)     .then(function(x) { return x.text(); }).then(createLayer('EPSG:3067_PTP', host));
-            }
+            var maasto     = baseUrl + '/maasto/wmts/1.0.0/WMTSCapabilities.xml';
+            var teema      = baseUrl + '/teema/wmts/1.0.0/WMTSCapabilities.xml';
+            var kiinteisto = baseUrl + '/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
+            fetch(maasto)    .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', baseUrl));
+            fetch(teema)     .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', baseUrl));
+            fetch(kiinteisto).then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', baseUrl));
+            
+            return group;
+        },
+        
+        maastotiedotGroup: function(baseUrl) {
+            var collectionsUrl = baseUrl + "/maastotiedot/features/v1/collections";
+            var group = new ol.layer.Group({
+                title: '<span class="fi">Maastotiedot<span><span class="en">Topographic</span>',
+                layers: [],
+                fold: 'close'
+            });
+            
+            fetch(collectionsUrl).then(function(x) { return x.json(); }).then(function(x) {
+                x.collections.forEach(function(c) {
+                    var title = c.title;
+                    var url = collectionsUrl + "/" + c.id + "/items?crs=http://www.opengis.net/def/crs/EPSG/0/3067";
+                    var layer = ret.newVectorLayerNoTile(url, c.id, title, title);
+                    group.getLayers().push(layer);
+                });
+            });
+            
             return group;
         },
         

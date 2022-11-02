@@ -47,6 +47,10 @@ public class ExcelModule {
             return new Cells(cells, "").withHeaders(cols);
         }
         
+        if (!Option.class.isAssignableFrom(type) && obj instanceof Option && ((Option<?>)obj).isDefined()) {
+            return serialize(row, columnIndex, ((Option<?>)obj).get(), type);
+        }
+        
         for (ExcelSerializer<Object> ser: resolveSerializer(obj.getClass())) {
             Cells ret = ser.render(this, row, columnIndex, obj);
             if (obj instanceof Option) {
