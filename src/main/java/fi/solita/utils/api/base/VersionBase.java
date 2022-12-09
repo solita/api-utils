@@ -3,6 +3,7 @@ package fi.solita.utils.api.base;
 import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
+import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.distinct;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
@@ -187,8 +188,8 @@ public abstract class VersionBase {
         return resolveIncludes(format, propertyNames, members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry));
     }
 
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
-        return resolveIncludes(format, propertyNames, members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?>... geometry2) {
+        return resolveIncludes(format, propertyNames, members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, geometry2)));
     }
     
     
