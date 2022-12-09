@@ -20,7 +20,6 @@ import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
-import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
@@ -149,5 +148,9 @@ public class SupportServiceBase {
 
     protected void checkUrl(HttpServletRequest request, String... acceptedParams) {
         RequestUtil.checkURL(request, newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
+    }
+    
+    public void redirectToICal(HttpServletRequest req, HttpServletResponse res, String propertyName) {
+        ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("propertyName", propertyName), Pair.of("srsName", "crs:84")));
     }
 }

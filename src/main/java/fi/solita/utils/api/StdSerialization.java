@@ -160,7 +160,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case ICS:
-            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            response = ical.serialize(req, res, title2fileName(title), mapValues(dataTransformer, data.get()));
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -217,7 +217,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case ICS:
-            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            response = ical.serialize(req, res, title2fileName(title), mapValues(dataTransformer, data.get()));
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -273,7 +273,7 @@ public abstract class StdSerialization<BOUNDS> {
         response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
     case ICS:
-        response = ical.serialize(res, title2fileName(title), mapValue(dataTransformer, data.get()));
+        response = ical.serialize(req, res, title2fileName(title), mapValue(dataTransformer, data.get()));
         break;
     case PNG:
         response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -328,7 +328,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case ICS:
-            response = ical.serialize(res, title2fileName(title), mapValue(dataTransformer, data.get()));
+            response = ical.serialize(req, res, title2fileName(title), mapValue(dataTransformer, data.get()));
             break;
         case PNG:
         case GML:
@@ -397,7 +397,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case ICS:
-            response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+            response = ical.serialize(req, res, title2fileName(title), newList(map(dataTransformer, data.get())));
             break;
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
@@ -466,7 +466,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+                response = ical.serialize(req, res, title2fileName(title), newList(map(dataTransformer, data.get())));
                 break;
             case PNG:
             case GML:
@@ -533,7 +533,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), dataTransformer.apply(data.get()));
+                response = ical.serialize(req, res, title2fileName(title), dataTransformer.apply(data.get()));
                 break;
             case PNG:
             case GML:
@@ -582,7 +582,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case ICS:
-            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            response = ical.serialize(req, res, title2fileName(title), mapValues(dataTransformer, data.get()));
             break;
         case PNG:
         case GML:
@@ -632,7 +632,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case ICS:
-            response = ical.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()));
+            response = ical.serialize(req, res, title2fileName(title), mapValues(dataTransformer, data.get()));
             break;
         case PNG:
         case GML:
@@ -681,7 +681,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+                response = ical.serialize(req, res, title2fileName(title), newList(map(dataTransformer, data.get())));
                 break;
             case PNG:
             case GML:
@@ -728,7 +728,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), dataTransformer.apply(data.get()));
+                response = ical.serialize(req, res, title2fileName(title), dataTransformer.apply(data.get()));
                 break;
             case PNG:
             case GML:
@@ -772,7 +772,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), data);
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), data);
+                response = ical.serialize(req, res, title2fileName(title), data);
                 break;
             case PNG:
             case GML:
@@ -821,7 +821,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())));
+                response = ical.serialize(req, res, title2fileName(title), newList(map(dataTransformer, data.get())));
                 break;
             case PNG:
             case XML:
@@ -868,7 +868,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case ICS:
-                response = ical.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
+                response = ical.serialize(req, res, title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case PNG:
             case XML:
