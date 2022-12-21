@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.distinct;
+import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.Option.Some;
@@ -173,9 +174,9 @@ public abstract class VersionBase {
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         Includes<T> includesFromPropertyNames =
                   Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<HttpServletRequest>None()), format, propertyNames,                                    members, builders, geometries, false);
-        Includes<T> includesFromFilters = filters == null || filters.filters.isEmpty()
+        Includes<T> includesFromFilters = filters == null || filters.or.isEmpty()
                 ? Includes.<T>none()
-                : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<HttpServletRequest>None()), format, distinct(map(Filter_.property, filters.filters)), members, builders, geometries, true);
+                : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<HttpServletRequest>None()), format, distinct(map(Filter_.property, flatten(filters.or))), members, builders, geometries, true);
         
         return new Includes<T>(includesFromPropertyNames.includes(), includesFromFilters.includes(), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, builders);
     }

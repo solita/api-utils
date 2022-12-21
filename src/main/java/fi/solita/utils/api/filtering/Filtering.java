@@ -2,6 +2,7 @@ package fi.solita.utils.api.filtering;
 
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newSet;
@@ -23,7 +24,6 @@ import static fi.solita.utils.functional.Predicates.not;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.regex.Pattern;
@@ -78,32 +78,35 @@ public class Filtering {
             return Constraints.empty();
         }
         
-        Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> c = newMutableMap();
+        Set<FilterType> spatialFilters = newSet(map(Filter_.pattern, flatten(filters.spatialFilters())));
         
-        Set<FilterType> spatialFilters = newSet(map(Filter_.pattern, filters.spatialFilters()));
-        
-        for (Entry<FilterType, List<Filter>> f: groupBy(Filter_.pattern, filters.filters).entrySet()) {
-            List<Pair<MetaNamedMember<T, Object>, List<Object>>> lst = Collections.<Pair<MetaNamedMember<T,Object>,List<Object>>>newMutableList();
-            c.put(f.getKey(), lst);
-            // leave out function calls, since the functions aren't found in the database anyway
-            for (Filter filter: filter(not(Filter_.property.andThen(PropertyName_.isFunctionCall)), f.getValue())) {
-                MetaNamedMember<T,Object> member;
-                try {
-                    member = (MetaNamedMember<T, Object>) Assert.singleton(
-                        newSet(filter(MemberUtil_.memberName.andThen(equalTo(filter.property.toProperty(fp).getValue())),
-                            includes.includesFromRowFiltering)));
-                } catch (UnknownPropertyNameException e) {
-                    throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
-                }
-                if (!spatialFilters.contains(filter.pattern)) {
-                    // leave spatial filters out from constraints for now
-                    Class<?> targetType = resolveTargetType(filter, member);
-                    lst.add(Pair.of(member, newList(map(Filtering_.convert().ap(this, targetType), filter.literals))));
+        List<Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>>> or = newMutableList();
+        for (List<Filter> and: filters.or) {
+            Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> c = newMutableMap();
+            for (Map.Entry<FilterType, List<Filter>> f: groupBy(Filter_.pattern, and).entrySet()) {
+                List<Pair<MetaNamedMember<T, Object>, List<Object>>> lst = Collections.<Pair<MetaNamedMember<T,Object>,List<Object>>>newMutableList();
+                c.put(f.getKey(), lst);
+                // leave out function calls, since the functions aren't found in the database anyway
+                for (Filter filter: filter(not(Filter_.property.andThen(PropertyName_.isFunctionCall)), f.getValue())) {
+                    MetaNamedMember<T,Object> member;
+                    try {
+                        member = (MetaNamedMember<T, Object>) Assert.singleton(
+                            newSet(filter(MemberUtil_.memberName.andThen(equalTo(filter.property.toProperty(fp).getValue())),
+                                includes.includesFromRowFiltering)));
+                    } catch (UnknownPropertyNameException e) {
+                        throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
+                    }
+                    if (!spatialFilters.contains(filter.pattern)) {
+                        // leave spatial filters out from constraints for now
+                        Class<?> targetType = resolveTargetType(filter, member);
+                        lst.add(Pair.of(member, newList(map(Filtering_.convert().ap(this, targetType), filter.literals))));
+                    }
                 }
             }
+            or.add(c);
         }
         
-        return new Constraints<T>(c);
+        return new Constraints<T>(or);
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -226,12 +229,11 @@ public class Filtering {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T> Iterable<T> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Iterable<T> ts) {
-        if (filters == null) {
-            return ts;
-        }
-        
-        for (Filter filter: filters.filters) {
+    public final <T> Predicate<T> buildPredicate(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters) {
+        Predicate<T> predicate = Predicate.<T>of(Function.<T,Boolean>constant(false));
+        for (List<Filter> and: filters.or) {
+          Predicate<T> pred = Predicate.<T>of(Function.<T,Boolean>constant(true));
+          for (Filter filter: and) {
             if (filter.pattern == FilterType.INTERSECTS) {
                 if (MemberUtil.toMembers(resolvableMemberProvider, fp, false, geometryMembers, filter.property).isEmpty()) {
                     throw new SpatialFilteringRequiresGeometryPropertyException(filter.property, newSet(map(MemberUtil_.memberName, geometryMembers)));
@@ -257,53 +259,63 @@ public class Filtering {
                 }
                 
                 if (filter.pattern == FilterType.EQUAL) {
-                    ts = equal(member, Assert.singleton(filter.literals), targetType, ts);
+                    pred = pred.and(equal(member, Assert.singleton(filter.literals), targetType));
                 } else if (filter.pattern == FilterType.NOT_EQUAL) {
-                    ts = notEqual(member, Assert.singleton(filter.literals), targetType, ts);
+                    pred = pred.and(notEqual(member, Assert.singleton(filter.literals), targetType));
                 } else if (filter.pattern == FilterType.LT) {
-                    ts = lt((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType, ts);
+                    pred = pred.and(lt((MetaNamedMember<T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType));
                 } else if (filter.pattern == FilterType.GT) {
-                    ts = gt((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType, ts);
+                    pred = pred.and(gt((MetaNamedMember<T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType));
                 } else if (filter.pattern == FilterType.LTE) {
-                    ts = lte((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType, ts);
+                    pred = pred.and(lte((MetaNamedMember<T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType));
                 } else if (filter.pattern == FilterType.GTE) {
-                    ts = gte((MetaNamedMember<? super T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType, ts);
+                    pred = pred.and(gte((MetaNamedMember<T,? extends Comparable>)member, Assert.singleton(filter.literals), targetType));
                 } else if (filter.pattern == FilterType.BETWEEN) {
                     Pair<Literal, Literal> vals = Match.pair(filter.literals).success.get();
-                    ts = between((MetaNamedMember<? super T,? extends Comparable>)member, vals.left(), vals.right(), targetType, ts);
+                    pred = pred.and(between((MetaNamedMember<T,? extends Comparable>)member, vals.left(), vals.right(), targetType));
                 } else if (filter.pattern == FilterType.NOT_BETWEEN) {
                     Pair<Literal, Literal> vals = Match.pair(filter.literals).success.get();
-                    ts = notBetween((MetaNamedMember<? super T,? extends Comparable>)member, vals.left(), vals.right(), targetType, ts);
+                    pred = pred.and(notBetween((MetaNamedMember<T,? extends Comparable>)member, vals.left(), vals.right(), targetType));
                 
                 } else if (filter.pattern == FilterType.LIKE) {
-                    ts = like((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.literals).getValue().left.get(), ts);
+                    pred = pred.and(like((MetaNamedMember<T,String>)member, Assert.singleton(filter.literals).getValue().left.get()));
                 } else if (filter.pattern == FilterType.NOT_LIKE) {
-                    ts = notLike((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.literals).getValue().left.get(), ts);
+                    pred = pred.and(notLike((MetaNamedMember<T,String>)member, Assert.singleton(filter.literals).getValue().left.get()));
                 } else if (filter.pattern == FilterType.ILIKE) {
-                    ts = ilike((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.literals).getValue().left.get(), ts);
+                    pred = pred.and(ilike((MetaNamedMember<T,String>)member, Assert.singleton(filter.literals).getValue().left.get()));
                 } else if (filter.pattern == FilterType.NOT_ILIKE) {
-                    ts = notILike((MetaNamedMember<? super T,String>)member, Assert.singleton(filter.literals).getValue().left.get(), ts);
+                    pred = pred.and(notILike((MetaNamedMember<T,String>)member, Assert.singleton(filter.literals).getValue().left.get()));
                     
                 } else if (filter.pattern == FilterType.IN) {
-                    ts = in(member, filter.literals, targetType, ts);
+                    pred = pred.and(in(member, filter.literals, targetType));
                 } else if (filter.pattern == FilterType.NOT_IN) {
-                    ts = notIn(member, filter.literals, targetType, ts);
+                    pred = pred.and(notIn(member, filter.literals, targetType));
                 } else if (filter.pattern == FilterType.NULL) {
                     if (!filter.literals.isEmpty()) {
                         throw new IllegalArgumentException("Should be empty");
                     }
-                    ts = isNull(member, ts);
+                    pred = pred.and(isNull(member));
                 } else if (filter.pattern == FilterType.NOT_NULL) {
                     if (!filter.literals.isEmpty()) {
                         throw new IllegalArgumentException("Should be empty");
                     }
-                    ts = isNotNull(member, ts);
+                    pred = pred.and(isNotNull(member));
                 } else {
                     throw new UnsupportedOperationException("Not implemented: " + filter.pattern);
                 }
             }
+          }
+          predicate = predicate.or(pred);
         }
-        return ts;
+        return predicate;
+    }
+    
+    public <T> Iterable<T> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Iterable<T> ts) {
+        if (filters == null) {
+            return ts;
+        }
+        
+        return filter(buildPredicate(includes, geometryMembers, filters), ts);
     }
 
     private <T> Class<?> resolveTargetType(Filter filter, MetaNamedMember<? super T, ?> member) {
@@ -346,75 +358,75 @@ public class Filtering {
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V> Iterable<T> equal(MetaNamedMember<? super T,V> member, Literal value, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, equalTo((V)convert(targetType, value))))), ts);
+    public <T,V> Predicate<T> equal(MetaNamedMember<T,V> member, Literal value, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, equalTo((V)convert(targetType, value))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V> Iterable<T> notEqual(MetaNamedMember<? super T,V> member, Literal value, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(equalTo((V)convert(targetType, value)))))), ts);
+    public <T,V> Predicate<T> notEqual(MetaNamedMember<T,V> member, Literal value, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(equalTo((V)convert(targetType, value)))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V extends Comparable<V>> Iterable<T> lt(MetaNamedMember<? super T,V> member, Literal value, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, lessThan((V)convert(targetType, value))))), ts);
+    public <T,V extends Comparable<V>> Predicate<T> lt(MetaNamedMember<T,V> member, Literal value, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, lessThan((V)convert(targetType, value))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V extends Comparable<V>> Iterable<T> gt(MetaNamedMember<? super T,V> member, Literal value, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, greaterThan((V)convert(targetType, value))))), ts);
+    public <T,V extends Comparable<V>> Predicate<T> gt(MetaNamedMember<T,V> member, Literal value, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, greaterThan((V)convert(targetType, value))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V extends Comparable<V>> Iterable<T> gte(MetaNamedMember<? super T,V> member, Literal value, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, greaterThanOrEqualTo((V)convert(targetType, value))))), ts);
+    public <T,V extends Comparable<V>> Predicate<T> gte(MetaNamedMember<T,V> member, Literal value, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, greaterThanOrEqualTo((V)convert(targetType, value))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V extends Comparable<V>> Iterable<T> lte(MetaNamedMember<? super T,V> member, Literal value, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, lessThanOrEqualTo((V)convert(targetType, value))))), ts);
+    public <T,V extends Comparable<V>> Predicate<T> lte(MetaNamedMember<T,V> member, Literal value, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, lessThanOrEqualTo((V)convert(targetType, value))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V extends Comparable<V>> Iterable<T> between(MetaNamedMember<? super T,V> member, Literal value1, Literal value2, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, Predicates.between((V)convert(targetType, value1), (V)convert(targetType, value2))))), ts);
+    public <T,V extends Comparable<V>> Predicate<T> between(MetaNamedMember<T,V> member, Literal value1, Literal value2, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, Predicates.between((V)convert(targetType, value1), (V)convert(targetType, value2))))));
     }
     
     @SuppressWarnings("unchecked")
-    public <T,V extends Comparable<V>> Iterable<T> notBetween(MetaNamedMember<? super T,V> member, Literal value1, Literal value2, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(Predicates.between((V)convert(targetType, value1), (V)convert(targetType, value2)))))), ts);
+    public <T,V extends Comparable<V>> Predicate<T> notBetween(MetaNamedMember<T,V> member, Literal value1, Literal value2, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(Predicates.between((V)convert(targetType, value1), (V)convert(targetType, value2)))))));
     }
     
-    public <T> Iterable<T> like(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))), ts);
+    public <T> Predicate<T> like(MetaNamedMember<T,String> member, String likePattern) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))));
     }
     
-    public <T> Iterable<T> notLike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*")))))), ts);
+    public <T> Predicate<T> notLike(MetaNamedMember<T,String> member, String likePattern) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*")))))));
     }
     
-    public <T> Iterable<T> ilike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))), ts);
+    public <T> Predicate<T> ilike(MetaNamedMember<T,String> member, String likePattern) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))));
     }
     
-    public <T> Iterable<T> notILike(MetaNamedMember<? super T,String> member, String likePattern, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*")))))), ts);
+    public <T> Predicate<T> notILike(MetaNamedMember<T,String> member, String likePattern) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*")))))));
     }
     
-    public <T,V> Iterable<T> in(MetaNamedMember<? super T,V> member, List<Literal> values, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, targetType), values)))))), ts);
+    public <T,V> Predicate<T> in(MetaNamedMember<T,V> member, List<Literal> values, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, targetType), values)))))));
     }
     
-    public <T,V> Iterable<T> notIn(MetaNamedMember<? super T,V> member, List<Literal> values, Class<?> targetType, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, targetType), values))))))), ts);
+    public <T,V> Predicate<T> notIn(MetaNamedMember<T,V> member, List<Literal> values, Class<?> targetType) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.<V>unwrapOption()).andThen(not(Predicates.<V>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.contains.ap(newSet(map(Filtering_.<V>convert().ap(this, targetType), values))))))));
     }
     
-    public <T,V> Iterable<T> isNull(MetaNamedMember<? super T,?> member, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(Filtering_.isNullOrEmpty), ts);
+    public <T,V> Predicate<T> isNull(MetaNamedMember<T,?> member) {
+        return Predicate.of(Function.of(member).andThen(Filtering_.isNullOrEmpty));
     }
     
-    public <T> Iterable<T> isNotNull(MetaNamedMember<? super T,?> member, Iterable<T> ts) {
-        return filter(Function.of(member).andThen(not(Filtering_.isNullOrEmpty)), ts);
+    public <T> Predicate<T> isNotNull(MetaNamedMember<T,?> member) {
+        return Predicate.of(Function.of(member).andThen(not(Filtering_.isNullOrEmpty)));
     }
     
     @SuppressWarnings("unchecked")

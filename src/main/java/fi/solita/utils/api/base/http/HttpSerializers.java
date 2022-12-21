@@ -172,7 +172,7 @@ public class HttpSerializers {
     private final Converter<String,Filters> filter = new Converter<String, Filters>() {
         @Override
         public Filters convert(String source) {
-            List<Filter> filters = FilterParser.parse(source);
+            List<List<Filter>> filters = FilterParser.parse(source);
             if (!filters.isEmpty()) {
                 return new Filters(filters);
             }
