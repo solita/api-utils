@@ -15,6 +15,8 @@ import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
+import static fi.solita.utils.functional.Option.None;
+import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.greaterThan;
 import static fi.solita.utils.functional.Predicates.greaterThanOrEqualTo;
@@ -229,8 +231,8 @@ public class Filtering {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public final <T> Predicate<T> buildPredicate(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters) {
-        Predicate<T> predicate = Predicate.<T>of(Function.<T,Boolean>constant(false));
+    public final <T> Option<Predicate<T>> buildPredicate(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters) {
+        Option<Predicate<T>> predicate = None();
         for (List<Filter> and: filters.or) {
           Predicate<T> pred = Predicate.<T>of(Function.<T,Boolean>constant(true));
           for (Filter filter: and) {
@@ -305,7 +307,11 @@ public class Filtering {
                 }
             }
           }
-          predicate = predicate.or(pred);
+          if (predicate.isDefined()) {
+              predicate = Some(predicate.get().or(pred));
+          } else {
+              predicate = Some(pred);
+          }
         }
         return predicate;
     }
@@ -315,7 +321,7 @@ public class Filtering {
             return ts;
         }
         
-        return filter(buildPredicate(includes, geometryMembers, filters), ts);
+        return filter(buildPredicate(includes, geometryMembers, filters).getOrElse(Predicate.<T>of(Function.<T,Boolean>constant(true))), ts);
     }
 
     private <T> Class<?> resolveTargetType(Filter filter, MetaNamedMember<? super T, ?> member) {
