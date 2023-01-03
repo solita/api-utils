@@ -10,6 +10,10 @@ import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
+import static springfox.documentation.schema.Collections.collectionElementType;
+import static springfox.documentation.schema.Collections.containerType;
+import static springfox.documentation.schema.Collections.isContainerType;
+import static springfox.documentation.schema.Types.typeNameFor;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.AnnotatedElement;
@@ -43,6 +47,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
+import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 
 import fi.solita.utils.api.Documentation;
@@ -72,6 +77,7 @@ import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.schema.AlternateTypeRules;
 import springfox.documentation.schema.ModelRef;
+import springfox.documentation.schema.ModelReference;
 import springfox.documentation.service.AllowableListValues;
 import springfox.documentation.service.AllowableRangeValues;
 import springfox.documentation.service.ApiKey;
@@ -363,6 +369,29 @@ public abstract class SwaggerSupport extends ApiResourceController {
         @Override
         public final void apply(ParameterContext parameterContext) {
             Class<?> type = parameterContext.resolvedMethodParameter().getParameterType().getErasedType();
+            if (Option.class.equals(type)) {
+                ResolvedType resolvedActual = head(parameterContext.resolvedMethodParameter().getParameterType().getTypeParameters());
+                type = resolvedActual.getErasedType();
+                String typeName = typeNameFor(resolvedActual.getErasedType());
+                if (typeName == null) {
+                    typeName = "string";
+                }
+                ModelReference itemModel = null;
+                if (isContainerType(resolvedActual)) {
+                  ResolvedType elementType = collectionElementType(resolvedActual);
+                  String itemTypeName = typeNameFor(elementType.getErasedType());
+                  if (itemTypeName == null) {
+                      itemTypeName = typeNameFor(parameterContext.alternateFor(elementType).getErasedType());
+                  }
+                  typeName = containerType(resolvedActual);
+                  itemModel = new ModelRef(itemTypeName);
+                }
+                parameterContext.parameterBuilder().required(false)
+                                                   .type(resolvedActual)
+                                                   .allowMultiple(isContainerType(resolvedActual))
+                                                   .modelRef(new ModelRef(typeName, itemModel));
+            }
+            
             Option<String> pathVariableName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orElse(null)).map(CustomTypeParameterBuilder_.pathVariableName);
             Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orElse(null)).map(CustomTypeParameterBuilder_.requestParamName);
             apply(parameterContext, type, pathVariableName, requestParamName);

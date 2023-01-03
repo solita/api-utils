@@ -74,6 +74,10 @@ public class Filtering {
         this.fp = fp;
     }
     
+    public <T> Constraints<T> with(Option<Filters> filters, Includes<T> includes) {
+        return with(filters.getOrElse(Filters.EMPTY), includes);
+    }
+    
     @SuppressWarnings({ "unchecked" })
     public <T> Constraints<T> with(Filters filters, Includes<T> includes) {
         if (filters == null) {
@@ -186,7 +190,7 @@ public class Filtering {
     }
     
     public <K,T> Map<K,T> filterDataSingle(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Map<K,T> ts) {
-        if (filters == null) {
+        if (filters == null || filters.or.isEmpty()) {
             return ts;
         }
         Map<K, T> ret = newMutableLinkedMap();
@@ -199,7 +203,7 @@ public class Filtering {
     }
     
     public <K,T,V extends Iterable<T>> Map<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, Map<K,V> ts) {
-        if (filters == null) {
+        if (filters == null || filters.or.isEmpty()) {
             return ts;
         }
         Map<K, V> ret = newMutableLinkedMap();
@@ -213,7 +217,7 @@ public class Filtering {
     }
     
     public <K,T,V extends Iterable<T>> SortedMap<K,V> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, SortedMap<K,V> ts) {
-        if (filters == null) {
+        if (filters == null || filters.or.isEmpty()) {
             return ts;
         }
         SortedMap<K, V> ret = newMutableSortedMap(ts.comparator());

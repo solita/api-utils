@@ -100,6 +100,11 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     public <SUB extends T> Includes<SUB> cast(Builder<?>[] subtypeBuilders) {
         return new Includes(includesFromColumnFiltering, includesFromRowFiltering, geometryMembers, false, subtypeBuilders);
     }
+    
+    @Deprecated
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
+        return resolveIncludes(provider, fp, format, Option.of(propertyNames), members, builders, geometries, onlyExact);
+    }
 
     /**
      * 
@@ -108,19 +113,20 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      * @param propertyNames Filtering given by the API user. Empty if not given.
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
+    @SuppressWarnings("unchecked")
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         
-        if (propertyNames != null && newList(propertyNames).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames)).size()) {
-            throw new RedundantPropertiesException(newSortedSet(flatten(filter(Transformers.size.andThen(greaterThan(1l)), group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames)))))));
+        if (propertyNames.isDefined() && newList(propertyNames.get()).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())).size()) {
+            throw new RedundantPropertiesException(newSortedSet(flatten(filter(Transformers.size.andThen(greaterThan(1l)), group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())))))));
         }
         
-        if (propertyNames != null && (Functional.isEmpty(propertyNames) ||
-                                      size(propertyNames) == 1 && head(propertyNames).isEmpty(fp))) {
+        if (propertyNames.isDefined() && (Functional.isEmpty(propertyNames.get()) ||
+                                          size(propertyNames.get()) == 1 && head(propertyNames.get()).isEmpty(fp))) {
             // propertyNames is empty or contains only the empty string
             ret = emptyList();
-        } else if (propertyNames == null || forall(PropertyName_.isExclusion, propertyNames)) {
+        } else if (!propertyNames.isDefined() || forall(PropertyName_.isExclusion, propertyNames.get())) {
             // if no propertyNames given, or given but contains only exclusions:
             
             // For PNG exclude everything (geometry included back in the end)
@@ -143,11 +149,11 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     ret = Includes.withNestedMembers(members, Includes.Include.All, builders);
                     break;
             }
-            if (propertyNames == null) {
+            if (!propertyNames.isDefined()) {
                 includesEverything = true;
             }
         } else {
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), propertyNames)));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList()))));
         }
         
         // Include geometries for png/geojson/gml even if not explicitly requested
@@ -170,7 +176,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         }
         
         // Exclusions. Also excludes geometries if explicitly excluded.
-        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, false, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, propertyNames))));
+        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, false, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList())))));
         ret = newList(subtract(ret, toRemove));
         if (toRemove != null) {
             for (MetaNamedMember<?,?> m: toRemove) {
