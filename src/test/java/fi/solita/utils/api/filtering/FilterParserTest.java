@@ -11,13 +11,14 @@ import org.junit.Test;
 
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.functional.Collections;
 
 public class FilterParserTest {
     
     private static final PropertyName FOO = PropertyName.of("foo");
 
-    private List<Filter> someFilter(String value) {
-        return newList(new Filter(FilterType.EQUAL, FOO, Literal.of(value)));
+    private List<List<Filter>> someFilter(String value) {
+        return Collections.<List<Filter>>newList(newList(new Filter(FilterType.EQUAL, FOO, Literal.of(value))));
     }
     
     @Test
@@ -60,14 +61,14 @@ public class FilterParserTest {
     
     @Test
     public void parsesPolygon() {
-        assertEquals(newList(new Filter(FilterType.INTERSECTS, FOO, Literal.of("POLYGON((30 10,40 40,20 40,10 20,30 10))"))), FilterParser.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20,30 10)))"));
+        assertEquals(Collections.<List<Filter>>newList(newList(new Filter(FilterType.INTERSECTS, FOO, Literal.of("POLYGON((30 10,40 40,20 40,10 20,30 10))")))), FilterParser.parse("INTERSECTS(foo,POLYGON((30 10,40 40,20 40,10 20,30 10)))"));
     }
     
     @Test
     public void parsesMultiple() {
-        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2"))), FilterParser.parse("foo=1 AND foo=2"));
-        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")), new Filter(FilterType.EQUAL, FOO, Literal.of("3"))), FilterParser.parse("foo=1 AND foo=2 AND foo=3"));
-        assertEquals(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")), new Filter(FilterType.EQUAL, FOO, Literal.of("3")), new Filter(FilterType.EQUAL, FOO, Literal.of("4")), new Filter(FilterType.EQUAL, FOO, Literal.of("5"))), FilterParser.parse("foo=1 AND foo=2 AND foo=3 AND foo=4 AND foo=5"));
+        assertEquals(Collections.<List<Filter>>newList(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")))), FilterParser.parse("foo=1 AND foo=2"));
+        assertEquals(Collections.<List<Filter>>newList(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")), new Filter(FilterType.EQUAL, FOO, Literal.of("3")))), FilterParser.parse("foo=1 AND foo=2 AND foo=3"));
+        assertEquals(Collections.<List<Filter>>newList(newList(new Filter(FilterType.EQUAL, FOO, Literal.of("1")), new Filter(FilterType.EQUAL, FOO, Literal.of("2")), new Filter(FilterType.EQUAL, FOO, Literal.of("3")), new Filter(FilterType.EQUAL, FOO, Literal.of("4")), new Filter(FilterType.EQUAL, FOO, Literal.of("5")))), FilterParser.parse("foo=1 AND foo=2 AND foo=3 AND foo=4 AND foo=5"));
     }
     
     @Test

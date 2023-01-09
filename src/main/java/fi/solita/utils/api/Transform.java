@@ -1,7 +1,10 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.newArray;
+import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatten;
+import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
@@ -29,8 +32,10 @@ import fi.solita.utils.functional.lens.Setter;
 public class Transform {
     public static <BOUNDS> BOUNDS resolveBounds(BOUNDS bbox, Filters filters, Apply<String,BOUNDS> fromWKT) {
         if (filters != null) {
-            List<Filter> spatialFilters = filters.spatialFilters();
-            Assert.lessThanOrEqual(spatialFilters.size(), 1);
+            List<List<Filter>> allSpatialFilters = filters.spatialFilters();
+            List<Filter> spatialFilters = newList(flatten(allSpatialFilters));
+            Assert.lessThanOrEqual(spatialFilters.size(), 1);                // multiple spatial constraints not supported.
+            Assert.True(spatialFilters.isEmpty() || filters.or.size() <= 1); // OR queries with spatial constraints not supported.
             for (Filter intersect: filter(Filter_.pattern.andThen(equalTo(FilterType.INTERSECTS)), spatialFilters)) {
                 Assert.Null(bbox, "BBOX cannot be given together with spatial filtering");
                 Literal wkt = Assert.singleton(intersect.literals);

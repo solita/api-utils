@@ -3,6 +3,7 @@ package fi.solita.utils.api;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.size;
+import static fi.solita.utils.functional.Option.Some;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -25,6 +26,7 @@ import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
+import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaFieldProperty;
@@ -88,77 +90,77 @@ public class IncludesTest {
     @Test
     public void resolveIncludes_returnsAllForNullPropertyNames() {
         List<MetaFieldProperty<FooDto, String>> members = newList(FooDto_.bar);
-        assertEquals(members, Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, null, members, new Builder[] {}, noGeometries, false).includes());
+        assertEquals(members, Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Option.<Iterable<PropertyName>>None(), members, new Builder[] {}, noGeometries, false).includes());
     }
     
     @Test
     public void resolveIncludes_returnsNothingForEmptyPropertyNames() {
-        assertTrue(isEmpty(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Collections.<PropertyName>emptyList(), newList(FooDto_.bar), new Builder[] {}, noGeometries, false).includes()));
+        assertTrue(isEmpty(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(Collections.<PropertyName>emptyList()), newList(FooDto_.bar), new Builder[] {}, noGeometries, false).includes()));
     }
     
     @Test
     public void resolveIncludes_returnsNothingForSingletonEmptyStringPropertyName() {
-        assertTrue(isEmpty(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("")), newList(FooDto_.bar), new Builder[] {}, noGeometries, false).includes()));
+        assertTrue(isEmpty(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of(""))), newList(FooDto_.bar), new Builder[] {}, noGeometries, false).includes()));
     }
     
     @Test
     public void resolveIncludes_excludesGivenExclusionFromAll() {
         List<MetaFieldProperty<FooDto,?>> input = newList(FooDto_.bar, FooDto_.someId);
         List<MetaFieldProperty<FooDto,String>> output = newList(FooDto_.bar);
-        assertEquals(output, Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("-someId")), input, new Builder[] {}, noGeometries, false).includes());
+        assertEquals(output, Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("-someId"))), input, new Builder[] {}, noGeometries, false).includes());
     }
     
     @Test(expected = RedundantPropertiesException.class)
     public void resolveIncludes_failsForDuplicates() {
-        Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("bar"),PropertyName.of("bar")), newList(FooDto_.bar), new Builder[] {}, noGeometries, false);
+        Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("bar"),PropertyName.of("bar"))), newList(FooDto_.bar), new Builder[] {}, noGeometries, false);
     }
     
     @Test(expected = RedundantPropertiesException.class)
     public void resolveIncludes_failsForDuplicateResolvables() {
-        Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("bar.a"),PropertyName.of("bar.a")), newList(FooDto_.bar), new Builder[] {}, noGeometries, false);
+        Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("bar.a"),PropertyName.of("bar.a"))), newList(FooDto_.bar), new Builder[] {}, noGeometries, false);
     }
     
     @Test(expected = RedundantPropertiesException.class)
     public void resolveIncludes_failsForDuplicateExclusions() {
-        Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("-bar"),PropertyName.of("-bar")), newList(FooDto_.bar), new Builder[] {}, noGeometries, false);
+        Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("-bar"),PropertyName.of("-bar"))), newList(FooDto_.bar), new Builder[] {}, noGeometries, false);
     }
     
     @Test
     public void resolveIncludes_resolvesField() {
-        assertEquals(1, size(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("bar")), newList(FooDto_.bar), new Builder[] {}, noGeometries, false)));
+        assertEquals(1, size(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("bar"))), newList(FooDto_.bar), new Builder[] {}, noGeometries, false)));
     }
     
     @Test(expected = UnknownPropertyNameException.class)
     public void resolveIncludes_failsForNonIdentifierNonExistent() {
-        assertTrue(isEmpty(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, newList(PropertyName.of("nonexistent")), newList(FooDto_.bar), new Builder[] {}, noGeometries, false)));
+        assertTrue(isEmpty(Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("nonexistent"))), newList(FooDto_.bar), new Builder[] {}, noGeometries, false)));
     }
     
     @Test
     public void resolveIncludes_resolvesNonExistentIdentifiersAsExternal() {
-        assertEquals(1, size(Includes.resolveIncludes(externalProvider, FunctionProvider.NONE, someFormat, newList(PropertyName.of("someId.someUnknownField")), newList(FooDto_.someId), new Builder[] {}, noGeometries, false)));
+        assertEquals(1, size(Includes.resolveIncludes(externalProvider, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("someId.someUnknownField"))), newList(FooDto_.someId), new Builder[] {}, noGeometries, false)));
     }
     
     @Test
     public void resolveIncludes_resolvedAreGrouped() {
         List<MetaFieldProperty<FooDto,?>> input = newList(FooDto_.bar, FooDto_.someId);
-        assertEquals(2, size(Includes.resolveIncludes(externalProvider, FunctionProvider.NONE, someFormat, newList(PropertyName.of("someId.someUnknownField"),PropertyName.of("bar"),PropertyName.of("someId.someOtherUnknownField")), input, new Builder[] {}, noGeometries, false)));
+        assertEquals(2, size(Includes.resolveIncludes(externalProvider, FunctionProvider.NONE, someFormat, Some(newList(PropertyName.of("someId.someUnknownField"),PropertyName.of("bar"),PropertyName.of("someId.someOtherUnknownField"))), input, new Builder[] {}, noGeometries, false)));
     }
     
     
     @Test
     public void resolveIncludes_handlesRound() {
-        Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, newList(PropertyName.of("round(baz)")), newList(FooDto_.baz), new Builder[] {}, noGeometries, false);
+        Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, Some(newList(PropertyName.of("round(baz)"))), newList(FooDto_.baz), new Builder[] {}, noGeometries, false);
         assertTrue(Assert.singleton(includes.includes()) instanceof FunctionCallMember);
     }
     
     @Test(expected = FunctionProvider.UnknownFunctionException.class)
     public void resolveIncludes_failsForUnknownFunction() {
-        Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, newList(PropertyName.of("unknown_function(baz)")), newList(FooDto_.baz), new Builder[] {}, noGeometries, false);
+        Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, Some(newList(PropertyName.of("unknown_function(baz)"))), newList(FooDto_.baz), new Builder[] {}, noGeometries, false);
     }
     
     @Test
     public void withPropertiesF_appliesFunction() {
-        Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, newList(PropertyName.of("round(baz)")), FooDto.FIELDS, FooDto.BUILDERS, noGeometries, false);
+        Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, Some(newList(PropertyName.of("round(baz)"))), FooDto.FIELDS, FooDto.BUILDERS, noGeometries, false);
         Function1<FooDto, FooDto> mapper = ModificationUtils.withPropertiesF(includes, new FunctionProvider());
         FooDto foo = new FooDto("", new External(), 3.14);
         assertEquals(Double.valueOf(3.0), mapper.apply(foo).baz);

@@ -82,86 +82,91 @@ public class FilterParser {
 
     private static final Pattern inlist        = Pattern.compile("(" + literal + "),");
     
-    public static final List<Filter> parse(String cql_filter) throws IllegalFilterException {
-        cql_filter += " AND ";
-        List<Filter> filters = newMutableList();
+    public static final List<List<Filter>> parse(String cql_filters) throws IllegalFilterException {
+        List<List<Filter>> or = newMutableList();
         
-        for (Pattern p: newList(EQUAL, NOT_EQUAL, LT, GT, LTE, GTE)) {
-            Matcher matcher = p.matcher(cql_filter);
-            while (matcher.find()) {
-                filters.add(new Filter(p == EQUAL     ? FilterType.EQUAL :
-                                       p == NOT_EQUAL ? FilterType.NOT_EQUAL :
-                                       p == LT        ? FilterType.LT :
-                                       p == GT        ? FilterType.GT :
-                                       p == LTE       ? FilterType.LTE :
-                                       p == GTE       ? FilterType.GTE : null,
-                                       PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2))));
-            }
-            cql_filter = matcher.replaceAll("");
-        }
-        
-        for (Pattern p: newList(BETWEEN, NOT_BETWEEN)) {
-            Matcher matcher = p.matcher(cql_filter);
-            while (matcher.find()) {
-                filters.add(new Filter(p == BETWEEN     ? FilterType.BETWEEN :
-                                       p == NOT_BETWEEN ? FilterType.NOT_BETWEEN : null,
-                                       PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2)), Literal.of(matcher.group(3))));
-            }
-            cql_filter = matcher.replaceAll("");
-        }
-        
-        for (Pattern p: newList(LIKE, NOT_LIKE, ILIKE, NOT_ILIKE)) {
-            Matcher matcher = p.matcher(cql_filter);
-            while (matcher.find()) {
-                filters.add(new Filter(p == LIKE      ? FilterType.LIKE :
-                                       p == NOT_LIKE  ? FilterType.NOT_LIKE :
-                                       p == ILIKE     ? FilterType.ILIKE :
-                                       p == NOT_ILIKE ? FilterType.NOT_ILIKE : null,
-                                       PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2))));
-            }
-            cql_filter = matcher.replaceAll("");
-        }
-        
-        for (Pattern p: newList(IN, NOT_IN)) {
-            Matcher matcher = p.matcher(cql_filter);
-            while (matcher.find()) {
-                List<String> inargs = newMutableList();
-                Matcher m = inlist.matcher(matcher.group(2) + ",");
-                while (m.find()) {
-                    inargs.add(m.group(1));
+        for (String cql_filter: cql_filters.split(" OR ")) {
+            cql_filter += " AND ";
+            List<Filter> filters = newMutableList();
+            or.add(filters);
+            
+            for (Pattern p: newList(EQUAL, NOT_EQUAL, LT, GT, LTE, GTE)) {
+                Matcher matcher = p.matcher(cql_filter);
+                while (matcher.find()) {
+                    filters.add(new Filter(p == EQUAL     ? FilterType.EQUAL :
+                                           p == NOT_EQUAL ? FilterType.NOT_EQUAL :
+                                           p == LT        ? FilterType.LT :
+                                           p == GT        ? FilterType.GT :
+                                           p == LTE       ? FilterType.LTE :
+                                           p == GTE       ? FilterType.GTE : null,
+                                           PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2))));
                 }
-                filters.add(new Filter(p == IN     ? FilterType.IN :
-                                       p == NOT_IN ? FilterType.NOT_IN : null,
-                                       PropertyName.of(matcher.group(1)), newArray(Literal.class, map(Literal_.of, inargs))));
+                cql_filter = matcher.replaceAll("");
             }
-            cql_filter = matcher.replaceAll("");
-        }
-        
-        for (Pattern p: newList(NULL, NOT_NULL)) {
-            Matcher matcher = p.matcher(cql_filter);
-            while (matcher.find()) {
-                filters.add(new Filter(p == NULL     ? FilterType.NULL :
-                                       p == NOT_NULL ? FilterType.NOT_NULL : null,
-                                       PropertyName.of(matcher.group(1))));
+            
+            for (Pattern p: newList(BETWEEN, NOT_BETWEEN)) {
+                Matcher matcher = p.matcher(cql_filter);
+                while (matcher.find()) {
+                    filters.add(new Filter(p == BETWEEN     ? FilterType.BETWEEN :
+                                           p == NOT_BETWEEN ? FilterType.NOT_BETWEEN : null,
+                                           PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2)), Literal.of(matcher.group(3))));
+                }
+                cql_filter = matcher.replaceAll("");
             }
-            cql_filter = matcher.replaceAll("");
-        }
-        
-        for (Pattern p: newList(INTERSECTS)) {
-            Matcher matcher = p.matcher(cql_filter);
-            while (matcher.find()) {
-                String wkt = matcher.group(2);
-                checkWKT(wkt);
-                filters.add(new Filter(FilterType.INTERSECTS, PropertyName.of(matcher.group(1)), Literal.of(wkt)));
+            
+            for (Pattern p: newList(LIKE, NOT_LIKE, ILIKE, NOT_ILIKE)) {
+                Matcher matcher = p.matcher(cql_filter);
+                while (matcher.find()) {
+                    filters.add(new Filter(p == LIKE      ? FilterType.LIKE :
+                                           p == NOT_LIKE  ? FilterType.NOT_LIKE :
+                                           p == ILIKE     ? FilterType.ILIKE :
+                                           p == NOT_ILIKE ? FilterType.NOT_ILIKE : null,
+                                           PropertyName.of(matcher.group(1)), Literal.of(matcher.group(2))));
+                }
+                cql_filter = matcher.replaceAll("");
             }
-            cql_filter = matcher.replaceAll("");
+            
+            for (Pattern p: newList(IN, NOT_IN)) {
+                Matcher matcher = p.matcher(cql_filter);
+                while (matcher.find()) {
+                    List<String> inargs = newMutableList();
+                    Matcher m = inlist.matcher(matcher.group(2) + ",");
+                    while (m.find()) {
+                        inargs.add(m.group(1));
+                    }
+                    filters.add(new Filter(p == IN     ? FilterType.IN :
+                                           p == NOT_IN ? FilterType.NOT_IN : null,
+                                           PropertyName.of(matcher.group(1)), newArray(Literal.class, map(Literal_.of, inargs))));
+                }
+                cql_filter = matcher.replaceAll("");
+            }
+            
+            for (Pattern p: newList(NULL, NOT_NULL)) {
+                Matcher matcher = p.matcher(cql_filter);
+                while (matcher.find()) {
+                    filters.add(new Filter(p == NULL     ? FilterType.NULL :
+                                           p == NOT_NULL ? FilterType.NOT_NULL : null,
+                                           PropertyName.of(matcher.group(1))));
+                }
+                cql_filter = matcher.replaceAll("");
+            }
+            
+            for (Pattern p: newList(INTERSECTS)) {
+                Matcher matcher = p.matcher(cql_filter);
+                while (matcher.find()) {
+                    String wkt = matcher.group(2);
+                    checkWKT(wkt);
+                    filters.add(new Filter(FilterType.INTERSECTS, PropertyName.of(matcher.group(1)), Literal.of(wkt)));
+                }
+                cql_filter = matcher.replaceAll("");
+            }
+            
+            if (!cql_filter.trim().isEmpty()) {
+                throw new IllegalFilterException(cql_filter);
+            }
         }
         
-        if (!cql_filter.trim().isEmpty()) {
-            throw new IllegalFilterException(cql_filter);
-        }
-        
-        return filters;
+        return or;
     }
     
     private static final Pattern POLYGON = Pattern.compile("^POLYGON\\s*\\(\\s*\\((.+)\\)\\s*\\)$");
