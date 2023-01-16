@@ -14,7 +14,8 @@ body {
 h2 {
   font-weight: 100;
   font-size: 3em;
-  margin: 0.5em;
+  text-align: center;
+  margin: 0.5em 0;
 }
 h3 {
   font-weight: 100;
@@ -28,7 +29,6 @@ section.menu {
   float: left;
   overflow-y: auto;
   height: 100%;
-  padding-left: 0.5em;
 }
 section.map {
   padding-left: 260px;
@@ -57,6 +57,6 @@ li {
     opacity: 1.0;
     padding-bottom: 5px;
 }
-body.fi .en, body.en .fi {
-    display: none !important;
+.tippy-content a {
+    color: white;
 }

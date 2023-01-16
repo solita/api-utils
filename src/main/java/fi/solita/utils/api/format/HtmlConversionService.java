@@ -3,6 +3,7 @@ package fi.solita.utils.api.format;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.cons;
+import static fi.solita.utils.functional.Functional.drop;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.head;
@@ -14,10 +15,10 @@ import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
 import static org.rendersnake.HtmlAttributesFactory.class_;
+import static org.rendersnake.HtmlAttributesFactory.href;
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
 import static org.rendersnake.HtmlAttributesFactory.id;
-import static org.rendersnake.HtmlAttributesFactory.onClick;
-import static org.rendersnake.HtmlAttributesFactory.rowspan;
+import static org.rendersnake.HtmlAttributesFactory.*;
 import static org.rendersnake.HtmlAttributesFactory.type;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +30,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -38,9 +41,11 @@ import org.rendersnake.Renderable;
 import org.rendersnake.ext.spring.HtmlCanvasFactory;
 
 import fi.solita.utils.api.base.html.HtmlModule;
+import fi.solita.utils.api.html.UI;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.StartIndex;
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
@@ -133,15 +138,15 @@ public abstract class HtmlConversionService {
     }
     
     public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(obj, members), request);
+        return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.isEmpty());
     }
     
     public <K,V> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request);
+        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.isEmpty());
     }
     
     public <K,V> byte[] serializeSingle(HttpServletRequest request, HtmlTitle title, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request);
+        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.isEmpty());
     }
     
     @SuppressWarnings("unchecked")
@@ -162,7 +167,7 @@ public abstract class HtmlConversionService {
                 return "";
             }
         }, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request);
+        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.isEmpty());
     }
     
     @SuppressWarnings("unchecked")
@@ -170,14 +175,14 @@ public abstract class HtmlConversionService {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request);
+        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.isEmpty());
     }
     
     protected String extraStyle() {
         return "";
     }
     
-    protected Renderable pageHead(final HtmlTitle title) {
+    protected Renderable pageHead(final HtmlTitle title, final HttpServletRequest request) {
         return new Renderable() {
             @SuppressWarnings("unchecked")
             @Override
@@ -194,7 +199,7 @@ public abstract class HtmlConversionService {
                             + "header .page   { padding-left: 1em; }"
                             + "header .type-datetime, header .type-oid, header .type-rectangle { font-size: small; font-style: italic; padding: 1em; }"
                             + "header .type-rectangle { color: #bbb; }"
-                            + ".lang li       { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
+                            + ".lang-selector { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
                             
                             + "footer *       { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
                             + ".timestamps    { text-align: left; }"
@@ -252,8 +257,8 @@ public abstract class HtmlConversionService {
                             + "table table th { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; }"
                             + "table table td { border: none; padding: 1px 3px; line-height: 1em; }"
                             
-                            + "body.en .fi, body.fi .en { display: none !important; }"
-                            + ".fi i, .en i   { font-weight: normal; display: block; }"
+                            + UI.langSelectorCSS
+                            
                             + "*[title]::after { content: '?'; font-size: 0.75em; font-style: italic; color: #bbb; font-weight: lighter; }"
                             
                             + "a:hover        { position: relative; }"
@@ -265,6 +270,19 @@ public abstract class HtmlConversionService {
                             + ".type-interval, .type-point, .type-kmetaisyys, .type-ratakmetaisyys, .type-ratakmvali { white-space: nowrap; }"
                             + ".type-multiline, .type-multipolygon { overflow: hidden; height: 1em; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
                             + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
+                            
+                            + ".load-more     { display: flex; justify-content: center; }"
+                            + ".load-more > * { flex: 0; white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
+                            
+                            + ".formats       { position: absolute; }"
+                            + ".formats a     { padding: 0 1em; font-size: 0.75em; }"
+                            
+                            // spinner
+                            + ".htmx-request.lds-dual-ring { display: inline-block; }"
+                            + ".lds-dual-ring { display: none; width: 30px; height: 30px; margin-right: auto; margin-left: auto; }"
+                            + ".lds-dual-ring:after { content: ' '; display: block; width: 14px; height: 14px; margin: 8px; border-radius: 50%; border: 6px solid #000; border-color: #000 transparent #000 transparent; animation: lds-dual-ring 1.2s linear infinite; }"
+                            + "@keyframes lds-dual-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }"
+                            
                             + mkString(" ", sequence(
                                  ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
                                 + "  h1 .type-datetime { display: block; }"
@@ -285,7 +303,7 @@ public abstract class HtmlConversionService {
                                 + "  table table td { display: table-cell; }"
                                 + "  table li       { display: inline-block; border-left: 1px solid #eee; padding: 0 3px; }"
                                 + "  table li:first-child { border-left: none; }"
-                                + "  .fi i, .en i   { display: inline; padding-left: 0.25em; margin-left: 0.25em; border-left: 1px solid #eee; }"),
+                                + "  .load-more     { display: none; }"),
                              newList((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {").andThen(append("}")), (Apply<String,String>)HtmlConversionService_.split.apply(Function.__, "}").andThen(HtmlConversionService_.<String>toList()).andThen(Transformers.map(prepend(".nested ").andThen(HtmlConversionService_.replaceAll.apply(__, ",", ", .nested ")).andThen(append("}")))).andThen(HtmlConversionService_.join.ap(" ")) )))
                                     
                             + extraStyle()
@@ -314,11 +332,15 @@ public abstract class HtmlConversionService {
                                     + "  }, 1000);"
                                     + "}"
                                     + "};", false)
-                        ._cdata()    
+                        ._cdata()
                     ._script()
                     .script(type("text/javascript"))
                         .cdata()
-                            .write("window.history.replaceState(undefined, undefined, window.location.toString().replace(/(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));", false)
+                            // remove Revision number from path, and store it in doc body
+                            .write("window.addEventListener('load', function() { "
+                                   + "    document.body.setAttribute('data-revision', window.location.toString().match(/\\/[0-9.]+\\/([0-9]+)\\//)[1]);"
+                                   + "    window.history.replaceState(undefined, undefined, window.location.toString().replace(/(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));"
+                                   + "});", false)
                         ._cdata()
                     ._script()
                     .script(type("text/javascript"))
@@ -355,21 +377,36 @@ public abstract class HtmlConversionService {
         };
     };
     
-    public static Renderable pageHeader(final HtmlTitle title) {
+    public static Renderable pageHeader(final HtmlTitle title, final HttpServletRequest request) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
-                html.header()
+                html.render(UI.langSelectorInput)
+                    .header()
                         .h1()
                           .render(title)
                         ._h1()
-                        .div(id("lang").class_("lang"))
-                            .ul()
-                                .li(onClick("document.body.classList.add('fi'); document.body.classList.remove('en')")).a().write("finnish")._a()._li()
-                                .li(onClick("document.body.classList.add('en'); document.body.classList.remove('fi')")).a().write("english")._a()._li()
-                            ._ul()
+                        .div(class_("formats"))
+                            .render(linksForDifferentFormats(request))
                         ._div()
+                        .render(UI.langSelectorLabel)
                     ._header();
+            }
+        };
+    }
+    
+    private static Renderable linksForDifferentFormats(final HttpServletRequest request) {
+        final String path = RequestUtil.getApiVersionBasePath(request) + drop(1, RequestUtil.getAPIVersionRelativePathWithoutRevision(request));
+        final String queryString = Option.of(request.getQueryString()).map(Transformers.prepend("?")).getOrElse("");
+        
+        return new Renderable() {
+            @Override
+            public void renderOn(HtmlCanvas html) throws IOException {
+                for (String format: newList("html","json","jsonl","geojson","csv","xlsx")) {
+                    html.a(href(path.replace(".html", "." + format) + queryString))
+                            .write(format)
+                        ._a();
+                }
             }
         };
     }
@@ -384,16 +421,16 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
                   .footer()
-                    .span(class_("fi timestamps"))
+                    .span(lang("fi").class_("timestamps"))
                         .write("Aikaleimat Suomen aikavyöhykkeellä (EET)")
                     ._span()
-                    .span(class_("en timestamps"))
+                    .span(lang("en").class_("timestamps"))
                         .write("Timestamps in Europe/Helsinki (EET) time zone")
                     ._span()
-                    .span(class_("fi copyright"))
+                    .span(lang("fi").class_("copyright"))
                         .write("© " + copyright_fi)
                     ._span()
-                    .span(class_("en copyright"))
+                    .span(lang("en").class_("copyright"))
                         .write("© " + copyright_en)
                     ._span()
                   ._footer();
@@ -401,7 +438,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request) {
+    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request, boolean emptyData) {
         ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
         HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, ow);
@@ -410,10 +447,10 @@ public abstract class HtmlConversionService {
             html.html()
                 .render(DocType.HTML5)
                 .head()
-                  .render(pageHead(title))
+                  .render(pageHead(title, request))
                 ._head()
-                .body(class_("fi"))
-                  .render(pageHeader(title))
+                .body()
+                  .render(pageHeader(title, request))
                   .section(id("content"))
                       .table()
                         .thead()
@@ -425,6 +462,26 @@ public abstract class HtmlConversionService {
                           .render(tableBody)
                         ._tbody()
                       ._table()
+                      .if_(!emptyData && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
+                          .render(initHtmx(request))
+                          .div(class_("lds-dual-ring"))._div()
+                          .div(class_("load-more")
+                                  .add("hx-push-url", "false")
+                                  .add("hx-boost", "true")
+                                  .add("hx-target", "#content > table > tbody")
+                                  .add("hx-swap", "beforeend")
+                                  .add("hx-indicator", ".lds-dual-ring")
+                                  .add("hx-select", "#content > table > tbody > tr"))
+                              .a(href(uriWithIncrementedStartIndex(request, false)))
+                                  .span(lang("fi")).write("Lataa lisää rivejä...")._span()
+                                  .span(lang("en")).write("Load more rows...")._span()
+                              ._a()
+                              .a(href(uriWithIncrementedStartIndex(request, true)))
+                                  .span(lang("fi")).write("Lataa loput rivit...")._span()
+                                  .span(lang("en")).write("Load rest of the rows...")._span()
+                              ._a()
+                          ._div()
+                      ._if()
                   ._section()
                   .render(pageFooter())
                 ._body()
@@ -436,6 +493,56 @@ public abstract class HtmlConversionService {
         }
         
         return os.toByteArray();
+    }
+    
+    private static Renderable initHtmx(final HttpServletRequest request) {
+        return new Renderable() {
+            @Override
+            public void renderOn(HtmlCanvas html) throws IOException {
+                html.script(type("text/javascript").src(request.getContextPath() + "/r/js/lib/htmx.min.js"))._script()
+                    .script(type("text/javascript"))
+                        .cdata()
+                            .write("if (htmx) { htmx.on('htmx:afterOnLoad', function(evt) {"
+                                   + "    let newRevision = evt.detail.xhr.responseURL.match(/\\/[0-9.]+\\/([0-9]+)\\//)[1];"
+                                   + "    let oldRevision = document.body.getAttribute('data-revision');"
+                                   + "    if (newRevision != oldRevision) {"
+                                   // revision has changed, rows may not align properly anymore -> reload the page to not display invalid content.
+                                   + "        window.location.reload();"
+                                   + "    }"
+                                   + "});}", false)
+                        ._cdata()
+                    ._script();
+            }
+        };
+    }
+    
+    public static final Pattern COUNT = Pattern.compile("count=([0-9]+)([^&]?)");
+    public static final Pattern START_INDEX = Pattern.compile("startIndex=([0-9]+)");
+    
+    static String uriWithIncrementedStartIndex(HttpServletRequest request, boolean loadRest) {
+        Matcher cm = COUNT.matcher(Option.of(request.getQueryString()).getOrElse(""));
+        if (cm.find()) {
+            int count = Integer.parseInt(cm.group(1));
+            
+            String uri = RequestUtil.getApiVersionBasePath(request) + drop(1, RequestUtil.getAPIVersionRelativePathWithoutRevision(request)) + Option.of(request.getQueryString()).map(Transformers.prepend("?")).getOrElse("");
+            StringBuilder sb = new StringBuilder();
+            Matcher m = START_INDEX.matcher(uri);
+            if (m.find()) {
+                m.appendReplacement(sb, "startIndex=" + (Integer.parseInt(m.group(1)) + count));
+                m.appendTail(sb);
+            } else {
+                m.appendTail(sb);
+                sb.append("&startIndex=" + (count+1));
+            }
+            
+            if (loadRest) {
+                return COUNT.matcher(sb.toString()).replaceFirst("$2").replace("?&", "?");
+            } else {
+                return sb.toString();
+            }
+        } else {
+            return "";
+        }
     }
     
     static String[] split(String s, String regex) {
@@ -462,10 +569,10 @@ public abstract class HtmlConversionService {
                     boolean pseudo = member.getName().isEmpty();
                     String extraClasses = pseudo ? "" : extraClasses(member.getMember());
                     html.th()
-                        .span(class_("fi " + extraClasses).title(pseudo ? null : docDescription(member).getOrElse(null)))
+                        .span(lang("fi").class_(extraClasses).title(pseudo ? null : docDescription(member).getOrElse(null)))
                             .write(pseudo ? member.getName() : docName(member).getOrElse(member.getName()))
                         ._span();
-                    html.span(class_("en " + extraClasses).title(pseudo ? null : docDescription_en(member).getOrElse(null)))
+                    html.span(lang("en").class_(extraClasses).title(pseudo ? null : docDescription_en(member).getOrElse(null)))
                             .write(pseudo ? member.getName() : docName_en(member).getOrElse(member.getName()))
                         ._span();
                     html._th();

@@ -363,7 +363,7 @@ var olstuff = function(constants, util) {
                     var kaavio = document.getElementById('kaavio');
                     layer.dispatchEvent("loadStart");
                     fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal})
-                        .then(function(response) { return response.json(); })
+                        .then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                         .then(function(response) {
                           layer.dispatchEvent("loadSuccess");
                           var features = ret.format.readFeatures(response);
@@ -428,7 +428,7 @@ var olstuff = function(constants, util) {
         },
         
         mkLayerTitle: function(title_fi, title_en) {
-            return '<span class="fi">' + ret.modifyLayerTitle(title_fi) + '</span><span class="en">' + ret.modifyLayerTitle(title_en) + '</span>';
+            return '<span lang="fi">' + ret.modifyLayerTitle(title_fi) + '</span><span lang="en">' + ret.modifyLayerTitle(title_en) + '</span>';
         },
         
         modifyLayerTitle: function(title) {
@@ -484,10 +484,10 @@ var olstuff = function(constants, util) {
             return layer;
         },
         
-        newWMTSGroup: function(title, url, matrix) {
+        newWMTSGroup: function(title_fi, title_en, url, matrix) {
             var parser = new ol.format.WMTSCapabilities();
             var group = new ol.layer.Group({
-                title: title,
+                title: ret.mkLayerTitle(title_fi, title_en),
                 layers: [],
                 fold: 'close'
             });
@@ -505,7 +505,9 @@ var olstuff = function(constants, util) {
               };
             };
             
-            fetch(url).then(function(x) { return x.text(); }).then(createLayer(matrix));
+            fetch(url).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                      .then(createLayer(matrix))
+                      .catch(console.log);
             
             return group;
         },
@@ -515,7 +517,7 @@ var olstuff = function(constants, util) {
             var osm = ret.tileLayer('OpenStreetMap', new ol.source.OSM());
             osm.setVisible(true);
             var group = new ol.layer.Group({
-                title: '<span class="fi">Taustat<span><span class="en">Backgrounds</span>',
+                title: ret.mkLayerTitle('Taustat', 'Backgrounds'),
                 layers: [ret.newImageLayer('https://placehold.it/256/eeffee?text=+', 'Green', opacity),
                          ret.tileLayer('Grid', new ol.source.TileImage({projection: ret.projection, tileGrid: ret.tileGrid, tileUrlFunction: function(extent, resolution, projection) {var size = ret.tileGrid.getTileSize(extent[0]); return 'https://placehold.it/' + size + '?text=' + extent + ' (' + size + 'x' + size + ')&w=' + size + '&h=' + size + '';} }), opacity),
                          ret.tileLayer('Debug', new ol.source.TileDebug({projection: ret.projection, tileGrid: ret.tileGrid}, opacity)),
@@ -545,9 +547,15 @@ var olstuff = function(constants, util) {
             var maasto     = baseUrl + '/maasto/wmts/1.0.0/WMTSCapabilities.xml';
             var teema      = baseUrl + '/teema/wmts/1.0.0/WMTSCapabilities.xml';
             var kiinteisto = baseUrl + '/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
-            fetch(maasto)    .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', baseUrl));
-            fetch(teema)     .then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', baseUrl));
-            fetch(kiinteisto).then(function(x) { return x.text(); }).then(createLayer('ETRS-TM35FIN', baseUrl));
+            fetch(maasto)    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                             .then(createLayer('ETRS-TM35FIN', baseUrl))
+                             .catch(console.log);
+            fetch(teema)     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                             .then(createLayer('ETRS-TM35FIN', baseUrl))
+                             .catch(console.log);
+            fetch(kiinteisto).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                             .then(createLayer('ETRS-TM35FIN', baseUrl))
+                             .catch(console.log);
             
             return group;
         },
@@ -555,19 +563,21 @@ var olstuff = function(constants, util) {
         maastotiedotGroup: function(baseUrl) {
             var collectionsUrl = baseUrl + "/maastotiedot/features/v1/collections";
             var group = new ol.layer.Group({
-                title: '<span class="fi">Maastotiedot<span><span class="en">Topographic</span>',
+                title: ret.mkLayerTitle('Maastotiedot','Topographic'),
                 layers: [],
                 fold: 'close'
             });
             
-            fetch(collectionsUrl).then(function(x) { return x.json(); }).then(function(x) {
+            fetch(collectionsUrl).then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                 .then(function(x) {
                 x.collections.forEach(function(c) {
                     var title = c.title;
                     var url = collectionsUrl + "/" + c.id + "/items?crs=http://www.opengis.net/def/crs/EPSG/0/3067";
                     var layer = ret.newVectorLayerNoTile(url, c.id, title, title);
                     group.getLayers().push(layer);
                 });
-            });
+            })
+            .catch(console.log);
             
             return group;
         },

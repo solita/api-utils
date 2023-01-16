@@ -143,6 +143,10 @@
   left: 22.5em;
   position: absolute;
   top: 0;
+  background: transparent;
+}
+.app-button:hover {
+  background: transparent;
 }
 .app-button:nth-child(2) {
   margin-left: 9em;
@@ -166,4 +170,7 @@
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+}
+#time {
+    width: 12em;
 }

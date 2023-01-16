@@ -224,6 +224,11 @@ public abstract class RequestUtil {
         return dropWhile(not(equalTo('/')), tail(getContextRelativePath(req)));
     }
     
+    public static final String getAPIVersionRelativePathWithoutRevision(HttpServletRequest req) {
+        String versionRelative = getAPIVersionRelativePath(req);
+        return dropWhile(not(equalTo('/')), tail(versionRelative));
+    }
+    
     public static final String getApiVersionBasePath(HttpServletRequest req) {
         String contextRelativePath = getContextRelativePath(req);
         return req.getContextPath() + "/" + takeWhile(not(equalTo('/')), tail(contextRelativePath)) + "/";

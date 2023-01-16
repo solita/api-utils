@@ -1,6 +1,6 @@
 package fi.solita.utils.api.html;
 
-import static org.rendersnake.HtmlAttributesFactory.class_;
+import static org.rendersnake.HtmlAttributesFactory.*;
 
 import java.io.IOException;
 
@@ -8,6 +8,7 @@ import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 import org.rendersnake.RenderableWrapper;
+import org.rendersnake.ext.servlet.ServletUtils;
 
 import fi.solita.utils.api.format.HtmlConversionService;
 import fi.solita.utils.api.format.HtmlConversionService.HtmlTitle;
@@ -35,9 +36,7 @@ public class Page extends RenderableWrapper {
               .title().write(title_fi)._title()
               .style().write(
                       "html     { font-family: sans-serif; font-weight: lighter; }"
-                    + ".lang li { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
-                    + ".lang li:first-child { border: none; }"
-                    + "body.en .fi, body.fi .en { display: none !important; }"
+                    + UI.langSelectorCSS
                     + "header   { display: flex; }"
                     + "h1       { font-weight: lighter; flex: 1; }"
                     + "dt       { font-weight: bolder; margin-top: 1em; }"
@@ -46,20 +45,20 @@ public class Page extends RenderableWrapper {
                     , false)
             ._style()
           ._head()
-          .body(class_("fi"))
+          .body()
               .render(HtmlConversionService.pageHeader(new HtmlTitle("") {
                 @Override
                 public void renderOn(HtmlCanvas html) throws IOException {
-                    html.span(class_("fi")).write(title_fi)._span()
-                        .span(class_("en")).write(title_en)._span();
+                    html.span(lang("fi")).write(title_fi)._span()
+                        .span(lang("en")).write(title_en)._span();
                 }
-            }))
+            }, ServletUtils.requestFor(html)))
               .render(component)
               .footer()
-                  .span(class_("fi").class_("copyright"))
+                  .span(lang("fi").class_("copyright"))
                       .write("© " + copyright_fi)
                   ._span()
-                  .span(class_("en").class_("copyright"))
+                  .span(lang("en").class_("copyright"))
                       .write("© " + copyright_en)
                   ._span()
               ._footer()

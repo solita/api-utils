@@ -1,8 +1,10 @@
 package fi.solita.utils.api.html;
 
 import static fi.solita.utils.functional.Option.Some;
-import static org.rendersnake.HtmlAttributesFactory.class_;
+import static org.rendersnake.HtmlAttributesFactory.lang;
+import static org.rendersnake.HtmlAttributesFactory.for_;
 import static org.rendersnake.HtmlAttributesFactory.href;
+import static org.rendersnake.HtmlAttributesFactory.id;
 
 import java.io.IOException;
 
@@ -75,13 +77,36 @@ public abstract class UI {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
-                .dt(class_(lang.getOrElse(null)))
+                .dt(lang(lang.getOrElse(null)))
                     .write(dt)
                 ._dt()
-                .dd(class_(lang.getOrElse(null)))
+                .dd(lang(lang.getOrElse(null)))
                     .render(dd)
                 ._dd();
             }
         };
     }
+    
+    public static Renderable langSelectorInput = new Renderable() {
+        @Override
+        public void renderOn(HtmlCanvas html) throws IOException {
+            html.input(id("lang-selector").type("checkbox"));
+        }
+    };
+    
+    public static Renderable langSelectorLabel = new Renderable() {
+        @Override
+        public void renderOn(HtmlCanvas html) throws IOException {
+            html.label(for_("lang-selector").title("Switch between Finnish/English"))
+                    .write("Finnish 🇫🇮 / English 🇬🇧")
+                ._label();
+        }
+    };
+    
+    public static final String langSelectorCSS = ""
+        + "#lang-selector                                   { display: none; }"
+        + "label[for='lang-selector']                       { margin-left: 1em; }"
+        + "[lang]:not(:lang(fi)),"
+        + "#lang-selector:checked ~ * :lang('fi')           { display: none !important; }"
+        + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: block !important; }";
 }

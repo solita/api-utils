@@ -1,0 +1,21 @@
+/*
+  Required HTML.
+  Label can be anywhere, input must high enough to be a sibling of the toggled content.
+  
+  <input id="lang-selector" type="checkbox" />
+  <label for="lang-selector" title="Switch between languages">Default / Alternative</label>
+*/
+
+#lang-selector {
+    display: none;
+}
+label[for='lang-selector'] {
+    margin-left: 1em;
+}
+[lang]:not(:lang(fi)),
+#lang-selector:checked ~ * :lang('fi') {
+    display: none !important;
+}
+#lang-selector:checked ~ * [lang]:not(:lang(fi)) {
+    display: block !important;
+}
