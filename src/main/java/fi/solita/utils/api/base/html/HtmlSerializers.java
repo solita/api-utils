@@ -4,8 +4,7 @@ import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.zipWithIndex;
 import static fi.solita.utils.functional.Predicates.not;
-import static org.rendersnake.HtmlAttributesFactory.class_;
-import static org.rendersnake.HtmlAttributesFactory.href;
+import static org.rendersnake.HtmlAttributesFactory.*;
 import static org.rendersnake.HtmlAttributesFactory.src;
 
 import java.io.IOException;
@@ -168,10 +167,10 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_("fi type-" + typeClassSuffix).title(docDescription(value).getOrElse(null)))
+                html.span(lang("fi").class_("type-" + typeClassSuffix).title(docDescription(value).getOrElse(null)))
                         .write(valueProducer.apply(value))
                     ._span()
-                    .span(class_("en type-" + typeClassSuffix).title(docDescription_en(value).getOrElse(null)))
+                    .span(lang("en").class_("type-" + typeClassSuffix).title(docDescription_en(value).getOrElse(null)))
                         .write(useValueAlsoForEnglish ? valueProducer.apply(value) : docName_en(value).getOrElse(valueProducer.apply(value)))
                     ._span();
             }
@@ -187,10 +186,10 @@ public abstract class HtmlSerializers {
             @Override
             public void renderOn(final Object value, HtmlCanvas html, final HtmlModule module) throws IOException {
                 if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
-                    html.span(class_("fi").title(docDescription((Enum<?>)value).getOrElse(((Enum<?>)value).name())))
+                    html.span(lang("fi").title(docDescription((Enum<?>)value).getOrElse(((Enum<?>)value).name())))
                             .write(((Enum<?>)value).name())
                         ._span()
-                        .span(class_("en").title(docName_en((Enum<?>)value).getOrElse(docDescription_en((Enum<?>)value).getOrElse(null))))
+                        .span(lang("en").title(docName_en((Enum<?>)value).getOrElse(docDescription_en((Enum<?>)value).getOrElse(null))))
                             .write(((Enum<?>)value).name())
                         ._span();
                 } else {

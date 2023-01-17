@@ -163,6 +163,7 @@
 }
 .app-button input[type=checkbox] {
     float:left;
+    margin-top: 5px;
 }
 
 .ol-selectable {
@@ -173,4 +174,7 @@
 }
 #time {
     width: 12em;
+}
+#search {
+    width: 45em;
 }

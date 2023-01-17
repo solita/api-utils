@@ -107,6 +107,6 @@ public abstract class UI {
         + "#lang-selector                                   { display: none; }"
         + "label[for='lang-selector']                       { margin-left: 1em; }"
         + "[lang]:not(:lang(fi)),"
-        + "#lang-selector:checked ~ * :lang('fi')           { display: none !important; }"
-        + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: block !important; }";
+        + "#lang-selector:checked ~ * :lang(fi)             { display: none !important; }"
+        + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: inherit !important; }";
 }

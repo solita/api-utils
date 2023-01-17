@@ -16,12 +16,9 @@ import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Functional.zip;
 import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalA.last;
-import static fi.solita.utils.functional.FunctionalA.map;
-import static fi.solita.utils.functional.FunctionalA.tail;
-import static fi.solita.utils.functional.FunctionalA.zip;
+import static fi.solita.utils.functional.FunctionalC.drop;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
 import static fi.solita.utils.functional.FunctionalC.reverse;
-import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Option.None;
@@ -34,6 +31,7 @@ import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -224,9 +222,12 @@ public abstract class RequestUtil {
         return dropWhile(not(equalTo('/')), tail(getContextRelativePath(req)));
     }
     
+    private static final Pattern DIGITS = Pattern.compile("[0-9]+");
+    
     public static final String getAPIVersionRelativePathWithoutRevision(HttpServletRequest req) {
         String versionRelative = getAPIVersionRelativePath(req);
-        return dropWhile(not(equalTo('/')), tail(versionRelative));
+        String candidate = takeWhile(not(equalTo('/')), drop(1, versionRelative));
+        return DIGITS.matcher(candidate).matches() ? dropWhile(not(equalTo('/')), drop(1, versionRelative)) : versionRelative;
     }
     
     public static final String getApiVersionBasePath(HttpServletRequest req) {
