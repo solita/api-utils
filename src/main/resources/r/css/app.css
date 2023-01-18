@@ -60,3 +60,6 @@ li {
 .tippy-content a {
     color: white;
 }
+.nowrap {
+    white-space: nowrap;
+}

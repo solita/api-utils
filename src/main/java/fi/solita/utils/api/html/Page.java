@@ -33,16 +33,10 @@ public class Page extends RenderableWrapper {
         html.html()
             .render(DocType.HTML5)
             .head()
+              .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
+              .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src '" + UI.calculateHash(styles()) + "'"))
               .title().write(title_fi)._title()
-              .style().write(
-                      "html     { font-family: sans-serif; font-weight: lighter; }"
-                    + UI.langSelectorCSS
-                    + "header   { display: flex; }"
-                    + "h1       { font-weight: lighter; flex: 1; }"
-                    + "dt       { font-weight: bolder; margin-top: 1em; }"
-                    + "section  { border-radius: 5px; border: 1px solid #ddd; overflow: auto; margin: 0.25em; padding: 0 0.5em; }"
-                    + "footer   { padding-top: 10px; color: #ccc; font-style: italic; font-size: 0.8em; clear: left; }"
-                    , false)
+              .style().write(styles(), false)
             ._style()
           ._head()
           .body()
@@ -52,7 +46,7 @@ public class Page extends RenderableWrapper {
                     html.span(lang("fi")).write(title_fi)._span()
                         .span(lang("en")).write(title_en)._span();
                 }
-            }, ServletUtils.requestFor(html)))
+            }, ServletUtils.requestFor(html), false))
               .render(component)
               .footer()
                   .span(lang("fi").class_("copyright"))
@@ -64,6 +58,17 @@ public class Page extends RenderableWrapper {
               ._footer()
           ._body()
         ._html();
+    }
+
+    private String styles() {
+        return
+          "html     { font-family: sans-serif; font-weight: lighter; }"
+        + UI.langSelectorCSS
+        + "header   { display: flex; }"
+        + "h1       { font-weight: lighter; flex: 1; }"
+        + "dt       { font-weight: bolder; margin-top: 1em; }"
+        + "section  { border-radius: 5px; border: 1px solid #ddd; overflow: auto; margin: 0.25em; padding: 0 0.5em; }"
+        + "footer   { padding-top: 10px; color: #ccc; font-style: italic; font-size: 0.8em; clear: left; }";
     }
 
 }

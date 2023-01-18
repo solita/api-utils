@@ -1,12 +1,16 @@
 package fi.solita.utils.api.html;
 
 import static fi.solita.utils.functional.Option.Some;
-import static org.rendersnake.HtmlAttributesFactory.lang;
 import static org.rendersnake.HtmlAttributesFactory.for_;
 import static org.rendersnake.HtmlAttributesFactory.href;
 import static org.rendersnake.HtmlAttributesFactory.id;
+import static org.rendersnake.HtmlAttributesFactory.lang;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 import org.rendersnake.HtmlAttributes;
 import org.rendersnake.HtmlCanvas;
@@ -109,4 +113,12 @@ public abstract class UI {
         + "[lang]:not(:lang(fi)),"
         + "#lang-selector:checked ~ * :lang(fi)             { display: none !important; }"
         + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: inherit !important; }";
+    
+    public static final String calculateHash(final String content) {
+        try {
+            return "sha256-" +  new String(Base64.getEncoder().encode(MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8))), StandardCharsets.UTF_8);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
