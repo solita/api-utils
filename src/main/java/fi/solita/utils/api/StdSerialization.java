@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
+import fi.solita.utils.api.format.CountConversionService;
 import fi.solita.utils.api.format.CsvConversionService;
 import fi.solita.utils.api.format.ExcelConversionService;
 import fi.solita.utils.api.format.HtmlConversionService;
@@ -56,6 +57,7 @@ public abstract class StdSerialization<BOUNDS> {
     public final CsvConversionService csv;
     public final ExcelConversionService excel;
     public final PngConversionService png;
+    public final CountConversionService count;
     //public final XmlConversionService xml;
     
     private final GeojsonResolver geojsonResolver;
@@ -68,7 +70,8 @@ public abstract class StdSerialization<BOUNDS> {
         CsvConversionService csv,
         ExcelConversionService excel,
         PngConversionService png,
-        GeojsonResolver geojsonResolver) {
+        GeojsonResolver geojsonResolver,
+        CountConversionService count) {
         this.json = json;
         this.geoJson = geoJson;
         this.jsonlines = jsonlines;
@@ -77,6 +80,7 @@ public abstract class StdSerialization<BOUNDS> {
         this.excel = excel;
         this.png = png;
         this.geojsonResolver = geojsonResolver;
+        this.count = count;
     }
     
     protected String title2fileName(HtmlTitle title) {
@@ -158,6 +162,9 @@ public abstract class StdSerialization<BOUNDS> {
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
             break;
+        case COUNT:
+            response = count.serialize(data.get());
+            break;
         case GML:
         case XML:
             throw new UnavailableContentTypeException();
@@ -212,6 +219,9 @@ public abstract class StdSerialization<BOUNDS> {
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
             break;
+        case COUNT:
+            response = count.serialize(data.get());
+            break;
         case GML:
         case XML:
             throw new UnavailableContentTypeException();
@@ -265,6 +275,9 @@ public abstract class StdSerialization<BOUNDS> {
     case PNG:
         response = png.render(req, bounds2envelope(bbox), title2layerName(title));
         break;
+    case COUNT:
+        response = count.serialize(data.get());
+        break;
     case GML:
     case XML:
         throw new UnavailableContentTypeException();
@@ -313,6 +326,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case XLSX:
             response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case COUNT:
+            response = count.serialize(data.get());
             break;
         case PNG:
         case GML:
@@ -383,6 +399,9 @@ public abstract class StdSerialization<BOUNDS> {
         case PNG:
             response = png.render(req, bounds2envelope(bbox), title2layerName(title));
             break;
+        case COUNT:
+            response = count.serialize(data.get());
+            break;
         case GML:
         case XML:
             throw new UnavailableContentTypeException();
@@ -445,6 +464,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                break;
+            case COUNT:
+                response = count.serialize(data.get());
                 break;
             case PNG:
             case GML:
@@ -510,6 +532,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case COUNT:
+                response = count.serialize(data.get());
+                break;
             case PNG:
             case GML:
             case XML:
@@ -555,6 +580,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case XLSX:
             response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case COUNT:
+            response = count.serialize(data.get());
             break;
         case PNG:
         case GML:
@@ -603,6 +631,9 @@ public abstract class StdSerialization<BOUNDS> {
         case XLSX:
             response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
+        case COUNT:
+            response = count.serialize(data.get());
+            break;
         case PNG:
         case GML:
         case XML:
@@ -649,6 +680,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
+            case COUNT:
+                response = count.serialize(data.get());
+                break;
             case PNG:
             case GML:
             case XML:
@@ -693,6 +727,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case COUNT:
+                response = count.serialize(data.get());
+                break;
             case PNG:
             case GML:
             case XML:
@@ -733,6 +770,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), data);
+                break;
+            case COUNT:
+                response = count.serialize(data);
                 break;
             case PNG:
             case GML:
@@ -780,6 +820,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
+            case COUNT:
+                response = count.serialize(data.get());
+                break;
             case PNG:
             case XML:
             case GML:
@@ -823,6 +866,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case XLSX:
                 response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
+                break;
+            case COUNT:
+                response = count.serialize(data.get());
                 break;
             case PNG:
             case XML:

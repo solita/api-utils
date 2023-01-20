@@ -16,7 +16,8 @@ public enum SerializationFormat {
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"),
     PNG(MediaType.IMAGE_PNG_VALUE),
     XML(MediaType.APPLICATION_XML_VALUE),
-    GML("application/gml+xml")
+    GML("application/gml+xml"),
+    COUNT(MediaType.TEXT_PLAIN_VALUE)
     ;
     
     public final String mediaType;
@@ -43,6 +44,8 @@ public enum SerializationFormat {
             return Some(SerializationFormat.XML);
         } else if (extension.equals("gml")) {
             return Some(SerializationFormat.GML);
+        } else if (extension.equals("count")) {
+            return Some(SerializationFormat.COUNT);
         }
         return None();
     }
