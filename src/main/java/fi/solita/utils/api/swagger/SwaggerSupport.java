@@ -6,7 +6,6 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.FunctionalA.map;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
@@ -474,7 +473,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info, final boolean ignoreRevision) {
+    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info, final boolean ignoreRevision, boolean includeFormatParameter) {
         Docket docket = new Docket(DocumentationType.SWAGGER_2)
             .groupName(publishedVersion.getVersion() + (ignoreRevision ? "" : ".extended"))
             .select()
@@ -515,18 +514,20 @@ public abstract class SwaggerSupport extends ApiResourceController {
             .directModelSubstitute(Count.class, int.class)
             .directModelSubstitute(StartIndex.class, int.class)
             .directModelSubstitute(Filters.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
-            .directModelSubstitute(SRSName.class, String.class)      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
+            .directModelSubstitute(SRSName.class, String.class);      // pitää olla mukana, muuten parametri katoaa rajapintakuvauksesta näkyvistä...
             
-            .globalOperationParameters(newList(new ParameterBuilder()
-                .name("format")
-                .defaultValue("json")
-                .description("Vastauksen muoto / Response format")
-                .modelRef(new ModelRef("String"))
-                .parameterType("path")
-                .required(true)
-                .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML)))), "String"))
-                .build()
+        if (includeFormatParameter) {
+            docket.globalOperationParameters(newList(new ParameterBuilder()
+                  .name("format")
+                  .defaultValue("json")
+                  .description("Vastauksen muoto / Response format")
+                  .modelRef(new ModelRef("String"))
+                  .parameterType("path")
+                  .required(true)
+                  .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML)))), "String"))
+                  .build()
             ));
+        }
         if (ignoreRevision) {
             docket = docket.ignoredParameterTypes(Revision.class);
         } else {
