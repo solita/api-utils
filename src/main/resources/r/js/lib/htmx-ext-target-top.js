@@ -1,6 +1,6 @@
 htmx.defineExtension('target-top', {
     onEvent: function(name, evt) {
-        if (name === "htmx:beforeRequest" && !evt.detail.elt.hasAttribute('hx-target')) {
+        if (name === "htmx:beforeRequest" && !evt.detail.elt.hasAttribute('hx-target') && evt.detail.requestConfig.triggeringEvent instanceof Event) {
             evt.preventDefault();
             let anc = evt.detail.pathInfo.anchor;
             let triggeringEvent = evt.detail.requestConfig.triggeringEvent;
