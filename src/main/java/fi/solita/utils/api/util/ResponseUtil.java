@@ -53,15 +53,19 @@ public abstract class ResponseUtil {
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_ALLOW_ORIGIN);
     }
 
-    public static void respondWithEternalCaching(HttpServletResponse response, byte[] data, ETags etags) {
-        respond(response, data, etags, true);
+    public static void respondOKWithEternalCaching(HttpServletResponse response, byte[] data, ETags etags) {
+        respond(response, data, etags, HttpStatus.OK, true);
     }
     
-    public static void respond(HttpServletResponse response, byte[] data, ETags etags) {
-        respond(response, data, etags, false);
+    public static void respondOK(HttpServletResponse response, byte[] data, ETags etags) {
+        respond(response, data, etags, HttpStatus.OK, false);
     }
     
-    private static void respond(HttpServletResponse response, byte[] data, ETags etags, boolean cacheOKForInfinity) {
+    public static void respond(HttpServletResponse response, byte[] data, ETags etags, HttpStatus status) {
+        respond(response, data, etags, status, false);
+    }
+    
+    private static void respond(HttpServletResponse response, byte[] data, ETags etags, HttpStatus status, boolean cacheOKForInfinity) {
         try {
             String etag = calculateETag(data);
             if (etags.ifMatch.isDefined() && !etags.ifMatch.get().contains(etag)) {
@@ -74,7 +78,7 @@ public abstract class ResponseUtil {
                 if (cacheOKForInfinity) {
                     cacheForInfinity(response);
                 }
-                response.setStatus(HttpStatus.OK.value());
+                response.setStatus(status.value());
                 response.setHeader(HttpHeaders.ETAG, etag);
                 setAccessControlHeaders(response);
                 response.setHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(data.length));
