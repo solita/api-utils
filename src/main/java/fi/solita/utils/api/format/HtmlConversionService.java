@@ -6,6 +6,7 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.head;
+import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sequence;
 import static fi.solita.utils.functional.Functional.tail;
@@ -49,7 +50,6 @@ import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -140,15 +140,15 @@ public abstract class HtmlConversionService {
     }
     
     public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.isEmpty());
+        return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.size());
     }
     
     public <K,V> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.isEmpty());
+        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.size());
     }
     
     public <K,V> byte[] serializeSingle(HttpServletRequest request, HtmlTitle title, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.isEmpty());
+        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.size());
     }
     
     @SuppressWarnings("unchecked")
@@ -169,7 +169,7 @@ public abstract class HtmlConversionService {
                 return "";
             }
         }, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.isEmpty());
+        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.size());
     }
     
     @SuppressWarnings("unchecked")
@@ -177,7 +177,7 @@ public abstract class HtmlConversionService {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.isEmpty());
+        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.size());
     }
     
     protected String extraStyle() {
@@ -266,7 +266,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request, boolean emptyData) {
+    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request, int rows) {
         ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
         HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, ow);
@@ -277,7 +277,7 @@ public abstract class HtmlConversionService {
                 .head()
                   .render(pageHead(title, request))
                 ._head()
-                .body()
+                .body(rows == 1 ? class_("singleton") : null)
                   .render(pageHeader(title, request, true))
                   .section(id("content"))
                       .table()
@@ -290,7 +290,7 @@ public abstract class HtmlConversionService {
                           .render(tableBody)
                         ._tbody()
                       ._table()
-                      .if_(!emptyData && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
+                      .if_(rows > 0 && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
                           .render(initHtmx(request))
                           .div(class_("lds-dual-ring"))._div()
                           .div(class_("load-more")
@@ -580,9 +580,14 @@ public abstract class HtmlConversionService {
             + "  table li       { display: inline-block; border-left: 1px solid #eee; padding: 0 3px; }"
             + "  table li:first-child { border-left: none; }"
             + "  .load-more     { display: none; }"),
-         newList((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {").andThen(append("}")), (Apply<String,String>)HtmlConversionService_.split.apply(Function.__, "}").andThen(HtmlConversionService_.<String>toList()).andThen(Transformers.map(prepend(".nested ").andThen(HtmlConversionService_.replaceAll.apply(__, ",", ", .nested ")).andThen(append("}")))).andThen(HtmlConversionService_.join.ap(" ")) )))
+         newList(HtmlConversionService_.prefixed.ap(".singleton").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
+                 HtmlConversionService_.prefixed.ap(".nested") )))
                 
         + extraStyle();
+    }
+    
+    static String prefixed(String prefix, String rules) {
+        return join(" ", map(prepend(prefix + " ").andThen(HtmlConversionService_.replaceAll.apply(__, ",", ", " + prefix + " ")).andThen(append("}")), toList(rules.split("}"))));
     }
 
     private final String scripts() {
