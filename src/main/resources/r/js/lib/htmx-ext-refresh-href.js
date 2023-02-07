@@ -10,19 +10,20 @@ htmx.defineExtension('refresh-href', {
         
         if (name === "htmx:beforeRequest") {
             if (evt.detail.requestConfig.triggeringEvent === tag) {
-                // event is sent by this extension
+                // event was sent by this extension -> call handler
                 evt.detail.etc.handler(evt.detail.pathInfo.anchor, evt.detail.pathInfo.finalRequestPath);
                 return false; // prevent actual Ajax call execution
             }
         } else if (name === "htmx:afterProcessNode") {
             let elt = evt.detail.elt;
             if (elt.tagName === "A" && elt.getAttribute('hx-get') && !elt.getAttribute("href")) {
-                // element is an anchor with a hx-get attribute and with an empty href attribute.
+                // element is an anchor with a hx-get attribute and with an empty/no href attribute.
                 
                 // events to hook this extension on.
-                // act directly on initialization and "mouseover" by default.
+                // act directly on initialization and mouseover by default.
                 let node = htmx.closest(elt, "[refresh-href]");
                 let events = (node && node.getAttribute('refresh-href') || "init,mouseover").split(",");
+                
                 events.forEach(function(e) {
                     let handler = function() {
                         // trigger an ajax call, but capture the url and interrupt request in htmx:beforeRequest
