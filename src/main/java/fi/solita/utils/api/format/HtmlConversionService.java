@@ -190,12 +190,17 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
-                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '" + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' '" + UI.calculateHash(scripts()) + "' '" + UI.calculateHash(scripts2()) + "'"))
+                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '"
+                        + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' '"
+                        + UI.calculateHash(scripts())+ "' '"
+                        + UI.calculateHash(scripts2()) + "' '"
+                        + UI.calculateHash(scripts3(request)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                     .write(styles(), false)
                     ._style()
+                    .script(type("text/javascript").src(request.getContextPath() + "/r/tablefilter/tablefilter.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
                     ._script();
@@ -280,7 +285,7 @@ public abstract class HtmlConversionService {
                 .body(rows == 1 ? class_("singleton") : null)
                   .render(pageHeader(title, request, true))
                   .section(id("content"))
-                      .table()
+                      .table(id("table"))
                         .thead()
                           .tr()
                             .render(tableHeader)
@@ -312,6 +317,9 @@ public abstract class HtmlConversionService {
                       ._if()
                   ._section()
                   .render(pageFooter())
+                  .script(type("text/javascript"))
+                      .write(scripts3(request), false)
+                  ._script()
                 ._body()
               ._html();
             
@@ -490,6 +498,9 @@ public abstract class HtmlConversionService {
         + "thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 1em; }"
         + "tbody > tr > td:first-child::before { content: counter(rowNumber); margin-right: 1em; color: #ddd; }"
         
+        + "input.flt { height: 20px; }"
+        + "table.TF tr th { padding-top: 0.5em; }"
+        
         + "ul             { list-style: none; padding: 0; margin: 0; white-space: normal; }"
         + "ul li          { border-top: 1px dotted #ddd; }"
         + "ul li:first-child { border: none; }"
@@ -666,5 +677,11 @@ public abstract class HtmlConversionService {
            + "        }"
            + "    }"
            + "});}";
+    }
+    
+    public static final String scripts3(final HttpServletRequest request) {
+        return "if (TableFilter) {"
+             + "  new TableFilter('table', { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
+             + "}";
     }
 }
