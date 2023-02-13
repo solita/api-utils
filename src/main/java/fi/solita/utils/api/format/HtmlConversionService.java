@@ -194,7 +194,7 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' '"
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
-                        + UI.calculateHash(scripts3(request)) + "'"))
+                        + UI.calculateHash(initTablefilter(request)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
                     .base(href(RequestUtil.getRequestURI(request).resolve("/").toString()))
                     .title().write(title.plainTextTitle)._title()
@@ -318,9 +318,11 @@ public abstract class HtmlConversionService {
                       ._if()
                   ._section()
                   .render(pageFooter())
-                  .script(type("text/javascript"))
-                      .write(scripts3(request), false)
-                  ._script()
+                  .if_(rows >= 2)
+                      .script(type("text/javascript"))
+                          .write(initTablefilter(request), false)
+                      ._script()
+                  ._if()
                 ._body()
               ._html();
             
@@ -680,7 +682,7 @@ public abstract class HtmlConversionService {
            + "});}";
     }
     
-    public static final String scripts3(final HttpServletRequest request) {
+    public static final String initTablefilter(final HttpServletRequest request) {
         return "if (TableFilter) {"
              + "  new TableFilter('table', { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
              + "}";
