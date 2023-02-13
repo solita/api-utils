@@ -1,5 +1,6 @@
 tippy(document.body.querySelectorAll('[title]'), {
     allowHTML: true,
+    flipOnUpdate: true,
     maxWidth: 'none',
     interactive: true,
     content(reference) {

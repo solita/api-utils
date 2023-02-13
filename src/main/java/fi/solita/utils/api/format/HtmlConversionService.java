@@ -683,7 +683,7 @@ public abstract class HtmlConversionService {
     }
     
     public static final String initTable(final HttpServletRequest request) {
-        return "if (TableFilter) {"
+        return "if (window.TableFilter) {"
              + "  document.querySelectorAll('#table:not(.TF)').forEach(function(x) {"
              + "    new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
              + "  });"

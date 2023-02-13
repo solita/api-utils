@@ -8,22 +8,29 @@
   height: 100%;
   width: 100%;
 }
+.map input {
+    font-size: 11px;
+}
 .layer-switcher {
   max-width: 30%;
+  font-size: 0.75em;
 }
 .layer-switcher .panel label {
   font-family: sans-serif;
-  font-size: 12px;
-  line-height: 1em;
+}
+.layer-switcher .group button {
+    width: 8px;
+    height: 12px;
 }
 .layer-switcher.shown {
   max-height: 80%;
   overflow-y: auto;
 }
-.layer-switcher[data-loading]:not([data-loading='0']) button {
+.layer-switcher[data-loading]:not([data-loading='0']) > button {
     animation: round-and-round 1s linear infinite;
+    background-color: transparent;
 }
-.layer-switcher[data-loading]:not([data-loading='0']) button:after {
+.layer-switcher[data-loading]:not([data-loading='0']) > button:after {
     content: 'loading';
     font-size: 0.8em;
     color: Black;
@@ -47,15 +54,15 @@
   overflow: auto;
 }
 .ol-rotate {
-  top: 18.5em;
+  top: 17.5em;
   left: 0.5em;
 }
 .rotate-left {
-  top: 20em;
+  top: 19em;
   left: 0.5em;
 }
 .rotate-right {
-  top: 21.5em;
+  top: 20.5em;
   left: 0.5em;
 }
 
@@ -140,7 +147,7 @@
   width: 11em;
   margin-left: 0;
   margin-top: 0.5em;
-  left: 22.5em;
+  left: 20em;
   position: absolute;
   top: 0;
   background: transparent;
@@ -149,13 +156,13 @@
   background: transparent;
 }
 .app-button:nth-child(2) {
-  margin-left: 9em;
+  margin-left: 8em;
 }
 .app-button:nth-child(3) {
-  margin-left: 20em;
+  margin-left: 17em;
 }
 .app-button:nth-child(4) {
-  margin-left: 56em;
+  margin-left: 49em;
 }
 .app-button > button {
   width: auto;
