@@ -127,8 +127,8 @@ var olstuff = function(constants, util) {
                 map.mystate = {};
                 map.mystate.closed = {};
             }
-            document.onkeydown = function() {
-                if (!document.querySelector('input:not(#rajoita):focus')) {
+            document.onkeydown = function(e) {
+                if (!e.ctrlKey && !e.metaKey && !document.querySelector('input:not(#rajoita):focus')) {
                     document.getElementById('rajoita').focus();
                 }
             };
