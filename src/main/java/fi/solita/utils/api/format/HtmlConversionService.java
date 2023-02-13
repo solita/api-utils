@@ -194,7 +194,7 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' '"
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
-                        + UI.calculateHash(initTablefilter(request)) + "'"))
+                        + UI.calculateHash(initTable(request)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
                     .base(href(RequestUtil.getRequestURI(request).resolve("/").toString()))
                     .title().write(title.plainTextTitle)._title()
@@ -286,7 +286,7 @@ public abstract class HtmlConversionService {
                 .body(rows == 1 ? class_("singleton") : null)
                   .render(pageHeader(title, request, true))
                   .section(id("content"))
-                      .table(id("table"))
+                      .table(id("table").hidden("hidden"))
                         .thead()
                           .tr()
                             .render(tableHeader)
@@ -320,7 +320,7 @@ public abstract class HtmlConversionService {
                   .render(pageFooter())
                   .if_(rows >= 2)
                       .script(type("text/javascript"))
-                          .write(initTablefilter(request), false)
+                          .write(initTable(request), false)
                       ._script()
                   ._if()
                 ._body()
@@ -682,9 +682,12 @@ public abstract class HtmlConversionService {
            + "});}";
     }
     
-    public static final String initTablefilter(final HttpServletRequest request) {
+    public static final String initTable(final HttpServletRequest request) {
         return "if (TableFilter) {"
-             + "  new TableFilter('table', { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
-             + "}";
+             + "  document.querySelectorAll('#table:not(.TF)').forEach(function(x) {"
+             + "    new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
+             + "  });"
+             + "}"
+             + "document.querySelector('#table').removeAttribute('hidden');"; // show table when it's completely done, to prevent reflows.
     }
 }
