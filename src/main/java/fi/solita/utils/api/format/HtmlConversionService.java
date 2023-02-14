@@ -194,7 +194,8 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' '"
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
-                        + UI.calculateHash(initTable(request)) + "'"))
+                        + UI.calculateHash(scripts3()) + "' '"
+                        + UI.calculateHash(initTableFilter(request)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
                     .base(href(RequestUtil.getRequestURI(request).resolve("/").toString()))
                     .title().write(title.plainTextTitle)._title()
@@ -320,9 +321,12 @@ public abstract class HtmlConversionService {
                   .render(pageFooter())
                   .if_(rows >= 2)
                       .script(type("text/javascript"))
-                          .write(initTable(request), false)
+                          .write(initTableFilter(request), false)
                       ._script()
                   ._if()
+                  .script(type("text/javascript"))
+                      .write(scripts3(), false)
+                  ._script()
                 ._body()
               ._html();
             
@@ -682,12 +686,15 @@ public abstract class HtmlConversionService {
            + "});}";
     }
     
-    public static final String initTable(final HttpServletRequest request) {
+    public static final String initTableFilter(final HttpServletRequest request) {
         return "if (window.TableFilter) {"
              + "  document.querySelectorAll('#table:not(.TF)').forEach(function(x) {"
              + "    new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
              + "  });"
-             + "}"
-             + "document.querySelector('#table').removeAttribute('hidden');"; // show table when it's completely done, to prevent reflows.
+             + "}";
+    }
+    
+    public static final String scripts3() {
+        return "document.querySelector('#table').removeAttribute('hidden');"; // show table when it's completely done, to prevent reflows.
     }
 }
