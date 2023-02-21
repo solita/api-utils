@@ -1,6 +1,6 @@
 /**
- * Extension that refreshes href attributes of anchor elements
- * based on actual URL used to make the Ajax call.
+ * Extension that refreshes href attributes of anchor elements having hx-get attribute,
+ * with the actual URL used to make the Ajax call.
  * Refresh is made by default on "init" (initialization) and "mouseover" event.
  * Events can be changed by listing them in refresh-href -attribute, separated by comma.
  */
@@ -16,9 +16,7 @@ htmx.defineExtension('refresh-href', {
             }
         } else if (name === "htmx:afterProcessNode") {
             let elt = evt.detail.elt;
-            if (elt.tagName === "A" && elt.getAttribute('hx-get') && !elt.getAttribute("href")) {
-                // element is an anchor with a hx-get attribute and with an empty/no href attribute.
-                
+            if (elt.tagName === "A" && elt.getAttribute('hx-get')) {
                 // events to hook this extension on.
                 // act directly on initialization and mouseover by default.
                 let node = htmx.closest(elt, "[refresh-href]");
@@ -31,7 +29,7 @@ htmx.defineExtension('refresh-href', {
                             source: elt,
                             event: tag,
                             handler: function(anchor, finalRequestPath) {
-                                let href = finalRequestPath + (anchor ? '#' + anchor : '');
+                                let href = finalRequestPath + (anchor && !finalRequestPath.includes('#') ? '#' + anchor : '');
                                 elt.setAttribute('href', href);
                             }
                         });

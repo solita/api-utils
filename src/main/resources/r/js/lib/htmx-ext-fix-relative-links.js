@@ -1,5 +1,5 @@
 /**
- * Extension to fix loaded relative links to be relative
+ * Extension to fix relative links of swapped content to point
  * to the source page instead of the current one.
  */
 htmx.defineExtension('fix-relative-links', {
