@@ -100,7 +100,8 @@ var olstuff = function(constants, util) {
                     var props = layer.getProperties();
                     results[props.title] = layer.getSource().getFeaturesInExtent(mapExtent).map(function(x) {
                         return util.withoutProp(util.withoutProp(x.getProperties(), 'geometry'), 'labelPoint');
-                    }).filter(onlyUnique);
+                    }).filter(onlyUnique)
+                      .sort(function(a,b) { return (a.osuus && b.osuus) ? (a.osuus - b.osuus) : (a.etappi && b.etappi) ? (a.etappi - b.etappi) : a.osuus ? -1 : b.osuus ? 1 : 0; });
                 }
             });
             return results;
@@ -370,7 +371,7 @@ var olstuff = function(constants, util) {
                           features.forEach(f => {
                             if (!f.getProperties().tunniste) {
                                 var newProps = f.getProperties();
-                                newProps._tunniste = newProps.etappi ? newProps.etappi : layerTitle;
+                                newProps._tunniste = newProps.osuus ? newProps.osuus : newProps.etappi ? newProps.etappi : layerTitle;
                                 f.setProperties(newProps);
                             }
                           });
