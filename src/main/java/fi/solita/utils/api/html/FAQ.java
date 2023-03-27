@@ -209,10 +209,10 @@ concat(text("This common problem is avoided by letting the user decide. srsName=
 
                    .render(definition_fi(
 "Mitä 'cql_filter'-parametri tekee?",
-"Suodattaa tulosjoukon rivejä ehtojen perusteella. Useita ehtoja voi yhdistää AND-sanalla. Toteutettuna osajoukko ECQL-filttereistä: " + mkString(", ", Filters.SUPPORTED_OPERATIONS) + ". INTERSECTS vaatii ensimmäiseksi parametriksi geometria-propertyn ja toiseksi POLYGON-tyyppisen WKT-geometrian."
+"Suodattaa tulosjoukon rivejä ehtojen perusteella. Useita ehtoja voi yhdistää AND-sanalla. Useita AND-lohkoja voi yhdistää OR-sanalla. Toteutettuna osajoukko ECQL-filttereistä: " + mkString(", ", Filters.SUPPORTED_OPERATIONS) + ". INTERSECTS vaatii ensimmäiseksi parametriksi geometria-propertyn ja toiseksi POLYGON-tyyppisen WKT-geometrian."
                  )).render(definition_en(
 "What does 'cql_filter'-parameter do?",
-"Filter result rows based on given conditions. Multiple conditions can be combined with AND-keyword. A subset of ECQL-filters are implemented: " + mkString(", ", Filters.SUPPORTED_OPERATIONS) + ". INTERSECTS requires a geometry property as its first value and a literal WKT polygon as the second."
+"Filter result rows based on given conditions. Multiple conditions can be combined with AND-keyword. Multiple AND-blocks can be combined with OR-keyword. A subset of ECQL-filters are implemented: " + mkString(", ", Filters.SUPPORTED_OPERATIONS) + ". INTERSECTS requires a geometry property as its first value and a literal WKT polygon as the second."
                  ))
                    
                    .render(definition_fi(
