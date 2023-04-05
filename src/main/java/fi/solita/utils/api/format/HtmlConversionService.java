@@ -197,7 +197,6 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(scripts3()) + "' '"
                         + UI.calculateHash(initTableFilter(request)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
-                    .base(href(RequestUtil.getRequestURI(request).resolve("/").toString()))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                     .write(styles(), false)
