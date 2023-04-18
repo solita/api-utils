@@ -395,7 +395,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orElse(null)).map(CustomTypeParameterBuilder_.requestParamName);
             apply(parameterContext, type, pathVariableName, requestParamName);
             Optional<ApiParam> apiparam = parameterContext.resolvedMethodParameter().findAnnotation(ApiParam.class);
-            if (apiparam.isPresent() && !apiparam.get().value().isBlank()) {
+            if (apiparam.isPresent() && !apiparam.get().value().trim().isEmpty()) {
                 parameterContext.parameterBuilder().description(apiparam.get().value() + parameterContext.parameterBuilder().build().getDescription());
             }
         }
@@ -496,7 +496,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     if (ignoreRevision) {
                         ret = ret.replace("{revision}/", "");      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
                     }
-                    return ret.replace("{*****}", "")          // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+                    return ret.replace("{?*****}", "")     // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
+                              .replace("{*****}", "")
                               .replace("{asterisk}", "*"); // Keino lisätä Springissä polkuun tähtönen, niin että tulee swagger-kuvaukseenkin oikein.
 
                 }

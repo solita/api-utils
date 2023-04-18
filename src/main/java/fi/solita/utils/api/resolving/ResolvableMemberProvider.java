@@ -155,7 +155,7 @@ public abstract class ResolvableMemberProvider {
     public static Iterable<Object> unwrapResolvable(MetaNamedMember<?,?> member, Object resolvable) {
         if (member instanceof NestedMember) {
             Object res = ((NestedMember<Object,?>) member).parent.apply(resolvable);
-            return flatMap(ResolvableMemberProvider_.unwrapResolvable.ap(((NestedMember<?,?>) member).child), Collection.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) || Option.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) ? (Iterable<?>)res : newList(res));
+            return flatMap(ResolvableMemberProvider_.unwrapResolvable.ap(((NestedMember<?,?>) member).child), Collection.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) || Option.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) ? (Iterable<Object>)res : newList(res));
         }
         Object ret = ((MetaNamedMember<Object,Object>)member).apply(resolvable);
         Class<?> memberClass = MemberUtil.memberClass(member);
