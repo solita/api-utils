@@ -367,6 +367,16 @@ var olstuff = function(constants, util) {
                         .then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                         .then(function(response) {
                           layer.dispatchEvent("loadSuccess");
+
+                          // openlayers throws error if coordinates == null
+                          if (response.type == 'FeatureCollection') {
+                              response.features.filter(f => f.geometry.coordinates == null).forEach((f => f.geometry.coordinates = []));
+                          } else if (response.type == 'Feature') {
+                              if (response.geometry.coordinates == null) {
+                                  response.geometry.coordinates = [];
+                              }
+                          }
+
                           var features = ret.format.readFeatures(response);
                           features.forEach(f => {
                             if (!f.getProperties().tunniste) {
@@ -390,6 +400,7 @@ var olstuff = function(constants, util) {
                             if (err.name == 'AbortError') {
                                 layer.dispatchEvent("loadAbort");
                             } else {
+                                console.log(err);
                                 layer.dispatchEvent("loadFail");
                             }
                         });
