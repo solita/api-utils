@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.poi.util.IOUtils;
 import org.geotools.feature.FeatureCollection;
@@ -48,7 +46,6 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import ar.com.hjg.pngj.FilterType;
 import fi.solita.utils.api.util.RequestUtil;
@@ -194,7 +191,7 @@ public class PngConversionService {
         return out.toByteArray();
     }
     
-    private static StyledLayer[] createStyles(final URL url) throws IOException, SAXException, ParserConfigurationException, URISyntaxException {
+    private static StyledLayer[] createStyles(final URL url) throws Exception {
         if (url == null) {
             return new StyledLayer[0];
         }

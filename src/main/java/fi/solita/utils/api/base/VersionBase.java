@@ -209,8 +209,13 @@ public abstract class VersionBase {
     }
 
     @Deprecated
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?>... geometry2) {
-        return resolveIncludes(format, Option.of(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, geometry2)));
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
+        return resolveIncludes(format, Option.of(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
+    }
+    
+    @Deprecated
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, MetaNamedMember<? super T,?>... geometry3) {
+        return resolveIncludes(format, Option.of(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Option<Filters> filters) {
@@ -221,8 +226,12 @@ public abstract class VersionBase {
         return resolveIncludes(format, propertyNames, members, builders, filters.getOrElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry));
     }
 
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Option<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?>... geometry2) {
-        return resolveIncludes(format, propertyNames, members, builders, filters.getOrElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, geometry2)));
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Option<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
+        return resolveIncludes(format, propertyNames, members, builders, filters.getOrElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
+    }
+    
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Option<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, MetaNamedMember<? super T,?>... geometry3) {
+        return resolveIncludes(format, propertyNames, members, builders, filters.getOrElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
     }
     
     
