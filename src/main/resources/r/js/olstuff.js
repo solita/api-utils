@@ -370,9 +370,9 @@ var olstuff = function(constants, util) {
 
                           // openlayers throws error if coordinates == null
                           if (response.type == 'FeatureCollection') {
-                              response.features.filter(f => f.geometry.coordinates == null).forEach((f => f.geometry.coordinates = []));
+                              response.features.filter(f => f.geometry && f.geometry.coordinates == null).forEach((f => f.geometry.coordinates = []));
                           } else if (response.type == 'Feature') {
-                              if (response.geometry.coordinates == null) {
+                              if (response.geometry && response.geometry.coordinates == null) {
                                   response.geometry.coordinates = [];
                               }
                           }

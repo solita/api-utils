@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
-import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;

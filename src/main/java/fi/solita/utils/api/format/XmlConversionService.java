@@ -5,7 +5,6 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.flatMap;
-import static fi.solita.utils.functional.FunctionalA.concat;
 
 import java.util.Map;
 

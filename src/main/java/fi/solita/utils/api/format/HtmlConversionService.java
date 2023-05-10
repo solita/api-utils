@@ -358,7 +358,7 @@ public abstract class HtmlConversionService {
             int count = Integer.parseInt(cm.group(1));
             
             String uri = RequestUtil.getApiVersionBasePath(request) + drop(1, RequestUtil.getAPIVersionRelativePathWithoutRevision(request)) + Option.of(request.getQueryString()).map(Transformers.prepend("?")).getOrElse("");
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer();
             Matcher m = START_INDEX.matcher(uri);
             if (m.find()) {
                 m.appendReplacement(sb, "startIndex=" + (Integer.parseInt(m.group(1)) + count));

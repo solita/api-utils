@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.12.83</version>
+    <version>0.12.84</version>
     <build>
         <resources>
             <resource>
@@ -27,8 +27,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
                 <configuration>
-                    <source>9</source>
-                    <target>9</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>UTF-8</encoding>
                     <optimize>true</optimize>
                     <proc>none</proc>

@@ -20,7 +20,6 @@ import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
-import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
