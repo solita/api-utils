@@ -563,6 +563,7 @@ public abstract class HtmlConversionService {
         + ".type-interval, .type-point, .type-kmetaisyys, .type-ratakmetaisyys, .type-ratakmvali { white-space: nowrap; }"
         + ".type-multiline, .type-multipolygon { overflow: hidden; height: 1em; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
         + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
+        + ".type-resolved table { display: table; }"
         
         + ".load-more     { padding-top: 1em; }"
         + ".load-more > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
@@ -687,7 +688,7 @@ public abstract class HtmlConversionService {
     
     public static final String initTableFilter(final HttpServletRequest request) {
         return "if (window.TableFilter) {"
-             + "  document.querySelectorAll('#table:not(.TF)').forEach(function(x) {"
+             + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.type-resolved')).forEach(function(x) {"
              + "    new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
              + "  });"
              + "}";
