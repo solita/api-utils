@@ -378,6 +378,25 @@ var olstuff = function(constants, util) {
                           }
 
                           var features = ret.format.readFeatures(response);
+                          
+                          // populate resolved features with properties from the corresponding "parent" object
+                          var resolved = features.filter(f => f.getProperties()._resolved == true);
+                          var direct = features.filter(f => !f.getProperties()._resolved);
+                          resolved.forEach(resolvedFeature => {
+                              var resolvedProps = resolvedFeature.getProperties();
+                              var parts = resolvedProps._source.split('.');
+                              if (resolvedProps.tunniste && resolvedProps._source) {
+                                var x = direct.find(d => {
+                                    var directProps = parts.reduce((acc,cur) => acc[cur], d.getProperties());
+                                    return directProps == resolvedProps.tunniste || directProps instanceof Array && directProps.includes(resolvedProps.tunniste);
+                                });
+                                if (x) {
+                                    // "geometry" is also a property due to some bad API design... so explicitly keep the actual geometry.
+                                    resolvedFeature.setProperties({...resolvedProps, ...x.getProperties(), geometry: resolvedProps.geometry});
+                                }
+                              }
+                          });
+                          
                           features.forEach(f => {
                             if (!f.getProperties().tunniste) {
                                 var newProps = f.getProperties();
