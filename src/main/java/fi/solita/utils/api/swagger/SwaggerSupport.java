@@ -38,6 +38,7 @@ import java.util.function.Predicate;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
+import org.joda.time.Period;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -235,6 +236,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
     
     public static final String DESCRIPTION_DateTime = "Ajanhetki / Instant. yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String DESCRIPTION_IntervalPeriod = "Aikaväli ilmaistuna joko kahdella UTC-ajanhetkellä tai UTC-ajanhetkellä ja ISO8601-periodilla. / Interval expressed either with two UTC instants or a UTC-instant and a ISO8601 period. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z' or yyyy-MM-dd'T'HH:mm:ss'Z'/PyYmMwWdDThHmMsS or PyYmMwWdDThHmMsS/yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String DESCRIPTION_Period = "Aikaväli ilmaistuna suhteessa nykyhetkeen joko yhdellä (negaatio tarkoittaa ajassa taaksepäin) tai kahdella ISO8601-periodilla. / Interval relative to current time expressed either with one (negation indicates backwards in time) or two ISO8601-periods. PyYmMwWdDThHmMsS or -PyYmMwWdDThHmMsS or PyYmMwWdDThHmMsS/PyYmMwWdDThHmMsS";
     public static final String DESCRIPTION_LocalDate = "Päivämäärä / Date. yyyy-MM-dd";
     public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
     
@@ -406,7 +409,10 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     .description(DESCRIPTION_DateTime);
             } else if (Interval.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .description(DESCRIPTION_Interval);
+                    .description(DESCRIPTION_IntervalPeriod);
+            } else if (Period.class.isAssignableFrom(type)) {
+                parameterContext.parameterBuilder()
+                .description(DESCRIPTION_Period);
             } else if (LocalDate.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(DESCRIPTION_LocalDate);
