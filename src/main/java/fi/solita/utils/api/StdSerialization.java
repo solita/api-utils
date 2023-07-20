@@ -7,6 +7,7 @@ import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalM.*;
+import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Collection;
@@ -93,11 +94,11 @@ public abstract class StdSerialization<BOUNDS> {
     
     public abstract ReferencedEnvelope bounds2envelope(BOUNDS place);
     
-    public static <DTO, SPATIAL> Function1<DTO, ? extends GeometryObject> geojsonFromDto(Lens<DTO, SPATIAL> geometryLens, final Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return Function.of(geometryLens).andThen(new Apply<SPATIAL, GeometryObject>() {
+    public static <DTO, SPATIAL> Function1<DTO, Option<GeometryObject>> geojsonFromDto(Apply<DTO, SPATIAL> geometryGetter, final Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+        return Function.of(geometryGetter).andThen(new Apply<SPATIAL, Option<GeometryObject>>() {
             @Override
-            public GeometryObject apply(SPATIAL t) {
-                return t == null ? null : toGeojson.apply(t);
+            public Option<GeometryObject> apply(SPATIAL t) {
+                return t == null ? None() : toGeojson.apply(t);
             }
         });
     }
@@ -114,8 +115,8 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedMap(req, res, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$);
+            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+        return stdSpatialBoundedMap(req, res, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
@@ -351,8 +352,8 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialBoundedCollection(req, res, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$);
+            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+        return stdSpatialBoundedCollection(req, res, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
     public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedCollection(
@@ -421,8 +422,8 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialCollection(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$);
+            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+        return stdSpatialCollection(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
 
     public <DTO,KEY,SPATIAL> byte[] stdSpatialCollection(
@@ -488,8 +489,8 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, ? extends GeometryObject> toGeojson) {
-        return stdSpatialSingle(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$);
+            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+        return stdSpatialSingle(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
     public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(

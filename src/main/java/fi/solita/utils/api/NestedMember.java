@@ -19,8 +19,13 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,T>(parent, child);
     }
 
-    public static final <S,U,T> MetaNamedMember<S,T> ofIt(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,T> child) {
+    public static final <S,U,T> MetaNamedMember<S,T> ofItFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,T> child) {
         return new NestedMember<S,T>(parent, child);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static final <S,U,T> MetaNamedMember<S,Iterable<T>> ofIt(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,T> child) {
+        return (MetaNamedMember<S, Iterable<T>>) new NestedMember<S,T>(parent, child);
     }
 
     public static final <S,T> MetaNamedMember<S,T> unchecked(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child) {
