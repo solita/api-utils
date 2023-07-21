@@ -6,7 +6,11 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
     });
 
     window.onhashchange = function() {
-        window.location.hash.split('#').filter(function(x) { return x != ''; }).map(function(h) { return decodeURIComponent(h); }).forEach(function(h,index) {
+        window.location.hash.split('#')
+                            .map(function(x) { return x.trim(); })
+                            .filter(function(x) { return x != ''; })
+                            .map(function(h) { return decodeURIComponent(h); })
+                            .forEach(function(h,index) {
             let s = searchUrlFunction(h);
             if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
                 let layer = s instanceof Array ?
