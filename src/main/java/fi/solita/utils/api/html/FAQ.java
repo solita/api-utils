@@ -206,6 +206,14 @@ concat(text("This common problem is avoided by letting the user decide. srsName=
 "Vectors or rasterized images?",
 "Your choice. Images may be more performant especially in mobile devices, but vectors allow interaction. Vectors are always sharp in every zoom level, whereas images need to be loaded separately for more lower zoom levels. One possibility would be to load images on high zoom levels, and change to vectors when approaching a lower zoom level where the user might want to interact with the data in question."
                  ))
+                   
+                   .render(definition_fi(
+"Miksi rasteroidut kuvat (WMTS/PNG) eivät aina vastaa vektoroituja?",
+"Tällä hetkellä kuvien renderöinti ei huomioi kaikkia oleellisia ominaisuuksia. Esimerkiksi baliisin tyyppiä ei huomioida vaan kaikki baliisit piirretään käyttäen samaa SVG-ikonia baliisityypistä riippumatta."
+                 )).render(definition_en(
+"Why don't rasterized images (WMTS/PNG) always correspond exactly to vectorized?",
+"Currently the rendering doesn't take into consideration all the properties. For example, balise type is not considered and instead all the balises are rendered using the same SVG icond irrespective of balise type."
+                 ))
 
                    .render(definition_fi(
 "Mitä 'cql_filter'-parametri tekee?",

@@ -67,10 +67,10 @@ public class PngConversionService {
     
     private final URI baseURI;
 
-    public PngConversionService(URI baseURI) {
+    public PngConversionService(String imageBasePath, URI baseURI) {
         this.baseURI = baseURI;
         try {
-            for (StyledLayer layer: createStyles(getSld())) {
+            for (StyledLayer layer: createStyles(imageBasePath, getSld())) {
                 // use only the first style in the layer...
                 defaultStyles.put(layer.getName(), ((NamedLayer)layer).getStyles()[0]);
             }
@@ -191,11 +191,11 @@ public class PngConversionService {
         return out.toByteArray();
     }
     
-    private static StyledLayer[] createStyles(final URL url) throws Exception {
+    private static StyledLayer[] createStyles(String imageBasePath, final URL url) throws Exception {
         if (url == null) {
             return new StyledLayer[0];
         }
-        URI imagePath = url.toURI().resolve("r/img/");
+        URI imagePath = url.toURI().resolve(imageBasePath);
         final URL sourceUrl;
         try {
             sourceUrl = imagePath.toURL();
