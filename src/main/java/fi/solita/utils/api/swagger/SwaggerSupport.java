@@ -125,7 +125,22 @@ public abstract class SwaggerSupport extends ApiResourceController {
             Field field = clazz.getDeclaredField("TYPE_FACTORY");
             field.setAccessible(true);
             // must remove final specifier to set a new map to the field.
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            Field modifiersField;
+            try {
+                modifiersField = Field.class.getDeclaredField("modifiers");
+            } catch (NoSuchFieldException e) {
+                // Java 17: https://stackoverflow.com/a/74727966
+                Method getDeclaredFields0 = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+                getDeclaredFields0.setAccessible(true);
+                Field[] fields = (Field[]) getDeclaredFields0.invoke(Field.class, false);
+                modifiersField = null;
+                for (Field each : fields) {
+                    if ("modifiers".equals(each.getName())) {
+                        modifiersField = each;
+                        break;
+                    }
+                }
+            }
             modifiersField.setAccessible(true);
             modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
             @SuppressWarnings("unchecked")
