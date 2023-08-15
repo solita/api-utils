@@ -135,7 +135,7 @@ public abstract class RequestUtil {
     }
     
     public static final void checkURL(HttpServletRequest request, Set<String> caseIgnoredParams, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
-        assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), Functional.union(caseIgnoredParams, newSet("propertyName", "cql_filter")), acceptedParams);
+        assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), caseIgnoredParams, acceptedParams);
     }
     
     static boolean inOrder(String a, String b) {
@@ -191,7 +191,7 @@ public abstract class RequestUtil {
         
         for (Map.Entry<String, String[]> param: parameters.entrySet()) {
             for (String v: param.getValue()) {
-                if (!caseIgnoredParams.contains(v) && !v.toLowerCase().equals(v)) {
+                if (!caseIgnoredParams.contains(param.getKey()) && !v.toLowerCase().equals(v)) {
                     throw new RequestUtil.QueryParameterValuesMustBeInLowercaseException();
                 }
             }
