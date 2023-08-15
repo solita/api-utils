@@ -31,6 +31,7 @@ import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +51,7 @@ import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
+import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaMethod;
@@ -132,15 +134,15 @@ public abstract class RequestUtil {
         return None();
     }
     
-    public static final void checkURL(HttpServletRequest request, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
-        assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), acceptedParams);
+    public static final void checkURL(HttpServletRequest request, Set<String> caseIgnoredParams, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
+        assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), Functional.union(caseIgnoredParams, newSet("propertyName", "cql_filter")), acceptedParams);
     }
     
     static boolean inOrder(String a, String b) {
         return a.compareToIgnoreCase(b) <= 0;
     }
     
-    static void assertQueryStringValid(Map<String, String[]> parameters, List<String> parameterNames, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
+    static void assertQueryStringValid(Map<String, String[]> parameters, List<String> parameterNames, Set<String> caseIgnoredParams, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
         List<String> unknownParameters = newList(subtract(parameterNames, newSet(acceptedParams)));
         if (!unknownParameters.isEmpty()) {
             throw new RequestUtil.IllegalQueryParametersException(unknownParameters);
@@ -189,7 +191,7 @@ public abstract class RequestUtil {
         
         for (Map.Entry<String, String[]> param: parameters.entrySet()) {
             for (String v: param.getValue()) {
-                if (!param.getKey().equals("time") && !param.getKey().equals("propertyName") && !param.getKey().equals("cql_filter") && !v.toLowerCase().equals(v)) {
+                if (!caseIgnoredParams.contains(v) && !v.toLowerCase().equals(v)) {
                     throw new RequestUtil.QueryParameterValuesMustBeInLowercaseException();
                 }
             }
