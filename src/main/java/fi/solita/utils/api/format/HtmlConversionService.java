@@ -15,14 +15,7 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
-import static org.rendersnake.HtmlAttributesFactory.class_;
-import static org.rendersnake.HtmlAttributesFactory.href;
-import static org.rendersnake.HtmlAttributesFactory.http_equiv;
-import static org.rendersnake.HtmlAttributesFactory.id;
-import static org.rendersnake.HtmlAttributesFactory.lang;
-import static org.rendersnake.HtmlAttributesFactory.name;
-import static org.rendersnake.HtmlAttributesFactory.rowspan;
-import static org.rendersnake.HtmlAttributesFactory.type;
+import static org.rendersnake.HtmlAttributesFactory.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -286,7 +279,7 @@ public abstract class HtmlConversionService {
                 .body(rows == 1 ? class_("singleton") : null)
                   .render(pageHeader(title, request, true))
                   .section(id("content"))
-                      .table(id("table").hidden("hidden"))
+                      .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML"))
                         .thead()
                           .tr()
                             .render(tableHeader)
@@ -299,21 +292,31 @@ public abstract class HtmlConversionService {
                       .if_(rows > 0 && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
                           .render(initHtmx(request))
                           .div(class_("lds-dual-ring"))._div()
-                          .div(class_("load-more")
+                          .div(class_("load-more"))
+                              .a(href("").class_("sse").hidden("hidden"))
+                                  .span(lang("fi")).write("Päivitä taulukkoa automaattisesti...")._span()
+                                  .span(lang("en")).write("Refresh table automatically...")._span()
+                              ._a()
+                              .span(class_("sse-loading").hidden("hidden"))
+                                  .span(lang("fi")).write("Taulukko päivittymässä automaattisesti SSE:llä")._span()
+                                  .span(lang("en")).write("Table is refreshing automatically via SSE")._span()
+                              ._span()
+                              .span(class_(null)
                                   .add("hx-push-url", "false")
                                   .add("hx-boost", "true")
                                   .add("hx-target", "#content > table > tbody")
                                   .add("hx-swap", "beforeend")
                                   .add("hx-indicator", ".lds-dual-ring")
                                   .add("hx-select", "#content > table > tbody > tr"))
-                              .a(href(uriWithIncrementedStartIndex(request, false)))
-                                  .span(lang("fi")).write("Lataa lisää rivejä...")._span()
-                                  .span(lang("en")).write("Load more rows...")._span()
-                              ._a()
-                              .a(href(uriWithIncrementedStartIndex(request, true)))
-                                  .span(lang("fi")).write("Lataa loput rivit...")._span()
-                                  .span(lang("en")).write("Load rest of the rows...")._span()
-                              ._a()
+                                  .a(href(uriWithIncrementedStartIndex(request, false)))
+                                      .span(lang("fi")).write("Lataa lisää rivejä...")._span()
+                                      .span(lang("en")).write("Load more rows...")._span()
+                                  ._a()
+                                  .a(href(uriWithIncrementedStartIndex(request, true)))
+                                      .span(lang("fi")).write("Lataa loput rivit...")._span()
+                                      .span(lang("en")).write("Load rest of the rows...")._span()
+                                  ._a()
+                              ._span()
                           ._div()
                       ._if()
                   ._section()
@@ -328,7 +331,7 @@ public abstract class HtmlConversionService {
                   ._script()
                 ._body()
               ._html();
-            
+
             ow.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -342,6 +345,7 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 html.script(type("text/javascript").src(request.getContextPath() + "/r/js/lib/htmx.min.js"))._script()
+                    .script(type("text/javascript").src(request.getContextPath() + "/r/js/lib/htmx-ext-sse.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts2(), false)
                     ._script();
@@ -565,8 +569,8 @@ public abstract class HtmlConversionService {
         + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
         + ".type-resolved table { display: table; }"
         
-        + ".load-more     { padding-top: 1em; }"
-        + ".load-more > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
+        + ".load-more         { padding-top: 1em; }"
+        + ".load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
         
         + ".formats       { position: absolute; }"
         + ".formats a     { padding: 0 1em; font-size: 0.75em; }"
@@ -668,7 +672,8 @@ public abstract class HtmlConversionService {
     
     public static final String scripts2() {
         return
-             "if (htmx) { htmx.on('htmx:afterOnLoad', function(evt) {"
+             "if (htmx) {"
+           + "  htmx.on('htmx:afterOnLoad', function(evt) {"
            + "    let m = evt.detail.xhr.responseURL.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
            + "    if (m) {"
            + "        let newRevision = m[1];"
@@ -678,18 +683,41 @@ public abstract class HtmlConversionService {
            + "            window.location.reload();"
            + "        }"
            + "    }"
-           + "});}";
+           + "  });"
+           + "}";
     }
     
     public static final String initTableFilter(final HttpServletRequest request) {
         return "if (window.TableFilter) {"
              + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.type-resolved')).forEach(function(x) {"
-             + "    new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' }).init();"
+             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' });"
+             + "    tf.init();"
+             + "    x.addEventListener('htmx:afterSwap', function(ev) { tf.filter(); });"
              + "  });"
              + "}";
     }
     
     public static final String scripts3() {
-        return "document.querySelector('#table').removeAttribute('hidden');"; // show table when it's completely done, to prevent reflows.
+        return "document.querySelector('#table').removeAttribute('hidden');" // show table when it's completely done, to prevent reflows.
+           + "  if (!document.head.classList.contains('sse-done')) {"
+           + "        document.head.classList.add('sse-done');"
+           + "        document.querySelectorAll('.sse').forEach(function(sse) {"
+           + "            sse.addEventListener('click', function(ev) {"
+           + "                sse.setAttribute('hidden', 'hidden');"
+           + "                document.querySelector('.lds-dual-ring').style.display = 'block';"
+           + "                document.querySelectorAll('.load-more > *').forEach(function(child) {"
+           + "                    if (child.classList.contains('sse-loading')) { child.removeAttribute('hidden'); } else { child.setAttribute('hidden', 'hidden'); }"
+           + "                });"
+           + "                document.querySelectorAll('#table').forEach(function(e) {"
+           + "                    e.addEventListener('htmx:sseMessage', function(ev) { if (window.tf) { window.tf.filter(); } });"
+           + "                    e.setAttribute('sse-connect', window.location.href);"
+           + "                    htmx.process(e);"
+           + "                });"
+           + "                ev.preventDefault();"
+           + "                return false;"
+           + "            });"
+           + "            sse.removeAttribute('hidden');"
+           + "        });"
+           + "  }";
     }
 }

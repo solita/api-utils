@@ -10,6 +10,7 @@ public class UITest {
 
     @Test
     public void calculateHash() {
-        assertEquals("sha256-1shFwz2+GoGhS/eb9QvxLY8Vk/JJlJXyPwkJg3owzl8=", UI.calculateHash(HtmlConversionService.scripts2()));
+        // just tests hash calculation. Replace hash here when you modify the script
+        assertEquals("sha256-hrTchaIJErAKAcJc7iW7pHe/ms/pPBb4ba18UI1eRlU=", UI.calculateHash(HtmlConversionService.scripts2()));
     }
 }
