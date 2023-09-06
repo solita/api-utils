@@ -58,11 +58,13 @@ public abstract class HtmlConversionService {
     }
     
     protected HtmlModule htmlModule;
+    private final boolean sseEnabled;
 
-    public HtmlConversionService(HtmlModule htmlModule) {
+    public HtmlConversionService(HtmlModule htmlModule, boolean sseEnabled) {
         this.htmlModule = htmlModule;
+        this.sseEnabled = sseEnabled;
     }
-    
+
     public HtmlTitle title(final String title) {
         return title(title, Option.<Count>None(), Option.<StartIndex>None());
     }
@@ -289,10 +291,10 @@ public abstract class HtmlConversionService {
                           .render(tableBody)
                         ._tbody()
                       ._table()
-                      .if_(rows > 0 && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
-                          .render(initHtmx(request))
-                          .div(class_("lds-dual-ring"))._div()
-                          .div(class_("load-more"))
+                      .render(initHtmx(request))
+                      .div(class_("lds-dual-ring"))._div()
+                      .div(class_("load-more"))
+                          .if_(sseEnabled)
                               .a(href("").class_("sse").hidden("hidden"))
                                   .span(lang("fi")).write("Päivitä taulukkoa automaattisesti...")._span()
                                   .span(lang("en")).write("Refresh table automatically...")._span()
@@ -301,6 +303,8 @@ public abstract class HtmlConversionService {
                                   .span(lang("fi")).write("Taulukko päivittymässä automaattisesti SSE:llä")._span()
                                   .span(lang("en")).write("Table is refreshing automatically via SSE")._span()
                               ._span()
+                          ._if()
+                          .if_(rows > 0 && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
                               .span(class_(null)
                                   .add("hx-push-url", "false")
                                   .add("hx-boost", "true")
@@ -317,8 +321,8 @@ public abstract class HtmlConversionService {
                                       .span(lang("en")).write("Load rest of the rows...")._span()
                                   ._a()
                               ._span()
-                          ._div()
-                      ._if()
+                          ._if()
+                      ._div()
                   ._section()
                   .render(pageFooter())
                   .if_(rows >= 2)
