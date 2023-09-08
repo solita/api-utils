@@ -44,8 +44,12 @@ public class GeneralExceptionResolver implements HandlerExceptionResolver, Order
                 ResponseUtil.respondError(response, HttpStatus.NOT_FOUND);
                 return new ModelAndView();
             }
-            
-            
+
+
+            for (RequestUtil.EventStreamNotAccepted e: ExceptionUtils.findCauseFromHierarchy(ex, RequestUtil.EventStreamNotAccepted.class)) {
+                ResponseUtil.respondError(response, HttpStatus.NOT_ACCEPTABLE.value(), "Requested content-type is not available for the requested resource for now");
+                return new ModelAndView();
+            }
             for (RequestUtil.UnavailableContentTypeException e: ExceptionUtils.findCauseFromHierarchy(ex, RequestUtil.UnavailableContentTypeException.class)) {
                 ResponseUtil.respondError(response, HttpStatus.NOT_ACCEPTABLE.value(), "Requested content-type is not available for the requested resource for now");
                 return new ModelAndView();

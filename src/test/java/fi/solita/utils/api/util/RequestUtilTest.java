@@ -60,4 +60,19 @@ public class RequestUtilTest {
             // ok
         }
     }
+
+    @Test(expected = RequestUtil.EventStreamNotAccepted.class)
+    public void eventStreamNotAccepted() {
+        RequestUtil.assertAcceptHeader(newList("text/event-stream"));
+    }
+
+    @Test(expected = RequestUtil.EventStreamNotAccepted.class)
+    public void eventStreamWithCharsetNotAccepted() {
+        RequestUtil.assertAcceptHeader(newList("text/event-stream;chartset=foo"));
+    }
+
+    @Test(expected = RequestUtil.EventStreamNotAccepted.class)
+    public void eventStreamsNotAccepted() {
+        RequestUtil.assertAcceptHeader(newList("text/plain", "text/event-stream"));
+    }
 }

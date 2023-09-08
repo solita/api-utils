@@ -59,6 +59,9 @@ import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class RequestUtil {
 
+    public static class EventStreamNotAccepted extends RuntimeException {
+    }
+
     public static class UnavailableContentTypeException extends RuntimeException {
     }
 
@@ -135,9 +138,18 @@ public abstract class RequestUtil {
     }
     
     public static final void checkURL(HttpServletRequest request, Set<String> caseIgnoredParams, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
+        assertAcceptHeader(newList(request.getHeaders("Accept")));
         assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), caseIgnoredParams, acceptedParams);
     }
-    
+
+    static void assertAcceptHeader(List<String> accepts) {
+        for (String accept: accepts) {
+            if (accept.toLowerCase().startsWith("text/event-stream")) {
+                throw new EventStreamNotAccepted();
+            }
+        }
+    }
+
     static boolean inOrder(String a, String b) {
         return a.compareToIgnoreCase(b) <= 0;
     }
