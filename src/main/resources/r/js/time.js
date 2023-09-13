@@ -8,7 +8,7 @@ var time = function(timeInput) {
         let params = new URLSearchParams(window.location.search);
         if (timeInput.value) {
             params.set('time', timeInput.value);
-        } else {
+        } else {
             params.delete('time');
         }
         window.location.search = decodeURIComponent(params);
