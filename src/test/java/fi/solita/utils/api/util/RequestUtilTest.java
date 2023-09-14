@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 

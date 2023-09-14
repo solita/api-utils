@@ -196,7 +196,7 @@ public abstract class HtmlConversionService {
                     .style()
                     .write(styles(), false)
                     ._style()
-                    .script(type("text/javascript").src(request.getContextPath() + "/r/tablefilter/tablefilter.js"))._script()
+                    .script(type("text/javascript").src(RequestUtil.getContextPath(request) + "/r/tablefilter/tablefilter.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
                     ._script();
@@ -348,8 +348,8 @@ public abstract class HtmlConversionService {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
-                html.script(type("text/javascript").src(request.getContextPath() + "/r/js/lib/htmx.min.js"))._script()
-                    .script(type("text/javascript").src(request.getContextPath() + "/r/js/lib/htmx-ext-sse.js"))._script()
+                html.script(type("text/javascript").src(RequestUtil.getContextPath(request) + "/r/js/lib/htmx.min.js"))._script()
+                    .script(type("text/javascript").src(RequestUtil.getContextPath(request) + "/r/js/lib/htmx-ext-sse.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts2(), false)
                     ._script();
@@ -694,7 +694,7 @@ public abstract class HtmlConversionService {
     public static final String initTableFilter(final HttpServletRequest request) {
         return "if (window.TableFilter) {"
              + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.type-resolved')).forEach(function(x) {"
-             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + request.getContextPath() + "/r/tablefilter/' });"
+             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + RequestUtil.getContextPath(request) + "/r/tablefilter/' });"
              + "    tf.init();"
              + "    x.addEventListener('htmx:afterSwap', function(ev) { tf.filter(); });"
              + "  });"

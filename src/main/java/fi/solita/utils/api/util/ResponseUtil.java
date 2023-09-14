@@ -179,7 +179,7 @@ public abstract class ResponseUtil {
     }
     
     public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
-        String path = request.getContextPath() +
+        String path = RequestUtil.getContextPath(request) +
                       (contextRelativePath.startsWith("/") ? contextRelativePath : "/" + contextRelativePath);
         Iterable<String> params = map(Transformers.join("=").andThen(ResponseUtil_.encodeUrlQueryString), additionalUnescapedQueryParams.entrySet());
         if (request.getQueryString() != null && !request.getQueryString().isEmpty()) {

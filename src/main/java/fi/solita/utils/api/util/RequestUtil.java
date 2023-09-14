@@ -4,16 +4,7 @@ import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Functional.distinct;
-import static fi.solita.utils.functional.Functional.filter;
-import static fi.solita.utils.functional.Functional.flatMap;
-import static fi.solita.utils.functional.Functional.head;
-import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.Functional.size;
-import static fi.solita.utils.functional.Functional.subtract;
-import static fi.solita.utils.functional.Functional.tail;
-import static fi.solita.utils.functional.Functional.zip;
+import static fi.solita.utils.functional.Functional.*;
 import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalA.last;
 import static fi.solita.utils.functional.FunctionalC.drop;
@@ -213,17 +204,28 @@ public abstract class RequestUtil {
     static List<String> split(String s, String regex) {
         return newList(s.split(regex));
     }
+
+    public static final String getContextPath(HttpServletRequest req) {
+        for (String forwardedPrefix: Option.of(req.getHeader("X-Forwarded-Prefix"))) {
+            return (forwardedPrefix.endsWith("/") ? init(forwardedPrefix) : forwardedPrefix) + req.getContextPath();
+        }
+        return req.getContextPath();
+    }
     
     public static final URI getRequestURI(HttpServletRequest req) {
         Option<String> qs = req.getQueryString() == null || req.getQueryString().trim().length() == 0 ? Option.<String>None() : Some(req.getQueryString());
         Option<String> forwardedProto = Option.of(req.getHeader("X-Forwarded-Proto"));
         Option<String> forwardedHost = Option.of(req.getHeader("X-Forwarded-Host"));
+        Option<String> forwardedPrefix = Option.of(req.getHeader("X-Forwarded-Prefix"));
         String url = req.getRequestURL().toString();
         for (String proto: forwardedProto) {
             url = url.replaceFirst("[^:]+://", proto + "://");
         }
         for (String host: forwardedHost) {
             url = url.replaceFirst("://[^:/]*", "://" + host);
+        }
+        for (String prefix: forwardedPrefix) {
+            url = url.replaceFirst("^[^:/]+://[^/]+", "$0" + prefix);
         }
         return URI.create(url + qs.map(prepend("?")).getOrElse(""));
     }
@@ -246,7 +248,7 @@ public abstract class RequestUtil {
     
     public static final String getApiVersionBasePath(HttpServletRequest req) {
         String contextRelativePath = getContextRelativePath(req);
-        return req.getContextPath() + "/" + takeWhile(not(equalTo('/')), tail(contextRelativePath)) + "/";
+        return getContextPath(req) + "/" + takeWhile(not(equalTo('/')), tail(contextRelativePath)) + "/";
     }
 
     public static final String resolvePath(Class<?> latestVersion) {

@@ -86,7 +86,7 @@ public class PngConversionService {
     }
     
     public byte[] render(HttpServletRequest req, ReferencedEnvelope paikka, String layerName) {
-        URI uri = baseURI.resolve(req.getContextPath() + RequestUtil.getContextRelativePath(req).replaceFirst(".png", ".geojson") + Option.of(req.getQueryString()).map(prepend("?")).getOrElse(""));
+        URI uri = baseURI.resolve(RequestUtil.getContextPath(req) + RequestUtil.getContextRelativePath(req).replaceFirst(".png", ".geojson") + Option.of(req.getQueryString()).map(prepend("?")).getOrElse(""));
         return render(uri, paikka, layerName, Option.of(req.getHeader(RequestUtil.API_KEY)));
     }
     
