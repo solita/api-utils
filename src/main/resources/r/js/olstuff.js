@@ -340,7 +340,7 @@ var olstuff = function(constants, util) {
         
         newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '');
-            u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http') && !u1.startsWith('mml/') ? u1.replace('?', '.geojson?') : u1;
+            u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http') && !u1.includes('/mml/') ? u1.replace('?', '.geojson?') : u1;
             var instant = new URLSearchParams(window.location.search).get('time');
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
