@@ -12,7 +12,7 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
                             .map(function(h) { return decodeURIComponent(h); })
                             .forEach(function(h,index) {
             let s = searchUrlFunction(h);
-            if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
+            if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
                 let layer = s instanceof Array ?
                      new ol.layer.Vector({source: new ol.source.Vector({features: [new ol.format.WKT().readFeature(s[0])] })}) :
                      olstuff.newVectorLayerNoTile(s, h, h, h, undefined, undefined, searchStyles[index % searchStyles.length]);
