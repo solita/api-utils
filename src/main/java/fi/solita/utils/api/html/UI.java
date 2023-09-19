@@ -112,7 +112,7 @@ public abstract class UI {
         + "label[for='lang-selector']                       { margin-left: 1em; }"
         + "[lang]:not(:lang(fi)),"
         + "#lang-selector:checked ~ * :lang(fi)             { display: none !important; }"
-        + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: inherit !important; }";
+        + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: revert !important; }";
     
     public static final String calculateHash(final String content) {
         try {
