@@ -244,7 +244,11 @@ public class ExcelSerializers {
     
     protected static Cell newCell(Row row, int columnIndex, CharSequence value) {
         Cell cell = row.createCell(columnIndex);
-        cell.setCellValue(value.toString());
+        if (value.length() >= 32767) {
+            cell.setCellValue(value.toString().substring(0, 32700) + " ...(some content did not fit to cell max length!)");
+        } else {
+            cell.setCellValue(value.toString());
+        }
         return cell;
     }
     
