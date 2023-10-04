@@ -23,15 +23,8 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -87,11 +80,7 @@ import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
 import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
 import springfox.documentation.spi.service.OperationBuilderPlugin;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
-import springfox.documentation.spi.service.contexts.DocumentationContext;
-import springfox.documentation.spi.service.contexts.OperationContext;
-import springfox.documentation.spi.service.contexts.ParameterContext;
-import springfox.documentation.spi.service.contexts.PathContext;
-import springfox.documentation.spi.service.contexts.RequestMappingContext;
+import springfox.documentation.spi.service.contexts.*;
 import springfox.documentation.spring.web.WebMvcRequestHandler;
 import springfox.documentation.spring.web.paths.DefaultPathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -493,9 +482,27 @@ public abstract class SwaggerSupport extends ApiResourceController {
             this.description = description;
         }
     }
+
+    // To make https come first in the produced API description
+    protected static <T> T protocolsKenttaJarjestykseen(Class<T> clazz, T obj) {
+        Field protocols = null;
+        try {
+            protocols = clazz.getDeclaredField("protocols");
+            protocols.setAccessible(true);
+            protocols.set(obj, new LinkedHashSet<>((Set<String>)protocols.get(obj)));
+            return obj;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
     
     public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info, final boolean ignoreRevision, boolean includeFormatParameter) {
-        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+        Docket docket = new Docket(DocumentationType.SWAGGER_2) {
+            @Override
+            public DocumentationContext configure(DocumentationContextBuilder builder) {
+                return super.configure(protocolsKenttaJarjestykseen(DocumentationContextBuilder.class, builder));
+            }
+        }
             .groupName(publishedVersion.getVersion() + (ignoreRevision ? "" : ".extended"))
             .select()
               .apis(RequestHandlerSelectors.basePackage(publishedVersion.getBasePackage()))
