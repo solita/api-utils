@@ -154,6 +154,11 @@ public abstract class ResponseUtil {
         redirect307(path.left() + "/" + revision + path.right(), request, response);
     }
     
+    public static void redirectToRevisionAndDateTime(HttpServletRequest req, HttpServletResponse res, long revision, DateTime dateTime, Set<String> queryParamsToExclude) {
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(req)));
+        redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.instant2string(dateTime))), queryParamsToExclude);
+    }
+
     public static void redirectToRevisionAndInterval(HttpServletRequest req, HttpServletResponse res, long revision, Interval interval, Set<String> queryParamsToExclude) {
         Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(req)));
         redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);

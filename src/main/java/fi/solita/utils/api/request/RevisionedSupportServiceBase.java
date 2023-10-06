@@ -51,6 +51,14 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         DateTime now = currentTime();
         redirectToCurrentRevisionAndInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
     }
+
+    public void redirectToCurrentRevisionAndDateTime(HttpServletRequest req, HttpServletResponse res, DateTime dateTime, Set<String> queryParamsToExclude) {
+        if (dateTime == null) {
+            dateTime = currentTime();
+        }
+        ResponseUtil.cacheFor(revisionsRedirectCached, res);
+        ResponseUtil.redirectToRevisionAndDateTime(req, res, getCurrentRevision().revision, dateTime, queryParamsToExclude);
+    }
     
     public void redirectToCurrentRevisionAndInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
         if (interval == null) {
