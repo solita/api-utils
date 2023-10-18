@@ -6,7 +6,7 @@ var presentation = function(presentationInput) {
     presentationInput.onclick = function() {
         if (presentationInput.checked) {
             params.append('presentation', 'diagram');
-        } else {
+        } else {
             params.delete('presentation');
         }
         window.location.search = decodeURIComponent(params);

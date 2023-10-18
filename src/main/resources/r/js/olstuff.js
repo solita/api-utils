@@ -135,6 +135,7 @@ var olstuff = function(constants, util) {
             };
             var f = function(evt) {
                 elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'labelPoint'));
+                util.initPrettyPrinted(elem);
                 var input = elem.querySelector(':scope input');
                 input.onkeyup = function() {
                     [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
@@ -340,11 +341,11 @@ var olstuff = function(constants, util) {
         
         newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '');
-            u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http') && !u1.includes('/mml/') ? u1.replace('?', '.geojson?') : u1;
+            u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http') && !u1.includes('mml/') ? u1.replace('?', '.geojson?') : u1;
             var instant = new URLSearchParams(window.location.search).get('time');
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
-                     (url.indexOf('time=') >= 0 || !instant ? '' : '&time=' + instant + '/' + instant) +
+                     (url.indexOf('time=') >= 0 || !instant ? '' : '&time=' + instant + '/' + instant) +
                      (!typeNames ? '' : '&typeNames=' + typeNames);
 
             var layerTitle = ret.mkLayerTitle(title_fi, title_en);
@@ -661,55 +662,3 @@ var olstuff = function(constants, util) {
     ol.proj.addProjection(ret.projection);
     return ret;
 };
-
-class RotateLeftControl extends ol.control.Control {
-    constructor(opt_options) {
-      const options = opt_options || {};
-      const button = document.createElement('button');
-      button.innerHTML = '⟲';
-  
-      const element = document.createElement('div');
-      element.className = 'rotate-left ol-unselectable ol-control';
-      element.setAttribute("title", "Vastapäivään 45°. Alt+shift+drag pyörittää vapaasti.");
-      element.appendChild(button);
-  
-      super({
-        element: element,
-        target: options.target,
-      });
-  
-      button.addEventListener('click', () => {
-        let view = this.getMap().getView();
-        view.animate({
-            duration: 250,
-            rotation: view.getRotation() - Math.PI / 4,
-        });
-      }, false);
-    }
-}
-
-class RotateRightControl extends ol.control.Control {
-    constructor(opt_options) {
-      const options = opt_options || {};
-      const button = document.createElement('button');
-      button.innerHTML = '⟳';
-  
-      const element = document.createElement('div');
-      element.className = 'rotate-right ol-unselectable ol-control';
-      element.setAttribute("title", "Myötäpäivään 45°. Alt+shift+drag pyörittää vapaasti.");
-      element.appendChild(button);
-  
-      super({
-        element: element,
-        target: options.target,
-      });
-  
-      button.addEventListener('click', () => {
-        let view = this.getMap().getView();
-        view.animate({
-            duration: 250,
-            rotation: view.getRotation() + Math.PI / 4,
-        });
-      }, false);
-    }
-}

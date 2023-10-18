@@ -1,16 +1,16 @@
-var search = function(map, searchUrlFunction, searchInput, olstuff, select, unselect, peek, unpeek) {
+var search = function(map, searchUrlFunction, olstuff, select, unselect, peek, unpeek) {
     var searchStyles = [[0,255,0,0.4], [0,0,255,0.4], [255,0,0,0.4], [255,255,0,0.4], [0,255,255,0.4], [255,0,255,0.4]].map(function(c) {
         var stroke = [...c];
         stroke[3] = 1;
         return olstuff.styles.defaultWithColor(c,stroke);
     });
 
-    window.onhashchange = function() {
-        window.location.hash.split('#')
-                            .map(function(x) { return x.trim(); })
-                            .filter(function(x) { return x != ''; })
-                            .map(function(h) { return decodeURIComponent(h); })
-                            .forEach(function(h,index) {
+    return function(hash) {
+        hash.split('#')
+            .map(function(x) { return x.trim(); })
+            .filter(function(x) { return x != ''; })
+            .map(function(h) { return decodeURIComponent(h); })
+            .forEach(function(h,index) {
             let s = searchUrlFunction(h);
             if (s && map.getLayers().getArray().filter(function(x) {return x.getProperties().title == olstuff.mkLayerTitle(h,h);}).length == 0) {
                 let layer = s instanceof Array ?
@@ -27,18 +27,4 @@ var search = function(map, searchUrlFunction, searchInput, olstuff, select, unse
             }
         });
     }
-    
-    window.onhashchange();
-    
-    if (window.location.hash) {
-        searchInput.value = decodeURI(window.location.hash.substring(1));
-    }
-    
-    var searchChanged = function() {
-        window.location.hash = '#' + encodeURI(searchInput.value);
-    };
-    
-    searchInput.onchange = searchChanged;
-    
-    return searchChanged;
 };

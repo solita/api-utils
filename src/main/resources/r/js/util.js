@@ -1,4 +1,4 @@
-var util = function(customPrettyPrinting) {
+var util = function(customPrettyPrinting, customInit) {
     var ret = {
         toISOStringNoMillis: function(d) {
             function pad(n) {
@@ -17,8 +17,10 @@ var util = function(customPrettyPrinting) {
             return ret;
         },
 
+        initPrettyPrinted: customInit,
+
         prettyPrint: function(obj) {
-            var printer = customPrettyPrinting ? (x) => { var rr = customPrettyPrinting(x); return (rr === null || rr === undefined) ? ret.prettyPrint(x) : rr} : ret.prettyPrint;
+            var printer = customPrettyPrinting ? (x) => { var rr = customPrettyPrinting(x); return (rr === null || rr === undefined) ? ret.prettyPrint(x) : rr} : ret.prettyPrint;
             if (obj instanceof Array && obj.length > 0) {
                 return '<span class="array">' + obj.map(function(val) {
                     var printedVal = (val && typeof val === 'object') ? printer(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
