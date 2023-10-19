@@ -19,8 +19,10 @@ var search = function(map, searchUrlFunction, olstuff, select, unselect, peek, u
                 layer.setVisible(true);
                 map.addLayer(layer);
                 layer.once('change', function(e) {
-                    layer.getSource().getFeatures().forEach(f => select(f, true));
-                    map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50,50,50,50], 'duration': 1000});
+                    if (layer.getSource().getFeatures().length == 1) {
+                        layer.getSource().getFeatures().forEach(f => select(f, true));
+                        map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50, 50, 50, 50], 'duration': 1000});
+                    }
                 });
                 hover(map, peek, unpeek);
                 click(map, [layer], select, unselect);
