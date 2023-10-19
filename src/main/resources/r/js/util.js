@@ -43,7 +43,7 @@ var util = function(customPrettyPrinting, customInit) {
                                 // skip empty arrays
                             } else {
                                 var printedVal = (val && typeof val === 'object') ? printer(val) : val == null ? null : customPrettyPrinting ? customPrettyPrinting(val) : val;
-                                r += '<li ' + (key.startsWith('_') ? 'style="display: none"' : '') + '>' + '<span class="key">' + key + '</span><span class="value">' + (printedVal ? printedVal : val) + '</span></li>';
+                                r += '<li ' + (key.startsWith('_') ? 'hidden' : '') + '>' + '<span class="key">' + key + '</span><span class="value">' + (printedVal ? printedVal : val) + '</span></li>';
                             }
                         }
                     }
