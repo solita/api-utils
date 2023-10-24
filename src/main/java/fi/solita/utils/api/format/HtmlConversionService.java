@@ -281,7 +281,7 @@ public abstract class HtmlConversionService {
                 .body(rows == 1 ? class_("singleton") : null)
                   .render(pageHeader(title, request, true))
                   .section(id("content"))
-                      .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML"))
+                      .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
                         .thead()
                           .tr()
                             .render(tableHeader)
