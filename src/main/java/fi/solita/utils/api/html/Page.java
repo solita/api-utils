@@ -34,7 +34,7 @@ public class Page extends RenderableWrapper {
             .render(DocType.HTML5)
             .head()
               .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
-              .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src '" + UI.calculateHash(styles()) + "'"))
+              .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '" + UI.calculateHash(styles()) + "'"))
               .title().write(title_fi)._title()
               .style().write(styles(), false)
             ._style()
@@ -60,7 +60,7 @@ public class Page extends RenderableWrapper {
         ._html();
     }
 
-    private String styles() {
+    protected String styles() {
         return
           "html     { font-family: sans-serif; font-weight: lighter; }"
         + UI.langSelectorCSS
