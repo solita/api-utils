@@ -391,11 +391,13 @@ public class ExcelSerializers {
     private final ExcelSerializer<LocalDate> localdate = new ExcelSerializer<LocalDate>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, LocalDate value) {
+            if (row.getSheet().getColumnStyle(columnIndex) == null || row.getSheet().getColumnStyle(columnIndex).getIndex() == 0) {
+                CellStyle style = row.getSheet().getWorkbook().createCellStyle();
+                style.setDataFormat(row.getSheet().getWorkbook().createDataFormat().getFormat("yyyy-mm-dd"));
+                row.getSheet().setDefaultColumnStyle(columnIndex, style);
+            }
             Cell cell = row.createCell(columnIndex);
             cell.setCellValue(value.toDate());
-            CellStyle style = row.getSheet().getWorkbook().createCellStyle();
-            style.setDataFormat(row.getSheet().getWorkbook().createDataFormat().getFormat("yyyy-mm-dd"));
-            cell.setCellStyle(style);
             return new Cells(cell, value.toString());
         }
     };
@@ -403,12 +405,14 @@ public class ExcelSerializers {
     private final ExcelSerializer<LocalTime> localtime = new ExcelSerializer<LocalTime>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, LocalTime value) {
+            if (row.getSheet().getColumnStyle(columnIndex) == null || row.getSheet().getColumnStyle(columnIndex).getIndex() == 0) {
+                CellStyle style = row.getSheet().getWorkbook().createCellStyle();
+                style.setDataFormat(row.getSheet().getWorkbook().createDataFormat().getFormat("hh:mm:ss"));
+                row.getSheet().setDefaultColumnStyle(columnIndex, style);
+            }
             Cell cell = row.createCell(columnIndex);
             // "Times are stored in Excel as decimals, between .0 and .99999, that represent a proportion of the day where .0 is 00:00:00 and .99999 is 23:59:59."
             cell.setCellValue(value.getMillisOfDay() / (24*60*60*1000) );
-            CellStyle style = row.getSheet().getWorkbook().createCellStyle();
-            style.setDataFormat(row.getSheet().getWorkbook().createDataFormat().getFormat("hh:mm:ss"));
-            cell.setCellStyle(style);
             return new Cells(cell, s.ser(value));
         }
     };
@@ -416,12 +420,14 @@ public class ExcelSerializers {
     private final ExcelSerializer<DateTime> datetime = new ExcelSerializer<DateTime>() {
         @Override
         public Cells render(ExcelModule module, Row row, int columnIndex, DateTime value) {
+            if (row.getSheet().getColumnStyle(columnIndex) == null || row.getSheet().getColumnStyle(columnIndex).getIndex() == 0) {
+                CellStyle style = row.getSheet().getWorkbook().createCellStyle();
+                style.setDataFormat(row.getSheet().getWorkbook().createDataFormat().getFormat("yyyy-mm-dd hh:mm:ss"));
+                row.getSheet().setDefaultColumnStyle(columnIndex, style);
+            }
             Cell cell = row.createCell(columnIndex);
-            // uuh, menisiköhän näin kun excel ei tuo aikavyöhykkeitä...
+            // uuh, menisiköhän näin kun excel ei tue aikavyöhykkeitä...
             cell.setCellValue(value.withZone(Serializers.APP_ZONE).toDate());
-            CellStyle style = row.getSheet().getWorkbook().createCellStyle();
-            style.setDataFormat(row.getSheet().getWorkbook().createDataFormat().getFormat("yyyy-mm-dd hh:mm:ss"));
-            cell.setCellStyle(style);
             return new Cells(cell, s.serZoned(value));
         }
     };
