@@ -1,25 +1,8 @@
 package fi.solita.utils.api.format;
 
-import static fi.solita.utils.functional.Option.None;
-
-import java.io.IOException;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.cfg.DeserializerFactoryConfig;
 import com.fasterxml.jackson.databind.cfg.SerializerFactoryConfig;
 import com.fasterxml.jackson.databind.deser.BeanDeserializer;
@@ -37,20 +20,17 @@ import com.fasterxml.jackson.databind.ser.BeanSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
-import com.fasterxml.jackson.databind.ser.std.CalendarSerializer;
-import com.fasterxml.jackson.databind.ser.std.DateSerializer;
-import com.fasterxml.jackson.databind.ser.std.EnumSerializer;
-import com.fasterxml.jackson.databind.ser.std.SqlDateSerializer;
-import com.fasterxml.jackson.databind.ser.std.SqlTimeSerializer;
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers;
+import com.fasterxml.jackson.databind.ser.std.*;
 import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
 import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Dynamic;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import fi.solita.utils.api.JsonDeserializeAsBean;
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.functional.Option;
+
+import java.io.IOException;
+
+import static fi.solita.utils.functional.Option.None;
 
 public class JsonObjectMapper extends ObjectMapper {
 
@@ -144,8 +124,10 @@ public class JsonObjectMapper extends ObjectMapper {
     }
 
     private static class CustomBeanSerializerFactory extends BeanSerializerFactory {
-        private CustomBeanSerializerFactory(SerializerFactoryConfig config) {
+        private final boolean checkJsonSerializeAsBean;
+        private CustomBeanSerializerFactory(boolean checkJsonSerializeAsBean, SerializerFactoryConfig config) {
             super(config);
+            this.checkJsonSerializeAsBean = checkJsonSerializeAsBean;
         }
 
         @SuppressWarnings("unchecked")
@@ -164,7 +146,7 @@ public class JsonObjectMapper extends ObjectMapper {
                 throw new SerializingDeserializingProhibitedException("Ei pitäisi käyttää SqlTimea!");
             } else if (candidate instanceof SqlDateSerializer) {
                 throw new SerializingDeserializingProhibitedException("Ei pitäisi käyttää SqlDatea!");
-            } else if (candidate instanceof BeanSerializer && !origType.getRawClass().isAnnotationPresent(JsonSerializeAsBean.class)) {
+            } else if (checkJsonSerializeAsBean && candidate instanceof BeanSerializer && !origType.getRawClass().isAnnotationPresent(JsonSerializeAsBean.class)) {
                 throw new SerializingDeserializingProhibitedException("Luokkaa " + origType.getRawClass().getName() + " ei ole merkattu sarjallistettavaksi! (Unohditko @" + JsonSerializeAsBean.class.getSimpleName() + "?)");
             }
 
@@ -196,11 +178,11 @@ public class JsonObjectMapper extends ObjectMapper {
 
         @Override
         public SerializerFactory withConfig(SerializerFactoryConfig config) {
-            return new CustomBeanSerializerFactory(config);
+            return new CustomBeanSerializerFactory(checkJsonSerializeAsBean, config);
         }
     }
 
-    public JsonObjectMapper() {
+    public JsonObjectMapper(boolean checkJsonSerializeAsBean) {
         super(null, null, new DefaultDeserializationContext.Impl(new CustomBeanDeserializerFactory(BeanDeserializerFactory.instance.getFactoryConfig())));
 
         // leave nulls out. This way we can restrict the serialized properties while using the same Dto.
@@ -217,7 +199,7 @@ public class JsonObjectMapper extends ObjectMapper {
         configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
         
         // ugh...
-        setSerializerFactory(new CustomBeanSerializerFactory(BeanSerializerFactory.instance.getFactoryConfig()));
+        setSerializerFactory(new CustomBeanSerializerFactory(checkJsonSerializeAsBean, BeanSerializerFactory.instance.getFactoryConfig()));
         setSerializerProvider(new DefaultSerializerProvider.Impl().createInstance(getSerializationConfig(), getSerializerFactory()));
     }
 

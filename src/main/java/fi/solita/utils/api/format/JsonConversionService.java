@@ -11,8 +11,8 @@ public class JsonConversionService {
 
     public final ObjectMapper om;
 
-    public JsonConversionService(Module... modules) {
-        this(new JsonObjectMapper(), modules);
+    public JsonConversionService(boolean checkJsonSerializeAsBean, Module... modules) {
+        this(new JsonObjectMapper(checkJsonSerializeAsBean), modules);
     }
     
     public JsonConversionService(ObjectMapper om, Module... modules) {

@@ -151,7 +151,7 @@ public class SupportServiceBase {
         return newSet("propertyName", "cql_filter", "time");
     }
 
-    protected void checkUrl(HttpServletRequest request, String... acceptedParams) {
+    public void checkUrl(HttpServletRequest request, String... acceptedParams) {
         RequestUtil.checkURL(request, getCaseIgnoredParams(), newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
     }
 }
