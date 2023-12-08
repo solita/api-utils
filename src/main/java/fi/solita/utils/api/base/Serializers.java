@@ -25,8 +25,9 @@ import fi.solita.utils.functional.Pair;
  * Use inheritance to evolve these.
  */
 public class Serializers {
-    
-    public static final DateTimeFormatter DATETIME_FORMAT = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC();
+
+    public static final DateTimeFormatter DATETIME_FORMAT_WITH_MILLIS = ISODateTimeFormat.dateTime().withZoneUTC();
+    public static final DateTimeFormatter DATETIME_FORMAT_NO_MILLIS = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC();
     public static final DateTimeZone APP_ZONE = DateTimeZone.forID("Europe/Helsinki");
     
     // Pakko käyttää sarjallistusluokkia, sillä Jacksonille ei tunnu pystyvän muuten kertomaan rakennetta.
@@ -54,15 +55,15 @@ public class Serializers {
     }
     
     public String ser(DateTime v) {
-        return v.toString(DATETIME_FORMAT);
+        return v.toString(v.getMillisOfSecond() == 0 ? DATETIME_FORMAT_NO_MILLIS : DATETIME_FORMAT_WITH_MILLIS);
     }
     
     public DateTime deserDateTime(String value) {
-        return DateTime.parse(value, DATETIME_FORMAT);
+        return DateTime.parse(value, value.contains(".") ? DATETIME_FORMAT_WITH_MILLIS : DATETIME_FORMAT_NO_MILLIS);
     }
     
     public String serZoned(DateTime value) {
-        return takeWhile(not(equalTo('+')), value.toString(ISODateTimeFormat.dateTimeNoMillis().withZone(APP_ZONE))).replace('T', ' ');
+        return takeWhile(not(equalTo('+')), value.toString((value.getMillisOfSecond() == 0 ? DATETIME_FORMAT_NO_MILLIS : DATETIME_FORMAT_WITH_MILLIS).withZone(APP_ZONE))).replace('T', ' ');
     }
     
     public Pair<DateTime,DateTime> ser(Interval v) {
@@ -85,4 +86,3 @@ public class Serializers {
             return new RevisioJaMuokkausaikaData(revisio, muokkaus_aika);
     }
 }
-

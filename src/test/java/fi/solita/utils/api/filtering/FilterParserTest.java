@@ -51,7 +51,7 @@ public class FilterParserTest {
     @Test
     public void parsesTimes() {
         DateTime now = DateTime.now();
-        assertEquals(someFilter(now.toString(Serializers.DATETIME_FORMAT)), FilterParser.parse("foo=" + now.toString(Serializers.DATETIME_FORMAT)));
+        assertEquals(someFilter(now.toString(Serializers.DATETIME_FORMAT_NO_MILLIS)), FilterParser.parse("foo=" + now.toString(Serializers.DATETIME_FORMAT_NO_MILLIS)));
     }
     
     @Test

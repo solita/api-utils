@@ -11,6 +11,16 @@ public class SerializersTest {
     public void deserDateTime_acceptsZ() {
         assertNotNull(serializers.deserDateTime("2019-12-03T00:00:00Z"));
     }
+
+    @Test
+    public void deserDateTime_acceptsMillis() {
+        assertNotNull(serializers.deserDateTime("2019-12-03T00:00:00.000Z"));
+    }
+
+    @Test
+    public void deserDateTime_acceptsMicros() {
+        assertNotNull(serializers.deserDateTime("2019-12-03T00:00:00.000000Z"));
+    }
     
     @Test
     public void deserDateTime_acceptsOtherZone() {
@@ -22,8 +32,4 @@ public class SerializersTest {
         serializers.deserDateTime("2019-12-03T00:00:00");
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void deserDateTime_failsWithMillis() {
-        serializers.deserDateTime("2019-12-03T00:00:00.000Z");
-    }
 }
