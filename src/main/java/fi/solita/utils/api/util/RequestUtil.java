@@ -18,15 +18,21 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.prepend;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.format.ISODateTimeFormat;
@@ -317,5 +323,12 @@ public abstract class RequestUtil {
 
     public static final String intervalInfinity() {
         return interval2stringRestrictedToInfinity(HttpSerializers.VALID);
+    }
+
+    public static final byte[] uncompressIfNeeded(HttpServletRequest req, byte[] data) throws IOException {
+        if (Option.of(req.getHeader("Content-Encoding")).getOrElse("").contains("gzip")) {
+            return IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(data)));
+        }
+        return data;
     }
 }
