@@ -55,7 +55,7 @@ public class Serializers {
     }
     
     public String ser(DateTime v) {
-        return v.toString(v.getMillisOfSecond() == 0 ? DATETIME_FORMAT_NO_MILLIS : DATETIME_FORMAT_WITH_MILLIS);
+        return v.toString(DATETIME_FORMAT_NO_MILLIS);
     }
     
     public DateTime deserDateTime(String value) {
@@ -63,7 +63,7 @@ public class Serializers {
     }
     
     public String serZoned(DateTime value) {
-        return takeWhile(not(equalTo('+')), value.toString((value.getMillisOfSecond() == 0 ? DATETIME_FORMAT_NO_MILLIS : DATETIME_FORMAT_WITH_MILLIS).withZone(APP_ZONE))).replace('T', ' ');
+        return takeWhile(not(equalTo('+')), value.toString(ISODateTimeFormat.dateTimeNoMillis().withZone(APP_ZONE))).replace('T', ' ');
     }
     
     public Pair<DateTime,DateTime> ser(Interval v) {
