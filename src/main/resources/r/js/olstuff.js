@@ -601,11 +601,14 @@ var olstuff = function(constants, util) {
                 fold: 'close'
             });
             
-            fetch(collectionsUrl).then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
+            fetch(collectionsUrl + '?f=json').then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                  .then(function(x) {
-                x.collections.forEach(function(c) {
+                var cols = x.collections;
+                cols.sort(function(a,b) { return a.id < b.id; })
+                    .forEach(function(c) {
                     var title = c.title;
-                    var url = collectionsUrl + "/" + c.id + "/items?crs=http://www.opengis.net/def/crs/EPSG/0/3067";
+                    // MML added default limit of 100...
+                    var url = collectionsUrl + "/" + c.id + "/items?crs=http://www.opengis.net/def/crs/EPSG/0/3067&f=json&limit=10000";
                     var layer = ret.newVectorLayerNoTile(url, c.id, title, title);
                     group.getLayers().push(layer);
                 });
