@@ -403,7 +403,13 @@ public abstract class SwaggerSupport extends ApiResourceController {
             apply(parameterContext, type, pathVariableName, requestParamName);
             Optional<ApiParam> apiparam = parameterContext.resolvedMethodParameter().findAnnotation(ApiParam.class);
             if (apiparam.isPresent() && !apiparam.get().value().trim().isEmpty()) {
-                parameterContext.parameterBuilder().description(apiparam.get().value() + parameterContext.parameterBuilder().build().getDescription());
+                String fromAnnotation = apiparam.get().value();
+                String fromBuilder = parameterContext.parameterBuilder().build().getDescription();
+                if (fromAnnotation.equals(fromBuilder)) {
+                    parameterContext.parameterBuilder().description(fromAnnotation);
+                } else {
+                    parameterContext.parameterBuilder().description(fromAnnotation + " " + fromBuilder);
+                }
             }
         }
         
