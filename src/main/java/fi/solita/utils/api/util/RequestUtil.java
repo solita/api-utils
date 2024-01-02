@@ -46,6 +46,7 @@ import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Functional;
@@ -161,7 +162,7 @@ public abstract class RequestUtil {
             throw new RequestUtil.QueryParametersMustNotBeDuplicatedException();
         }
         
-        if (size(filter(not(Function.<Boolean>id()), map(RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
+        if (size(filter(not(Function.<Boolean>id()), map((ApplyBi<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
             throw new RequestUtil.QueryParametersMustBeInAlphabeticalOrderException();
         }
         

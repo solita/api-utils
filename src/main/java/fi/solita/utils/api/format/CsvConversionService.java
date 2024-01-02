@@ -32,6 +32,7 @@ import fi.solita.utils.api.base.csv.CsvSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
+import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -162,11 +163,11 @@ public class CsvConversionService {
     }
     
     private <K,V,O> Iterable<Iterable<Cells>> mapBody(final Map<K, ? extends Iterable<V>> obj, final Iterable<? extends MetaNamedMember<V, O>> members) {
-        return map(CsvConversionService_.<K,V,O>mapBodyRow().ap(this, members), flatMap(CsvConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
+        return map((ApplyBi<K,V,Iterable<Cells>>)CsvConversionService_.<K,V,O>mapBodyRow().ap(this, members), flatMap(CsvConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
     }
     
     <K,V,O> Iterable<Cells> mapBodyRow(Iterable<? extends MetaNamedMember<V, O>> members, K key, V value) {
-        return cons(module.serialize(key), map(CsvModule_.serialize1().ap(module), map(CsvConversionService_.<V,O>foo().ap(value), members)));
+        return cons(module.serialize(key), map((ApplyBi<Object,Class<?>,Cells>)CsvModule_.serialize1().ap(module), map(CsvConversionService_.<V,O>foo().ap(value), members)));
     }
     
     @SuppressWarnings("unchecked")

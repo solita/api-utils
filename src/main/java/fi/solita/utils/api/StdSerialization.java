@@ -38,6 +38,8 @@ import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.RequestUtil.UnavailableContentTypeException;
 import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.Apply3;
+import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
@@ -131,7 +133,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
         switch (format) {
         case JSON:
@@ -141,7 +143,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY, Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = geoJson.serialize(new FeatureCollection(
-                    concat(map(toFeature, map(
+                    concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -188,7 +190,7 @@ public abstract class StdSerialization<BOUNDS> {
             MetaNamedMember<? super DTO, KEY> key,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
         switch (format) {
         case JSON:
@@ -198,7 +200,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY, Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = geoJson.serialize(new FeatureCollection(
-                    concat(map(toFeature, map(
+                    concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -244,7 +246,7 @@ public abstract class StdSerialization<BOUNDS> {
         HtmlTitle title,
         Apply<? super DTO, ? super DTO> excluding,
         Apply<? super DTO, ? extends SPATIAL> toGeojson,
-        Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+        Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
     byte[] response;
     switch (format) {
     case JSON:
@@ -254,7 +256,7 @@ public abstract class StdSerialization<BOUNDS> {
         Map<KEY, DTO> d = data.get();
         Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
         response = geoJson.serialize(new FeatureCollection(
-                concat(map(toFeature, map(
+                concat(map(Function.of(toFeature), map(
                         toGeojson,
                         excluding,
                         Function.constant(Option.<Crs>None()),
@@ -299,7 +301,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
         switch (format) {
         case JSON:
@@ -309,7 +311,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY, DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
             response = geoJson.serialize(new FeatureCollection(
-                    concat(map(toFeature, map(
+                    concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -368,7 +370,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
         switch (format) {
         case JSON:
@@ -378,7 +380,7 @@ public abstract class StdSerialization<BOUNDS> {
             Iterable<DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
             response = geoJson.serialize(new FeatureCollection(
-                    concat(map(toFeature, map(
+                    concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -437,7 +439,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
         switch (format) {
             case JSON:
@@ -447,7 +449,7 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = geoJson.serialize(new FeatureCollection(
-                    concat(map(toFeature, map(
+                    concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -504,7 +506,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Function3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         byte[] response;
         switch (format) {
             case JSON:
@@ -754,7 +756,7 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case GEOJSON:
                 response = geoJson.serialize(new FeatureCollection(
-                    map(Feature_.$2, map(
+                    map((ApplyBi<String,Object,Feature>)Feature_.$2, map(
                             Function.constant("typeName"),
                             Function.id(),
                             data)),
