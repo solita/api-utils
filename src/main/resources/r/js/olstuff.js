@@ -331,19 +331,20 @@ var olstuff = function(constants, util) {
             }
         },
         
-        newVectorLayerNoTile: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify) {
-            return ret.newVectorLayerImpl(false, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify);
+        newVectorLayerNoTile: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
+            return ret.newVectorLayerImpl(false, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter);
         },
         
-        newVectorLayer: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify) {
-            return ret.newVectorLayerImpl(true, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify);
+        newVectorLayer: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
+            return ret.newVectorLayerImpl(true, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter);
         },
         
-        newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify) {
+        newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '');
             u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http') && !u1.includes('mml/') ? u1.replace('?', '.geojson?') : u1;
             var instant = new URLSearchParams(window.location.search).get('time');
             var u2 = (window.location.search.indexOf('profile') == -1 ? '' : '&profile=true') +
+                     (!cql_filter ? '' : '&cql_filter=' + cql_filter) +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
                      (!simplify || url.indexOf('simplify=') >= 0 ? '' : '&simplify=' + simplify) +
                      (url.indexOf('time=') >= 0 || !instant ? '' : '&time=' + instant + '/' + instant) +
