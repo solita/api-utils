@@ -25,8 +25,7 @@ var click = function(map, layers, callbackOver, callbackOut, callbackMultiple) {
     var clickInteraction = new ol.interaction.Select({
         hitTolerance: 3,
         multi: false,
-        condition: ol.events.condition.singleClick,
-        layers: [].concat.apply([], layers.map(function(l) { return (l instanceof ol.layer.Group) ? l.getLayers().getArray() : l; }))
+        condition: ol.events.condition.singleClick
     });
     map.addInteraction(clickInteraction);
 
