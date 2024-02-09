@@ -278,7 +278,118 @@ concat(text("For example like "), link(href("lp-graph.txt"), text("this")))
 "Why are some headers red in HTML format?",
 "Red properties are calculated data. They may be slow to produce and thus you might want to exclude them if you don't need them."
                  ))
-              ._dl()
+
+                   .render(definition_fi(
+"Mikä on 'duration' -parametri?",
+"Joskus on absoluuttisen ajan sijaan helpompi ilmaista aikaväli suhteellisesti, esimerkiksi 'kolme päivää menneisyyteen ja viisi tulevaisuuteen'. Voit antaa tällaisia 'duration'-parametrilla ISO8601-standardin mukaisessa muodossa. Negatiivinen kesto tarkoittaa nykyhetkestä menneisyyteen, positiivinen tulevaisuuteen. Voit antaa jomman kumman tai molemmat kauttaviivalla erotettuina. Esimerkiksi 'ikuisuus' voitaisiin ilmaista '-P99Y/P99Y'. Koska 'nykyhetki' ei muodosta determinististä välimuistitettavaa URL-osoitetta, 'duration'-parametri tekee uudelleenohjauksen time-parametrilliseen osoitteeseen senhetkiseksi parhaiten tulkittavan nykyhetken perusteella."
+                 )).render(definition_en(
+"What is 'duration' parameter?",
+"Sometimes instead of absolute time interval it's easier to express the interval relatively, for example 'three days to the past and five to the future'. You can give such intervals with 'duration'-parameter in ISO8601-standard format. Negative duration means from the present to the past, positive to the future. You can give either or both separated with a slash. For example 'eternity' could be expressed as '-P99Y/P99Y'. Because 'the present' doesn't form a deterministic cacheable URL, 'duration'-parameter makes a redirect to a time-parameterized URL based on the current best interpretation of 'the present'."
+
+                 )).render(definition_fi(
+"Rajapinta saattaa sisältää paljon laskennallista dataa, enkä saa kaikkea ladattua yhdellä pyynnöllä. Miten voin hakea dataa osissa?",
+new Renderable() {
+    @Override
+    public void renderOn(HtmlCanvas html) throws IOException {
+        html.ol()
+                .li().write("typeNames, eli alityyppiin perustuva sivutus")
+                     .ul()
+                         .li().write("Jos endpoint sisältää 'typeNames' -parametrin, voi siitä hakea yhden tai useamman alityypin datan kerrallaan.")._li()
+                         .li().write("Hyvä ja helppo tapa, kannattaa aina hyödyntää.")._li()
+                     ._ul()
+                ._li()
+                .li().write("tunniste, eli rivi kerrallaan")
+                    .ul()
+                        .li().write("Haetaan ensin pelkät tunnisteet niiltä osin mitä haluaa ladata (esimerkiksi: https://<api>/<versio>/<endpoint>.json?propertyName=tunniste?duration=-P99Y/P99Y) ja sen jälkeen varsinaisen datan tunniste kerrallaan (https://<api>/<versio>/<tunniste>.json).")._li()
+                        .li().write("Pyynnöt ovat nopeita, mutta niitä joutuu tekemään mahdollisesti hyvinkin paljon.")._li()
+                    ._ul()
+                ._li()
+                .li().write("startIndex+count, eli vakiokokoisiin joukkoihin perustuva sivutus")
+                   .ul()
+                       .li().write("Perinteinen tietynkokoinen sivu kerrallaan, eli valitaan sopiva 'count' ja nostetaan 'startIndex' arvoa 'count':n verran eteepäin alkaen arvosta 1 niin pitkään kunnes ei enää tule dataa.")._li()
+                       .li().write("Helppo tapa, mutta jos dataan tulee muutoksia latauksen aikana, saattaa osa datasta jäädä lataamatta.")._li()
+                   ._ul()
+                ._li()
+                .li().write("propertyName, eli sarakkeisiin perustuva sivutus")
+                  .ul()
+                      .li().write("Suurin osa sarakkeista on staattista sisältöä, mutta osa on laskennallista ja hyvinkin hidas muodostaa. Itselle tarpeettomat sarakkeet kannattaa jättää kokonaan pois, mutta loput voidaan ladata yksi tai useampi sarake kerrallaan. Esimerkiksi yhdellä pyynnöllä kaikki ei-laskennallinen data, ja loput niin monessa osassa kuin vaatii.")._li()
+                      .li().write("Mahdollista muodostaa sopiva sivutus omaan tarpeeseen, mutta vaatii tulosten yhdistämistä latauksen jälkeen.")._li()
+                  ._ul()
+                ._li()
+                .li().write("cql_filter, eli riveihin perustuva sivutus")
+                     .ul()
+                         .li().write("Jos data on jaettavissa sopivankokoisiin alijoukkoihin, voidaan 'cql_filter'-parametrilla ladata joukko kerrallaan.")._li()
+                         .li().write("Joskus yhtä hyvä ja helppo kuin 'typeNames'-paramerin mukainen sivutus, mutta usein data ei jakaudu riittävän tasaisesti hyödynnettäviin joukkoihin. Lisäksi huomioitava että 'cql_filter' on tehokas vain niissä tapauksissa, kun rajaus voidaan toteutuksessa viedä tietokantakyselyyn asti, mikä ei aina ole mahdollista.")._li()
+                     ._ul()
+                ._li()
+                .li().write("time, eli voimassaoloihin perustuva sivutus")
+                    .ul()
+                        .li().write("Kun data on luonteeltaan lyhytaikaista (esimerkiksi reaaliaikaiset tapahtumat), voi olla järkevää hakea ajanjakso kerrallaan. Jakson pituus on tällöin helppo valita sopivaksi pyyntöjen määrän minimoimiseksi.")._li()
+                        .li().write("Ei sovellu pitkään voimassaolevaan dataan, sillä tällöin sama tietorivi palautuu useassa eri pyynnössä, jolloin myös sen laskennallinen data tulee laskettua turhaan moneen kertaan.")._li()
+                    ._ul()
+                ._li()
+                .li().write("bbox, eli maantieteelliseen alueeseen perustuva sivutus")
+                    .ul()
+                        .li().write("Spatiaalista dataa voi rajata maantieteellisesti 'bbox'-parametrilla. Tämä voi olla hyvä, kun data on jakautunut maantieteellisesti riittävän tasaisesti.")._li()
+                        .li().write("Huomioitava, että rajapinta ei salli mielivaltaisten bbox-rajausten antamisen, vaan rajautuu JHS 180-suosituksen mukaisiin laatikoihin.")._li()
+                    ._ul()
+                ._li()
+            ._ol();
+    }
+}
+                 )).render(definition_en(
+"API contains lots of calculated data, and I cannot fetch everything in with a single request. How can I fetch data in smaller parts?",
+new Renderable() {
+    @Override
+    public void renderOn(HtmlCanvas html) throws IOException {
+        html.ol()
+                  .li().write("typeNames, i.e. paged by subtype")
+                      .ul()
+                          .li().write("If the endpoint contains 'typeNames' parameter, you can fetch data of one or more subtypes at a time.")._li()
+                          .li().write("Good and easy way, should always be utilized.")._li()
+                      ._ul()
+                  ._li()
+                  .li().write("identifier, i.e. row by row")
+                      .ul()
+                          .li().write("First fetch only the identifiers of the data you are interested of (for example: https://<api>/<version>/<endpoint>.json?propertyName=tunniste?duration=-P99Y/P99Y) and then the actual data one identifier at a time (https://<api>/<version>/<identifier>.json).")._li()
+                          .li().write("Requests are fast, but you might need to make a lot of them.")._li()
+                      ._ul()
+                  ._li()
+                  .li().write("startIndex+count, i.e. paged by fixed size sets")
+                      .ul()
+                          .li().write("Traditional fixed size page at a time, i.e. choose a suitable 'count' and raise 'startIndex' value by 'count' starting from 1 until no more data is returned.")._li()
+                          .li().write("Easy way, but if there are changes in the data during the load, some of the data might be left out.")._li()
+                      ._ul()
+                  ._li()
+                  .li().write("propertyName, i.e. paged by columns")
+                      .ul()
+                          .li().write("Most of the properties are static content, but some are calculated and might be slow to produce. You should always exclude the properties you don't need, but the rest can be loaded one or more columns at a time. For example all non-calculated data with one request, and the rest in as many parts as needed.")._li()
+                          .li().write("Possible to form a suitable pagination for your needs, but requires combining the results after the load.")._li()
+                      ._ul()
+                  ._li()
+                  .li().write("cql_filter, i.e. paged by rows")
+                      .ul()
+                          .li().write("If the data can be divided into suitable subsets, you can load them one subset at a time with 'cql_filter'-parameter.")._li()
+                          .li().write("Sometimes as good and easy as 'typeNames'-parameter, but often the data doesn't divide into suitable subsets. Also note that 'cql_filter' is efficient only in cases where the filter can be pushed down to the database query, which is not always possible.")._li()
+                      ._ul()
+                  ._li()
+                  .li().write("time, i.e. paged by validity")
+                      .ul()
+                          .li().write("When the data is short-lived (for example real-time events), it might be reasonable to fetch it interval by interval. The length of the interval is then easy to choose to minimize amount of requests.")._li()
+                          .li().write("Not suitable for long-lived data, as then the same data row is returned in multiple requests, and thus its calculated data is calculated unnecessarily multiple times.")._li()
+                      ._ul()
+                  ._li()
+                  .li().write("bbox, i.e. paged by geographical area")
+                      .ul()
+                          .li().write("Spatial data can be limited geographically with 'bbox'-parameter. This can be good when the data is divided geographically evenly enough.")._li()
+                          .li().write("Note that the API doesn't allow arbitrary bounding boxes, but limits to boxes according to JHS 180-recommendation.")._li()
+                      ._ul()
+                  ._li()
+            ._ol();
+    }
+}
+                 ))
+          ._dl()
           ._section();
     }
 }
