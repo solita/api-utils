@@ -50,8 +50,16 @@ public class Serializers {
         return v.toString();
     }
     
+    public LocalDate deserLocalDate(String value) {
+        return LocalDate.parse(value, ISODateTimeFormat.date());
+    }
+    
     public String ser(LocalTime v) {
         return v.toString(ISODateTimeFormat.timeNoMillis().withZoneUTC());
+    }
+    
+    public LocalTime deserLocalTime(String value) {
+        return LocalTime.parse(value);
     }
     
     public String ser(DateTime v) {

@@ -43,7 +43,6 @@ import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
-import fi.solita.utils.functional.Function3;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.lens.Lens;
 import fi.solita.utils.meta.MetaNamedMember;

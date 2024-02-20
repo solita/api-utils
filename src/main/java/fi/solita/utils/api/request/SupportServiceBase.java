@@ -26,7 +26,6 @@ import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 

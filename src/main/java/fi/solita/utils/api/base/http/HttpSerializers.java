@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -440,7 +441,16 @@ public class HttpSerializers {
         }
     };
     
-    
+    private final Converter<String,UUID> uuid = new Converter<String, UUID>() {
+        @Override
+        public UUID convert(String source) throws InvalidValueException {
+            try {
+                return UUID.fromString(source);
+            } catch (RuntimeException e) {
+                throw new InvalidValueException("uuid", source);
+            }
+        }
+    };
     
     
     
@@ -453,6 +463,7 @@ public class HttpSerializers {
         Pair.of(Count.class, count),
         
         Pair.of(URI.class, uri),
+        Pair.of(UUID.class, uuid),
         Pair.of(LocalDate.class, paiva),
         Pair.of(LocalTime.class, kellonaika),
         Pair.of(DateTime.class, ajanhetki),

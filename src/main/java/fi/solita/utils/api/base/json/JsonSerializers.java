@@ -317,7 +317,6 @@ public class JsonSerializers {
             jgen.writeString(s.ser(i.left()) + "/" + s.ser(i.right()));
         }
     };
-
     
     
     
@@ -341,7 +340,9 @@ public class JsonSerializers {
     public Map<Class<?>,JsonSerializer<?>> keySerializers() { return emptyMap(); }
     
     public Map<Class<?>,JsonDeserializer<?>> deserializers() { return newMap(
-            Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s)))
+            Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s))),
+            Pair.<Class<?>,JsonDeserializer<?>>of(LocalDate.class, stringDeserializer(LocalDate.class, Serializers_.deserLocalDate.ap(s))),
+            Pair.<Class<?>,JsonDeserializer<?>>of(LocalTime.class, stringDeserializer(LocalTime.class, Serializers_.deserLocalTime.ap(s)))
         );
     }
     
