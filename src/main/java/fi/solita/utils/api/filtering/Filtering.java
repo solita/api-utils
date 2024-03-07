@@ -64,10 +64,10 @@ import fi.solita.utils.meta.MetaNamedMember;
 
 public class Filtering {
     private final HttpModule httpModule;
-    final ResolvableMemberProvider resolvableMemberProvider;
+    final ResolvableMemberProvider<?> resolvableMemberProvider;
     final FunctionProvider fp;
     
-    public Filtering(HttpModule httpModule, ResolvableMemberProvider resolvableMemberProvider, FunctionProvider fp) {
+    public Filtering(HttpModule httpModule, ResolvableMemberProvider<?> resolvableMemberProvider, FunctionProvider fp) {
         this.httpModule = httpModule;
         this.resolvableMemberProvider = resolvableMemberProvider;
         this.fp = fp;

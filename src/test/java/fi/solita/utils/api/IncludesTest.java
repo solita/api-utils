@@ -10,8 +10,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.SortedSet;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.junit.Test;
 
 import fi.solita.utils.api.IncludesTest_.FooDto_;
@@ -40,7 +38,7 @@ public class IncludesTest {
     public static class External {
     }
     
-    private static ResolvableMemberProvider externalProvider = new ResolvableMemberProvider() {
+    private static ResolvableMemberProvider<?> externalProvider = new ResolvableMemberProvider<Object>() {
         @Override
         public boolean isResolvable(MetaNamedMember<?, ?> member) {
             return true;
@@ -52,7 +50,7 @@ public class IncludesTest {
         }
 
         @Override
-        public void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object apply) {
+        public void mutateResolvable(Object request, SortedSet<PropertyName> propertyNames, Object apply) {
         }
     };
     

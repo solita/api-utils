@@ -105,8 +105,9 @@ public abstract class VersionBase {
         }
     };
     
-    public ResolvableMemberProvider resolvableMemberProvider() {
-        return ResolvableMemberProvider.NONE;
+    @SuppressWarnings("unchecked")
+    public ResolvableMemberProvider<HttpServletRequest> resolvableMemberProvider() {
+        return (ResolvableMemberProvider<HttpServletRequest>) ResolvableMemberProvider.NONE;
     }
     
     public Filtering filtering(HttpServletRequest req) {

@@ -21,8 +21,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.joda.time.Duration;
 
 import fi.solita.utils.api.Includes;
@@ -35,7 +33,7 @@ import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
 
-public abstract class ResolvableMemberProvider {
+public abstract class ResolvableMemberProvider<REQ> {
     
     public enum Type {
         Internal,
@@ -55,7 +53,7 @@ public abstract class ResolvableMemberProvider {
         }
     }
     
-    public static final ResolvableMemberProvider NONE = new ResolvableMemberProvider() {
+    public static final ResolvableMemberProvider<?> NONE = new ResolvableMemberProvider<Object>() {
         @Override
         public boolean isResolvable(MetaNamedMember<?, ?> member) {
             return false;
@@ -67,7 +65,7 @@ public abstract class ResolvableMemberProvider {
         }
         
         @Override
-        public void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object apply) {
+        public void mutateResolvable(Object request, SortedSet<PropertyName> propertyNames, Object apply) {
             throw new UnsupportedOperationException();
         }
     };
@@ -79,9 +77,9 @@ public abstract class ResolvableMemberProvider {
     /**
      * Aaargh, mutable, but would need Lenses here to update a single value...
      */
-    public abstract void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object object);
+    public abstract void mutateResolvable(REQ request, SortedSet<PropertyName> propertyNames, Object object);
     
-    public <K,T> Map<K,T> mutateResolvablesSingle(HttpServletRequest request, Includes<T> includes, Map<K,T> ts) {
+    public <K,T> Map<K,T> mutateResolvablesSingle(REQ request, Includes<T> includes, Map<K,T> ts) {
         Map<K,T> ret = newMutableLinkedMap();
         for (Map.Entry<K,T> e: ts.entrySet()) {
             ret.put(e.getKey(), mutateResolvables(request, includes, e.getValue()));
@@ -89,23 +87,23 @@ public abstract class ResolvableMemberProvider {
         return ret;
     }
     
-    public <K,T> Map<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
+    public <K,T> Map<K,Iterable<T>> mutateResolvables(REQ request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
         Map<K, Iterable<T>> ret = newMutableLinkedMap();
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
-            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), e.getValue())));
+            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), e.getValue())));
         }
         return ret;
     }
     
-    public <K,T> SortedMap<K,Iterable<T>> mutateResolvables(HttpServletRequest request, Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
+    public <K,T> SortedMap<K,Iterable<T>> mutateResolvables(REQ request, Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
         SortedMap<K, Iterable<T>> ret = newMutableSortedMap(ts.comparator());
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
-            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), e.getValue())));
+            ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), e.getValue())));
         }
         return ret;
     }
-    public <T> Iterable<T> mutateResolvables(HttpServletRequest request, Includes<T> includes, Iterable<T> ts) {
-        return map(ResolvableMemberProvider_.<T>mutateResolvables3().ap(this, request, includes), ts);
+    public <T> Iterable<T> mutateResolvables(REQ request, Includes<T> includes, Iterable<T> ts) {
+        return map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), ts);
     }
     
     public static boolean isResolvableMember(MetaNamedMember<?, ?> member) {
@@ -117,7 +115,7 @@ public abstract class ResolvableMemberProvider {
     }
     
     @SuppressWarnings("unchecked")
-    public <T> T mutateResolvables(final HttpServletRequest request, Includes<T> includes, T t) {
+    public <T> T mutateResolvables(final REQ request, Includes<T> includes, T t) {
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
             final SortedSet<PropertyName> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
             try {

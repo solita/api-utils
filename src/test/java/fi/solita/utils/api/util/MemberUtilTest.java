@@ -6,8 +6,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.SortedSet;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.junit.Test;
 
 import fi.solita.utils.api.functions.FunctionCallMember;
@@ -22,7 +20,7 @@ import fi.solita.utils.meta.MetaNamedMember;
 
 public class MemberUtilTest {
     
-    private static ResolvableMemberProvider externalProvider = new ResolvableMemberProvider() {
+    private static ResolvableMemberProvider<?> externalProvider = new ResolvableMemberProvider<Object>() {
         @Override
         public boolean isResolvable(MetaNamedMember<?, ?> member) {
             return true;
@@ -34,7 +32,7 @@ public class MemberUtilTest {
         }
 
         @Override
-        public void mutateResolvable(HttpServletRequest request, SortedSet<PropertyName> propertyNames, Object apply) {
+        public void mutateResolvable(Object request, SortedSet<PropertyName> propertyNames, Object apply) {
         }
     };
     
