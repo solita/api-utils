@@ -23,6 +23,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -356,6 +357,7 @@ public class CsvSerializers {
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, stringSerializer(Serializers_.ser.ap(s))),
+        Pair.of(UUID.class, stringSerializer(Serializers_.ser9.ap(s))),
         Pair.of(LocalDate.class, stringSerializer(Serializers_.ser1.ap(s))),
         Pair.of(LocalTime.class, stringSerializer(Serializers_.ser2.ap(s))),
         Pair.of(DateTime.class, stringSerializer(Serializers_.serZoned.ap(s))),

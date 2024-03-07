@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -367,6 +368,15 @@ public abstract class HtmlSerializers {
         }
     };
     
+    private final HtmlSerializer<UUID> uuid = new HtmlSerializer<UUID>() {
+        @Override
+        public void renderOn(UUID value, HtmlCanvas html, HtmlModule module) throws IOException {
+            html.span(class_("type-uuid"))
+                  .write(s.ser(value))
+                ._span();
+        }
+    };
+    
     private final HtmlSerializer<DateTime> datetime = new HtmlSerializer<DateTime>() {
         public final DateTime END_OF_ALL_TIMES = new DateTime(3000, 12, 31, 21, 59, DateTimeZone.UTC);
         public final DateTime START_OF_TIME = new DateTime(1921, 12, 31, 22, 0, DateTimeZone.UTC);
@@ -409,6 +419,7 @@ public abstract class HtmlSerializers {
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, uri),
+        Pair.of(UUID.class, uuid),
         Pair.of(LocalDate.class, stringSerializer("date", Serializers_.ser1.ap(s))),
         Pair.of(LocalTime.class, stringSerializer("time", Serializers_.ser2.ap(s))),
         Pair.of(DateTime.class, datetime),

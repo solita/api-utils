@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -327,6 +328,7 @@ public class JsonSerializers {
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, stringSerializer(URI.class, Serializers_.ser.ap(s))),
+        Pair.of(UUID.class, stringSerializer(UUID.class, Serializers_.ser9.ap(s))),
         Pair.of(LocalDate.class, stringSerializer(LocalDate.class, Serializers_.ser1.ap(s))),
         Pair.of(LocalTime.class, stringSerializer(LocalTime.class, Serializers_.ser2.ap(s))),
         Pair.of(DateTime.class, stringSerializer(DateTime.class, Serializers_.ser3.ap(s))),

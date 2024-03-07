@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.poi.ss.format.CellFormat;
 import org.apache.poi.ss.usermodel.Cell;
@@ -454,6 +455,7 @@ public class ExcelSerializers {
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, stringSerializer(Serializers_.ser.ap(s))),
+        Pair.of(UUID.class, stringSerializer(Serializers_.ser9.ap(s))),
         Pair.of(LocalDate.class, localdate),
         Pair.of(LocalTime.class, localtime),
         Pair.of(DateTime.class, datetime),

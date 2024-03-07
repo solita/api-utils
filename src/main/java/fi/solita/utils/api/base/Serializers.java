@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 
 import java.net.URI;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -92,5 +93,9 @@ public class Serializers {
     
     public RevisioJaMuokkausaikaData ser(Long revisio, DateTime muokkaus_aika) {
             return new RevisioJaMuokkausaikaData(revisio, muokkaus_aika);
+    }
+    
+    public String ser(UUID v) {
+        return v.toString();
     }
 }
