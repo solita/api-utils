@@ -34,7 +34,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.Period;
-import org.springframework.core.convert.ConverterNotFoundException;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.JsonSerializeAsBean;
@@ -140,8 +139,8 @@ public class Filtering {
         }
         try {
             return (T)httpModule.convert(value == null ? value : value.getValue().left.get(), targetType);
-        } catch (ConverterNotFoundException e) {
-            if (targetType.isAnnotationPresent(JsonSerializeAsBean.class)) {
+        } catch (RuntimeException e) {
+            if (e.getClass().getName().equals("org.springframework.core.convert.ConverterNotFoundException") && targetType.isAnnotationPresent(JsonSerializeAsBean.class)) {
                 // wasn't even ment to be convertable -> client error
                 throw new CannotFilterByStructureException();
             }

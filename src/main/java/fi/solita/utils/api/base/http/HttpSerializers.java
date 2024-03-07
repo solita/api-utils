@@ -24,7 +24,6 @@ import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.core.convert.converter.Converter;
 
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.filtering.Filter;
@@ -59,19 +58,19 @@ public class HttpSerializers {
      * Some primitive serializers, to be used as helper functions for actual serialization
      */
     
-    public static final <T> Converter<String,T> converter(final Apply<String,T> f) {
-        return new Converter<String,T>() {
+    public static final <T> Apply<String,T> converter(final Apply<String,T> f) {
+        return new Apply<String,T>() {
             @Override
-            public T convert(String source) {
+            public T apply(String source) {
                 return f.apply(source);
             }
         };
     }
     
-    public static final <E extends Enum<E>> Converter<String, E> enumConverter(final Class<E> enumClass, final Apply<E,String> serialization) {
-        return new Converter<String, E>() {
+    public static final <E extends Enum<E>> Apply<String, E> enumConverter(final Class<E> enumClass, final Apply<E,String> serialization) {
+        return new Apply<String, E>() {
             @Override
-            public E convert(String source) {
+            public E apply(String source) {
                 for (E v: enumClass.getEnumConstants()) {
                     if (serialization.apply(v).equals(source)) {
                         return v;
@@ -156,9 +155,9 @@ public class HttpSerializers {
         }
     }
     
-    private final Converter<String,Revision> revision = new Converter<String, Revision>() {
+    private final Apply<String,Revision> revision = new Apply<String, Revision>() {
         @Override
-        public Revision convert(String source) throws InvalidValueException {
+        public Revision apply(String source) throws InvalidValueException {
             try {
                 long val = Long.parseLong(source);
                 return new Revision(val);
@@ -168,11 +167,11 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,PropertyName> propertyName = converter(PropertyName_.of);
+    private final Apply<String,PropertyName> propertyName = converter(PropertyName_.of);
     
-    private final Converter<String,Filters> filter = new Converter<String, Filters>() {
+    private final Apply<String,Filters> filter = new Apply<String, Filters>() {
         @Override
-        public Filters convert(String source) {
+        public Filters apply(String source) {
             List<List<Filter>> filters = FilterParser.parse(source);
             if (!filters.isEmpty()) {
                 return new Filters(filters);
@@ -181,59 +180,59 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,Boolean> bool = new Converter<String, Boolean>() {
+    private final Apply<String,Boolean> bool = new Apply<String, Boolean>() {
         @Override
-        public Boolean convert(String source) {
+        public Boolean apply(String source) {
             return Boolean.parseBoolean(source);
         }
     };
     
-    private final Converter<String,Character> character = new Converter<String, Character>() {
+    private final Apply<String,Character> character = new Apply<String, Character>() {
         @Override
-        public Character convert(String source) {
+        public Character apply(String source) {
             Assert.True(source.length() == 1);
             return source.charAt(0);
         }
     };
     
-    private final Converter<String,Short> _short = new Converter<String, Short>() {
+    private final Apply<String,Short> _short = new Apply<String, Short>() {
         @Override
-        public Short convert(String source) {
+        public Short apply(String source) {
             return Short.parseShort(source);
         }
     };
     
-    private final Converter<String,Integer> _int = new Converter<String, Integer>() {
+    private final Apply<String,Integer> _int = new Apply<String, Integer>() {
         @Override
-        public Integer convert(String source) {
+        public Integer apply(String source) {
             return Integer.parseInt(source);
         }
     };
     
-    private final Converter<String,Long> _long = new Converter<String, Long>() {
+    private final Apply<String,Long> _long = new Apply<String, Long>() {
         @Override
-        public Long convert(String source) {
+        public Long apply(String source) {
             return Long.parseLong(source);
         }
     };
     
-    private final Converter<String,BigInteger> biginteger = new Converter<String, BigInteger>() {
+    private final Apply<String,BigInteger> biginteger = new Apply<String, BigInteger>() {
         @Override
-        public BigInteger convert(String source) {
+        public BigInteger apply(String source) {
             return new BigInteger(source);
         }
     };
     
-    private final Converter<String,BigDecimal> bigdecimal = new Converter<String, BigDecimal>() {
+    private final Apply<String,BigDecimal> bigdecimal = new Apply<String, BigDecimal>() {
         @Override
-        public BigDecimal convert(String source) {
+        public BigDecimal apply(String source) {
             return new BigDecimal(source);
         }
     };
     
-    private final Converter<String,Count> count = new Converter<String, Count>() {
+    private final Apply<String,Count> count = new Apply<String, Count>() {
         @Override
-        public Count convert(String source) throws InvalidValueException {
+        public Count apply(String source) throws InvalidValueException {
             try {
                 int val = Integer.parseInt(source);
                 Assert.True(Count.validValues.contains(val));
@@ -248,9 +247,9 @@ public class HttpSerializers {
         return Integer.toString(i);
     }
     
-    private final Converter<String,StartIndex> startIndex = new Converter<String, StartIndex>() {
+    private final Apply<String,StartIndex> startIndex = new Apply<String, StartIndex>() {
         @Override
-        public StartIndex convert(String source) throws InvalidStartIndexException {
+        public StartIndex apply(String source) throws InvalidStartIndexException {
             try {
                 int val = Integer.parseInt(source);
                 return new StartIndex(val);
@@ -260,9 +259,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,SRSName> srsName = new Converter<String, SRSName>() {
+    private final Apply<String,SRSName> srsName = new Apply<String, SRSName>() {
         @Override
-        public SRSName convert(String source) throws InvalidValueException {
+        public SRSName apply(String source) throws InvalidValueException {
             try {
                 Option<SRSName> found = find(SRSName_.value.andThen(equalTo(source)), SRSName.validValues);
                 Assert.defined(found);
@@ -273,12 +272,12 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,DateTime> ajanhetki = new Converter<String, DateTime>() {
+    private final Apply<String,DateTime> ajanhetki = new Apply<String, DateTime>() {
         private final DateTime VALID_BEGIN = VALID.getStart();
         private final DateTime VALID_END = VALID.getEnd();
         
         @Override
-        public DateTime convert(String source) throws InvalidValueException, DateTimeNotWithinLimitsException {
+        public DateTime apply(String source) throws InvalidValueException, DateTimeNotWithinLimitsException {
             DateTime ret;
             try {
                 ret = dateTimeParser.parseDateTime(source);
@@ -294,9 +293,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,Interval> interval = new Converter<String, Interval>() {
+    private final Apply<String,Interval> interval = new Apply<String, Interval>() {
         @Override
-        public Interval convert(String source) throws InvalidValueException, IntervalNotWithinLimitsException {
+        public Interval apply(String source) throws InvalidValueException, IntervalNotWithinLimitsException {
             String[] parts = source.split("/");
             
             Interval ret;
@@ -313,10 +312,10 @@ public class HttpSerializers {
                     } catch (IllegalArgumentException e) {
                         // loppu ei ollut aikaleima, kokeillaan onko duration
                         try {
-                            end = begin.plus((Duration)converters().get(Duration.class).convert(parts[1]));
+                            end = begin.plus((Duration)converters().get(Duration.class).apply(parts[1]));
                         } catch (InvalidValueException e1) {
                             // loppu ei ollut duration, oletetaan että oli period
-                            end = begin.plus((Period)converters().get(Period.class).convert(parts[1]));
+                            end = begin.plus((Period)converters().get(Period.class).apply(parts[1]));
                         }
                         if (end.isAfter(VALID.getEnd())) {
                             end = VALID.getEnd();
@@ -327,10 +326,10 @@ public class HttpSerializers {
                     end = dateTimeParser.parseDateTime(parts[1]);
                     try {
                         // kokeillaan onko alku duration
-                        begin = end.minus((Duration)converters().get(Duration.class).convert(parts[0]));
+                        begin = end.minus((Duration)converters().get(Duration.class).apply(parts[0]));
                     } catch (InvalidValueException e1) {
                         // alku ei ollut duration, oletetaan että oli period
-                        begin = end.minus((Period)converters().get(Period.class).convert(parts[0]));
+                        begin = end.minus((Period)converters().get(Period.class).apply(parts[0]));
                     }
                     if (begin.isBefore(VALID.getStart())) {
                         begin = VALID.getStart();
@@ -353,9 +352,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,Duration> kesto = new Converter<String, Duration>() {
+    private final Apply<String,Duration> kesto = new Apply<String, Duration>() {
         @Override
-        public Duration convert(String source) throws InvalidValueException {
+        public Duration apply(String source) throws InvalidValueException {
             Duration ret;
             try {
                 ret = Duration.parse(source);
@@ -370,9 +369,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,Period> jakso = new Converter<String, Period>() {
+    private final Apply<String,Period> jakso = new Apply<String, Period>() {
         @Override
-        public Period convert(String source) throws InvalidValueException {
+        public Period apply(String source) throws InvalidValueException {
             Period ret;
             try {
                 ret = Period.parse(source);
@@ -386,14 +385,14 @@ public class HttpSerializers {
     public static final DateTimeFormatter dateTimeParser = ISODateTimeFormat.dateTimeNoMillis().withOffsetParsed();
     public static final Interval VALID = new Interval(dateTimeParser.parseDateTime("2010-01-01T00:00:00Z"), dateTimeParser.parseDateTime("2030-01-01T00:00:00Z"));
     
-    private final Converter<String,LocalDate> paiva = new Converter<String, LocalDate>() {
+    private final Apply<String,LocalDate> paiva = new Apply<String, LocalDate>() {
         private final DateTimeFormatter localDateParser = ISODateTimeFormat.localDateParser();
         
         private final LocalDate VALID_BEGIN = VALID.getStart().toLocalDate();
         private final LocalDate VALID_END = VALID.getEnd().toLocalDate();
         
         @Override
-        public LocalDate convert(String source) throws InvalidValueException, LocalDateNotWithinLimitsException {
+        public LocalDate apply(String source) throws InvalidValueException, LocalDateNotWithinLimitsException {
             try {
                 LocalDate ret = localDateParser.parseLocalDate(source);
                 if (ret.isBefore(VALID_BEGIN) || ret.isAfter(VALID_END)) {
@@ -406,11 +405,11 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,LocalTime> kellonaika = new Converter<String, LocalTime>() {
+    private final Apply<String,LocalTime> kellonaika = new Apply<String, LocalTime>() {
         private final DateTimeFormatter localTimeParser = ISODateTimeFormat.localTimeParser();
         
         @Override
-        public LocalTime convert(String source) throws InvalidValueException, LocalDateNotWithinLimitsException {
+        public LocalTime apply(String source) throws InvalidValueException, LocalDateNotWithinLimitsException {
             try {
                 return localTimeParser.parseLocalTime(source);
             } catch (RuntimeException e) {
@@ -419,9 +418,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,DateTimeZone> zone = new Converter<String, DateTimeZone>() {
+    private final Apply<String,DateTimeZone> zone = new Apply<String, DateTimeZone>() {
         @Override
-        public DateTimeZone convert(String source) throws InvalidTimeZoneException {
+        public DateTimeZone apply(String source) throws InvalidTimeZoneException {
             try {
                 return DateTimeZone.forID(source);
             } catch (RuntimeException e) {
@@ -430,9 +429,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,URI> uri = new Converter<String, URI>() {
+    private final Apply<String,URI> uri = new Apply<String, URI>() {
         @Override
-        public URI convert(String source) throws InvalidValueException {
+        public URI apply(String source) throws InvalidValueException {
             try {
                 return URI.create(source);
             } catch (RuntimeException e) {
@@ -441,9 +440,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Converter<String,UUID> uuid = new Converter<String, UUID>() {
+    private final Apply<String,UUID> uuid = new Apply<String, UUID>() {
         @Override
-        public UUID convert(String source) throws InvalidValueException {
+        public UUID apply(String source) throws InvalidValueException {
             try {
                 return UUID.fromString(source);
             } catch (RuntimeException e) {
@@ -454,7 +453,7 @@ public class HttpSerializers {
     
     
     
-    public Map<Class<?>,Converter<String,?>> converters() { return newMap(
+    public Map<Class<?>,Apply<String,?>> converters() { return newMap(
         Pair.of(Revision.class, revision),
         Pair.of(PropertyName.class, propertyName),
         Pair.of(Filters.class, filter),
