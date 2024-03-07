@@ -10,12 +10,18 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sequence;
 import static fi.solita.utils.functional.Functional.tail;
-import static fi.solita.utils.functional.FunctionalC.drop;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
-import static org.rendersnake.HtmlAttributesFactory.*;
+import static org.rendersnake.HtmlAttributesFactory.class_;
+import static org.rendersnake.HtmlAttributesFactory.href;
+import static org.rendersnake.HtmlAttributesFactory.http_equiv;
+import static org.rendersnake.HtmlAttributesFactory.id;
+import static org.rendersnake.HtmlAttributesFactory.lang;
+import static org.rendersnake.HtmlAttributesFactory.name;
+import static org.rendersnake.HtmlAttributesFactory.rowspan;
+import static org.rendersnake.HtmlAttributesFactory.type;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,25 +35,22 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
-import org.rendersnake.ext.spring.HtmlCanvasFactory;
 
 import fi.solita.utils.api.base.html.HtmlModule;
+import fi.solita.utils.api.html.HttpServletCanvas;
 import fi.solita.utils.api.html.UI;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.StartIndex;
-import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
-public abstract class HtmlConversionService {
+public abstract class HtmlConversionService<REQ> {
 
     public static abstract class HtmlTitle implements Renderable {
         public final String plainTextTitle;
@@ -107,15 +110,15 @@ public abstract class HtmlConversionService {
         return a + b;
     }
     
-    public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+    public <T> byte[] serialize(REQ request, HtmlTitle title, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return serialize(request, title, newList(obj), members);
     }
     
-    public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, T[] obj) {
+    public <T> byte[] serialize(REQ request, HtmlTitle title, T[] obj) {
         return serialize(request, title, newList(obj));
     }
     
-    public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Iterable<T> obj) {
+    public <T> byte[] serialize(REQ request, HtmlTitle title, final Iterable<T> obj) {
         return serialize(request, title, newList(obj), newList(new MetaNamedMember<T, T>() {
             @Override
             public T apply(T t) {
@@ -134,20 +137,20 @@ public abstract class HtmlConversionService {
         }));
     }
     
-    public <T> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+    public <T> byte[] serialize(REQ request, HtmlTitle title, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.size());
     }
     
-    public <K,V> byte[] serialize(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> byte[] serialize(REQ request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.size());
     }
     
-    public <K,V> byte[] serializeSingle(HttpServletRequest request, HtmlTitle title, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> byte[] serializeSingle(REQ request, HtmlTitle title, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.size());
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> byte[] serializeWithKey(REQ request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         // empty header if there's no simple key. This is a bit too hackish...
         headers = cons(new MetaNamedMember<V, Object>() {
@@ -168,7 +171,7 @@ public abstract class HtmlConversionService {
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(HttpServletRequest request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<? super V, ?>> members, final MetaNamedMember<? super V,?> key) {
+    public <K,V> byte[] serializeWithKey(REQ request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<? super V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
@@ -179,10 +182,13 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected Renderable pageHead(final HtmlTitle title, final HttpServletRequest request) {
+    protected Renderable pageHead(final HtmlTitle title, final REQ request) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
+                @SuppressWarnings("unchecked")
+                String contextPath = ((HttpServletCanvas<REQ>)html).getContextPath();
+                
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
                     .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '"
@@ -190,13 +196,13 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
                         + UI.calculateHash(scripts3()) + "' '"
-                        + UI.calculateHash(initTableFilter(request)) + "'"))
+                        + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                     .write(styles(), false)
                     ._style()
-                    .script(type("text/javascript").src(RequestUtil.getContextPath(request) + "/r/tablefilter/tablefilter.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/tablefilter/tablefilter.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
                     ._script();
@@ -204,7 +210,7 @@ public abstract class HtmlConversionService {
         };
     };
     
-    public static Renderable pageHeader(final HtmlTitle title, final HttpServletRequest request, final boolean includeFormats) {
+    public static <REQ> Renderable pageHeader(final HtmlTitle title, final REQ request, final boolean includeFormats) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -224,13 +230,15 @@ public abstract class HtmlConversionService {
         };
     }
     
-    private static Renderable linksForDifferentFormats(final HttpServletRequest request) {
-        final String path = RequestUtil.getApiVersionBasePath(request) + drop(1, RequestUtil.getAPIVersionRelativePathWithoutRevision(request));
-        final String queryString = Option.of(request.getQueryString()).map(Transformers.prepend("?")).getOrElse("");
-        
+    private static <REQ> Renderable linksForDifferentFormats(final REQ request) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
+                @SuppressWarnings("unchecked")
+                final String path = ((HttpServletCanvas<REQ>)html).getRequestPath();
+                @SuppressWarnings("unchecked")
+                final String queryString = ((HttpServletCanvas<REQ>)html).getRequestQueryString().map(Transformers.prepend("?")).getOrElse("");
+                
                 for (String format: newList("html","json","jsonl","geojson","csv","xlsx")) {
                     html.a(href(path.replace(".html", "." + format) + queryString))
                             .write(format)
@@ -267,10 +275,16 @@ public abstract class HtmlConversionService {
         };
     }
     
-    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, HttpServletRequest request, int rows) {
+    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, REQ request, int rows) {
         ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
-        HtmlCanvas html = HtmlCanvasFactory.createCanvas(request, null, ow);
+        HtmlCanvas html = HttpServletCanvas.of(request, ow);
+        
+        @SuppressWarnings("unchecked")
+        Option<String> queryString = (((HttpServletCanvas<REQ>)html).getRequestQueryString());
+        
+        @SuppressWarnings("unchecked")
+        String contextPath = (((HttpServletCanvas<REQ>)html).getContextPath());
         
         try {
             html.html()
@@ -304,7 +318,7 @@ public abstract class HtmlConversionService {
                                   .span(lang("en")).write("Table is refreshing automatically via SSE")._span()
                               ._span()
                           ._if()
-                          .if_(rows > 0 && COUNT.matcher(Option.of(request.getQueryString()).getOrElse("")).matches())
+                          .if_(rows > 0 && COUNT.matcher(queryString.getOrElse("")).matches())
                               .span(class_(null)
                                   .add("hx-push-url", "false")
                                   .add("hx-boost", "true")
@@ -312,11 +326,11 @@ public abstract class HtmlConversionService {
                                   .add("hx-swap", "beforeend")
                                   .add("hx-indicator", ".lds-dual-ring")
                                   .add("hx-select", "#content > table > tbody > tr"))
-                                  .a(href(uriWithIncrementedStartIndex(request, false)))
+                                  .a(href(uriWithIncrementedStartIndex(html, false)))
                                       .span(lang("fi")).write("Lataa lisää rivejä...")._span()
                                       .span(lang("en")).write("Load more rows...")._span()
                                   ._a()
-                                  .a(href(uriWithIncrementedStartIndex(request, true)))
+                                  .a(href(uriWithIncrementedStartIndex(html, true)))
                                       .span(lang("fi")).write("Lataa loput rivit...")._span()
                                       .span(lang("en")).write("Load rest of the rows...")._span()
                                   ._a()
@@ -327,7 +341,7 @@ public abstract class HtmlConversionService {
                   .render(pageFooter())
                   .if_(rows >= 2)
                       .script(type("text/javascript"))
-                          .write(initTableFilter(request), false)
+                          .write(initTableFilter(contextPath), false)
                       ._script()
                   ._if()
                   .script(type("text/javascript"))
@@ -344,12 +358,15 @@ public abstract class HtmlConversionService {
         return os.toByteArray();
     }
     
-    private static Renderable initHtmx(final HttpServletRequest request) {
+    private static <REQ> Renderable initHtmx(final REQ request) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
-                html.script(type("text/javascript").src(RequestUtil.getContextPath(request) + "/r/js/lib/htmx.min.js"))._script()
-                    .script(type("text/javascript").src(RequestUtil.getContextPath(request) + "/r/js/lib/htmx-ext-sse.js"))._script()
+                @SuppressWarnings("unchecked")
+                String contextPath = (((HttpServletCanvas<REQ>)html).getContextPath());
+                
+                html.script(type("text/javascript").src(contextPath + "/r/js/lib/htmx.min.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-sse.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts2(), false)
                     ._script();
@@ -360,12 +377,18 @@ public abstract class HtmlConversionService {
     public static final Pattern COUNT = Pattern.compile("count=([0-9]+)(.*)");
     public static final Pattern START_INDEX = Pattern.compile("startIndex=([0-9]+)");
     
-    static String uriWithIncrementedStartIndex(HttpServletRequest request, boolean loadRest) {
-        Matcher cm = COUNT.matcher(Option.of(request.getQueryString()).getOrElse(""));
+    static <REQ> String uriWithIncrementedStartIndex(HtmlCanvas html, boolean loadRest) {
+        @SuppressWarnings("unchecked")
+        String path = (((HttpServletCanvas<REQ>)html).getRequestPath());
+        
+        @SuppressWarnings("unchecked")
+        Option<String> queryString = (((HttpServletCanvas<REQ>)html).getRequestQueryString());
+        
+        Matcher cm = COUNT.matcher(queryString.getOrElse(""));
         if (cm.find()) {
             int count = Integer.parseInt(cm.group(1));
             
-            String uri = RequestUtil.getApiVersionBasePath(request) + drop(1, RequestUtil.getAPIVersionRelativePathWithoutRevision(request)) + Option.of(request.getQueryString()).map(Transformers.prepend("?")).getOrElse("");
+            String uri = path + queryString .map(Transformers.prepend("?")).getOrElse("");
             StringBuffer sb = new StringBuffer();
             Matcher m = START_INDEX.matcher(uri);
             if (m.find()) {
@@ -691,10 +714,10 @@ public abstract class HtmlConversionService {
            + "}";
     }
     
-    public static final String initTableFilter(final HttpServletRequest request) {
+    public static final <REQ> String initTableFilter(String contextPath) {
         return "if (window.TableFilter) {"
              + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.type-resolved')).forEach(function(x) {"
-             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + RequestUtil.getContextPath(request) + "/r/tablefilter/' });"
+             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/' });"
              + "    tf.init();"
              + "    x.addEventListener('htmx:afterSwap', function(ev) { tf.filter(); });"
              + "  });"

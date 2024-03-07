@@ -1,14 +1,22 @@
 package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.emptyList;
-import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Functional.*;
-import static fi.solita.utils.functional.FunctionalA.flatten;
+import static fi.solita.utils.functional.Functional.distinct;
+import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatMap;
+import static fi.solita.utils.functional.Functional.head;
+import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.Functional.size;
+import static fi.solita.utils.functional.Functional.subtract;
+import static fi.solita.utils.functional.Functional.tail;
+import static fi.solita.utils.functional.Functional.zip;
 import static fi.solita.utils.functional.FunctionalA.last;
 import static fi.solita.utils.functional.FunctionalC.drop;
 import static fi.solita.utils.functional.FunctionalC.dropWhile;
+import static fi.solita.utils.functional.FunctionalC.init;
 import static fi.solita.utils.functional.FunctionalC.reverse;
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
 import static fi.solita.utils.functional.FunctionalM.find;
@@ -16,48 +24,29 @@ import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
-import static fi.solita.utils.functional.Transformers.prepend;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers;
-import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.functional.ApplyBi;
-import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.meta.MetaMethod;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class RequestUtil {
 
     public static class EventStreamNotAccepted extends RuntimeException {
-    }
-
-    public static class UnavailableContentTypeException extends RuntimeException {
     }
 
     public static class QueryParameterMustBeInAlphabeticalOrderException extends RuntimeException {
@@ -116,11 +105,6 @@ public abstract class RequestUtil {
         }
     }
     
-    public static final ETags getETags(HttpServletRequest request) {
-        return new ETags(parseETags(Option.of(request.getHeader(HttpHeaders.IF_MATCH))),
-                         parseETags(Option.of(request.getHeader(HttpHeaders.IF_NONE_MATCH))));
-    }
-    
     static String trim(String s) {
         return s.trim();
     }
@@ -132,11 +116,6 @@ public abstract class RequestUtil {
         return None();
     }
     
-    public static final void checkURL(HttpServletRequest request, Set<String> caseIgnoredParams, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
-        assertAcceptHeader(newList(request.getHeaders("Accept")));
-        assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), caseIgnoredParams, acceptedParams);
-    }
-
     static void assertAcceptHeader(List<String> accepts) {
         for (String accept: accepts) {
             if (accept.toLowerCase().startsWith("text/event-stream")) {
@@ -209,55 +188,30 @@ public abstract class RequestUtil {
         return newList(s.split(regex));
     }
 
-    public static final String getContextPath(HttpServletRequest req) {
-        for (String forwardedPrefix: Option.of(req.getHeader("X-Forwarded-Prefix"))) {
-            return (forwardedPrefix.endsWith("/") ? init(forwardedPrefix) : forwardedPrefix) + req.getContextPath();
+    public static final String getContextPath(String reqContextPath, Option<String> xForwardedPrefix) {
+        for (String forwardedPrefix: xForwardedPrefix) {
+            return (forwardedPrefix.endsWith("/") ? init(forwardedPrefix) : forwardedPrefix) + reqContextPath;
         }
-        return req.getContextPath();
+        return reqContextPath;
     }
     
-    public static final URI getRequestURI(HttpServletRequest req) {
-        Option<String> qs = req.getQueryString() == null || req.getQueryString().trim().length() == 0 ? Option.<String>None() : Some(req.getQueryString());
-        Option<String> forwardedProto = Option.of(req.getHeader("X-Forwarded-Proto"));
-        Option<String> forwardedHost = Option.of(req.getHeader("X-Forwarded-Host"));
-        Option<String> forwardedPrefix = Option.of(req.getHeader("X-Forwarded-Prefix"));
-        String url = req.getRequestURL().toString();
-        for (String proto: forwardedProto) {
-            url = url.replaceFirst("[^:]+://", proto + "://");
-        }
-        for (String host: forwardedHost) {
-            url = url.replaceFirst("://[^:/]*", "://" + host);
-        }
-        for (String prefix: forwardedPrefix) {
-            url = url.replaceFirst("^[^:/]+://[^/]+", "$0" + prefix);
-        }
-        return URI.create(url + qs.map(prepend("?")).getOrElse(""));
+    public static final String getContextRelativePath(String servletPath, Option<String> pathInfo) {
+        return servletPath + pathInfo.getOrElse("");
     }
-    
-    public static final String getContextRelativePath(HttpServletRequest req) {
-        return req.getServletPath() + Option.of(req.getPathInfo()).getOrElse("");
-    }
-    
-    public static final String getAPIVersionRelativePath(HttpServletRequest req) {
-        return dropWhile(not(equalTo('/')), tail(getContextRelativePath(req)));
+
+    public static final String getAPIVersionRelativePath(String contextRelativePath) {
+        return dropWhile(not(equalTo('/')), tail(contextRelativePath));
     }
     
     private static final Pattern DIGITS = Pattern.compile("[0-9]+");
     
-    public static final String getAPIVersionRelativePathWithoutRevision(HttpServletRequest req) {
-        String versionRelative = getAPIVersionRelativePath(req);
-        String candidate = takeWhile(not(equalTo('/')), drop(1, versionRelative));
-        return DIGITS.matcher(candidate).matches() ? dropWhile(not(equalTo('/')), drop(1, versionRelative)) : versionRelative;
+    public static final String getAPIVersionRelativePathWithoutRevision(String versionRelativePath) {
+        String candidate = takeWhile(not(equalTo('/')), drop(1, versionRelativePath));
+        return DIGITS.matcher(candidate).matches() ? dropWhile(not(equalTo('/')), drop(1, versionRelativePath)) : versionRelativePath;
     }
     
-    public static final String getApiVersionBasePath(HttpServletRequest req) {
-        String contextRelativePath = getContextRelativePath(req);
-        return getContextPath(req) + "/" + takeWhile(not(equalTo('/')), tail(contextRelativePath)) + "/";
-    }
-
-    public static final String resolvePath(Class<?> latestVersion) {
-        String[] paths = latestVersion.getAnnotation(RequestMapping.class).value();
-        return takeWhile(not(equalTo('/')), tail(paths[0]));
+    public static final String getApiVersionBasePath(String contextPath, String contextRelativePath) {
+        return contextPath + "/" + takeWhile(not(equalTo('/')), tail(contextRelativePath)) + "/";
     }
 
     public static final Option<String> resolveExtension(String path) {
@@ -267,28 +221,6 @@ public abstract class RequestUtil {
             return None();
         }
         return Some(reverse(takeWhile(not(equalTo('.')), reverse(lastPathPart))));
-    }
-
-    public static final Either<Option<String>,SerializationFormat> resolveFormat(HttpServletRequest request) throws NotFoundException {
-        for (String extension: resolveExtension(getContextRelativePath(request))) {
-            for (SerializationFormat ext: SerializationFormat.valueOfExtension(extension)) {
-                return Either.right(ext);
-            }
-            return Either.left(Some(extension));
-        }
-        return Either.left(Option.<String>None());
-    }
-    
-    public static final String[] resolveQueryParams(MetaMethod<?, ?> requestMethod) {
-        return newArray(String.class, map(RequestUtil_.paramValue, filter(RequestUtil_.isRequestParam, flatten(requestMethod.getMember().getParameterAnnotations()))));
-    }
-    
-    static boolean isRequestParam(Annotation a) {
-        return a.annotationType().equals(RequestParam.class);
-    }
-    
-    static String paramValue(Annotation rp) {
-        return ((RequestParam)rp).value().equals("") ? ((RequestParam)rp).name() : ((RequestParam)rp).value();
     }
 
     @SuppressWarnings("unchecked")
@@ -321,12 +253,5 @@ public abstract class RequestUtil {
 
     public static final String intervalInfinity() {
         return interval2stringRestrictedToInfinity(HttpSerializers.VALID);
-    }
-
-    public static final byte[] uncompressIfNeeded(HttpServletRequest req, byte[] data) throws IOException {
-        if (Option.of(req.getHeader("Content-Encoding")).getOrElse("").contains("gzip")) {
-            return IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(data)));
-        }
-        return data;
     }
 }

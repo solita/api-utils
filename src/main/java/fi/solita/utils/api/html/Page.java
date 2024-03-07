@@ -8,7 +8,6 @@ import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 import org.rendersnake.RenderableWrapper;
-import org.rendersnake.ext.servlet.ServletUtils;
 
 import fi.solita.utils.api.format.HtmlConversionService;
 import fi.solita.utils.api.format.HtmlConversionService.HtmlTitle;
@@ -46,7 +45,7 @@ public class Page extends RenderableWrapper {
                     html.span(lang("fi")).write(title_fi)._span()
                         .span(lang("en")).write(title_en)._span();
                 }
-            }, ServletUtils.requestFor(html), false))
+            }, HttpServletCanvas.requestFor(html), false))
               .render(component)
               .footer()
                   .span(lang("fi").class_("copyright"))
