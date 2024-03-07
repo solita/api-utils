@@ -3,21 +3,19 @@ package fi.solita.utils.api.format;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
-import org.springframework.http.MediaType;
-
 import fi.solita.utils.functional.Option;
 
 public enum SerializationFormat {
-    JSON(MediaType.APPLICATION_JSON_VALUE),
+    JSON("application/json"),
     GEOJSON("application/vnd.geo+json;charset=UTF-8"),
     JSONL("application/x-ndjson"),
-    HTML(MediaType.TEXT_HTML_VALUE + ";charset=UTF-8"),
+    HTML("text/html;charset=UTF-8"),
     CSV("text/csv;charset=UTF-8"),
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"),
-    PNG(MediaType.IMAGE_PNG_VALUE),
-    XML(MediaType.APPLICATION_XML_VALUE),
+    PNG("image/png"),
+    XML("application/xml"),
     GML("application/gml+xml"),
-    COUNT(MediaType.TEXT_PLAIN_VALUE)
+    COUNT("text/plain")
     ;
     
     public final String mediaType;

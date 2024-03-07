@@ -24,8 +24,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriUtils;
 
 import fi.solita.utils.api.util.RequestUtil.ETags;
@@ -34,8 +32,6 @@ import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformers;
 
 public abstract class ResponseUtil {
-    
-    private static final String ACCESS_CONTROL_ALLOW_ORIGIN = "*";
     
     private static final DateTime started = DateTime.now();
     
@@ -50,38 +46,38 @@ public abstract class ResponseUtil {
     }
 
     public static void setAccessControlHeaders(HttpServletResponse response) {
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_ALLOW_ORIGIN);
+        response.setHeader(Headers.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
     }
 
     public static void respondOKWithEternalCaching(HttpServletResponse response, byte[] data, ETags etags) {
-        respond(response, data, etags, HttpStatus.OK, true);
+        respond(response, data, etags, HttpServletResponse.SC_OK, true);
     }
     
     public static void respondOK(HttpServletResponse response, byte[] data, ETags etags) {
-        respond(response, data, etags, HttpStatus.OK, false);
+        respond(response, data, etags, HttpServletResponse.SC_OK, false);
     }
     
-    public static void respond(HttpServletResponse response, byte[] data, ETags etags, HttpStatus status) {
+    public static void respond(HttpServletResponse response, byte[] data, ETags etags, int status) {
         respond(response, data, etags, status, false);
     }
     
-    private static void respond(HttpServletResponse response, byte[] data, ETags etags, HttpStatus status, boolean cacheOKForInfinity) {
+    private static void respond(HttpServletResponse response, byte[] data, ETags etags, int status, boolean cacheOKForInfinity) {
         try {
             String etag = calculateETag(data);
             if (etags.ifMatch.isDefined() && !etags.ifMatch.get().contains(etag)) {
                 // "14.24 If-Match: If none of the entity tags match ... MUST return a 412"
-                respondError(response, HttpStatus.PRECONDITION_FAILED);
+                respondError(response, 412, "Precondition Failed");
             } else if (etags.ifNoneMatch.isDefined() && (etags.ifNoneMatch.get().contains("*") || etags.ifNoneMatch.get().contains(etag))) {
                 // "14.26 If-None-Match: If any of the entity tags match ... or if "*" is given and any current entity exists for that resource ... the server SHOULD respond with a 304"
-                respondError(response, HttpStatus.NOT_MODIFIED, Pair.of(HttpHeaders.ETAG, etag));
+                respondError(response, 304, "Not Modified", Pair.of(Headers.ETAG, etag));
             } else {
                 if (cacheOKForInfinity) {
                     cacheForInfinity(response);
                 }
-                response.setStatus(status.value());
-                response.setHeader(HttpHeaders.ETAG, etag);
+                response.setStatus(status);
+                response.setHeader(Headers.ETAG, etag);
                 setAccessControlHeaders(response);
-                response.setHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(data.length));
+                response.setHeader(Headers.CONTENT_LENGTH, Integer.toString(data.length));
                 
                 ServletOutputStream os = response.getOutputStream();
                 try {
@@ -105,49 +101,45 @@ public abstract class ResponseUtil {
     }
     
     public static final void disableCaching(HttpServletResponse response) {
-        response.setHeader(HttpHeaders.CACHE_CONTROL, "private, no-store, no-cache, must-revalidate");
+        response.setHeader(Headers.CACHE_CONTROL, "private, no-store, no-cache, must-revalidate");
     }
 
     public static final void setLastModifiedToAppStartupTime(HttpServletResponse response) {
         DateTime now = DateTime.now(DateTimeZone.UTC);
-        response.setDateHeader(HttpHeaders.DATE, now.getMillis());
-        response.setDateHeader(HttpHeaders.LAST_MODIFIED, started.getMillis());
+        response.setDateHeader(Headers.DATE, now.getMillis());
+        response.setDateHeader(Headers.LAST_MODIFIED, started.getMillis());
     }
 
     /**
      * No-op if cache-control header is already set
      */
     public static final void cacheFor(Duration age, HttpServletResponse response) {
-        if (age.isLongerThan(Duration.ZERO) && !response.containsHeader(HttpHeaders.CACHE_CONTROL)) {
+        if (age.isLongerThan(Duration.ZERO) && !response.containsHeader(Headers.CACHE_CONTROL)) {
             DateTime now = DateTime.now(DateTimeZone.UTC);
-            response.setDateHeader(HttpHeaders.DATE, now.getMillis());
-            response.setDateHeader(HttpHeaders.EXPIRES, now.plus(age).getMillis());
-            response.setHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=" + age.getStandardSeconds());
-            response.setHeader(HttpHeaders.PRAGMA, "cache");
+            response.setDateHeader(Headers.DATE, now.getMillis());
+            response.setDateHeader(Headers.EXPIRES, now.plus(age).getMillis());
+            response.setHeader(Headers.CACHE_CONTROL, "public, max-age=" + age.getStandardSeconds());
+            response.setHeader(Headers.PRAGMA, "cache");
         }
     }
    
     @SafeVarargs
-    public static void respondError(HttpServletResponse response, HttpStatus status, Pair<String,String>... headers) throws IOException {
+    public static void respondError(HttpServletResponse response, int status, String errorMsg, Pair<String,String>... headers) throws IOException {
         for (Pair<String,String> header: headers) {
             response.setHeader(header.left(), header.right());
         }
-        respondError(response, status.value(), status.getReasonPhrase());
-    }
-    
-    public static void respondError(HttpServletResponse response, int status, String errorMsg) throws IOException {
         setAccessControlHeaders(response);
         response.sendError(status, errorMsg);
     }
 
     public static void respondLatest(Class<?> latestVersion, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String version = RequestUtil.resolvePath(latestVersion);
-        String path = RequestUtil.getAPIVersionRelativePath(request);
+        String version = SpringRequestUtil.resolvePath(latestVersion);
+        String path = ServletRequestUtil.getAPIVersionRelativePath(request);
         redirect307(version + path, request, response);
     }
     
     public static void redirectToRevision(long revision, HttpServletRequest request, HttpServletResponse response) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(request)));
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(request)));
         // path == <Whole API path>
         // path.left == <API version>
         // path.right == <remaining API path, if any?>
@@ -155,17 +147,17 @@ public abstract class ResponseUtil {
     }
     
     public static void redirectToRevisionAndDateTime(HttpServletRequest req, HttpServletResponse res, long revision, DateTime dateTime, Set<String> queryParamsToExclude) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(req)));
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(req)));
         redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.instant2string(dateTime))), queryParamsToExclude);
     }
 
     public static void redirectToRevisionAndInterval(HttpServletRequest req, HttpServletResponse res, long revision, Interval interval, Set<String> queryParamsToExclude) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(req)));
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(req)));
         redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
     
     public static void redirectToAnotherRevision(long revision, HttpServletRequest request, HttpServletResponse response) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, RequestUtil.getContextRelativePath(request)));
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(request)));
         Pair<String, String> revisionAndRemainingPath = span(not(equalTo('/')), drop(1, path.right()));
         // path == <Whole API path>
         // path.left == <API version>
@@ -184,7 +176,7 @@ public abstract class ResponseUtil {
     }
     
     public static void redirect307(String contextRelativePath, HttpServletRequest request, HttpServletResponse response, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
-        String path = RequestUtil.getContextPath(request) +
+        String path = ServletRequestUtil.getContextPath(request) +
                       (contextRelativePath.startsWith("/") ? contextRelativePath : "/" + contextRelativePath);
         Iterable<String> params = map(Transformers.join("=").andThen(ResponseUtil_.encodeUrlQueryString), additionalUnescapedQueryParams.entrySet());
         if (request.getQueryString() != null && !request.getQueryString().isEmpty()) {

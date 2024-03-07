@@ -24,6 +24,7 @@ import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
+import fi.solita.utils.api.util.ServletRequestUtil;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
@@ -134,14 +135,14 @@ public class SupportServiceBase {
     }
     
     public static void redirectToInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
-        ResponseUtil.redirect307(RequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
+        ResponseUtil.redirect307(ServletRequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
 
     protected Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
-        Either<Option<String>, SerializationFormat> format = RequestUtil.resolveFormat(request);
+        Either<Option<String>, SerializationFormat> format = ServletRequestUtil.resolveFormat(request);
         for (SerializationFormat f: format.right) {
             response.setContentType(f.mediaType);
-            return Some(new RequestData(f, RequestUtil.getETags(request)));
+            return Some(new RequestData(f, ServletRequestUtil.getETags(request)));
         }
         return None();
     }
@@ -151,6 +152,6 @@ public class SupportServiceBase {
     }
 
     public void checkUrl(HttpServletRequest request, String... acceptedParams) {
-        RequestUtil.checkURL(request, getCaseIgnoredParams(), newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
+        ServletRequestUtil.checkURL(request, getCaseIgnoredParams(), newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
     }
 }

@@ -1,6 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.api.util.ModificationUtils.excluding;
+import static fi.solita.utils.functional.Collections.emptyMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
@@ -12,9 +13,6 @@ import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Collection;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
@@ -35,8 +33,7 @@ import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
 import fi.solita.utils.api.resolving.GeojsonResolver;
 import fi.solita.utils.api.types.SRSName;
-import fi.solita.utils.api.util.RequestUtil;
-import fi.solita.utils.api.util.RequestUtil.UnavailableContentTypeException;
+import fi.solita.utils.api.util.UnavailableContentTypeException;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Apply3;
 import fi.solita.utils.functional.ApplyBi;
@@ -44,18 +41,19 @@ import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Lens;
 import fi.solita.utils.meta.MetaNamedMember;
 
 /**
  * One "standard" way to serialize stuff. Feel free to use this, or make your own.
  */
-public abstract class StdSerialization<BOUNDS> {
+public abstract class StdSerialization<BOUNDS,REQ> {
     
     public final JsonConversionService json;
     public final JsonConversionService geoJson;
     public final JsonLinesConversionService jsonlines;
-    public final HtmlConversionService html;
+    public final HtmlConversionService<REQ> html;
     public final CsvConversionService csv;
     public final ExcelConversionService excel;
     public final PngConversionService png;
@@ -68,7 +66,7 @@ public abstract class StdSerialization<BOUNDS> {
         JsonConversionService json,
         JsonConversionService geoJson,
         JsonLinesConversionService jsonlines,
-        HtmlConversionService html,
+        HtmlConversionService<REQ> html,
         CsvConversionService csv,
         ExcelConversionService excel,
         PngConversionService png,
@@ -104,9 +102,8 @@ public abstract class StdSerialization<BOUNDS> {
         });
     }
     
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
+            REQ req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -117,12 +114,11 @@ public abstract class StdSerialization<BOUNDS> {
             MetaNamedMember<? super DTO, KEY> key,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
-        return stdSpatialBoundedMap(req, res, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
+        return stdSpatialBoundedMap(req, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
+            REQ req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -133,39 +129,39 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
-            response = json.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(json.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case GEOJSON:
             Map<KEY, Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
-            response = geoJson.serialize(new FeatureCollection(
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
-                    Some(Crs.of(srsName))));
+                    Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
-            response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = Pair.of(html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = csv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = excel.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = png.render(req, bounds2envelope(bbox), title2layerName(title));
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
             break;
         case COUNT:
-            response = count.serialize(data.get());
+            response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case GML:
         case XML:
@@ -175,10 +171,13 @@ public abstract class StdSerialization<BOUNDS> {
         }
         return response;
     }
+    
+    protected abstract String getRequestUri(REQ req);
+    
+    protected abstract Option<String> getRequestApiKey(REQ req);
 
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMap(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
+            REQ req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -190,39 +189,39 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
-            response = json.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(json.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case GEOJSON:
             Map<KEY, Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
-            response = geoJson.serialize(new FeatureCollection(
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
                             flatten(mapValues(dataTransformer, data.get()).values()))), resolvables),
-                    Some(Crs.of(srsName))));
+                    Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
-            response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            response = Pair.of(html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key), emptyMap());
             break;
         case CSV:
-            response = csv.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            response = csv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case XLSX:
-            response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            response = excel.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case PNG:
-            response = png.render(req, bounds2envelope(bbox), title2layerName(title));
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
             break;
         case COUNT:
-            response = count.serialize(data.get());
+            response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case GML:
         case XML:
@@ -233,9 +232,8 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedMapSingle(
-        HttpServletRequest req,
-        HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMapSingle(
+        REQ req,
         BOUNDS bbox,
         SRSName srsName,
         SerializationFormat format,
@@ -246,39 +244,39 @@ public abstract class StdSerialization<BOUNDS> {
         Apply<? super DTO, ? super DTO> excluding,
         Apply<? super DTO, ? extends SPATIAL> toGeojson,
         Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-    byte[] response;
+    Pair<byte[],Map<String,String>> response;
     switch (format) {
     case JSON:
-        response = json.serialize(mapValue(dataTransformer, data.get()));
+        response = Pair.of(json.serialize(mapValue(dataTransformer, data.get())), emptyMap());
         break;
     case GEOJSON:
         Map<KEY, DTO> d = data.get();
         Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
-        response = geoJson.serialize(new FeatureCollection(
+        response = Pair.of(geoJson.serialize(new FeatureCollection(
                 concat(map(Function.of(toFeature), map(
                         toGeojson,
                         excluding,
                         Function.constant(Option.<Crs>None()),
                         mapValue(dataTransformer, data.get()).values())), resolvables),
-                Some(Crs.of(srsName))));
+                Some(Crs.of(srsName)))), emptyMap());
         break;
     case JSONL:
-        response = jsonlines.serialize(mapValue(dataTransformer, data.get()));
+        response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), emptyMap());
         break;
     case HTML:
-        response = html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
         break;
     case CSV:
-        response = csv.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
     case XLSX:
-        response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
     case PNG:
-        response = png.render(req, bounds2envelope(bbox), title2layerName(title));
+        response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
         break;
     case COUNT:
-        response = count.serialize(data.get());
+        response = Pair.of(count.serialize(data.get()), emptyMap());
         break;
     case GML:
     case XML:
@@ -289,9 +287,8 @@ public abstract class StdSerialization<BOUNDS> {
     return response;
 }
     
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialMapSingle(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialMapSingle(
+            REQ req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -301,36 +298,36 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
-            response = json.serialize(mapValue(dataTransformer, data.get()));
+            response = Pair.of(json.serialize(mapValue(dataTransformer, data.get())), emptyMap());
             break;
         case GEOJSON:
             Map<KEY, DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
-            response = geoJson.serialize(new FeatureCollection(
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
                             mapValue(dataTransformer, data.get()).values())), resolvables),
-                    Some(Crs.of(srsName))));
+                    Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
-            response = jsonlines.serialize(mapValue(dataTransformer, data.get()));
+            response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
             break;
         case CSV:
-            response = csv.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serializeSingle(res, title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case COUNT:
-            response = count.serialize(data.get());
+            response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case PNG:
         case GML:
@@ -342,9 +339,8 @@ public abstract class StdSerialization<BOUNDS> {
     return response;
 }
     
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedCollection(
+            REQ req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -354,12 +350,11 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
-        return stdSpatialBoundedCollection(req, res, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
+        return stdSpatialBoundedCollection(req, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
-    public <DTO, KEY, SPATIAL> byte[] stdSpatialBoundedCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedCollection(
+            REQ req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -370,39 +365,39 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
-            response = json.serialize(map(dataTransformer, data.get()));
+            response = Pair.of(json.serialize(map(dataTransformer, data.get())), emptyMap());
             break;
         case GEOJSON:
             Iterable<DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
-            response = geoJson.serialize(new FeatureCollection(
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
                             map(dataTransformer, data.get()))), resolvables),
-                    Some(Crs.of(srsName))));
+                    Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
-            response = jsonlines.serialize(map(dataTransformer, data.get()));
+            response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+            response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering), emptyMap());
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+            response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+            response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = png.render(req, bounds2envelope(bbox), title2layerName(title));
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
             break;
         case COUNT:
-            response = count.serialize(data.get());
+            response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case GML:
         case XML:
@@ -413,9 +408,8 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO,KEY,SPATIAL> byte[] stdSpatialCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialCollection(
+            REQ req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -424,12 +418,11 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
-        return stdSpatialCollection(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
+        return stdSpatialCollection(req, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
 
-    public <DTO,KEY,SPATIAL> byte[] stdSpatialCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialCollection(
+            REQ req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -439,36 +432,36 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(json.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case GEOJSON:
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
-                response = geoJson.serialize(new FeatureCollection(
+                response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Function.of(toFeature), map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
                             map(dataTransformer, data.get()))), resolvables),
-                    Some(Crs.of(srsName))));
+                    Some(Crs.of(srsName)))), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case COUNT:
-                response = count.serialize(data.get());
+                response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -480,9 +473,8 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialSingle(
+            REQ req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -491,12 +483,11 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
             Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
-        return stdSpatialSingle(req, res, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
+        return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
-    public <DTO,KEY,SPATIAL> byte[] stdSpatialSingle(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialSingle(
+            REQ req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -506,10 +497,10 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(dataTransformer.apply(data.get()));
+                response = Pair.of(json.serialize(dataTransformer.apply(data.get())), emptyMap());
                 break;
             case GEOJSON:
                 DTO d = data.get();
@@ -520,22 +511,22 @@ public abstract class StdSerialization<BOUNDS> {
                         excluding.apply(d2),
                     Some(Crs.of(srsName)));
                 
-                response = geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName))));
+                response = Pair.of(geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName)))), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(newList(dataTransformer.apply(data.get())));
+                response = Pair.of(jsonlines.serialize(newList(dataTransformer.apply(data.get()))), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                response = Pair.of(html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                response = csv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                response = excel.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case COUNT:
-                response = count.serialize(data.get());
+                response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -547,44 +538,43 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <KEY,DTO> byte[] stdMap(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <KEY,DTO> Pair<byte[],Map<String,String>> stdMap(
+            REQ req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<Map<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
-            response = json.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(json.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case GEOJSON:
             Map<KEY,Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
-            response = geoJson.serialize(new FeatureCollection(
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
                         concat(map(Feature_.$1, map(
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
                                 flatten(mapValues(dataTransformer, data.get()).values()))), resolvables),
-                        Option.<Crs>None()));
+                        Option.<Crs>None())), emptyMap());
             break;
         case JSONL:
-            response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = Pair.of(html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
             break;
         case CSV:
-            response = csv.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = csv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case XLSX:
-            response = excel.serialize(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            response = excel.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case COUNT:
-            response = count.serialize(data.get());
+            response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case PNG:
         case GML:
@@ -596,45 +586,44 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO, KEY> byte[] stdMap(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO, KEY> Pair<byte[],Map<String,String>> stdMap(
+            REQ req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<Map<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
-            response = json.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(json.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case GEOJSON:
             Map<KEY,Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
-            response = geoJson.serialize(new FeatureCollection(
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
                         concat(map(Feature_.$1, map(
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
                                 flatten(mapValues(dataTransformer, data.get()).values()))), resolvables),
-                        Option.<Crs>None()));
+                        Option.<Crs>None())), emptyMap());
             break;
         case JSONL:
-            response = jsonlines.serialize(mapValues(dataTransformer, data.get()));
+            response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            response = Pair.of(html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key), emptyMap());
             break;
         case CSV:
-            response = csv.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            response = csv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case XLSX:
-            response = excel.serializeWithKey(res, title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            response = excel.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case COUNT:
-            response = count.serialize(data.get());
+            response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case PNG:
         case GML:
@@ -646,44 +635,43 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
 
-    public <DTO> byte[] stdCollection(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO> Pair<byte[],Map<String,String>> stdCollection(
+            REQ req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(json.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case GEOJSON:
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
-                response = geoJson.serialize(new FeatureCollection(
+                response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
                             map(dataTransformer, data.get()))), resolvables),
-                    Option.<Crs>None()));
+                    Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case COUNT:
-                response = count.serialize(data.get());
+                response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -695,18 +683,17 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO> byte[] stdSingle(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO> Pair<byte[],Map<String,String>> stdSingle(
+            REQ req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(dataTransformer.apply(data.get()));
+                response = Pair.of(json.serialize(dataTransformer.apply(data.get())), emptyMap());
                 break;
             case GEOJSON:
                 DTO d = data.get();
@@ -715,22 +702,22 @@ public abstract class StdSerialization<BOUNDS> {
                         Option.<GeometryObject>None(),
                         dataTransformer.apply(data.get()),
                         Option.<Crs>None());
-                response = geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Option.<Crs>None()));
+                response = Pair.of(geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(newList(dataTransformer.apply(data.get())));
+                response = Pair.of(jsonlines.serialize(newList(dataTransformer.apply(data.get()))), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                response = Pair.of(html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                response = csv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                response = excel.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case COUNT:
-                response = count.serialize(data.get());
+                response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -742,39 +729,38 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <E extends Enum<E>> byte[] stdTypes(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <E extends Enum<E>> Pair<byte[],Map<String,String>> stdTypes(
+            REQ req,
             SerializationFormat format,
             Iterable<E> data,
             HtmlTitle title) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(data);
+                response = Pair.of(json.serialize(data), emptyMap());
                 break;
             case GEOJSON:
-                response = geoJson.serialize(new FeatureCollection(
+                response = Pair.of(geoJson.serialize(new FeatureCollection(
                     map((ApplyBi<String,Object,Feature>)Feature_.$2, map(
                             Function.constant("typeName"),
                             Function.id(),
                             data)),
-                    Option.<Crs>None()));
+                    Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(data);
+                response = Pair.of(jsonlines.serialize(data), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, data);
+                response = Pair.of(html.serialize(req, title, data), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), data);
+                response = csv.serialize(title2fileName(title), data);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), data);
+                response = excel.serialize(title2fileName(title), data);
                 break;
             case COUNT:
-                response = count.serialize(data);
+                response = Pair.of(count.serialize(data), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -786,96 +772,94 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
-    public <DTO> byte[] stdStatic(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO> Pair<byte[],Map<String,String>> stdStatic(
+            REQ req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(json.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case GEOJSON:
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
-                response = geoJson.serialize(new FeatureCollection(
+                response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
                             map(dataTransformer, data.get()))), resolvables),
-                    Option.<Crs>None()));
+                    Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, newList(map(dataTransformer, data.get())), includes);
+                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
             case COUNT:
-                response = count.serialize(data.get());
+                response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case PNG:
             case XML:
             case GML:
-                throw new RequestUtil.UnavailableContentTypeException();
+                throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
         }
         return response;
     }
     
-    public <DTO> byte[] stdStatic(
-            HttpServletRequest req,
-            HttpServletResponse res,
+    public <DTO> Pair<byte[],Map<String,String>> stdStatic(
+            REQ req,
             SerializationFormat format,
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title) {
-        byte[] response;
+        Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
-                response = json.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(json.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case GEOJSON:
                 Iterable<DTO> d = map(dataTransformer, data.get());
-                response = geoJson.serialize(new FeatureCollection(
+                response = Pair.of(geoJson.serialize(new FeatureCollection(
                     map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
                             d)),
-                    Option.<Crs>None()));
+                    Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
-                response = jsonlines.serialize(map(dataTransformer, data.get()));
+                response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case HTML:
-                response = html.serialize(req, title, map(dataTransformer, data.get()));
+                response = Pair.of(html.serialize(req, title, map(dataTransformer, data.get())), emptyMap());
                 break;
             case CSV:
-                response = csv.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
+                response = csv.serialize(title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case XLSX:
-                response = excel.serialize(res, title2fileName(title), map(dataTransformer, data.get()));
+                response = excel.serialize(title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case COUNT:
-                response = count.serialize(data.get());
+                response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case PNG:
             case XML:
             case GML:
-                throw new RequestUtil.UnavailableContentTypeException();
+                throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
         }

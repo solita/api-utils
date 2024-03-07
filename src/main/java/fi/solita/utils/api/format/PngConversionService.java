@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.FunctionalM.find;
-import static fi.solita.utils.functional.Transformers.prepend;
 
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -21,8 +20,6 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.poi.util.IOUtils;
 import org.geotools.feature.FeatureCollection;
@@ -85,9 +82,9 @@ public class PngConversionService {
         return getClass().getResource("/defaultStyle.sld");
     }
     
-    public byte[] render(HttpServletRequest req, ReferencedEnvelope paikka, String layerName) {
-        URI uri = baseURI.resolve(RequestUtil.getContextPath(req) + RequestUtil.getContextRelativePath(req).replaceFirst(".png", ".geojson") + Option.of(req.getQueryString()).map(prepend("?")).getOrElse(""));
-        return render(uri, paikka, layerName, Option.of(req.getHeader(RequestUtil.API_KEY)));
+    public byte[] render(String requestURI, Option<String> apikey, ReferencedEnvelope paikka, String layerName) {
+        URI uri = baseURI.resolve(requestURI.replaceFirst(".png", ".geojson"));
+        return render(uri, paikka, layerName, apikey);
     }
     
     public byte[] render(URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) {

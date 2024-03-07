@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
@@ -20,10 +21,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.http.HttpHeaders;
 
 import fi.solita.utils.api.base.Cells_;
 import fi.solita.utils.api.base.csv.CsvModule;
@@ -45,16 +42,16 @@ public class CsvConversionService {
         this.module = module;
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(res, filename, newList(obj), members);
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+        return serialize(filename, newList(obj), members);
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, T[] obj) {
-        return serialize(res, filename, newList(obj));
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, T[] obj) {
+        return serialize(filename, newList(obj));
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, final Iterable<T> obj) {
-        return serialize(res, filename, newList(obj), newList(new MetaNamedMember<T, T>() {
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, final Iterable<T> obj) {
+        return serialize(filename, newList(obj), newList(new MetaNamedMember<T, T>() {
             @Override
             public T apply(T t) {
                 return t;
@@ -72,20 +69,20 @@ public class CsvConversionService {
         }));
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(res, filename, header(members), map(CsvConversionService_.<T>regularBodyRow().ap(this, members), obj));
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+        return serialize(filename, header(members), map(CsvConversionService_.<T>regularBodyRow().ap(this, members), obj));
     }
     
-    public <K,V> byte[] serialize(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(res, filename, header(members), map(CsvConversionService_.<V>regularBodyRow().ap(this, members), flatten(obj.values())));
+    public <K,V> Pair<byte[],Map<String,String>> serialize(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(filename, header(members), map(CsvConversionService_.<V>regularBodyRow().ap(this, members), flatten(obj.values())));
     }
     
-    public <K,V> byte[] serializeSingle(HttpServletResponse res, String filename, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(res, filename, header(members), map(CsvConversionService_.<V>regularBodyRow().ap(this, members), obj.values()));
+    public <K,V> Pair<byte[],Map<String,String>> serializeSingle(String filename, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(filename, header(members), map(CsvConversionService_.<V>regularBodyRow().ap(this, members), obj.values()));
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> Pair<byte[],Map<String,String>> serializeWithKey(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         // empty header if there's no simple key. This is a bit too hackish...
         headers = cons(new MetaNamedMember<V, Object>() {
@@ -102,20 +99,18 @@ public class CsvConversionService {
                 return "";
             }
         }, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(res, filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
+        return serialize(filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
+    public <K,V> Pair<byte[],Map<String,String>> serializeWithKey(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(res, filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
+        return serialize(filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
     
-    private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Cells>> tableBody) {
-        res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".csv");
-        
+    private Pair<byte[],Map<String,String>> serialize(String filename, Iterable<String> tableHeader, Iterable<Iterable<Cells>> tableBody) {
         List<CharSequence> header = newMutableList();
         List<Iterable<CharSequence>> body = newMutableList();
         for (Iterable<Cells> row: tableBody) {
@@ -127,7 +122,8 @@ public class CsvConversionService {
             body.add(bodyRow);
         }
         
-        return mkString("\r\n", map(Transformers.map(CsvConversionService_.escape).andThen(CsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8"));
+        return Pair.of(mkString("\r\n", map(Transformers.map(CsvConversionService_.escape).andThen(CsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8")),
+                       newMap(Pair.of("Content-Disposition", "attachment; filename=" + filename + ".csv")));
     }
 
     private List<CharSequence> createHeader(Iterable<String> tableHeader, Iterable<Cells> row) {

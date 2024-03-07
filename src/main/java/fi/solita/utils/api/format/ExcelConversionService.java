@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.drop;
@@ -26,8 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -37,7 +36,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.http.HttpHeaders;
 
 import fi.solita.utils.api.base.excel.ExcelModule;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
@@ -58,16 +56,16 @@ public class ExcelConversionService {
         this.module = module;
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(res, filename, newList(obj), members);
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+        return serialize(filename, newList(obj), members);
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, T[] obj) {
-        return serialize(res, filename, newList(obj));
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, T[] obj) {
+        return serialize(filename, newList(obj));
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, final Iterable<T> obj) {
-        return serialize(res, filename, newList(obj), newList(new MetaNamedMember<T, T>() {
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, final Iterable<T> obj) {
+        return serialize(filename, newList(obj), newList(new MetaNamedMember<T, T>() {
             @Override
             public T apply(T t) {
                 return t;
@@ -85,20 +83,20 @@ public class ExcelConversionService {
         }));
     }
     
-    public <T> byte[] serialize(HttpServletResponse res, String filename, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(res, filename, header(members), map(ExcelConversionService_.<T>regularBodyRow().ap(members), obj));
+    public <T> Pair<byte[],Map<String,String>> serialize(String filename, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+        return serialize(filename, header(members), map(ExcelConversionService_.<T>regularBodyRow().ap(members), obj));
     }
 
-    public <K,V> byte[] serialize(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(res, filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), flatten(obj.values())));
+    public <K,V> Pair<byte[],Map<String,String>> serialize(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), flatten(obj.values())));
     }
     
-    public <K,V> byte[] serializeSingle(HttpServletResponse res, String filename, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(res, filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), obj.values()));
+    public <K,V> Pair<byte[],Map<String,String>> serializeSingle(String filename, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+        return serialize(filename, header(members), map(ExcelConversionService_.<V>regularBodyRow().ap(members), obj.values()));
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
+    public <K,V> Pair<byte[],Map<String,String>> serializeWithKey(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         // empty header if there's no simple key. This is a bit too hackish...
         headers = cons(new MetaNamedMember<V, Object>() {
@@ -115,20 +113,18 @@ public class ExcelConversionService {
                 return "";
             }
         }, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(res, filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
+        return serialize(filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(HttpServletResponse res, String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
+    public <K,V> Pair<byte[],Map<String,String>> serializeWithKey(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
         members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(res, filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
+        return serialize(filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
     
-    private byte[] serialize(HttpServletResponse res, String filename, Iterable<String> tableHeader, Iterable<Iterable<Pair<Object,Class<Object>>>> tableBody) {
-        res.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + ".xlsx");
-        
+    private Pair<byte[],Map<String,String>> serialize(String filename, Iterable<String> tableHeader, Iterable<Iterable<Pair<Object,Class<Object>>>> tableBody) {
         XSSFWorkbook wb = new XSSFWorkbook();
         String safeName = WorkbookUtil.createSafeSheetName(filename);
         Sheet sheet = wb.createSheet(safeName);
@@ -186,7 +182,7 @@ public class ExcelConversionService {
             throw new RuntimeException(e);
         }
         
-        return out.toByteArray();
+        return Pair.of(out.toByteArray(), newMap(Pair.of("Content-Disposition", "attachment; filename=" + filename + ".xlsx")));
     }
     
     private void createHeader(Iterable<String> tableHeader, Iterable<Cells> row, Row header, CellStyle headerStyle) {
