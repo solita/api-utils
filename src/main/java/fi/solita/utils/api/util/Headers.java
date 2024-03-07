@@ -8,6 +8,8 @@ public abstract class Headers {
     
     public static final String CONTENT_LENGTH = "Content-Length";
     
+    public static final String CONTENT_ENCODING = "Content-Encoding";
+    
     public static final String CACHE_CONTROL = "Cache-Control";
     
     public static final String DATE = "Date";
@@ -17,4 +19,16 @@ public abstract class Headers {
     public static final String EXPIRES = "Expires";
     
     public static final String PRAGMA = "Pragma";
+    
+    public static final String X_FORWARDED_PREFIX = "X-Forwarded-Prefix";
+    
+    public static final String X_FORWARDED_PROTO= "X-Forwarded-Proto";
+    
+    public static final String X_FORWARDED_HOST= "X-Forwarded-Host";
+    
+    public static final String IF_MATCH = "If-Match";
+    
+    public static final String IF_NONE_MATCH = "If-None-Match";
+    
+    public static final String ACCEPT = "Accept";
 }

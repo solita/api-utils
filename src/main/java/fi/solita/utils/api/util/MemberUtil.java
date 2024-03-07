@@ -111,7 +111,7 @@ public class MemberUtil {
         return s.isEmpty();
     }
 
-    public static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider resolvableMemberProvider, FunctionProvider fp, boolean onlyExact, Iterable<? extends MetaNamedMember<? super T,?>> fields, PropertyName propertyName) throws UnknownPropertyNameException {
+    public static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider<?> resolvableMemberProvider, FunctionProvider fp, boolean onlyExact, Iterable<? extends MetaNamedMember<? super T,?>> fields, PropertyName propertyName) throws UnknownPropertyNameException {
         List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberName.andThen(onlyExact ? PropertyName_.isEqualTo.ap(propertyName, fp) : PropertyName_.isPrefixOf.ap(propertyName, fp)), fields));
         if (ret.isEmpty()) {
             // Exactly the requested property was not found. Check if the property was resolvable, for example a reference to an external API

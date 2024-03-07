@@ -24,25 +24,25 @@ import javax.servlet.http.HttpServletRequest;
 
 public abstract class ServletRequestUtil {
     public static final ETags getETags(HttpServletRequest request) {
-        return new ETags(RequestUtil.parseETags(Option.of(request.getHeader("If-Match"))),
-                RequestUtil.parseETags(Option.of(request.getHeader("If-None-Match"))));
+        return new ETags(RequestUtil.parseETags(Option.of(request.getHeader(Headers.IF_MATCH))),
+                RequestUtil.parseETags(Option.of(request.getHeader(Headers.IF_NONE_MATCH))));
     }
     
     
     public static final void checkURL(HttpServletRequest request, Set<String> caseIgnoredParams, String... acceptedParams) throws IllegalQueryParametersException, QueryParametersMustNotBeDuplicatedException, QueryParametersMustBeInAlphabeticalOrderException {
-        RequestUtil.assertAcceptHeader(newList(request.getHeaders("Accept")));
+        RequestUtil.assertAcceptHeader(newList(request.getHeaders(Headers.ACCEPT)));
         RequestUtil.assertQueryStringValid(request.getParameterMap(), newList(request.getParameterNames()), caseIgnoredParams, acceptedParams);
     }
     
     public static final String getContextPath(HttpServletRequest req) {
-        return RequestUtil.getContextPath(req.getContextPath(), Option.of(req.getHeader("X-Forwarded-Prefix")));
+        return RequestUtil.getContextPath(req.getContextPath(), Option.of(req.getHeader(Headers.X_FORWARDED_PREFIX)));
     }
     
     public static final URI getRequestURI(HttpServletRequest req) {
         Option<String> qs = req.getQueryString() == null || req.getQueryString().trim().length() == 0 ? Option.<String>None() : Some(req.getQueryString());
-        Option<String> forwardedProto = Option.of(req.getHeader("X-Forwarded-Proto"));
-        Option<String> forwardedHost = Option.of(req.getHeader("X-Forwarded-Host"));
-        Option<String> forwardedPrefix = Option.of(req.getHeader("X-Forwarded-Prefix"));
+        Option<String> forwardedProto = Option.of(req.getHeader(Headers.X_FORWARDED_PROTO));
+        Option<String> forwardedHost = Option.of(req.getHeader(Headers.X_FORWARDED_HOST));
+        Option<String> forwardedPrefix = Option.of(req.getHeader(Headers.X_FORWARDED_PREFIX));
         String url = req.getRequestURL().toString();
         for (String proto: forwardedProto) {
             url = url.replaceFirst("[^:]+://", proto + "://");
@@ -83,7 +83,7 @@ public abstract class ServletRequestUtil {
     }
     
     public static final byte[] uncompressIfNeeded(HttpServletRequest req, byte[] data) throws IOException {
-        if (Option.of(req.getHeader("Content-Encoding")).getOrElse("").contains("gzip")) {
+        if (Option.of(req.getHeader(Headers.CONTENT_ENCODING)).getOrElse("").contains("gzip")) {
             return IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(data)));
         }
         return data;

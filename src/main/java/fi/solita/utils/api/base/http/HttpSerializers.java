@@ -52,21 +52,6 @@ public class HttpSerializers {
     
     
     
-    
-    
-    /**
-     * Some primitive serializers, to be used as helper functions for actual serialization
-     */
-    
-    public static final <T> Apply<String,T> converter(final Apply<String,T> f) {
-        return new Apply<String,T>() {
-            @Override
-            public T apply(String source) {
-                return f.apply(source);
-            }
-        };
-    }
-    
     public static final <E extends Enum<E>> Apply<String, E> enumConverter(final Class<E> enumClass, final Apply<E,String> serialization) {
         return new Apply<String, E>() {
             @Override
@@ -167,7 +152,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,PropertyName> propertyName = converter(PropertyName_.of);
+    private final Apply<String,PropertyName> propertyName = PropertyName_.of;
     
     private final Apply<String,Filters> filter = new Apply<String, Filters>() {
         @Override

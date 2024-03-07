@@ -19,7 +19,7 @@ public final class HttpModule extends FormattingConversionService {
             addConverter(String.class, (Class<Object>)e.getKey(), new Converter<String,Object>() {
                 @Override
                 public Object convert(String source) {
-                    return e.getValue();
+                    return e.getValue().apply(source);
                 }
             });
         }

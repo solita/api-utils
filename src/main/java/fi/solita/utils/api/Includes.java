@@ -102,7 +102,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     }
     
     @Deprecated
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider<?> provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
         return resolveIncludes(provider, fp, format, Option.of(propertyNames), members, builders, geometries, onlyExact);
     }
 
@@ -114,7 +114,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
     @SuppressWarnings("unchecked")
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider provider, FunctionProvider fp, SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider<?> provider, FunctionProvider fp, SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         

@@ -4,7 +4,8 @@ import static fi.solita.utils.functional.FunctionalC.drop;
 
 import java.io.Writer;
 
-import fi.solita.utils.api.util.ServletRequestUtil;
+import fi.solita.utils.api.util.Headers;
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Option;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -15,12 +16,16 @@ public class JakartaHttpServletCanvas extends HttpServletCanvas<HttpServletReque
     }
 
     public String getContextPath() {
-        return ServletRequestUtil.getContextPath((HttpServletRequest) request);
+        return RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader(Headers.X_FORWARDED_PREFIX)));
     }
 
     public String getRequestPath() {
-        String apiVersionBasePath = ServletRequestUtil.getApiVersionBasePath((HttpServletRequest) request);
-        String apiVersionRelativePathWithoutRevision = ServletRequestUtil.getAPIVersionRelativePathWithoutRevision((HttpServletRequest) request);
+        String contextPath = RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader(Headers.X_FORWARDED_PREFIX)));
+        String contextRelativePath = RequestUtil.getContextRelativePath(request.getServletPath(), Option.of(request.getPathInfo()));
+        
+        String apiVersionBasePath = RequestUtil.getApiVersionBasePath(contextPath, contextRelativePath);
+        String apiVersionRelativePath = RequestUtil.getAPIVersionRelativePath(contextRelativePath);
+        String apiVersionRelativePathWithoutRevision = RequestUtil.getAPIVersionRelativePathWithoutRevision(apiVersionRelativePath);
         return apiVersionBasePath + drop(1, apiVersionRelativePathWithoutRevision);
     }
 

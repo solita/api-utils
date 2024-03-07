@@ -6,6 +6,7 @@ import java.io.Writer;
 
 import javax.servlet.http.HttpServletRequest;
 
+import fi.solita.utils.api.util.Headers;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Option;
 
@@ -16,11 +17,11 @@ public class JavaxHttpServletCanvas extends HttpServletCanvas<HttpServletRequest
     }
 
     public String getContextPath() {
-        return RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader("X-Forwarded-Prefix")));
+        return RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader(Headers.X_FORWARDED_PREFIX)));
     }
 
     public String getRequestPath() {
-        String contextPath = RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader("X-Forwarded-Prefix")));
+        String contextPath = RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader(Headers.X_FORWARDED_PREFIX)));
         String contextRelativePath = RequestUtil.getContextRelativePath(request.getServletPath(), Option.of(request.getPathInfo()));
         
         String apiVersionBasePath = RequestUtil.getApiVersionBasePath(contextPath, contextRelativePath);
