@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
 import fi.solita.utils.api.Includes;
@@ -53,7 +51,7 @@ import fi.solita.utils.meta.MetaNamedMember;
  * Base class for API version.
  * Extend a new class for each new API version, overriding fields as necessary.
  */
-public abstract class VersionBase {
+public abstract class VersionBase<REQ> {
     // package containing the version implementation
     public String getBasePackage() {
         return getClass().getPackage().getName();
@@ -106,24 +104,24 @@ public abstract class VersionBase {
     };
     
     @SuppressWarnings("unchecked")
-    public ResolvableMemberProvider<HttpServletRequest> resolvableMemberProvider() {
-        return (ResolvableMemberProvider<HttpServletRequest>) ResolvableMemberProvider.NONE;
+    public ResolvableMemberProvider<REQ> resolvableMemberProvider() {
+        return (ResolvableMemberProvider<REQ>) ResolvableMemberProvider.NONE;
     }
     
-    public Filtering filtering(HttpServletRequest req) {
+    public Filtering filtering(REQ req) {
         return new Filtering(httpModule, resolvableMemberProvider(), functionProvider(Some(req)));
     }
     
-    public <K,T> Map<K,T> filterRowsSingle(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,T> ts) {
+    public <K,T> Map<K,T> filterRowsSingle(REQ req, Includes<T> includes, Filters filters, Map<K,T> ts) {
         return filtering(req).filterDataSingle(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
-    public <K,T,V extends Iterable<T>> Map<K,V> filterRows(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,V> ts) {
+    public <K,T,V extends Iterable<T>> Map<K,V> filterRows(REQ req, Includes<T> includes, Filters filters, Map<K,V> ts) {
         return filtering(req).filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
-    public <K,T,V extends Iterable<T>> SortedMap<K,V> filterRows(HttpServletRequest req, Includes<T> includes, Filters filters, SortedMap<K,V> ts) {
+    public <K,T,V extends Iterable<T>> SortedMap<K,V> filterRows(REQ req, Includes<T> includes, Filters filters, SortedMap<K,V> ts) {
         return filtering(req).filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
-    public <T> Iterable<T> filterRows(HttpServletRequest req, Includes<T> includes, Filters filters, Iterable<T> ts) {
+    public <T> Iterable<T> filterRows(REQ req, Includes<T> includes, Filters filters, Iterable<T> ts) {
         return filtering(req).filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
     
@@ -131,7 +129,7 @@ public abstract class VersionBase {
         return mapValue(new Transformer<T,T>() {
             @Override
             public T transform(T source) {
-                return ModificationUtils.withPropertiesF(includes, functionProvider(Option.<HttpServletRequest>None())).apply(source);
+                return ModificationUtils.withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(source);
             }
         }, ts);
     }
@@ -140,61 +138,61 @@ public abstract class VersionBase {
         return mapValue(new Transformer<Iterable<T>,Iterable<T>>() {
             @Override
             public Iterable<T> transform(Iterable<T> source) {
-                return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<HttpServletRequest>None())), source);
+                return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), source);
             }
         }, (Map<K,Iterable<T>>)ts);
     }
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
-        return FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<HttpServletRequest>None())), ts);
+        return FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
     }
     public final <T> Iterable<T> filterColumns(Includes<T> includes, Iterable<T> ts) {
-        return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<HttpServletRequest>None())), ts);
+        return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
     }
     
     @Deprecated
-    public <K,T> Map<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Filters filters, Map<K,? extends Iterable<T>> ts) {
+    public <K,T> Map<K,Iterable<T>> filter(REQ req, Includes<T> includes, Filters filters, Map<K,? extends Iterable<T>> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
     @Deprecated
-    public <K,T> SortedMap<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Filters filters, SortedMap<K,? extends Iterable<T>> ts) {
+    public <K,T> SortedMap<K,Iterable<T>> filter(REQ req, Includes<T> includes, Filters filters, SortedMap<K,? extends Iterable<T>> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
     @Deprecated
-    public <T> List<T> filter(HttpServletRequest req, Includes<T> includes, Filters filters, List<T> ts) {
+    public <T> List<T> filter(REQ req, Includes<T> includes, Filters filters, List<T> ts) {
         return newList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts))));
     }
     @Deprecated
-    public <T> Iterable<T> filter(HttpServletRequest req, Includes<T> includes, Filters filters, Iterable<T> ts) {
+    public <T> Iterable<T> filter(REQ req, Includes<T> includes, Filters filters, Iterable<T> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
     
-    public <K,T> Map<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Option<Filters> filters, Map<K,? extends Iterable<T>> ts) {
+    public <K,T> Map<K,Iterable<T>> filter(REQ req, Includes<T> includes, Option<Filters> filters, Map<K,? extends Iterable<T>> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
     }
-    public <K,T> SortedMap<K,Iterable<T>> filter(HttpServletRequest req, Includes<T> includes, Option<Filters> filters, SortedMap<K,? extends Iterable<T>> ts) {
+    public <K,T> SortedMap<K,Iterable<T>> filter(REQ req, Includes<T> includes, Option<Filters> filters, SortedMap<K,? extends Iterable<T>> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
     }
-    public <T> List<T> filter(HttpServletRequest req, Includes<T> includes, Option<Filters> filters, List<T> ts) {
+    public <T> List<T> filter(REQ req, Includes<T> includes, Option<Filters> filters, List<T> ts) {
         return newList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts))));
     }
-    public <T> Iterable<T> filter(HttpServletRequest req, Includes<T> includes, Option<Filters> filters, Iterable<T> ts) {
+    public <T> Iterable<T> filter(REQ req, Includes<T> includes, Option<Filters> filters, Iterable<T> ts) {
         return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
     }
     
-    public final <T> T filter(HttpServletRequest req, Includes<T> includes, T t) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<HttpServletRequest>None())).apply(t));
+    public final <T> T filter(REQ req, Includes<T> includes, T t) {
+        return resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(t));
     }
     
-    public FunctionProvider functionProvider(Option<HttpServletRequest> option) {
+    public FunctionProvider functionProvider(Option<REQ> option) {
         return new FunctionProvider();
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         Includes<T> includesFromPropertyNames =
-                  Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<HttpServletRequest>None()), format, propertyNames,                                    members, builders, geometries, false);
+                  Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<REQ>None()), format, propertyNames,                                    members, builders, geometries, false);
         Includes<T> includesFromFilters = filters == null || filters.or.isEmpty()
                 ? Includes.<T>none()
-                : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<HttpServletRequest>None()), format, Some(distinct(map(Filter_.property, flatten(filters.or)))), members, builders, geometries, true);
+                : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<REQ>None()), format, Some(distinct(map(Filter_.property, flatten(filters.or)))), members, builders, geometries, true);
         
         return new Includes<T>(includesFromPropertyNames.includes(), includesFromFilters.includes(), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, builders);
     }
@@ -238,27 +236,27 @@ public abstract class VersionBase {
     
     
     @Deprecated
-    public <K,T,V extends Iterable<T>> Map<K,V> filter(HttpServletRequest req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Map<K,V> ts) {
+    public <K,T,V extends Iterable<T>> Map<K,V> filter(REQ req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Map<K,V> ts) {
         return filtering(req).filterData(includes, newList(geometry), filters, ts);
     }
     @Deprecated
-    public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(HttpServletRequest req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, SortedMap<K,V> ts) {
+    public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(REQ req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, SortedMap<K,V> ts) {
         return filtering(req).filterData(includes, newList(geometry), filters, ts);
     }
     @Deprecated
-    public <K,T,V extends Iterable<T>> Map<K,V> filter(HttpServletRequest req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Map<K,V> ts) {
+    public <K,T,V extends Iterable<T>> Map<K,V> filter(REQ req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Map<K,V> ts) {
         return filtering(req).filterData(includes, newList(geometry, geometry2), filters, ts);
     }
     @Deprecated
-    public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(HttpServletRequest req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, SortedMap<K,V> ts) {
+    public <K,T,V extends Iterable<T>> SortedMap<K,V> filter(REQ req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, SortedMap<K,V> ts) {
         return filtering(req).filterData(includes, newList(geometry, geometry2), filters, ts);
     }
     @Deprecated
-    public <T> Iterable<T> filter(HttpServletRequest req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Iterable<T> ts) {
+    public <T> Iterable<T> filter(REQ req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, Filters filters, Iterable<T> ts) {
         return filtering(req).filterData(includes, newList(geometry), filters, ts);
     }
     @Deprecated
-    public <T> Iterable<T> filter(HttpServletRequest req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Iterable<T> ts) {
+    public <T> Iterable<T> filter(REQ req, Iterable<MetaNamedMember<T,?>> includes, MetaNamedMember<T, ?> geometry, MetaNamedMember<T, ?> geometry2, Filters filters, Iterable<T> ts) {
         return filtering(req).filterData(includes, newList(geometry, geometry2), filters, ts);
     }
 }
