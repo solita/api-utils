@@ -10,9 +10,6 @@ import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -24,7 +21,9 @@ import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ResponseUtil;
+import fi.solita.utils.api.util.ResponseUtil.Response;
 import fi.solita.utils.api.util.ServletRequestUtil;
+import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
@@ -62,12 +61,12 @@ public class SupportServiceBase {
         return time;
     }
 
-    public void redirectToCurrentTime(HttpServletRequest req, HttpServletResponse res) {
+    public void redirectToCurrentTime(Request req, Response res) {
         DateTime now = currentTime();
         redirectToInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
     }
     
-    public void redirectToCurrentInterval(HttpServletRequest req, HttpServletResponse res, String durationOrPeriod) throws InvalidValueException {
+    public void redirectToCurrentInterval(Request req, Response res, String durationOrPeriod) throws InvalidValueException {
         String[] parts = durationOrPeriod.split("/");
         
         if (parts.length == 1) {
@@ -134,11 +133,11 @@ public class SupportServiceBase {
         return new Interval(start_, end_);
     }
     
-    public static void redirectToInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
+    public static void redirectToInterval(Request req, Response res, Interval interval, Set<String> queryParamsToExclude) {
         ResponseUtil.redirect307(ServletRequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
 
-    protected Option<RequestData> resolveFormat(HttpServletRequest request, HttpServletResponse response) {
+    protected Option<RequestData> resolveFormat(Request request, Response response) {
         Either<Option<String>, SerializationFormat> format = ServletRequestUtil.resolveFormat(request);
         for (SerializationFormat f: format.right) {
             response.setContentType(f.mediaType);
@@ -151,7 +150,7 @@ public class SupportServiceBase {
         return newSet("propertyName", "cql_filter", "time");
     }
 
-    public void checkUrl(HttpServletRequest request, String... acceptedParams) {
+    public void checkUrl(Request request, String... acceptedParams) {
         ServletRequestUtil.checkURL(request, getCaseIgnoredParams(), newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
     }
 }

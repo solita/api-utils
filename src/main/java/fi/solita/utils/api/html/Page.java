@@ -45,7 +45,7 @@ public class Page extends RenderableWrapper {
                     html.span(lang("fi")).write(title_fi)._span()
                         .span(lang("en")).write(title_en)._span();
                 }
-            }, HttpServletCanvas.requestFor(html), false))
+            }, ((HttpServletCanvas<?>)html).getRequest(), false))
               .render(component)
               .footer()
                   .span(lang("fi").class_("copyright"))

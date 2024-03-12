@@ -75,6 +75,9 @@ public class ModificationUtils {
     }
 
     static final <T> T withProperties_topLevel(Collection<PropertyName> propertyNames, FunctionProvider fp, Iterable<Builder<?>> builders, T t) {
+        if (t == null) {
+            return t;
+        }
         Assert.defined(MemberUtil.findBuilderFor(builders, t.getClass()), "No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
         return ModificationUtils.withProperties(propertyNames, builders, fp, t);
     }

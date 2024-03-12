@@ -7,9 +7,6 @@ import static fi.solita.utils.functional.Option.Some;
 
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -20,6 +17,8 @@ import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.util.ResponseUtil;
+import fi.solita.utils.api.util.ResponseUtil.Response;
+import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
@@ -42,17 +41,17 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         return Math.abs(revision1.revision - revision2.revision) <= revisionCheckTolerance;
     }
     
-    public void redirectToCurrentRevision(HttpServletRequest req, HttpServletResponse res) {
+    public void redirectToCurrentRevision(Request req, Response res) {
         ResponseUtil.cacheFor(revisionsRedirectCached, res);
         redirectToRevision(getCurrentRevision().revision, req, res);
     }
     
-    public void redirectToCurrentRevisionAndTime(HttpServletRequest req, HttpServletResponse res) {
+    public void redirectToCurrentRevisionAndTime(Request req, Response res) {
         DateTime now = currentTime();
         redirectToCurrentRevisionAndInterval(req, res, new Interval(now, now), Collections.<String>emptySet());
     }
 
-    public void redirectToCurrentRevisionAndDateTime(HttpServletRequest req, HttpServletResponse res, DateTime dateTime, Set<String> queryParamsToExclude) {
+    public void redirectToCurrentRevisionAndDateTime(Request req, Response res, DateTime dateTime, Set<String> queryParamsToExclude) {
         if (dateTime == null) {
             dateTime = currentTime();
         }
@@ -60,7 +59,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         ResponseUtil.redirectToRevisionAndDateTime(req, res, getCurrentRevision().revision, dateTime, queryParamsToExclude);
     }
     
-    public void redirectToCurrentRevisionAndInterval(HttpServletRequest req, HttpServletResponse res, Interval interval, Set<String> queryParamsToExclude) {
+    public void redirectToCurrentRevisionAndInterval(Request req, Response res, Interval interval, Set<String> queryParamsToExclude) {
         if (interval == null) {
             DateTime now = currentTime();
             interval = new Interval(now, now);
@@ -69,7 +68,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         ResponseUtil.redirectToRevisionAndInterval(req, res, getCurrentRevision().revision, interval, queryParamsToExclude);
     }
     
-    public void redirectToCurrentRevisionAndInterval(HttpServletRequest req, HttpServletResponse res, String durationOrPeriod) throws InvalidValueException {
+    public void redirectToCurrentRevisionAndInterval(Request req, Response res, String durationOrPeriod) throws InvalidValueException {
         String[] parts = durationOrPeriod.split("/");
         
         if (parts.length == 1) {
@@ -97,7 +96,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         }
     }
     
-    protected Option<Void> checkRevisions(Revision currentRevision, Revision revision, HttpServletRequest request, HttpServletResponse response) {
+    protected Option<Void> checkRevisions(Revision currentRevision, Revision revision, Request request, Response response) {
         if (!withinTolerance(currentRevision, revision)) {
             ResponseUtil.redirectToAnotherRevision(currentRevision.revision, request, response);
             return None();
@@ -105,12 +104,12 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         return Some(null);
     }
     
-    protected Option<Void> checkRevision(Revision revision, HttpServletRequest request, HttpServletResponse response) {
+    protected Option<Void> checkRevision(Revision revision, Request request, Response response) {
         Revision currentRevision = getCurrentRevision();
         return checkRevisions(currentRevision, revision, request, response);
     }
     
-    protected Option<Void> checkRevisionAndUrl(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) {
+    protected Option<Void> checkRevisionAndUrl(Revision revision, Request request, Response response, String... acceptedParams) {
         for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
             checkUrl(request, acceptedParams);
             return Some(null);
@@ -121,7 +120,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
     /**
      * @throws NotFoundException for unidentified format
      */
-    protected Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, HttpServletRequest request, HttpServletResponse response, String... acceptedParams) throws NotFoundException {
+    protected Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, Request request, Response response, String... acceptedParams) throws NotFoundException {
         for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
             checkUrl(request, acceptedParams);
             RequestData data = NotFoundException.assertFound(resolveFormat(request, response)).get();
@@ -133,7 +132,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
     /**
      * @throws NotFoundException for unidentified format
      */
-    protected Option<RequestData> checkUrlAndResolveFormat(HttpServletRequest request, HttpServletResponse response, String... acceptedParams) throws NotFoundException {
+    protected Option<RequestData> checkUrlAndResolveFormat(Request request, Response response, String... acceptedParams) throws NotFoundException {
         checkUrl(request, acceptedParams);
         Option<RequestData> ret = resolveFormat(request, response);
         NotFoundException.assertFound(ret);

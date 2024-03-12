@@ -30,6 +30,7 @@ import fi.solita.utils.api.base.json.JsonModule;
 import fi.solita.utils.api.base.json.JsonSerializers;
 import fi.solita.utils.api.base.xml.XmlMetadataSource;
 import fi.solita.utils.api.base.xml.XmlModule;
+import fi.solita.utils.api.base.xml.XmlRegistry;
 import fi.solita.utils.api.base.xml.XmlSerializers;
 import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.filtering.Filtering;
@@ -66,10 +67,6 @@ public abstract class VersionBase<REQ> {
     }
     
     public static class XmlNameGenerator extends fi.solita.utils.api.base.xml.XmlNameGenerator {
-    }
-    
-    @javax.xml.bind.annotation.XmlRegistry
-    public static class XmlRegistry {
     }
     
     public Serializers serializers() {
@@ -213,7 +210,7 @@ public abstract class VersionBase<REQ> {
     }
     
     @Deprecated
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, MetaNamedMember<? super T,?>... geometry3) {
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, @SuppressWarnings("unchecked") MetaNamedMember<? super T,?>... geometry3) {
         return resolveIncludes(format, Option.of(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
     }
     
@@ -229,7 +226,7 @@ public abstract class VersionBase<REQ> {
         return resolveIncludes(format, propertyNames, members, builders, filters.getOrElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
     }
     
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Option<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, MetaNamedMember<? super T,?>... geometry3) {
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Option<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, @SuppressWarnings("unchecked") MetaNamedMember<? super T,?>... geometry3) {
         return resolveIncludes(format, propertyNames, members, builders, filters.getOrElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
     }
     

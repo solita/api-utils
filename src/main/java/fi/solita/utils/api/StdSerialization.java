@@ -33,6 +33,7 @@ import fi.solita.utils.api.format.geojson.Feature_;
 import fi.solita.utils.api.format.geojson.GeometryObject;
 import fi.solita.utils.api.resolving.GeojsonResolver;
 import fi.solita.utils.api.types.SRSName;
+import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.api.util.UnavailableContentTypeException;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Apply3;
@@ -48,12 +49,12 @@ import fi.solita.utils.meta.MetaNamedMember;
 /**
  * One "standard" way to serialize stuff. Feel free to use this, or make your own.
  */
-public abstract class StdSerialization<BOUNDS,REQ> {
+public abstract class StdSerialization<BOUNDS> {
     
     public final JsonConversionService json;
     public final JsonConversionService geoJson;
     public final JsonLinesConversionService jsonlines;
-    public final HtmlConversionService<REQ> html;
+    public final HtmlConversionService html;
     public final CsvConversionService csv;
     public final ExcelConversionService excel;
     public final PngConversionService png;
@@ -66,7 +67,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
         JsonConversionService json,
         JsonConversionService geoJson,
         JsonLinesConversionService jsonlines,
-        HtmlConversionService<REQ> html,
+        HtmlConversionService html,
         CsvConversionService csv,
         ExcelConversionService excel,
         PngConversionService png,
@@ -103,7 +104,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
-            REQ req,
+            Request req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -118,7 +119,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
-            REQ req,
+            Request req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -172,12 +173,12 @@ public abstract class StdSerialization<BOUNDS,REQ> {
         return response;
     }
     
-    protected abstract String getRequestUri(REQ req);
+    protected abstract String getRequestUri(Request req);
     
-    protected abstract Option<String> getRequestApiKey(REQ req);
+    protected abstract Option<String> getRequestApiKey(Request req);
 
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
-            REQ req,
+            Request req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -233,7 +234,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMapSingle(
-        REQ req,
+        Request req,
         BOUNDS bbox,
         SRSName srsName,
         SerializationFormat format,
@@ -288,7 +289,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
 }
     
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialMapSingle(
-            REQ req,
+            Request req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -340,7 +341,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
 }
     
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedCollection(
-            REQ req,
+            Request req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -354,7 +355,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedCollection(
-            REQ req,
+            Request req,
             BOUNDS bbox,
             SRSName srsName,
             SerializationFormat format,
@@ -409,7 +410,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialCollection(
-            REQ req,
+            Request req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -422,7 +423,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
 
     public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialCollection(
-            REQ req,
+            Request req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -474,7 +475,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialSingle(
-            REQ req,
+            Request req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -487,7 +488,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialSingle(
-            REQ req,
+            Request req,
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
@@ -539,7 +540,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <KEY,DTO> Pair<byte[],Map<String,String>> stdMap(
-            REQ req,
+            Request req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<Map<KEY, Iterable<DTO>>> data,
@@ -587,7 +588,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO, KEY> Pair<byte[],Map<String,String>> stdMap(
-            REQ req,
+            Request req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<Map<KEY, Iterable<DTO>>> data,
@@ -636,7 +637,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
 
     public <DTO> Pair<byte[],Map<String,String>> stdCollection(
-            REQ req,
+            Request req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<? extends Iterable<DTO>> data,
@@ -684,7 +685,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO> Pair<byte[],Map<String,String>> stdSingle(
-            REQ req,
+            Request req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<DTO> data,
@@ -730,7 +731,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <E extends Enum<E>> Pair<byte[],Map<String,String>> stdTypes(
-            REQ req,
+            Request req,
             SerializationFormat format,
             Iterable<E> data,
             HtmlTitle title) {
@@ -773,7 +774,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO> Pair<byte[],Map<String,String>> stdStatic(
-            REQ req,
+            Request req,
             SerializationFormat format,
             Includes<DTO> includes,
             ApplyZero<? extends Iterable<DTO>> data,
@@ -821,7 +822,7 @@ public abstract class StdSerialization<BOUNDS,REQ> {
     }
     
     public <DTO> Pair<byte[],Map<String,String>> stdStatic(
-            REQ req,
+            Request req,
             SerializationFormat format,
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,

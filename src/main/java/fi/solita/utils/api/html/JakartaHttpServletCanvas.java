@@ -5,7 +5,9 @@ import static fi.solita.utils.functional.FunctionalC.drop;
 import java.io.Writer;
 
 import fi.solita.utils.api.util.Headers;
+import fi.solita.utils.api.util.JakartaRequest;
 import fi.solita.utils.api.util.RequestUtil;
+import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Option;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -13,6 +15,11 @@ public class JakartaHttpServletCanvas extends HttpServletCanvas<HttpServletReque
     
     public JakartaHttpServletCanvas(HttpServletRequest request, Writer out) {
         super(request, out);
+    }
+    
+    @Override
+    public Request getRequest() {
+        return JakartaRequest.of(request);
     }
 
     public String getContextPath() {
