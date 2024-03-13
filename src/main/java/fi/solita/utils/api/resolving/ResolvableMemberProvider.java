@@ -80,6 +80,9 @@ public abstract class ResolvableMemberProvider<REQ> {
     public abstract void mutateResolvable(REQ request, SortedSet<PropertyName> propertyNames, Object object);
     
     public <K,T> Map<K,T> mutateResolvablesSingle(REQ request, Includes<T> includes, Map<K,T> ts) {
+        if (includes.includesEverything) {
+            return ts;
+        }
         Map<K,T> ret = newMutableLinkedMap();
         for (Map.Entry<K,T> e: ts.entrySet()) {
             ret.put(e.getKey(), mutateResolvables(request, includes, e.getValue()));
@@ -87,7 +90,11 @@ public abstract class ResolvableMemberProvider<REQ> {
         return ret;
     }
     
+    @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> mutateResolvables(REQ request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
+        if (includes.includesEverything) {
+            return (Map<K, Iterable<T>>) ts;
+        }
         Map<K, Iterable<T>> ret = newMutableLinkedMap();
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
             ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), e.getValue())));
@@ -95,14 +102,22 @@ public abstract class ResolvableMemberProvider<REQ> {
         return ret;
     }
     
+    @SuppressWarnings("unchecked")
     public <K,T> SortedMap<K,Iterable<T>> mutateResolvables(REQ request, Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
+        if (includes.includesEverything) {
+            return (SortedMap<K, Iterable<T>>) ts;
+        }
         SortedMap<K, Iterable<T>> ret = newMutableSortedMap(ts.comparator());
         for (Map.Entry<K,? extends Iterable<T>> e: ts.entrySet()) {
             ret.put(e.getKey(), newList(map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), e.getValue())));
         }
         return ret;
     }
+    
     public <T> Iterable<T> mutateResolvables(REQ request, Includes<T> includes, Iterable<T> ts) {
+        if (includes.includesEverything) {
+            return ts;
+        }
         return map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), ts);
     }
     
@@ -116,6 +131,10 @@ public abstract class ResolvableMemberProvider<REQ> {
     
     @SuppressWarnings("unchecked")
     public <T> T mutateResolvables(final REQ request, Includes<T> includes, T t) {
+        if (includes.includesEverything) {
+            return t;
+        }
+        
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
             final SortedSet<PropertyName> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
             try {

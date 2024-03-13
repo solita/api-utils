@@ -39,6 +39,7 @@ import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
+import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
@@ -123,7 +124,7 @@ public abstract class VersionBase<REQ> {
     }
     
     public <K,T> Map<K,T> filterColumnsSingle(final Includes<T> includes, Map<K,T> ts) {
-        return mapValue(new Transformer<T,T>() {
+        return includes.includesEverything ? ts : mapValue(new Transformer<T,T>() {
             @Override
             public T transform(T source) {
                 return ModificationUtils.withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(source);
@@ -132,52 +133,57 @@ public abstract class VersionBase<REQ> {
     }
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        return mapValue(new Transformer<Iterable<T>,Iterable<T>>() {
+        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(new Transformer<Iterable<T>,Iterable<T>>() {
             @Override
             public Iterable<T> transform(Iterable<T> source) {
                 return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), source);
             }
         }, (Map<K,Iterable<T>>)ts);
     }
+    @SuppressWarnings("unchecked")
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
-        return FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
+        return includes.includesEverything ? (SortedMap<K, Iterable<T>>)ts : FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
     }
     public final <T> Iterable<T> filterColumns(Includes<T> includes, Iterable<T> ts) {
-        return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
+        return includes.includesEverything ? ts : map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
     }
     
+    @SuppressWarnings("unchecked")
     @Deprecated
     public <K,T> Map<K,Iterable<T>> filter(REQ req, Includes<T> includes, Filters filters, Map<K,? extends Iterable<T>> ts) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
+        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
+    @SuppressWarnings("unchecked")
     @Deprecated
     public <K,T> SortedMap<K,Iterable<T>> filter(REQ req, Includes<T> includes, Filters filters, SortedMap<K,? extends Iterable<T>> ts) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
+        return includes.includesEverything ? (SortedMap<K, Iterable<T>>)ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
     @Deprecated
     public <T> List<T> filter(REQ req, Includes<T> includes, Filters filters, List<T> ts) {
-        return newList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts))));
+        return includes.includesEverything ? ts : ClassUtils.toList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts))));
     }
     @Deprecated
     public <T> Iterable<T> filter(REQ req, Includes<T> includes, Filters filters, Iterable<T> ts) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
+        return includes.includesEverything ? ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
     
+    @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filter(REQ req, Includes<T> includes, Option<Filters> filters, Map<K,? extends Iterable<T>> ts) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
+        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
     }
+    @SuppressWarnings("unchecked")
     public <K,T> SortedMap<K,Iterable<T>> filter(REQ req, Includes<T> includes, Option<Filters> filters, SortedMap<K,? extends Iterable<T>> ts) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
+        return includes.includesEverything ? (SortedMap<K, Iterable<T>>)ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
     }
     public <T> List<T> filter(REQ req, Includes<T> includes, Option<Filters> filters, List<T> ts) {
-        return newList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts))));
+        return includes.includesEverything ? ts : ClassUtils.toList(resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts))));
     }
     public <T> Iterable<T> filter(REQ req, Includes<T> includes, Option<Filters> filters, Iterable<T> ts) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
+        return includes.includesEverything ? ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
     }
     
     public final <T> T filter(REQ req, Includes<T> includes, T t) {
-        return resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(t));
+        return includes.includesEverything ? t : resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(t));
     }
     
     public FunctionProvider functionProvider(Option<REQ> option) {

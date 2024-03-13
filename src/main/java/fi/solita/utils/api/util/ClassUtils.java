@@ -1,5 +1,6 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -13,6 +14,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.List;
 
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
@@ -20,6 +22,10 @@ import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Transformer;
 
 public class ClassUtils {
+    
+    public static <T> List<T> toList(Iterable<T> xs) {
+        return xs == null ? null : xs instanceof List ? (List<T>)xs : newList(xs);
+    }
 
     /**
      * This is because enums with class bodies seem to differ from other enums...
