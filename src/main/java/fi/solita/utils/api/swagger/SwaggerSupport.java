@@ -294,6 +294,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (clazz.equals(LocalTime.class)) {
                 builder.qualifiedType("localtime")
                        .description("Kellonaika / Time. HH:mm:ss")
+                       .pattern("[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}")
                        .example("13:20:45");
             } else if (clazz.equals(Duration.class)) {
                 builder.qualifiedType("duration")
