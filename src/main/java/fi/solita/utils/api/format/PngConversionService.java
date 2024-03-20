@@ -96,12 +96,8 @@ public class PngConversionService {
             throw new RuntimeException(e);
         }
     }
-
-    public byte[] render(int imageWidth, int imageHeight, URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) throws IOException {
-        Style layerStyle = find(layerName, defaultStyles).get();
-        logger.debug("Fetching geojson...");
-        FeatureJSON io = new FeatureJSON();
-        
+    
+    protected InputStream fetchGeojson(URI uri, Option<String> apikey) throws IOException {
         URLConnection connection = uri.toURL().openConnection();
         for (String key: apikey) {
             connection.setRequestProperty(RequestUtil.API_KEY, key);
@@ -114,7 +110,14 @@ public class PngConversionService {
             in = new GZIPInputStream(in);
         }
         
-        Reader reader = new InputStreamReader(in, Charset.forName("UTF-8"));
+        return in;
+    }
+
+    public byte[] render(int imageWidth, int imageHeight, URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) throws IOException {
+        Style layerStyle = find(layerName, defaultStyles).get();
+        logger.debug("Fetching geojson...");
+        FeatureJSON io = new FeatureJSON();
+        Reader reader = new InputStreamReader(fetchGeojson(uri, apikey), Charset.forName("UTF-8"));
         FeatureCollection<?,?> featureCollection;
         try {
             featureCollection = io.readFeatureCollection(reader);
