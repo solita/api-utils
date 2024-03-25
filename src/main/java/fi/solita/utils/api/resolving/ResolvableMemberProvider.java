@@ -3,6 +3,7 @@ package fi.solita.utils.api.resolving;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
 import static fi.solita.utils.functional.Collections.newMutableSortedMap;
+import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.foreach;
@@ -80,7 +81,7 @@ public abstract class ResolvableMemberProvider<REQ> {
     public abstract void mutateResolvable(REQ request, SortedSet<PropertyName> propertyNames, Object object);
     
     public <K,T> Map<K,T> mutateResolvablesSingle(REQ request, Includes<T> includes, Map<K,T> ts) {
-        if (includes.includesEverything) {
+        if (includes.includesEverything || !exists(ResolvableMemberProvider_.isResolvableMember, includes)) {
             return ts;
         }
         Map<K,T> ret = newMutableLinkedMap();
@@ -92,7 +93,7 @@ public abstract class ResolvableMemberProvider<REQ> {
     
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> mutateResolvables(REQ request, Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        if (includes.includesEverything) {
+        if (includes.includesEverything || !exists(ResolvableMemberProvider_.isResolvableMember, includes)) {
             return (Map<K, Iterable<T>>) ts;
         }
         Map<K, Iterable<T>> ret = newMutableLinkedMap();
@@ -104,7 +105,7 @@ public abstract class ResolvableMemberProvider<REQ> {
     
     @SuppressWarnings("unchecked")
     public <K,T> SortedMap<K,Iterable<T>> mutateResolvables(REQ request, Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
-        if (includes.includesEverything) {
+        if (includes.includesEverything || !exists(ResolvableMemberProvider_.isResolvableMember, includes)) {
             return (SortedMap<K, Iterable<T>>) ts;
         }
         SortedMap<K, Iterable<T>> ret = newMutableSortedMap(ts.comparator());
@@ -115,7 +116,7 @@ public abstract class ResolvableMemberProvider<REQ> {
     }
     
     public <T> Iterable<T> mutateResolvables(REQ request, Includes<T> includes, Iterable<T> ts) {
-        if (includes.includesEverything) {
+        if (includes.includesEverything || !exists(ResolvableMemberProvider_.isResolvableMember, includes)) {
             return ts;
         }
         return map(ResolvableMemberProvider_.<REQ,T>mutateResolvables3().ap(this, request, includes), ts);
