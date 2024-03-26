@@ -64,6 +64,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     public final List<MetaNamedMember<T, ?>> includesFromRowFiltering;
     
     public final List<MetaNamedMember<T, ?>> geometryMembers;
+    public final List<MetaNamedMember<T, ?>> allRootMembers;
     public final Builder<?>[] builders;
     public final boolean includesEverything;
     
@@ -72,20 +73,21 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     }
 
     public static final <T> Includes<T> none() {
-        return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false);
+        return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false, emptyList());
     }
     
     public static final <T> Includes<T> all(Collection<? extends MetaNamedMember<? super T,?>> includes, Builder<?>[] builders) {
-        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), true);
+        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), true, includes);
     }
     
     @SuppressWarnings("unchecked")
-    public Includes(Iterable<? extends MetaNamedMember<? super T,?>> includesColumn, Iterable<? extends MetaNamedMember<? super T,?>> includesRow, Iterable<? extends MetaNamedMember<? super T, ?>> geometryMembers, boolean includesEverything, Builder<?>... builders) {
+    public Includes(Iterable<? extends MetaNamedMember<? super T,?>> includesColumn, Iterable<? extends MetaNamedMember<? super T,?>> includesRow, Iterable<? extends MetaNamedMember<? super T, ?>> geometryMembers, boolean includesEverything, Iterable<? extends MetaNamedMember<? super T, ?>> allRootMembers, Builder<?>... builders) {
         this.includesFromColumnFiltering = newList((Iterable<MetaNamedMember<T, ?>>) includesColumn);
         this.includesFromRowFiltering = newList((Iterable<MetaNamedMember<T, ?>>) includesRow);
         this.geometryMembers = newList((Iterable<MetaNamedMember<T, ?>>) geometryMembers);
         this.builders = builders;
         this.includesEverything = includesEverything;
+        this.allRootMembers = (List<MetaNamedMember<T, ?>>) newList(allRootMembers);
     }
     
     @Override
@@ -98,7 +100,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <SUB extends T> Includes<SUB> cast(Builder<?>[] subtypeBuilders) {
-        return new Includes(includesFromColumnFiltering, includesFromRowFiltering, geometryMembers, false, subtypeBuilders);
+        return new Includes(includesFromColumnFiltering, includesFromRowFiltering, geometryMembers, false, allRootMembers, subtypeBuilders);
     }
     
     @Deprecated
@@ -202,7 +204,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             }
         }, ret)));
         
-        return new Includes<T>(ret, ret, geometries, includesEverything, builders);
+        return new Includes<T>(ret, ret, geometries, includesEverything, members, builders);
     }
     
     public enum Include {

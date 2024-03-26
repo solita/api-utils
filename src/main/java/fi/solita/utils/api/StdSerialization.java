@@ -150,7 +150,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = Pair.of(html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
+            response = Pair.of(html.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case CSV:
             response = csv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
@@ -210,7 +210,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = Pair.of(html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key), emptyMap());
+            response = Pair.of(html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes, key), emptyMap());
             break;
         case CSV:
             response = csv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
@@ -265,7 +265,7 @@ public abstract class StdSerialization<BOUNDS> {
         response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), emptyMap());
         break;
     case HTML:
-        response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
+        response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
         break;
     case CSV:
         response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
@@ -319,7 +319,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
+            response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
             break;
         case CSV:
             response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
@@ -386,7 +386,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering), emptyMap());
+            response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
             break;
         case CSV:
             response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
@@ -453,7 +453,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case HTML:
-                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering), emptyMap());
+                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
@@ -518,7 +518,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(jsonlines.serialize(newList(dataTransformer.apply(data.get()))), emptyMap());
                 break;
             case HTML:
-                response = Pair.of(html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering), emptyMap());
+                response = Pair.of(html.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
@@ -566,7 +566,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = Pair.of(html.serialize(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering), emptyMap());
+            response = Pair.of(html.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case CSV:
             response = csv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
@@ -615,7 +615,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), emptyMap());
             break;
         case HTML:
-            response = Pair.of(html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key), emptyMap());
+            response = Pair.of(html.serializeWithKey(req, title, mapValues(dataTransformer, data.get()), includes, key), emptyMap());
             break;
         case CSV:
             response = csv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
@@ -663,7 +663,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), emptyMap());
                 break;
             case HTML:
-                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering), emptyMap());
+                response = Pair.of(html.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
@@ -709,7 +709,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(jsonlines.serialize(newList(dataTransformer.apply(data.get()))), emptyMap());
                 break;
             case HTML:
-                response = Pair.of(html.serialize(req, title, dataTransformer.apply(data.get()), includes.includesFromColumnFiltering), emptyMap());
+                response = Pair.of(html.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);

@@ -94,7 +94,7 @@ public abstract class UI {
     public static Renderable langSelectorInput = new Renderable() {
         @Override
         public void renderOn(HtmlCanvas html) throws IOException {
-            html.input(id("lang-selector").type("checkbox"));
+            html.input(id("lang-selector").type("checkbox").value("en").add("persist-fields-local", "api-utils-lang"));
         }
     };
     

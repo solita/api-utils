@@ -24,7 +24,7 @@ htmx.defineExtension('refresh-href', {
                 
                 events.forEach(function(e) {
                     let handler = function() {
-                        // trigger an ajax call, but capture the url and interrupt request in htmx:beforeRequest
+                        // Trigger an ajax call, but capture the url and interrupt request in htmx:beforeRequest.
                         htmx.ajax("GET", elt.getAttribute('hx-get'), {
                             source: elt,
                             event: tag,

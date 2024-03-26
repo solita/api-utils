@@ -197,7 +197,7 @@ public abstract class VersionBase<REQ> {
                 ? Includes.<T>none()
                 : Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Option.<REQ>None()), format, Some(distinct(map(Filter_.property, flatten(filters.or)))), members, builders, geometries, true);
         
-        return new Includes<T>(includesFromPropertyNames.includes(), includesFromFilters.includes(), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, builders);
+        return new Includes<T>(includesFromPropertyNames.includes(), includesFromFilters.includes(), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, members, builders);
     }
     
     @Deprecated

@@ -1,6 +1,8 @@
 package fi.solita.utils.api.format;
 
+import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
@@ -10,6 +12,7 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sequence;
 import static fi.solita.utils.functional.Functional.tail;
+import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
@@ -22,6 +25,7 @@ import static org.rendersnake.HtmlAttributesFactory.lang;
 import static org.rendersnake.HtmlAttributesFactory.name;
 import static org.rendersnake.HtmlAttributesFactory.rowspan;
 import static org.rendersnake.HtmlAttributesFactory.type;
+import static org.rendersnake.HtmlAttributesFactory.value;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,6 +36,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,16 +44,22 @@ import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 
+import fi.solita.utils.api.Includes;
+import fi.solita.utils.api.Includes.Include;
 import fi.solita.utils.api.base.html.HtmlModule;
 import fi.solita.utils.api.html.HttpServletCanvas;
 import fi.solita.utils.api.html.UI;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
+import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformers;
+import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class HtmlConversionService {
@@ -111,7 +122,7 @@ public abstract class HtmlConversionService {
         return a + b;
     }
     
-    public <T> byte[] serialize(Request request, HtmlTitle title, T obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
+    public <T> byte[] serialize(Request request, HtmlTitle title, T obj, final Includes<T> members) {
         return serialize(request, title, newList(obj), members);
     }
     
@@ -120,7 +131,7 @@ public abstract class HtmlConversionService {
     }
     
     public <T> byte[] serialize(Request request, HtmlTitle title, final Iterable<T> obj) {
-        return serialize(request, title, newList(obj), newList(new MetaNamedMember<T, T>() {
+        return serialize(request, title, newList(obj), new Includes<T>(newList(new MetaNamedMember<T, T>() {
             @Override
             public T apply(T t) {
                 return t;
@@ -135,26 +146,25 @@ public abstract class HtmlConversionService {
             public String getName() {
                 return "";
             }
-        }));
+        }), emptyList(), emptyList(), true, emptyList()));
     }
     
-    public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.size());
+    public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Includes<T> members) {
+        return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.size(), members);
     }
     
-    public <K,V> byte[] serialize(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.size());
+    public <K,V> byte[] serialize(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members) {
+        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.size(), members);
     }
     
-    public <K,V> byte[] serializeSingle(Request request, HtmlTitle title, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.size());
+    public <K,V> byte[] serializeSingle(Request request, HtmlTitle title, final Map<K,V> obj, Includes<V> members) {
+        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.size(), members);
     }
     
-    @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
+    public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members) {
+        Includes<V> headers = (Includes<V>)members;
         // empty header if there's no simple key. This is a bit too hackish...
-        headers = cons(new MetaNamedMember<V, Object>() {
+        headers = new Includes<V>(newList(cons(new MetaNamedMember<V, Object>() {
             @Override
             public Object apply(V t) {
                 throw new UnsupportedOperationException();
@@ -167,16 +177,16 @@ public abstract class HtmlConversionService {
             public String getName() {
                 return "";
             }
-        }, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.size());
+        }, members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        return serialize(title, tableHeader(headers), mapBody(obj, members), request, obj.size(), members);
     }
     
     @SuppressWarnings("unchecked")
-    public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<? super V, ?>> members, final MetaNamedMember<? super V,?> key) {
-        Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
-        members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
-        headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
-        return serialize(title, tableHeader(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members), request, obj.size());
+    public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members, final MetaNamedMember<? super V,?> key) {
+        Includes<V> headers = (Includes<V>)members;
+        members = new Includes<V>(newList(filter(not(equalTo((MetaNamedMember<V,Object>)key)), members)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        headers = new Includes<V>(newList(cons((MetaNamedMember<V,Object>)key, members)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        return serialize(title, tableHeader(headers), mapBody(obj, members), request, obj.size(), members);
     }
     
     protected String extraStyle() {
@@ -192,16 +202,18 @@ public abstract class HtmlConversionService {
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
                     .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '"
-                        + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' '"
+                        + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
                         + UI.calculateHash(scripts3()) + "' '"
+                        + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
                     .title().write(title.plainTextTitle)._title()
                     .style()
-                    .write(styles(), false)
+                        .write(styles(), false)
                     ._style()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
                     .script(type("text/javascript").src(contextPath + "/r/tablefilter/tablefilter.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
@@ -210,7 +222,7 @@ public abstract class HtmlConversionService {
         };
     };
     
-    public static Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats) {
+    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, Option<Pair<Includes<T>, Apply<MetaNamedMember<T, ?>,Renderable>>> properties, Pair<Renderable,Set<String>> additionalQueryParameters) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -224,12 +236,86 @@ public abstract class HtmlConversionService {
                                 .render(linksForDifferentFormats(request))
                             ._div()
                         ._if()
+                        .if_(properties.isDefined())
+                            .div(class_("parameters").add("persist-fields-query", ""))
+                                .select(name("count"))
+                                    .render(new Renderable() {
+                                        @Override
+                                        public void renderOn(HtmlCanvas html) throws IOException {
+                                            html.option(value("")).write("count")._option();
+                                            for (int x: Count.validValues) {
+                                                html.option().write(x)._option();
+                                            }
+                                        }
+                                    })
+                                ._select()
+                                .input(name("cql_filter").type("hidden").value(""))
+                                .render(additionalQueryParameters.left())
+                                .if_(!properties.get().left().geometryMembers.isEmpty())
+                                    .select(name("srsName"))
+                                        .render(new Renderable() {
+                                            @Override
+                                            public void renderOn(HtmlCanvas html) throws IOException {
+                                                html.option(value("")).write("srsName")._option();
+                                                for (SRSName x: SRSName.validValues) {
+                                                    html.option().write(x.value)._option();
+                                                }
+                                            }
+                                        })
+                                    ._select()
+                                ._if()
+                                .input(name("propertyName").type("hidden").value("")) // dummy field to use in linksForDifferentFormats
+                                .input(name("startIndex").type("text").min(1).size(6).placeholder("startIndex"))
+                                .render(new Renderable() {
+                                    Set<String> knownParams = newSet("count", "cql_filter", "srsName", "startIndex", "propertyName");
+                                    @Override
+                                    public void renderOn(HtmlCanvas html) throws IOException {
+                                        for (Map.Entry<String, String[]> e: request.getParameterMap().entrySet()) {
+                                            if (!knownParams.contains(e.getKey()) && !additionalQueryParameters.right().contains(e.getKey())) {
+                                                if (e.getValue().length == 0) {
+                                                    html.input(type("hidden").name(e.getKey()));
+                                                } else {
+                                                    for (String v: e.getValue()) {
+                                                        html.input(type("hidden").name(e.getKey()).value(v));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                })
+                            ._div()
+                            .div(class_("properties sortable").add("persist-fields-query", ""))
+                                .render(new Renderable() {
+                                    @SuppressWarnings("unchecked")
+                                    @Override
+                                    public void renderOn(HtmlCanvas html) throws IOException {
+                                        Pair<Includes<T>, Apply<MetaNamedMember<T, ?>,Renderable>> p = properties.get();
+                                        for (MetaNamedMember<T, ?> member: (List<MetaNamedMember<T, ?>>)(Object)Includes.withNestedMembers(p.left().allRootMembers, Include.All, p.left().builders)) {
+                                            html.label()
+                                                    .input(type("checkbox").name("propertyName").value(member.getName()))
+                                                    .render(p.right().apply(member))
+                                                ._label()
+                                                .input(class_("negated").type("checkbox").name("propertyName").value("-" + member.getName()));
+                                        }
+                                    }
+                                })
+                            ._div()
+                        ._if()
                         .render(UI.langSelectorLabel)
                     ._header();
             }
         };
     }
     
+    protected <T> Pair<Renderable,Set<String>> additionalQueryParameters(Includes<T> includes) {
+        return Pair.of(new Renderable() {
+            @Override
+            public void renderOn(HtmlCanvas html) throws IOException {
+                // no-op
+            }
+        }, Collections.<String>emptySet());
+    }
+
     private static Renderable linksForDifferentFormats(final Request request) {
         return new Renderable() {
             @Override
@@ -238,7 +324,9 @@ public abstract class HtmlConversionService {
                 final String queryString = ((HttpServletCanvas<?>)html).getRequestQueryString().map(Transformers.prepend("?")).getOrElse("");
                 
                 for (String format: newList("html","json","jsonl","geojson","csv","xlsx")) {
-                    html.a(href(path.replace(".html", "." + format) + queryString))
+                    html.a(href(path.replace(".html", "." + format) + queryString).add("hx-get", path.replace(".html", "." + format))
+                                                                                  .add("hx-include", ".parameters input:not(:placeholder-shown):not([value='']), .parameters select:has(option[value='']:not(:checked))")
+                                                                                  .add("hx-swap", "ignoreTitle:true"))
                             .write(format)
                         ._a();
                 }
@@ -273,7 +361,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    private byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, Request request, int rows) {
+    private <T> byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, Request request, int rows, Includes<T> includes) {
         ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
         HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
@@ -287,9 +375,9 @@ public abstract class HtmlConversionService {
                 .head()
                   .render(pageHead(title, request))
                 ._head()
-                .body(rows == 1 ? class_("singleton") : null)
-                  .render(pageHeader(title, request, true))
-                  .section(id("content"))
+                .body(class_(rows == 1 ? "singleton" : "").add("hx-ext", "persist-fields,refresh-href,target-top"))
+                  .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
+                  .section(id("content").add("persist-fields-query", ""))
                       .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
                         .thead()
                           .tr()
@@ -334,6 +422,9 @@ public abstract class HtmlConversionService {
                       ._div()
                   ._section()
                   .render(pageFooter())
+                  .script(type("text/javascript"))
+                      .write(initSortable(), false)
+                  ._script()
                   .if_(rows >= 2)
                       .script(type("text/javascript"))
                           .write(initTableFilter(contextPath), false)
@@ -361,6 +452,9 @@ public abstract class HtmlConversionService {
                 
                 html.script(type("text/javascript").src(contextPath + "/r/js/lib/htmx.min.js"))._script()
                     .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-sse.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-persist-fields.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-refresh-href.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-target-top.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts2(), false)
                     ._script();
@@ -421,17 +515,26 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 for (MetaNamedMember<T, ?> member: members) {
-                    boolean pseudo = member.getName().isEmpty();
-                    String extraClasses = pseudo ? "" : extraClasses(member.getMember());
                     html.th()
-                        .span(lang("fi").class_(extraClasses).title(pseudo ? null : docDescription(member).getOrElse(null)))
-                            .write(pseudo ? member.getName() : docName(member).getOrElse(member.getName()))
-                        ._span();
-                    html.span(lang("en").class_(extraClasses).title(pseudo ? null : docDescription_en(member).getOrElse(null)))
-                            .write(pseudo ? member.getName() : docName_en(member).getOrElse(member.getName()))
-                        ._span();
-                    html._th();
+                        .render(header(member))
+                        ._th();
                 }
+            }
+        };
+    }
+    
+    <T> Renderable header(MetaNamedMember<T, ?> member) {
+        return new Renderable() {
+            @Override
+            public void renderOn(HtmlCanvas html) throws IOException {
+                boolean pseudo = member.getName().isEmpty();
+                String extraClasses = pseudo ? "" : extraClasses(member.getMember());
+                html.span(lang("fi").class_(extraClasses).title(pseudo ? null : docDescription(member).getOrElse(null)))
+                        .write(pseudo ? member.getName() : docName(member).getOrElse(member.getName()))
+                    ._span()
+                    .span(lang("en").class_(extraClasses).title(pseudo ? null : docDescription_en(member).getOrElse(null)))
+                        .write(pseudo ? member.getName() : docName_en(member).getOrElse(member.getName()))
+                    ._span();
             }
         };
     }
@@ -461,7 +564,7 @@ public abstract class HtmlConversionService {
         };
     }
 
-    private <K,V,O> Renderable mapBody(final Map<K, ? extends Iterable<V>> obj, final Iterable<? extends MetaNamedMember<V, O>> members) {
+    private <K,V,O> Renderable mapBody(final Map<K, ? extends Iterable<V>> obj, final Includes<V> members) {
         return new Renderable() {
               @Override
               public void renderOn(HtmlCanvas html) throws IOException {
@@ -475,7 +578,7 @@ public abstract class HtmlConversionService {
                                       .render(htmlModule.toRenderable(t.getKey()))
                                     ._td();
                                 if (!values.isEmpty()) {
-                                    html.render(tablecols(head(values), members));
+                                    html.render(tablecols(head(values), members.includesFromColumnFiltering));
                                 }
                             }
                           })
@@ -521,6 +624,7 @@ public abstract class HtmlConversionService {
         + "table          { border-collapse: collapse; counter-reset: rowNumber; }"
         + "th,td          { vertical-align: top; padding: 0.5em 1em 0.5em 0; }"
         + "th             { position: -webkit-sticky; position: sticky; top: 0; z-index: 999; background-color: white; text-align: left; }"
+        + "thead          { whitespace: nowrap; }"
         + "tbody          { font-size: small; }"
         + "tbody tr       { border-top: 1px dotted #ccc; counter-increment: rowNumber; }"
         + "thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 1em; }"
@@ -590,8 +694,14 @@ public abstract class HtmlConversionService {
         + ".load-more         { padding-top: 1em; }"
         + ".load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
         
-        + ".formats       { position: absolute; }"
+        + ".formats       { display: flex; flex-direction: column; }"
         + ".formats a     { padding: 0 1em; font-size: 0.75em; }"
+        
+        + ".parameters          { display: flex; flex-direction: column; padding: 0 0.5em; }"
+        + ".properties          { display: flex; flex-direction: column; max-height: 5em; overflow-y: scroll; }"
+        + ".properties:hover    { max-height: inherit; }"
+        + ".properties label    { margin: 1px; border-radius: 5px; background-color: aliceblue; border: 1px dotted gray; font-size: 0.5em; }"
+        + ".properties .negated { display: none; }"
         
         // spinner
         + ".htmx-Requestuest.lds-dual-ring { display: inline-block; }"
@@ -708,10 +818,16 @@ public abstract class HtmlConversionService {
     public static final String initTableFilter(String contextPath) {
         return "if (window.TableFilter) {"
              + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.type-resolved')).forEach(function(x) {"
-             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/' });"
+             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/', extensions: [{name: 'sort'}] });"
              + "    tf.init();"
              + "    x.addEventListener('htmx:afterSwap', function(ev) { tf.filter(); });"
              + "  });"
+             + "}";
+    }
+    
+    public static final String initSortable() {
+        return "if (window.Sortable) {"
+             + "    document.querySelectorAll('.sortable').forEach(function(x) { new Sortable(x, { animation: 150 }) });"
              + "}";
     }
     
