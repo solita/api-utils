@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Function.__;
@@ -59,7 +60,6 @@ import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformers;
-import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class HtmlConversionService {
@@ -291,8 +291,13 @@ public abstract class HtmlConversionService {
                                     public void renderOn(HtmlCanvas html) throws IOException {
                                         Pair<Includes<T>, Apply<MetaNamedMember<T, ?>,Renderable>> p = properties.get();
                                         for (MetaNamedMember<T, ?> member: (List<MetaNamedMember<T, ?>>)(Object)Includes.withNestedMembers(p.left().allRootMembers, Include.All, p.left().builders)) {
-                                            html.label()
-                                                    .input(type("checkbox").name("propertyName").value(member.getName()))
+                                            Set<String> ancestors = ancestors(member.getName());
+                                            String js = "document.querySelectorAll(\".properties input[data-ancestors~='\" + event.target.value + \"']\").forEach(y => { y.disabled = event.target.checked; htmx.trigger(y, 'change'); })";
+                                            html.label(class_("").add("hx-on::after-process-node", js))
+                                                    .input(type("checkbox").name("propertyName")
+                                                                           .value(member.getName())
+                                                                           .add("data-ancestors", " " + mkString(" ", ancestors) + " ")
+                                                                           .add("hx-on:click", js))
                                                     .render(p.right().apply(member))
                                                 ._label()
                                                 .input(class_("negated").type("checkbox").name("propertyName").value("-" + member.getName()));
@@ -305,6 +310,16 @@ public abstract class HtmlConversionService {
                     ._header();
             }
         };
+    }
+    
+    static Set<String> ancestors(String x) {
+        int i = x.lastIndexOf('.');
+        if (i < 0) {
+            return emptySet();
+        } else {
+        String parent = x.substring(0, x.lastIndexOf('.'));
+            return newSet(cons(parent, ancestors(parent)));
+        }
     }
     
     protected <T> Pair<Renderable,Set<String>> additionalQueryParameters(Includes<T> includes) {
@@ -698,7 +713,7 @@ public abstract class HtmlConversionService {
         + ".formats a     { padding: 0 1em; font-size: 0.75em; }"
         
         + ".parameters          { display: flex; flex-direction: column; padding: 0 0.5em; }"
-        + ".properties          { display: flex; flex-direction: column; max-height: 5em; overflow-y: scroll; }"
+        + ".properties          { display: flex; flex-direction: column; max-height: 5.7em; overflow-y: scroll; }"
         + ".properties:hover    { max-height: inherit; }"
         + ".properties label    { margin: 1px; border-radius: 5px; background-color: aliceblue; border: 1px dotted gray; font-size: 0.5em; }"
         + ".properties .negated { display: none; }"
