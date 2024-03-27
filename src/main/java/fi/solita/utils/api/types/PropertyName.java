@@ -1,5 +1,7 @@
 package fi.solita.utils.api.types;
 
+import static fi.solita.utils.functional.Functional.init;
+
 import java.util.regex.Pattern;
 
 import fi.solita.utils.api.Documentation;
@@ -34,7 +36,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
         }
         
         public boolean isPrefixOf(FunctionProvider fp, final String longer) {
-            return (longer + ".").startsWith(value + ".");
+            return (longer + ".").startsWith(value + ".") || value.endsWith("*") && longer.startsWith(init(value));
         }
         
         public boolean isEqualTo(FunctionProvider fp, final String prefix) {
