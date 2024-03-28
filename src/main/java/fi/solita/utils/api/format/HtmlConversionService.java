@@ -744,7 +744,9 @@ public abstract class HtmlConversionService {
             + "  table table td { display: table-cell; }"
             + "  table li       { display: inline-block; border-left: 1px solid #eee; padding: 0 3px; }"
             + "  table li:first-child { border-left: none; }"
-            + "  .load-more     { display: none; }"),
+            + "  .load-more     { display: none; }"
+            + "  .parameters    { display: none; }"
+            + "  .properties    { display: none; }"),
          newList(HtmlConversionService_.prefixed.ap(".singleton").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
                  HtmlConversionService_.prefixed.ap(".nested") )))
                 
