@@ -21,7 +21,7 @@ var hover = function(map, callbackOver, callbackOut, callbackMultiple) {
     return hoverInteraction;
 };
 
-var click = function(map, layers, callbackOver, callbackOut, callbackMultiple) {
+var click = function(map, callbackOver, callbackOut, callbackMultiple) {
     var clickInteraction = new ol.interaction.Select({
         hitTolerance: 3,
         multi: false,
