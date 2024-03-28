@@ -41,6 +41,7 @@ import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
+import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Lens;
@@ -139,7 +140,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY, Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Function.of(toFeature), map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -199,7 +200,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY, Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Function.of(toFeature), map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -254,7 +255,7 @@ public abstract class StdSerialization<BOUNDS> {
         Map<KEY, DTO> d = data.get();
         Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
         response = Pair.of(geoJson.serialize(new FeatureCollection(
-                concat(map(Function.of(toFeature), map(
+                concat(map(toFeature, map(
                         toGeojson,
                         excluding,
                         Function.constant(Option.<Crs>None()),
@@ -308,7 +309,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY, DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Function.of(toFeature), map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -375,7 +376,7 @@ public abstract class StdSerialization<BOUNDS> {
             Iterable<DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Function.of(toFeature), map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -442,7 +443,7 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Function.of(toFeature), map(
+                    concat(map(toFeature, map(
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
@@ -555,7 +556,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY,Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                        concat(map(Feature_.$1, map(
+                        concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, map(
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
@@ -604,7 +605,7 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY,Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                        concat(map(Feature_.$1, map(
+                        concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, map(
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
@@ -652,7 +653,7 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Feature_.$1, map(
+                    concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
@@ -789,7 +790,7 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(map(Feature_.$1, map(
+                    concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
@@ -835,7 +836,7 @@ public abstract class StdSerialization<BOUNDS> {
             case GEOJSON:
                 Iterable<DTO> d = map(dataTransformer, data.get());
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    map(Feature_.$1, map(
+                    Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, map(
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),

@@ -251,7 +251,7 @@ public abstract class HtmlConversionService {
                                 ._select()
                                 .input(name("cql_filter").type("hidden").value(""))
                                 .render(additionalQueryParameters.left())
-                                .if_(!properties.get().left().geometryMembers.isEmpty())
+                                .if_(properties.isDefined() && !properties.get().left().geometryMembers.isEmpty())
                                     .select(name("srsName"))
                                         .render(new Renderable() {
                                             @Override
@@ -437,9 +437,6 @@ public abstract class HtmlConversionService {
                       ._div()
                   ._section()
                   .render(pageFooter())
-                  .script(type("text/javascript"))
-                      .write(initSortable(), false)
-                  ._script()
                   .if_(rows >= 2)
                       .script(type("text/javascript"))
                           .write(initTableFilter(contextPath), false)
@@ -447,6 +444,9 @@ public abstract class HtmlConversionService {
                   ._if()
                   .script(type("text/javascript"))
                       .write(scripts3(), false)
+                  ._script()
+                  .script(type("text/javascript"))
+                      .write(initSortable(), false)
                   ._script()
                 ._body()
               ._html();
