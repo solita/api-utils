@@ -2,7 +2,7 @@ package fi.solita.utils.api.base.xml;
 
 import java.util.Map;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 import org.eclipse.persistence.jaxb.metadata.MetadataSourceAdapter;
 import org.eclipse.persistence.jaxb.xmlmodel.XmlAccessType;

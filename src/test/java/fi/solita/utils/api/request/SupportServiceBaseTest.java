@@ -11,8 +11,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
-import fi.solita.utils.api.util.JavaxRequest;
-import fi.solita.utils.api.util.JavaxResponse;
+import fi.solita.utils.api.util.JakartaRequest;
+import fi.solita.utils.api.util.JakartaResponse;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Pair;
 
@@ -63,14 +63,14 @@ public class SupportServiceBaseTest {
     @Test
     public void redirectToCurrentInterval_multipart() {
         Duration someDuration = Duration.standardDays(1);
-        support.redirectToCurrentInterval(JavaxRequest.of(new MockHttpServletRequest()), JavaxResponse.of(new MockHttpServletResponse()), someDuration.toString());
-        support.redirectToCurrentInterval(JavaxRequest.of(new MockHttpServletRequest()), JavaxResponse.of(new MockHttpServletResponse()), someDuration + "/" + someDuration);
+        support.redirectToCurrentInterval(JakartaRequest.of(new MockHttpServletRequest()), JakartaResponse.of(new MockHttpServletResponse()), someDuration.toString());
+        support.redirectToCurrentInterval(JakartaRequest.of(new MockHttpServletRequest()), JakartaResponse.of(new MockHttpServletResponse()), someDuration + "/" + someDuration);
     }
     
     @Test(expected = InvalidValueException.class)
     public void redirectToCurrentInterval_multipartFailsForTooManyParts() {
         Duration someDuration = Duration.standardDays(1);
-        support.redirectToCurrentInterval(JavaxRequest.of(new MockHttpServletRequest()), JavaxResponse.of(new MockHttpServletResponse()), someDuration + "/" + someDuration + "/" + someDuration);
+        support.redirectToCurrentInterval(JakartaRequest.of(new MockHttpServletRequest()), JakartaResponse.of(new MockHttpServletResponse()), someDuration + "/" + someDuration + "/" + someDuration);
     }
     
     @Test

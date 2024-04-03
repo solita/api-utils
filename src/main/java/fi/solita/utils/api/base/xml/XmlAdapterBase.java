@@ -1,6 +1,6 @@
 package fi.solita.utils.api.base.xml;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 import fi.solita.utils.api.base.Serializers;
 

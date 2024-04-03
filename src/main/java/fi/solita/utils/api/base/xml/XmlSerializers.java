@@ -5,8 +5,8 @@ import static fi.solita.utils.functional.Collections.newMap;
 import java.net.URI;
 import java.util.Map;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
