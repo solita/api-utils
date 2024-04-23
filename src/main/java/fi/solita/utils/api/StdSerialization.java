@@ -204,7 +204,7 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            flatten(mapValues(dataTransformer, data.get()).values()))), resolvables),
+                            flatten(mapValues(dataTransformer, d).values()))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
@@ -259,7 +259,7 @@ public abstract class StdSerialization<BOUNDS> {
                         toGeojson,
                         excluding,
                         Function.constant(Option.<Crs>None()),
-                        mapValue(dataTransformer, data.get()).values())), resolvables),
+                        mapValue(dataTransformer, d).values())), resolvables),
                 Some(Crs.of(srsName)))), emptyMap());
         break;
     case JSONL:
@@ -313,7 +313,7 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            mapValue(dataTransformer, data.get()).values())), resolvables),
+                            mapValue(dataTransformer, d).values())), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
@@ -380,7 +380,7 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))), resolvables),
+                            map(dataTransformer, d))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
             break;
         case JSONL:
@@ -447,7 +447,7 @@ public abstract class StdSerialization<BOUNDS> {
                             toGeojson,
                             excluding,
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))), resolvables),
+                            map(dataTransformer, d))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
                 break;
             case JSONL:
@@ -499,6 +499,26 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<? super DTO, ? super DTO> excluding,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+        return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, new Apply<DTO, FeatureObject>() {
+            @Override
+            public FeatureObject apply(DTO d) {
+                return toFeature.apply(
+                        toGeojson.apply(d),
+                        excluding.apply(d),
+                    Some(Crs.of(srsName)));
+            }
+        });
+    }
+    
+    public <DTO,KEY,SPATIAL> Pair<byte[],Map<String,String>> stdSpatialSingle(
+            Request req,
+            SRSName srsName,
+            SerializationFormat format,
+            Includes<DTO> includes,
+            ApplyZero<DTO> data,
+            Apply<DTO,DTO> dataTransformer,
+            HtmlTitle title,
+            Apply<DTO, FeatureObject> toFeatures) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
@@ -507,13 +527,17 @@ public abstract class StdSerialization<BOUNDS> {
             case GEOJSON:
                 DTO d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(Some(d), includes);
-                DTO d2 = dataTransformer.apply(data.get());
-                Feature feature = toFeature.apply(
-                        toGeojson.apply(d2),
-                        excluding.apply(d2),
-                    Some(Crs.of(srsName)));
+                DTO d2 = dataTransformer.apply(d);
+                FeatureObject feature = toFeatures.apply(d2);
                 
-                response = Pair.of(geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName)))), emptyMap());
+                if (!resolvables.isEmpty()) {
+                    if (feature instanceof FeatureCollection) {
+                        feature = new FeatureCollection(concat(((FeatureCollection)feature).features, resolvables), Some(Crs.of(srsName)));
+                    } else {
+                        feature = new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName)));
+                    }
+                }
+                response = Pair.of(geoJson.serialize(feature), emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(newList(dataTransformer.apply(data.get()))), emptyMap());
@@ -560,7 +584,7 @@ public abstract class StdSerialization<BOUNDS> {
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
-                                flatten(mapValues(dataTransformer, data.get()).values()))), resolvables),
+                                flatten(mapValues(dataTransformer, d).values()))), resolvables),
                         Option.<Crs>None())), emptyMap());
             break;
         case JSONL:
@@ -609,7 +633,7 @@ public abstract class StdSerialization<BOUNDS> {
                                 Function.constant(Option.<GeometryObject>None()), 
                                 Function.id(),
                                 Function.constant(Option.<Crs>None()),
-                                flatten(mapValues(dataTransformer, data.get()).values()))), resolvables),
+                                flatten(mapValues(dataTransformer, d).values()))), resolvables),
                         Option.<Crs>None())), emptyMap());
             break;
         case JSONL:
@@ -657,7 +681,7 @@ public abstract class StdSerialization<BOUNDS> {
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))), resolvables),
+                            map(dataTransformer, d))), resolvables),
                     Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
@@ -702,7 +726,7 @@ public abstract class StdSerialization<BOUNDS> {
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(Some(d), includes);
                 Feature feature = new Feature(
                         Option.<GeometryObject>None(),
-                        dataTransformer.apply(data.get()),
+                        dataTransformer.apply(d),
                         Option.<Crs>None());
                 response = Pair.of(geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Option.<Crs>None())), emptyMap());
                 break;
@@ -794,7 +818,7 @@ public abstract class StdSerialization<BOUNDS> {
                             Function.constant(Option.<GeometryObject>None()),
                             Function.id(),
                             Function.constant(Option.<Crs>None()),
-                            map(dataTransformer, data.get()))), resolvables),
+                            map(dataTransformer, d))), resolvables),
                     Option.<Crs>None())), emptyMap());
                 break;
             case JSONL:
