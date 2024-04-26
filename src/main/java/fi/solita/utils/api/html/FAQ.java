@@ -113,10 +113,10 @@ link(href("minimal.html"), text("Here's a minimal OpenLayers-example."))
 
                    .render(definition_fi(
 "Mitä arvoja propertyName-parametri hyväksyy?",
-"Karkeastiottaen ne, jotka näkyvät kyseisen rajapintametodin HTML-muodon sarakeotsikkoina."
+"Karkeastiottaen ne, jotka näkyvät kyseisen rajapintametodin HTML-muodon sarakeotsikkoina. Ymmärtää myös hierarkioita, negaatiota ja *-wildcardia."
                  )).render(definition_en(
-"",
-""
+"What values does propertyName parameter accept?",
+"Roughly speaking, the values visible in table header of the endpoint HTML format. Also understands hierarchies, negation and *-wildcard."
                  ))
 
                    .render(definition_fi(
