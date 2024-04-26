@@ -5,7 +5,7 @@ htmx.defineExtension('path-params', {
                 var val = evt.detail.parameters[param];
                 delete evt.detail.parameters[param];
                 return val === undefined ? "{" + param + "}" : encodeURIComponent(val);
-            })
+          })
         }
     }
 });
