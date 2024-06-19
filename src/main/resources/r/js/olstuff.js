@@ -624,7 +624,6 @@ var olstuff = function(constants, util) {
         tileLayer: function(title, source, opacity) {
             var layer = new ol.layer.Tile({
                 title: title,
-                tileGrid: ret.tileGrid,
                 opacity: opacity || 0.3,
                 source: source,
                 renderBuffer: constants.renderBuffer,
