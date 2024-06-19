@@ -95,7 +95,7 @@ var olstuff = function(constants, util) {
             var mapExtent = map.getView().calculateExtent(map.getSize());
             var results = {};
             var onlyUnique = function(value, index, self) { 
-                return !value.tunniste || self.findIndex(function(v) { return v.tunniste == value.tunniste; }) === index;
+                return (!value.tunniste && !value.external_id) || self.findIndex(function(v) { return v.tunniste && v.tunniste == value.tunniste || v.external_id && v.external_id == value.external_id; }) === index;
             };
             ret.actualVisibleLayers(map).forEach(function(layer) {
                 if (layer.getSource && layer.getSource().getFeaturesInExtent) {
@@ -116,7 +116,14 @@ var olstuff = function(constants, util) {
                 if (layer.getSource && layer.getSource().getFeatures) {
                     var features = layer.getSource().getFeatures();
                     for (var j = 0; j < features.length; ++j) {
-                        if (features[j].getProperties().tunniste == tunniste || features[j].getProperties()._tunniste == tunniste) {
+                        if (features[j].getProperties().tunniste == tunniste || features[j].getProperties()._tunniste == tunniste || features[j].getProperties().external_id == tunniste) {
+                            return features[j];
+                        }
+                    }
+                } else if (layer.getSource && layer.getSource().getFeaturesInExtent) {
+                    var features = layer.getSource().getFeaturesInExtent(constants.dataExtent);
+                    for (var j = 0; j < features.length; ++j) {
+                        if (features[j].getProperties().tunniste == tunniste || features[j].getProperties()._tunniste == tunniste || features[j].getProperties().external_id == tunniste) {
                             return features[j];
                         }
                     }
@@ -161,7 +168,7 @@ var olstuff = function(constants, util) {
                 });
                 [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].forEach(function(x) {
                     x.onmouseenter = function() {
-                        [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
+                        [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0 || y.textContent.indexOf("external_id") >= 0; })
                                                                      .slice(0, 1)
                                                                      .forEach(function(tunnisteElem) {
                             var tunniste = tunnisteElem.textContent == '_tunniste'
@@ -180,7 +187,7 @@ var olstuff = function(constants, util) {
                         });
                     };
                     x.onmouseleave = function() {
-                        var features = [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
+                        var features = [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0 || y.textContent.indexOf("external_id") >= 0; })
                                                                                     .slice(0, 1)
                                                                                     .map(function(tunnisteElem) {
                             var tunniste = tunnisteElem.textContent == '_tunniste'
@@ -193,7 +200,7 @@ var olstuff = function(constants, util) {
                         }
                     };
                     x.onmouseup = function() {
-                        [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0; })
+                        [...x.querySelectorAll(':scope > li > .key')].filter(function(y) { return y.textContent.indexOf("tunniste") >= 0 || y.textContent.indexOf("external_id") >= 0; })
                                                                      .slice(0, 1)
                                                                      .forEach(function(tunnisteElem) {
                             var tunniste = tunnisteElem.textContent == '_tunniste'
