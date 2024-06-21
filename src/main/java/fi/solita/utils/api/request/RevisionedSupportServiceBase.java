@@ -128,15 +128,4 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         }
         return None();
     }
-    
-    /**
-     * @throws NotFoundException for unidentified format
-     */
-    protected Option<RequestData> checkUrlAndResolveFormat(Request request, Response response, String... acceptedParams) throws NotFoundException {
-        checkUrl(request, acceptedParams);
-        Option<RequestData> ret = resolveFormat(request, response);
-        NotFoundException.assertFound(ret);
-        return ret;
-    }
-    
 }

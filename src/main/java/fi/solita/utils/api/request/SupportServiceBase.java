@@ -17,6 +17,7 @@ import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
+import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.base.http.HttpSerializers.InvalidValueException;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.util.RequestUtil;
@@ -152,5 +153,15 @@ public class SupportServiceBase {
 
     public void checkUrl(Request request, String... acceptedParams) {
         ServletRequestUtil.checkURL(request, getCaseIgnoredParams(), newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
+    }
+    
+    /**
+     * @throws NotFoundException for unidentified format
+     */
+    protected Option<RequestData> checkUrlAndResolveFormat(Request request, Response response, String... acceptedParams) throws NotFoundException {
+        checkUrl(request, acceptedParams);
+        Option<RequestData> ret = resolveFormat(request, response);
+        NotFoundException.assertFound(ret);
+        return ret;
     }
 }
