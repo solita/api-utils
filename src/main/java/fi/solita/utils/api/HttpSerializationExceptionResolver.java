@@ -51,6 +51,11 @@ public abstract class HttpSerializationExceptionResolver<REQ,RESP> implements Or
             return new ModelAndView();
         }
         
+        for (HttpSerializers.ExpectedSingletonException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.ExpectedSingletonException.class)) {
+            respondError(response, 400, "Illegal list. Expected a single value");
+            return new ModelAndView();
+        }
+        
         return null;
     }
 

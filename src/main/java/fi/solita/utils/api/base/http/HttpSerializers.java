@@ -94,6 +94,11 @@ public class HttpSerializers {
         }
     }
     
+    public static final class ExpectedSingletonException extends RuntimeException {
+        public ExpectedSingletonException() {
+        }
+    }
+    
     public static final class InvalidFilterException extends RuntimeException {
         public final List<String> validValues;
         public InvalidFilterException(List<String> validValues) {
