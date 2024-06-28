@@ -206,6 +206,13 @@ public class HttpSerializers {
         }
     };
     
+    private final Apply<String,Double> _double = new Apply<String, Double>() {
+        @Override
+        public Double apply(String source) {
+            return Double.parseDouble(source);
+        }
+    };
+    
     private final Apply<String,BigInteger> biginteger = new Apply<String, BigInteger>() {
         @Override
         public BigInteger apply(String source) {
@@ -465,6 +472,7 @@ public class HttpSerializers {
         Pair.of(Short.class, _short),
         Pair.of(Integer.class, _int),
         Pair.of(Long.class, _long),
+        Pair.of(Double.class, _double),
         Pair.of(BigDecimal.class, bigdecimal),
         Pair.of(BigInteger.class, biginteger),
         Pair.of(Character.class, character)
