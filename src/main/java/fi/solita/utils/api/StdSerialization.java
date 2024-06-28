@@ -7,7 +7,8 @@ import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.FunctionalM.*;
+import static fi.solita.utils.functional.FunctionalM.mapValue;
+import static fi.solita.utils.functional.FunctionalM.mapValues;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
@@ -167,6 +168,7 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case GML:
         case XML:
+        case MVT:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -227,6 +229,7 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case GML:
         case XML:
+        case MVT:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -282,6 +285,7 @@ public abstract class StdSerialization<BOUNDS> {
         break;
     case GML:
     case XML:
+    case MVT:
         throw new UnavailableContentTypeException();
     default:
         throw new IllegalStateException();
@@ -334,6 +338,7 @@ public abstract class StdSerialization<BOUNDS> {
         case PNG:
         case GML:
         case XML:
+        case MVT:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -403,6 +408,7 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case GML:
         case XML:
+        case MVT:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -468,6 +474,7 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case GML:
             case XML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -557,6 +564,7 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case GML:
             case XML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -605,6 +613,7 @@ public abstract class StdSerialization<BOUNDS> {
         case PNG:
         case GML:
         case XML:
+        case MVT:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -654,6 +663,7 @@ public abstract class StdSerialization<BOUNDS> {
         case PNG:
         case GML:
         case XML:
+        case MVT:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -702,6 +712,7 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case GML:
             case XML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -748,6 +759,7 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case GML:
             case XML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -791,6 +803,7 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case GML:
             case XML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -839,6 +852,7 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case XML:
             case GML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -885,10 +899,17 @@ public abstract class StdSerialization<BOUNDS> {
             case PNG:
             case XML:
             case GML:
+            case MVT:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
         }
         return response;
+    }
+    
+    public Pair<byte[],Map<String,String>> stdPassThrough(
+            Request req,
+            ApplyZero<byte[]> data) {
+        return Pair.of(data.get(), emptyMap());
     }
 }

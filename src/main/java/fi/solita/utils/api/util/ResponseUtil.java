@@ -32,6 +32,9 @@ import fi.solita.utils.functional.Transformers;
 
 public abstract class ResponseUtil {
     
+    // must be 365 days to get 31536000. Otherwise at least safari might refuse to cache content.
+    public static final Duration ETERNAL_CACHE_DURATION = Duration.standardDays(365);
+
     public static interface Response {
         public void setStatus(int sc);
         public void setHeader(String name, String value);
@@ -107,8 +110,7 @@ public abstract class ResponseUtil {
     }
     
     public static final void cacheForInfinity(Response response) {
-        // must be 365 days to get 31536000. Otherwise at least safari might refuse to cache content.
-        cacheFor(Duration.standardDays(365), response);
+        cacheFor(ETERNAL_CACHE_DURATION, response);
     }
     
     public static final void disableCaching(Response response) {

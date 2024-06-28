@@ -1,6 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newSet;
@@ -16,6 +17,7 @@ import static fi.solita.utils.functional.Functional.forall;
 import static fi.solita.utils.functional.Functional.group;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Functional.remove;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
@@ -149,6 +151,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 case JSONL:
                 case XML:
                 case COUNT:
+                case MVT:
                     ret = Includes.withNestedMembers(members, Includes.Include.All, builders);
                     break;
             }
@@ -159,11 +162,12 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList()))));
         }
         
-        // Include geometries for png/geojson/gml even if not explicitly requested
+        // Include geometries for png/geojson/gml/mvt even if not explicitly requested
         switch (format) {
             case PNG:
             case GEOJSON:
             case GML:
+            case MVT:
                 for (MetaNamedMember<? super T,?> geometry: geometries) {
                     if (!exists(MemberUtil_.memberName.andThen(equalTo((CharSequence)geometry.getName())), ret)) {
                         ret = newList(cons(geometry, ret));
@@ -230,7 +234,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 if (include == Includes.Include.NoBuildable) {
                     ret.remove(member);
                 }
-                for (MetaNamedMember<?, ?> nestedMember: withNestedMembers((Collection<? extends MetaNamedMember<T, ?>>) builder.getMembers(), include, builders)) {
+                for (MetaNamedMember<?, ?> nestedMember: withNestedMembers((Collection<? extends MetaNamedMember<T, ?>>) builder.getMembers(), include, newArray(Builder.class, remove(builder, builders)))) {
                     ret.add(NestedMember.unchecked(member, nestedMember));
                     if (include == Includes.Include.OnlyLeaf) {
                         ret.remove(member);

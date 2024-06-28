@@ -1,10 +1,12 @@
 package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.sort;
+import static fi.solita.utils.functional.FunctionalA.zip;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
@@ -30,8 +32,11 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
+import fi.solita.utils.meta.MetaProperty;
 
 public class MemberUtil {
     
@@ -141,19 +146,49 @@ public class MemberUtil {
         return (Class<T>) ClassUtils.typeClass(member.getMember() instanceof Field ? ((Field)member.getMember()).getGenericType() : ((Method)member.getMember()).getGenericReturnType());
     }
     
-    static String ownerType(MetaNamedMember<?, ?> member) {
+    public static String ownerType(MetaNamedMember<?, ?> member) {
         return member.getMember() instanceof Field ? ((Field)member.getMember()).getDeclaringClass().getName() : ((Method)member.getMember()).getDeclaringClass().getName();
     }
     
     @SuppressWarnings("unchecked")
-    public
-    static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Class<T> clazz) {
+    public static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Class<T> clazz) {
         for (Builder<?> b: builders) {
             if (b.resultType().equals(clazz)) {
                 return Some((Builder<T>)b);
             }
         }
         return None();
+    }
+    
+    public static <VALUES extends Tuple,T> Apply<VALUES,T> builderConstructor(final VALUES members) {
+        @SuppressWarnings("unchecked")
+        List<MetaProperty<T,?>> ms = (List<MetaProperty<T,?>>)(Object)newList(members.toArray());
+        
+        Class<T> targetClass = Assert.singleton(newSet(map(new Apply<MetaProperty<T,?>, Class<T>>() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public Class<T> apply(MetaProperty<T,?> x) {
+                return (Class<T>) x.getMember().getDeclaringClass();
+            }
+        }, ms)));
+        
+        return new Apply<VALUES, T>() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public T apply(VALUES t) {
+                try {
+                    T ret = targetClass.newInstance();
+                    for (Pair<? extends MetaProperty<T, ?>, Object> s: zip(ms, t.toArray())) {
+                        ((MetaProperty<T, Object>)s.left()).setter(ret).apply(s.right());
+                    }
+                    return ret;
+                } catch (InstantiationException e) {
+                    throw new RuntimeException(e);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
     }
 
     public static String memberName(Apply<?, ?> member) {
