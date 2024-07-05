@@ -1,6 +1,5 @@
 package fi.solita.utils.api.base.json;
 
-import static fi.solita.utils.functional.Collections.emptyMap;
 import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.map;
@@ -319,6 +318,18 @@ public class JsonSerializers {
         }
     };
     
+    @SuppressWarnings("rawtypes")
+    private final JsonSerializer<Option> optionKey = new StdSerializer<Option>(Option.class) {
+        @Override
+        public void serialize(Option value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            if (value.isDefined()) {
+                provider.findKeySerializer(value.get().getClass(), null).serialize(value.get(), jgen, provider);
+            } else {
+                jgen.writeFieldName("");
+            }
+        }
+    };
+    
     
     
     
@@ -339,7 +350,9 @@ public class JsonSerializers {
     );
     }
     
-    public Map<Class<?>,JsonSerializer<?>> keySerializers() { return emptyMap(); }
+    public Map<Class<?>,JsonSerializer<?>> keySerializers() { return newMap(
+        Pair.of(Option.class, optionKey));
+    }
     
     public Map<Class<?>,JsonDeserializer<?>> deserializers() { return newMap(
             Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s))),
