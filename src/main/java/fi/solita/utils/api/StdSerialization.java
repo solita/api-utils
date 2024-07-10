@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
+import fi.solita.utils.api.format.ChartConversionService;
 import fi.solita.utils.api.format.CountConversionService;
 import fi.solita.utils.api.format.CsvConversionService;
 import fi.solita.utils.api.format.ExcelConversionService;
@@ -61,6 +62,7 @@ public abstract class StdSerialization<BOUNDS> {
     public final ExcelConversionService excel;
     public final PngConversionService png;
     public final CountConversionService count;
+    public final ChartConversionService chart;
     //public final XmlConversionService xml;
     
     private final GeojsonResolver geojsonResolver;
@@ -74,7 +76,8 @@ public abstract class StdSerialization<BOUNDS> {
         ExcelConversionService excel,
         PngConversionService png,
         GeojsonResolver geojsonResolver,
-        CountConversionService count) {
+        CountConversionService count,
+        ChartConversionService chart) {
         this.json = json;
         this.geoJson = geoJson;
         this.jsonlines = jsonlines;
@@ -84,6 +87,7 @@ public abstract class StdSerialization<BOUNDS> {
         this.png = png;
         this.geojsonResolver = geojsonResolver;
         this.count = count;
+        this.chart = chart;
     }
     
     protected String title2fileName(HtmlTitle title) {
@@ -129,7 +133,7 @@ public abstract class StdSerialization<BOUNDS> {
             ApplyZero<Map<KEY, Iterable<DTO>>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
@@ -143,7 +147,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(toFeature, map(
                             toGeojson,
-                            excluding,
+                            geojsonPropertyTransformer,
                             Function.constant(Option.<Crs>None()),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
@@ -165,6 +169,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
+            break;
+        case CHART:
+            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case GML:
         case XML:
@@ -190,7 +197,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
-            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
@@ -204,7 +211,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(toFeature, map(
                             toGeojson,
-                            excluding,
+                            geojsonPropertyTransformer,
                             Function.constant(Option.<Crs>None()),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
@@ -227,6 +234,9 @@ public abstract class StdSerialization<BOUNDS> {
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
+        case CHART:
+            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
+            break;
         case GML:
         case XML:
         case MVT:
@@ -246,7 +256,7 @@ public abstract class StdSerialization<BOUNDS> {
         ApplyZero<Map<KEY, DTO>> data,
         Apply<DTO,DTO> dataTransformer,
         HtmlTitle title,
-        Apply<? super DTO, ? super DTO> excluding,
+        Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
         Apply<? super DTO, ? extends SPATIAL> toGeojson,
         Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
     Pair<byte[],Map<String,String>> response;
@@ -260,7 +270,7 @@ public abstract class StdSerialization<BOUNDS> {
         response = Pair.of(geoJson.serialize(new FeatureCollection(
                 concat(map(toFeature, map(
                         toGeojson,
-                        excluding,
+                        geojsonPropertyTransformer,
                         Function.constant(Option.<Crs>None()),
                         mapValue(dataTransformer, d).values())), resolvables),
                 Some(Crs.of(srsName)))), emptyMap());
@@ -283,6 +293,9 @@ public abstract class StdSerialization<BOUNDS> {
     case COUNT:
         response = Pair.of(count.serialize(data.get()), emptyMap());
         break;
+    case CHART:
+        response = Pair.of(chart.serializeSingle(req, title.plainTextTitle, mapValue(dataTransformer, data.get()), includes), emptyMap());
+        break;
     case GML:
     case XML:
     case MVT:
@@ -301,7 +314,7 @@ public abstract class StdSerialization<BOUNDS> {
             ApplyZero<Map<KEY, DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
@@ -315,7 +328,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(toFeature, map(
                             toGeojson,
-                            excluding,
+                            geojsonPropertyTransformer,
                             Function.constant(Option.<Crs>None()),
                             mapValue(dataTransformer, d).values())), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
@@ -334,6 +347,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
+            break;
+        case CHART:
+            response = Pair.of(chart.serializeSingle(req, title.plainTextTitle, mapValue(dataTransformer, data.get()), includes), emptyMap());
             break;
         case PNG:
         case GML:
@@ -369,7 +385,7 @@ public abstract class StdSerialization<BOUNDS> {
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
@@ -383,7 +399,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(toFeature, map(
                             toGeojson,
-                            excluding,
+                            geojsonPropertyTransformer,
                             Function.constant(Option.<Crs>None()),
                             map(dataTransformer, d))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
@@ -405,6 +421,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
+            break;
+        case CHART:
+            response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
             break;
         case GML:
         case XML:
@@ -437,7 +456,7 @@ public abstract class StdSerialization<BOUNDS> {
             ApplyZero<? extends Iterable<DTO>> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
@@ -451,7 +470,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(map(toFeature, map(
                             toGeojson,
-                            excluding,
+                            geojsonPropertyTransformer,
                             Function.constant(Option.<Crs>None()),
                             map(dataTransformer, d))), resolvables),
                     Some(Crs.of(srsName)))), emptyMap());
@@ -470,6 +489,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
+                break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -503,7 +525,7 @@ public abstract class StdSerialization<BOUNDS> {
             ApplyZero<DTO> data,
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> excluding,
+            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
         return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, new Apply<DTO, FeatureObject>() {
@@ -511,7 +533,7 @@ public abstract class StdSerialization<BOUNDS> {
             public FeatureObject apply(DTO d) {
                 return toFeature.apply(
                         toGeojson.apply(d),
-                        excluding.apply(d),
+                        geojsonPropertyTransformer.apply(d),
                     Some(Crs.of(srsName)));
             }
         });
@@ -561,6 +583,9 @@ public abstract class StdSerialization<BOUNDS> {
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, dataTransformer.apply(data.get()), includes), emptyMap());
+                break;
             case PNG:
             case GML:
             case XML:
@@ -609,6 +634,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
+            break;
+        case CHART:
+            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case PNG:
         case GML:
@@ -660,6 +688,9 @@ public abstract class StdSerialization<BOUNDS> {
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
+        case CHART:
+            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
+            break;
         case PNG:
         case GML:
         case XML:
@@ -709,6 +740,9 @@ public abstract class StdSerialization<BOUNDS> {
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
+                break;
             case PNG:
             case GML:
             case XML:
@@ -756,6 +790,9 @@ public abstract class StdSerialization<BOUNDS> {
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, dataTransformer.apply(data.get()), includes), emptyMap());
+                break;
             case PNG:
             case GML:
             case XML:
@@ -799,6 +836,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case COUNT:
                 response = Pair.of(count.serialize(data), emptyMap());
+                break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, data), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -849,6 +889,9 @@ public abstract class StdSerialization<BOUNDS> {
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
+                break;
             case PNG:
             case XML:
             case GML:
@@ -895,6 +938,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
+                break;
+            case CHART:
+                response = Pair.of(chart.serialize(req, title.plainTextTitle, map(dataTransformer, data.get())), emptyMap());
                 break;
             case PNG:
             case XML:

@@ -143,6 +143,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 case CSV:
                 case XLSX:
                 case HTML:
+                case CHART:
                     ret = Includes.withNestedMembers(members, Includes.Include.OnlyLeaf, builders);
                     break;
                 case GEOJSON:
@@ -177,6 +178,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             case JSON:
             case JSONL:
             case HTML:
+            case CHART:
             case CSV:
             case XLSX:
             case XML:
