@@ -185,3 +185,12 @@
 #search {
     width: 45em;
 }
+.close {
+    position: absolute;
+    right: 0;
+    width: 1em;
+    padding: 2px 0;
+    text-align: center;
+    border-radius: 0 0 0 8px;
+    background-color: burlywood;
+}

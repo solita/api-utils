@@ -206,6 +206,7 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
                         + UI.calculateHash(scripts3()) + "' '"
+                        + UI.calculateHash(additionalHeadScript()) + "' '"
                         + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
@@ -213,6 +214,9 @@ public abstract class HtmlConversionService {
                     .style()
                         .write(styles(), false)
                     ._style()
+                    .script(type("text/javascript"))
+                        .write(additionalHeadScript(), false)
+                    ._script()
                     .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
                     .script(type("text/javascript").src(contextPath + "/r/tablefilter/tablefilter.js"))._script()
                     .script(type("text/javascript"))
@@ -871,4 +875,9 @@ public abstract class HtmlConversionService {
            + "        });"
            + "  }";
     }
+    
+    public String additionalHeadScript() {
+        return "";
+    }
+    
 }

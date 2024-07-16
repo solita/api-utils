@@ -10,6 +10,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import fi.solita.utils.api.filtering.FilterParser;
 import fi.solita.utils.api.filtering.Filtering;
+import fi.solita.utils.api.format.ChartConversionService;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName_;
@@ -17,9 +18,9 @@ import fi.solita.utils.api.util.ExceptionUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.api.util.RequestUtil;
-import fi.solita.utils.api.util.UnavailableContentTypeException;
 import fi.solita.utils.api.util.RequestUtil.ETags;
 import fi.solita.utils.api.util.RequestUtil.LoopsInPropertyNameException;
+import fi.solita.utils.api.util.UnavailableContentTypeException;
 
 
 public abstract class GeneralExceptionResolver<REQ,RESP> implements Ordered {
@@ -117,6 +118,10 @@ public abstract class GeneralExceptionResolver<REQ,RESP> implements Ordered {
         }
         for (Filtering.CannotFilterByStructureException e: ExceptionUtils.findCauseFromHierarchy(ex, Filtering.CannotFilterByStructureException.class)) {
             respondError(response, 400, "Cannot filter by structure");
+            return new ModelAndView();
+        }
+        for (ChartConversionService.CannotChartByStructureException e: ExceptionUtils.findCauseFromHierarchy(ex, ChartConversionService.CannotChartByStructureException.class)) {
+            respondError(response, 400, "Cannot chart a structure: " + e.name);
             return new ModelAndView();
         }
         

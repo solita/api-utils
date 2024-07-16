@@ -107,6 +107,14 @@ public class CsvSerializers {
             }
         };
     }
+    public static final <T> CsvSerializer<T> doubleSerializer(final Apply<T, Double> f) {
+        return new CsvSerializer<T>() {
+            @Override
+            public Cells render(CsvModule module, T value) {
+                return new Cells(Double.toString(f.apply(value)));
+            }
+        };
+    }
     public static final <T> CsvSerializer<T> bigIntegerSerializer(final Apply<T, BigInteger> f) {
         return new CsvSerializer<T>() {
             @Override
@@ -372,6 +380,7 @@ public class CsvSerializers {
         Pair.of(Short.class, shortSerializer(Function.<Short>id())),
         Pair.of(Integer.class, intSerializer(Function.<Integer>id())),
         Pair.of(Long.class, longSerializer(Function.<Long>id())),
+        Pair.of(Double.class, doubleSerializer(Function.<Double>id())),
         Pair.of(BigDecimal.class, bigDecimalSerializer(Function.<BigDecimal>id())),
         Pair.of(BigInteger.class, bigIntegerSerializer(Function.<BigInteger>id())),
         Pair.of(Character.class, charSerializer(Function.<Character>id())),

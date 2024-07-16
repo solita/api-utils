@@ -285,8 +285,17 @@ concat(text("For example like "), link(href("lp-graph.txt"), text("this")))
                  )).render(definition_en(
 "What is 'duration' parameter?",
 "Sometimes instead of absolute time interval it's easier to express the interval relatively, for example 'three days to the past and five to the future'. You can give such intervals with 'duration'-parameter in ISO8601-standard format. Negative duration means from the present to the past, positive to the future. You can give either or both separated with a slash. For example 'eternity' could be expressed as '-P99Y/P99Y'. Because 'the present' doesn't form a deterministic cacheable URL, 'duration'-parameter makes a redirect to a time-parameterized URL based on the current best interpretation of 'the present'."
+                 ))
 
-                 )).render(definition_fi(
+                   .render(definition_fi(
+"Miten .chart -muotoa käytetään?",
+"Se piirtää kuvaajan propertyName-parametrilla annettuja kenttiä käyttäen. Ensimmäinen kenttä on x-akseli, loput piirretään kuvaajiksi, hieman eri tavalla riippuen siitä onko kenttiä annettu yksi vai useampia. Kuvaajan tyyppi (stepline/line/column) määräytyy x-akselin tyypin mukaan (aikaväli/ajanhetki/muut)."
+                 )).render(definition_en(
+"How do you use .chart format?",
+"It draws a chart if the data from propertyName parameter. First field is x axis, others are drawn as series, the exact way depending on whether there's one or more fields given. The type of the chart (stepline/line/column) is determined by the type of the x axis (interval/instant/other)."
+                 ))
+
+                   .render(definition_fi(
 "Rajapinta saattaa sisältää paljon laskennallista dataa, enkä saa kaikkea ladattua yhdellä pyynnöllä. Miten voin hakea dataa osissa?",
 new Renderable() {
     @Override

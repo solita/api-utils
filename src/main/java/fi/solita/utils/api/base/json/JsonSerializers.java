@@ -1,6 +1,5 @@
 package fi.solita.utils.api.base.json;
 
-import static fi.solita.utils.functional.Collections.emptyMap;
 import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.map;
@@ -42,6 +41,7 @@ import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
+import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
@@ -319,6 +319,45 @@ public class JsonSerializers {
         }
     };
     
+    @SuppressWarnings("rawtypes")
+    private final JsonSerializer<Option> optionKey = new StdSerializer<Option>(Option.class) {
+        @Override
+        public void serialize(Option value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            if (value.isDefined()) {
+                provider.findKeySerializer(value.get().getClass(), null).serialize(value.get(), jgen, provider);
+            } else {
+                jgen.writeFieldName("");
+            }
+        }
+    };
+    
+    @SuppressWarnings("rawtypes")
+    private final JsonSerializer<Either> eitherKey = new StdSerializer<Either>(Either.class) {
+        @Override
+        public void serialize(Either value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            if (value.isLeft()) {
+                provider.findKeySerializer(value.left.get().getClass(), null).serialize(value.left.get(), jgen, provider);
+            } else {
+                provider.findKeySerializer(value.right.get().getClass(), null).serialize(value.right.get(), jgen, provider);
+            }
+        }
+    };
+    
+    private final JsonSerializer<?> intervalKey = new StdSerializer<Interval>(Interval.class) {
+        @Override
+        public void serialize(Interval value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            Pair<DateTime,DateTime> i = s.ser(value);
+            jgen.writeFieldName(s.ser(i.left()) + "/" + s.ser(i.right()));
+        }
+    };
+    
+    private final JsonSerializer<?> bigDecimalKey = new StdSerializer<BigDecimal>(BigDecimal.class) {
+        @Override
+        public void serialize(BigDecimal value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            jgen.writeFieldName(value.toPlainString());
+        }
+    };
+    
     
     
     
@@ -335,11 +374,26 @@ public class JsonSerializers {
         Pair.of(Interval.class, interval),
         Pair.of(Duration.class, stringSerializer(Duration.class, Serializers_.ser5.ap(s))),
         Pair.of(Period.class, stringSerializer(Period.class, Serializers_.ser6.ap(s))),
-        Pair.of(DateTimeZone.class, stringSerializer(DateTimeZone.class, Serializers_.ser7.ap(s)))
+        Pair.of(DateTimeZone.class, stringSerializer(DateTimeZone.class, Serializers_.ser7.ap(s))),
+        Pair.of(BigDecimal.class, bigDecimalSerializer(BigDecimal.class, Function.id()))
     );
     }
     
-    public Map<Class<?>,JsonSerializer<?>> keySerializers() { return emptyMap(); }
+    public Map<Class<?>,JsonSerializer<?>> keySerializers() { return newMap(
+        Pair.of(Option.class, optionKey),
+        Pair.of(Either.class, eitherKey),
+        Pair.of(URI.class, keySerializer(URI.class, Serializers_.ser.ap(s))),
+        Pair.of(UUID.class, keySerializer(UUID.class, Serializers_.ser9.ap(s))),
+        Pair.of(LocalDate.class, keySerializer(LocalDate.class, Serializers_.ser1.ap(s))),
+        Pair.of(LocalTime.class, keySerializer(LocalTime.class, Serializers_.ser2.ap(s))),
+        Pair.of(DateTime.class, keySerializer(DateTime.class, Serializers_.ser3.ap(s))),
+        Pair.of(Interval.class, intervalKey),
+        Pair.of(Duration.class, keySerializer(Duration.class, Serializers_.ser5.ap(s))),
+        Pair.of(Period.class, keySerializer(Period.class, Serializers_.ser6.ap(s))),
+        Pair.of(DateTimeZone.class, keySerializer(DateTimeZone.class, Serializers_.ser7.ap(s))),
+        Pair.of(BigDecimal.class, bigDecimalKey)
+    );
+    }
     
     public Map<Class<?>,JsonDeserializer<?>> deserializers() { return newMap(
             Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s))),

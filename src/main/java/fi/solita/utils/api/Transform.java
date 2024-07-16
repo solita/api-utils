@@ -44,30 +44,46 @@ public class Transform {
         return bbox;
     }
     
-    public static Pair<BigDecimal,BigDecimal> transformCoordinate(SRSName sourceCRS, SRSName targetCRS, Pair<BigDecimal,BigDecimal> coord) {
-        final MathTransform transformer;
+    private static MathTransform findMathTransform(SRSName sourceCRS, SRSName targetCRS) {
         try {
             // For some reason geotools seems to not recognize this, so let's utilize 4326
             if (sourceCRS.equals(SRSName.CRS84)) {
-                transformer = CRS.findMathTransform(CRS.decode(SRSName.EPSG4326.longValue), CRS.decode(targetCRS.longValue));
+                return CRS.findMathTransform(CRS.decode(SRSName.EPSG4326.longValue), CRS.decode(targetCRS.longValue));
             } else if (targetCRS.equals(SRSName.CRS84)) {
-                transformer = CRS.findMathTransform(CRS.decode(sourceCRS.longValue), CRS.decode(SRSName.EPSG4326.longValue));
+                return CRS.findMathTransform(CRS.decode(sourceCRS.longValue), CRS.decode(SRSName.EPSG4326.longValue));
             } else {
-                transformer = CRS.findMathTransform(CRS.decode(sourceCRS.longValue), CRS.decode(targetCRS.longValue));
+                return CRS.findMathTransform(CRS.decode(sourceCRS.longValue), CRS.decode(targetCRS.longValue));
             }
         } catch (FactoryException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public static Pair<BigDecimal,BigDecimal> transformCoordinate(SRSName sourceCRS, SRSName targetCRS, Pair<BigDecimal,BigDecimal> coord) {
         try {
             double[] from = {coord.left().doubleValue(), coord.right().doubleValue()};
-            if (sourceCRS.equals(SRSName.CRS84)) {
-                from = new double[] {coord.right().doubleValue(), coord.left().doubleValue()};
-            }
-            Double[] ret = newArray(transformer.transform(new DirectPosition2D(from[0], from[1]), null).getCoordinate());
-            if (targetCRS.equals(SRSName.CRS84)) {
-                ret = new Double[] { ret[1], ret[0] };
-            }
+            double[] ret = transformCoordinate(sourceCRS, targetCRS, from);
             return Pair.of(BigDecimal.valueOf(ret[0]), BigDecimal.valueOf(ret[1]));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static double[] transformCoordinate(SRSName sourceCRS, SRSName targetCRS, double[] coord) {
+        final MathTransform transformer = findMathTransform(sourceCRS, targetCRS);
+        try {
+            double[] from = coord;
+            if (sourceCRS.equals(SRSName.CRS84)) {
+                from = new double[] {from[1], from[0]};
+            }
+            double[] to = transformer.transform(new DirectPosition2D(from[0], from[1]), null).getCoordinate();
+            if (targetCRS.equals(SRSName.CRS84)) {
+                to = new double[] { to[1], to[0] };
+            }
+            double[] ret = coord.clone();
+            ret[0] = to[0];
+            ret[1] = to[1];
+            return ret;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

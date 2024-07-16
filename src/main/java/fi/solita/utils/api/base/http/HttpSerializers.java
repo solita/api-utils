@@ -94,6 +94,11 @@ public class HttpSerializers {
         }
     }
     
+    public static final class ExpectedSingletonException extends RuntimeException {
+        public ExpectedSingletonException() {
+        }
+    }
+    
     public static final class InvalidFilterException extends RuntimeException {
         public final List<String> validValues;
         public InvalidFilterException(List<String> validValues) {
@@ -198,6 +203,13 @@ public class HttpSerializers {
         @Override
         public Long apply(String source) {
             return Long.parseLong(source);
+        }
+    };
+    
+    private final Apply<String,Double> _double = new Apply<String, Double>() {
+        @Override
+        public Double apply(String source) {
+            return Double.parseDouble(source);
         }
     };
     
@@ -460,6 +472,7 @@ public class HttpSerializers {
         Pair.of(Short.class, _short),
         Pair.of(Integer.class, _int),
         Pair.of(Long.class, _long),
+        Pair.of(Double.class, _double),
         Pair.of(BigDecimal.class, bigdecimal),
         Pair.of(BigInteger.class, biginteger),
         Pair.of(Character.class, character)

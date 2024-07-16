@@ -112,6 +112,14 @@ public class ExcelSerializers {
             }
         };
     }
+    public static final <T> ExcelSerializer<T> doubleSerializer(final Apply<T, Double> f) {
+        return new ExcelSerializer<T>() {
+            @Override
+            public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
+                return new Cells(newCell(row, columnIndex, f.apply(value)));
+            }
+        };
+    }
     public static final <T> ExcelSerializer<T> bigIntegerSerializer(final Apply<T, BigInteger> f) {
         return new ExcelSerializer<T>() {
             @Override
@@ -260,6 +268,12 @@ public class ExcelSerializers {
     }
     
     protected static Cell newCell(Row row, int columnIndex, long value) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellValue(value);
+        return cell;
+    }
+    
+    protected static Cell newCell(Row row, int columnIndex, double value) {
         Cell cell = row.createCell(columnIndex);
         cell.setCellValue(value);
         return cell;
@@ -470,6 +484,7 @@ public class ExcelSerializers {
         Pair.of(Short.class, shortSerializer(Function.<Short>id())),
         Pair.of(Integer.class, intSerializer(Function.<Integer>id())),
         Pair.of(Long.class, longSerializer(Function.<Long>id())),
+        Pair.of(Double.class, doubleSerializer(Function.<Double>id())),
         Pair.of(BigDecimal.class, bigDecimalSerializer(Function.<BigDecimal>id())),
         Pair.of(BigInteger.class, bigIntegerSerializer(Function.<BigInteger>id())),
         Pair.of(Character.class, charSerializer(Function.<Character>id())),

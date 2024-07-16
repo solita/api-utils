@@ -16,6 +16,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -114,6 +115,16 @@ public abstract class HtmlSerializers {
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
                 html.span(class_("type-" + cssTypeName))
                       .write(Long.toString(f.apply(value)))
+                    ._span();
+            }
+        };
+    }
+    public static final <T> HtmlSerializer<T> doubleSerializer(final String cssTypeName, final Apply<T, Double> f) {
+        return new HtmlSerializer<T>() {
+            @Override
+            public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
+                html.span(class_("type-" + cssTypeName))
+                      .write(Double.toString(f.apply(value)))
                     ._span();
             }
         };
@@ -239,10 +250,12 @@ public abstract class HtmlSerializers {
      */
     
     private final HtmlSerializer<ResolvedMember> resolvedMember = new HtmlSerializer<ResolvedMember>() {
+        private Pattern SECTION_START = Pattern.compile(".*<section\\s+id=\"content\"[^>]*>");
+        private Pattern SECTION_END = Pattern.compile("</section>.*");
         @Override
         public void renderOn(ResolvedMember value, HtmlCanvas html, HtmlModule module) throws IOException {
             try {
-                String content = new String(value.getData(), Charset.forName("UTF-8")).replaceFirst(".*<section\\s+id=\"content\">", "").replaceFirst("</section>.*", "");
+                String content = SECTION_END.matcher(SECTION_START.matcher(new String(value.getData(), Charset.forName("UTF-8"))).replaceFirst("")).replaceFirst("");
                 html.span(class_("type-resolved"))
                       .write(content, false)
                     ._span();
@@ -434,6 +447,7 @@ public abstract class HtmlSerializers {
         Pair.of(Short.class, shortSerializer("integer", Function.<Short>id())),
         Pair.of(Integer.class, intSerializer("integer", Function.<Integer>id())),
         Pair.of(Long.class, longSerializer("integer", Function.<Long>id())),
+        Pair.of(Double.class, doubleSerializer("double", Function.<Double>id())),
         Pair.of(BigDecimal.class, bigDecimalSerializer("decimal", Function.<BigDecimal>id())),
         Pair.of(BigInteger.class, bigIntegerSerializer("integer", Function.<BigInteger>id())),
         Pair.of(Character.class, charSerializer("char", Function.<Character>id())),

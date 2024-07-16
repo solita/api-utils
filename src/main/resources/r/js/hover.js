@@ -8,7 +8,7 @@ var hover = function(map, callbackOver, callbackOut, callbackMultiple) {
 
     hoverInteraction.on('select', function(evt){
         var coord = evt.mapBrowserEvent.coordinate;
-        var selected = evt.selected.filter(function(v,i) { return evt.selected.findIndex(function(e) { return e.getProperties().tunniste === v.getProperties().tunniste; }) === i; });
+        var selected = evt.selected.filter(function(v,i) { return evt.selected.findIndex(function(e) { return e.getProperties().tunniste === v.getProperties().tunniste || e.getProperties().external_id === v.getProperties().external_id; }) === i; });
         
         if (selected.length > 1 && callbackMultiple) {
             callbackMultiple(selected, coord);
@@ -31,7 +31,7 @@ var click = function(map, callbackOver, callbackOut, callbackMultiple) {
 
     clickInteraction.on('select', function(evt){
         var coord = evt.mapBrowserEvent.coordinate;
-        var selected = evt.selected.filter(function(v,i) { return evt.selected.findIndex(function(e) { return e.getProperties().tunniste === v.getProperties().tunniste; }) === i; });
+        var selected = evt.selected.filter(function(v,i) { return evt.selected.findIndex(function(e) { return e.getProperties().tunniste === v.getProperties().tunniste || e.getProperties().external_id === v.getProperties().external_id; }) === i; });
         
         if (selected.length > 1 && callbackMultiple) {
             callbackMultiple(selected, coord);
