@@ -95,6 +95,16 @@ public abstract class SwaggerSupport extends ApiResourceController {
     
     public static final SecurityConfiguration SECURITY_CONFIGURATION = new SecurityConfiguration(null, null, null, null, null, ApiKeyVehicle.HEADER, RequestUtil.API_KEY, ",");
     
+    protected SwaggerResourcesProvider getSwaggerResources() {
+        try {
+            Field field = ApiResourceController.class.getDeclaredField("swaggerResources");
+            field.setAccessible(true);
+            return (SwaggerResourcesProvider) field.get(this);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public SwaggerSupport(final String groupName, final boolean ignoreRevision) {
         super(new SwaggerResourcesProvider() {
             @Override
