@@ -184,6 +184,10 @@ public class ChartConversionService {
         return m == DUMMY_MEMBER ? Object.class : MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(m);
     }
     
+    protected static Class<?> resolvePropertyType(MetaNamedMember<?, ?> m) {
+        return m == DUMMY_MEMBER ? Object.class : MemberUtil.actualTypeUnwrappingOptionAndEither(m);
+    }
+    
     protected boolean isLinear(MetaNamedMember<?,?> m) {
         return DateTime.class.isAssignableFrom(resolveType(m)) ||
                Interval.class.isAssignableFrom(resolveType(m));
@@ -268,10 +272,10 @@ public class ChartConversionService {
         if (!isEmpty(members)) {
             for (MetaNamedMember<T, ?> m: members) {
                 Class<?> finalType = resolveType(m);
-                Class<?> memberType = MemberUtil.actualTypeUnwrappingOptionAndEither(m);
+                Class<?> propertyType = resolvePropertyType(m);
                 if (finalType.isAnnotationPresent(JsonSerializeAsBean.class) ||
-                    Map.class.isAssignableFrom(memberType) ||
-                    Collection.class.isAssignableFrom(memberType) && Tuple.class.isAssignableFrom(finalType)) {
+                    Map.class.isAssignableFrom(propertyType) ||
+                    Collection.class.isAssignableFrom(propertyType) && Tuple.class.isAssignableFrom(finalType)) {
                     // pure structure, or Maps, or collections of Tuples don't make sense.
                     throw new CannotChartByStructureException(m.getName());
                 }
@@ -281,7 +285,7 @@ public class ChartConversionService {
             
             Set<Object> xValues = newSet(map(x, objs));
     
-            final boolean xIsListOfValuesFromASingleRow = size(objs) == 1 && head(members) != DUMMY_MEMBER && Iterable.class.isAssignableFrom(MemberUtil.actualTypeUnwrappingOptionAndEither(head(members)));
+            final boolean xIsListOfValuesFromASingleRow = size(objs) == 1 && head(members) != DUMMY_MEMBER && Iterable.class.isAssignableFrom(resolvePropertyType(head(members)));
             
             if (members.size() == 1) {
                 if (xIsListOfValuesFromASingleRow) {
