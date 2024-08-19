@@ -5,7 +5,7 @@ import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
-import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Functional.*;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
@@ -19,6 +19,7 @@ import fi.solita.utils.api.filtering.Constraints_.Or_;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
+import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicates;
@@ -36,6 +37,10 @@ public class Constraints<T> {
         return or.isEmpty();
     }
     
+    public long size() {
+        return sum(map(Or_.size, or));
+    }
+    
     public static final <T> Constraints<T> empty() { return new Constraints<T>(Collections.<Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>>>emptyList()); }
     
     public Constraints(List<Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>>> filters) {
@@ -47,6 +52,10 @@ public class Constraints<T> {
         
         public boolean isEmpty() {
             return filters.isEmpty();
+        }
+        
+        public long size() {
+            return Functional.size(flatten(filters.values()));
         }
         
         public Or(Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> filters) {
