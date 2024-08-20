@@ -273,7 +273,7 @@ public class ChartConversionService {
             for (MetaNamedMember<T, ?> m: members) {
                 Class<?> finalType = resolveType(m);
                 Class<?> propertyType = resolvePropertyType(m);
-                if (finalType.isAnnotationPresent(JsonSerializeAsBean.class) ||
+                if (finalType.isAnnotationPresent(JsonSerializeAsBean.class) && !finalType.isEnum() ||
                     Map.class.isAssignableFrom(propertyType) ||
                     Collection.class.isAssignableFrom(propertyType) && Tuple.class.isAssignableFrom(finalType)) {
                     // pure structure, or Maps, or collections of Tuples don't make sense.
