@@ -38,6 +38,7 @@ public abstract class ResponseUtil {
     public static interface Response {
         public void setStatus(int sc);
         public void setHeader(String name, String value);
+        public void addHeader(String name, String value);
         public void setDateHeader(String name, long date);
         public boolean containsHeader(String name);
         public PrintWriter getWriter() throws IOException;
@@ -133,6 +134,8 @@ public abstract class ResponseUtil {
             response.setDateHeader(Headers.EXPIRES, now.plus(age).getMillis());
             response.setHeader(Headers.CACHE_CONTROL, "public, max-age=" + age.getStandardSeconds());
             response.setHeader(Headers.PRAGMA, "cache");
+            response.addHeader(Headers.VARY, Headers.ACCEPT_ENCODING); // cache different compressions separately 
+            response.addHeader(Headers.VARY, Headers.CACHE_CONTEXT); // this cusomt header can be used to split a cache by a known key 
         }
     }
    

@@ -8,6 +8,8 @@ public abstract class Headers {
     
     public static final String CONTENT_LENGTH = "Content-Length";
     
+    public static final String ACCEPT_ENCODING = "Accept-Encoding";
+    
     public static final String CONTENT_ENCODING = "Content-Encoding";
     
     public static final String CACHE_CONTROL = "Cache-Control";
@@ -31,4 +33,8 @@ public abstract class Headers {
     public static final String IF_NONE_MATCH = "If-None-Match";
     
     public static final String ACCEPT = "Accept";
+    
+    public static final String VARY = "Vary";
+    
+    public static final String CACHE_CONTEXT = "X-Cache-Context";
 }

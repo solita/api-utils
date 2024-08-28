@@ -21,6 +21,11 @@ public abstract class JakartaResponse {
             public void setHeader(String name, String value) {
                 resp.setHeader(name, value);
             }
+            
+            @Override
+            public void addHeader(String name, String value) {
+                resp.addHeader(name, value);
+            }
 
             @Override
             public void setDateHeader(String name, long date) {
