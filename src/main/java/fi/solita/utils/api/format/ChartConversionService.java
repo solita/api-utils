@@ -266,7 +266,7 @@ public class ChartConversionService {
         final boolean xIsTemporal = xIsInstant || xIsInterval;
         final boolean xIsLinear = !members.isEmpty() && isLinear(head(members));
         final boolean isStacked = members.size() == 2;
-        final boolean isGrouped = members.size() == 1 || xIsInterval || !xIsLinear;
+        final boolean isGrouped = members.size() == 1 || xIsTemporal || !xIsLinear;
         List<Map<Object,Object>> data = newMutableList();
         List<String> yNames = emptyList();
         if (!isEmpty(members)) {
@@ -349,7 +349,7 @@ public class ChartConversionService {
                                      reduce(Monoids.mapCombine(SemiGroups.longSum),
                                          map(categoryValues(entry.getValue()), tail(members)))));
                     }
-                } else if (xIsLinear) {
+                } else if (xIsLinear && !xIsInstant) {
                     // y has at least one member, x is linear -> chart value
                     yNames = newList(map(MemberUtil_.memberName, tail(members)));
                     
@@ -368,7 +368,7 @@ public class ChartConversionService {
                     } else {
                         for (T t: newList(sort(Compare.by(xx), objs))) {
                             Iterable<Object> categoryObjects = sequence(t, tail(members));
-                            data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)x.apply(t)).getMillis() : x.apply(t),
+                            data.add(with(SemiGroups.failUnequal(), "c", x.apply(t),
                                     newMap(SemiGroups.failUnequal(),
                                         flatMap(mkDataRows(values), zip(tail(members), categoryObjects)))));
                         }
@@ -380,14 +380,14 @@ public class ChartConversionService {
                         Iterable<Function1<Object, Object>> tailMembers = repeat(Function.id(), size(tail(members)));
                         for (Iterable<Object> category: transpose(allRows)) {
                             List<Object> categoryObjects = newList(tail(category));
-                            data.add(with(SemiGroups.failUnequal(), "c", head(category),
+                            data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)head(category)).getMillis() : head(category),
                                          reduce(Monoids.mapCombine(SemiGroups.longSum),
                                              map(categoryValues(categoryObjects), tailMembers))));
                         }
                     } else {
-                        for (Object category: xValues) {
+                        for (Object category: xIsInstant ? sort((Iterable<DateTime>)(Object)xValues) : xValues) {
                             List<T> categoryObjects = newList(filter(x.andThen(equalTo(category)), objs));
-                            data.add(with(SemiGroups.failUnequal(), "c", category,
+                            data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)category).getMillis() : category,
                                          reduce(Monoids.mapCombine(SemiGroups.longSum),
                                              map(categoryValues(categoryObjects), tail(members)))));
                         }
@@ -496,6 +496,7 @@ public class ChartConversionService {
               + "        },\n"
               + "        groupIntervals: [\n"
               + "          { timeUnit: 'second', count: 1 },\n"
+              + "          { timeUnit: 'minute', count: 1 },\n"
               + "          { timeUnit: 'hour', count: 1 },\n"
               + "          { timeUnit: 'day', count: 1 },\n"
               + "          { timeUnit: 'week', count: 1 },\n"
@@ -517,24 +518,20 @@ public class ChartConversionService {
               + "  layout:  root.horizontalLayout"
               + "}));\n"
               + "buttons.children.push(am5.Button.new(root, {\n"
-              + "  tooltipText: 'Ei ryhmittelyä',\n"
-              + "  label: am5.Label.new(root, {text:'-'})\n"
-              + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'second', count: 1 }));\n"
-              + "buttons.children.push(am5.Button.new(root, {\n"
               + "  tooltipText: 'Ryhmittely vuosittain',\n"
-              + "  label: am5.Label.new(root, {text:'y'})\n"
+              + "  label: am5.Label.new(root, {text:'Y'})\n"
               + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'year', count: 1 }));\n"
               + "buttons.children.push(am5.Button.new(root, {\n"
               + "  tooltipText: 'Ryhmittely kvartaaleittain',\n"
-              + "  label: am5.Label.new(root, {text:'q'})\n"
+              + "  label: am5.Label.new(root, {text:'Q'})\n"
               + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'month', count: 3 }));\n"
               + "buttons.children.push(am5.Button.new(root, {\n"
               + "  tooltipText: 'Ryhmittely kuukausittain',\n"
-              + "  label: am5.Label.new(root, {text:'m'})\n"
+              + "  label: am5.Label.new(root, {text:'M'})\n"
               + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'month', count: 1 }));\n"
               + "buttons.children.push(am5.Button.new(root, {\n"
               + "  tooltipText: 'Ryhmittely viikoittain',\n"
-              + "  label: am5.Label.new(root, {text:'w'})\n"
+              + "  label: am5.Label.new(root, {text:'W'})\n"
               + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'week',  count: 1 }));\n"
               + "buttons.children.push(am5.Button.new(root, {\n"
               + "  tooltipText: 'Ryhmittely päivittäin',\n"
@@ -544,6 +541,14 @@ public class ChartConversionService {
               + "  tooltipText: 'Ryhmittely tunneittain',\n"
               + "  label: am5.Label.new(root, {text:'h'})\n"
               + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'hour',   count: 1 }));\n"
+              + "buttons.children.push(am5.Button.new(root, {\n"
+              + "  tooltipText: 'Ryhmittely minuuteittain',\n"
+              + "  label: am5.Label.new(root, {text:'m'})\n"
+              + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'minute',   count: 1 }));\n"
+              + "buttons.children.push(am5.Button.new(root, {\n"
+              + "  tooltipText: 'Ei ryhmittelyä',\n"
+              + "  label: am5.Label.new(root, {text:'-'})\n"
+              + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'second', count: 1 }));\n"
                 : "")
               + mkString("", map(new Apply<Pair<Integer,String>,String>() {
                 @Override
