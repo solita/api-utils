@@ -375,7 +375,7 @@ var olstuff = function(constants, util) {
                     }
                     var kaavio = document.getElementById('kaavio');
                     layer.dispatchEvent("loadStart");
-                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal})
+                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal, credentials: 'include'})
                         .then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                         .then(function(response) {
                           layer.dispatchEvent("loadSuccess");
@@ -548,7 +548,7 @@ var olstuff = function(constants, util) {
               };
             };
             
-            fetch(url).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+            fetch(url).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } }, {credentials: 'include'})
                       .then(createLayer(matrix))
                       .catch(console.log);
             
@@ -590,15 +590,15 @@ var olstuff = function(constants, util) {
             var maasto     = baseUrl + '/maasto/wmts/1.0.0/WMTSCapabilities.xml';
             var teema      = baseUrl + '/teema/wmts/1.0.0/WMTSCapabilities.xml';
             var kiinteisto = baseUrl + '/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
-            fetch(maasto)    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
-                             .then(createLayer('ETRS-TM35FIN', baseUrl))
-                             .catch(console.log);
-            fetch(teema)     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
-                             .then(createLayer('ETRS-TM35FIN', baseUrl))
-                             .catch(console.log);
-            fetch(kiinteisto).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
-                             .then(createLayer('ETRS-TM35FIN', baseUrl))
-                             .catch(console.log);
+            fetch(maasto, {credentials: 'include'})    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                       .then(createLayer('ETRS-TM35FIN', baseUrl))
+                                                       .catch(console.log);
+            fetch(teema, {credentials: 'include'})     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                       .then(createLayer('ETRS-TM35FIN', baseUrl))
+                                                       .catch(console.log);
+            fetch(kiinteisto, {credentials: 'include'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                       .then(createLayer('ETRS-TM35FIN', baseUrl))
+                                                       .catch(console.log);
             
             return group;
         },
@@ -611,7 +611,7 @@ var olstuff = function(constants, util) {
                 fold: 'close'
             });
             
-            fetch(collectionsUrl + '?f=json').then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
+            fetch(collectionsUrl + '?f=json', {credentials: 'include'}).then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                  .then(function(x) {
                 var cols = x.collections;
                 cols.sort(function(a,b) { return a.id < b.id; })
