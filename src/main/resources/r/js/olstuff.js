@@ -548,9 +548,9 @@ var olstuff = function(constants, util) {
               };
             };
             
-            fetch(url).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } }, {credentials: 'include'})
-                      .then(createLayer(matrix))
-                      .catch(console.log);
+            fetch(url, {credentials: 'include'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                .then(createLayer(matrix))
+                                                .catch(console.log);
             
             return group;
         },
