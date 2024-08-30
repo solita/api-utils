@@ -54,6 +54,8 @@ import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
+import fi.solita.utils.api.util.RequestUtil;
+import fi.solita.utils.api.util.ServletRequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
@@ -210,6 +212,7 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
+                    .base(href(ServletRequestUtil.getRequestURI(request).toString().replaceFirst(contextPath + "/.*", contextPath + "/")))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                         .write(styles(), false)
