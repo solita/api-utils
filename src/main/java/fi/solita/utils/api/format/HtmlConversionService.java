@@ -713,6 +713,11 @@ public abstract class HtmlConversionService {
         + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
         + ".type-resolved table { display: table; }"
         
+        + ".color-red      { color: red; }"
+        + ".color-green    { color: green; }"
+        + ".color-blue     { color: blue; }"
+        + ".color-yellow   { color: yellow; }"
+        
         + ".load-more         { padding-top: 1em; }"
         + ".load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
         
