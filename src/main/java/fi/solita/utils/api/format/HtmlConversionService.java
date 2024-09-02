@@ -829,7 +829,7 @@ public abstract class HtmlConversionService {
     
     public static final String scripts2() {
         return
-             "if (htmx) {"
+             "if (window.htmx) {"
            + "  htmx.on('htmx:afterOnLoad', function(evt) {"
            + "    let m = evt.detail.xhr.responseURL.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
            + "    if (m) {"
