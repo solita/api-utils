@@ -203,7 +203,7 @@ public abstract class HtmlConversionService {
                 
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
-                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '"
+                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';frame-src *; style-src 'self' '"
                         + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
