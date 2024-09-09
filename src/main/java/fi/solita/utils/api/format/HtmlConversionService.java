@@ -212,7 +212,7 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
-                    .base(href(ServletRequestUtil.getRequestURI(request).toString().replaceFirst(contextPath + "/.*", contextPath + "/")))
+                    .base(href(ServletRequestUtil.getRequestURI(request).toString().replaceFirst("(https?://[^/?]+)" + contextPath + "/.*", "$1" + contextPath + "/")))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                         .write(styles(), false)
