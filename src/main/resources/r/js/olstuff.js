@@ -315,7 +315,7 @@ var olstuff = function(constants, util) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         src: url,
-                        crossOrigin: 'anonymous',
+                        crossOrigin: 'use-credentials',
                         scale: scale ? scale : 1,
                         rotateWithView: true,
                         anchor: anchor ? anchor : [0.5, 0.5],

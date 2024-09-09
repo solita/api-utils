@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.13.52</version>
+    <version>0.13.53</version>
     <build>
         <resources>
             <resource>
