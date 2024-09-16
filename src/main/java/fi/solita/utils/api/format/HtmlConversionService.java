@@ -54,6 +54,8 @@ import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
+import fi.solita.utils.api.util.RequestUtil;
+import fi.solita.utils.api.util.ServletRequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
@@ -193,6 +195,10 @@ public abstract class HtmlConversionService {
         return "";
     }
     
+    protected String base(Request request, String contextPath) {
+        return ServletRequestUtil.getRequestURI(request).toString().replaceFirst("(https?://[^/?]+)" + contextPath + "/.*", "$1" + contextPath + "/");
+    }
+    
     protected Renderable pageHead(final HtmlTitle title, final Request request) {
         return new Renderable() {
             @Override
@@ -201,7 +207,7 @@ public abstract class HtmlConversionService {
                 
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
-                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';style-src 'self' '"
+                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';frame-src *; style-src 'self' '"
                         + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
                         + UI.calculateHash(scripts())+ "' '"
                         + UI.calculateHash(scripts2()) + "' '"
@@ -210,6 +216,7 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
+                    .base(href(base(request, contextPath)))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                         .write(styles(), false)
@@ -710,6 +717,11 @@ public abstract class HtmlConversionService {
         + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
         + ".type-resolved table { display: table; }"
         
+        + ".color-red      { color: red; }"
+        + ".color-green    { color: green; }"
+        + ".color-blue     { color: blue; }"
+        + ".color-yellow   { color: yellow; }"
+        
         + ".load-more         { padding-top: 1em; }"
         + ".load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
         
@@ -821,7 +833,7 @@ public abstract class HtmlConversionService {
     
     public static final String scripts2() {
         return
-             "if (htmx) {"
+             "if (window.htmx) {"
            + "  htmx.on('htmx:afterOnLoad', function(evt) {"
            + "    let m = evt.detail.xhr.responseURL.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
            + "    if (m) {"
