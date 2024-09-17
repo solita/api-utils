@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fi.solita.utils.api.filtering.Constraints_;
 import fi.solita.utils.api.filtering.Constraints_.Or_;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
@@ -23,7 +24,9 @@ import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicates;
+import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.functional.Tuple;
+import fi.solita.utils.functional.Tuple3;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class Constraints<T> {
@@ -47,6 +50,10 @@ public class Constraints<T> {
         this.or = newList(map(Or_.<T>$(), filter(not(Predicates.<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>,Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>>>mapEmpty()), filters)));
     }
     
+    static final <T> Iterable<Tuple3<FilterType,MetaNamedMember<T,Object>,List<Object>>> flat(Map.Entry<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> e) {
+        return map(Transformers.prependPair(e.getKey()), e.getValue());
+    }
+    
     public static class Or<T> {
         private Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> filters;
         
@@ -56,6 +63,10 @@ public class Constraints<T> {
         
         public long size() {
             return Functional.size(flatten(filters.values()));
+        }
+        
+        public List<Tuple3<FilterType,MetaNamedMember<T,Object>,List<Object>>> allFilters() {
+            return newList(flatMap(Constraints_.flat(), filters.entrySet()));
         }
         
         public Or(Map<FilterType,List<Pair<MetaNamedMember<T,Object>,List<Object>>>> filters) {
