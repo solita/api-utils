@@ -368,7 +368,7 @@ var olstuff = function(constants, util) {
                      (!cql_filter ? '' : '&cql_filter=' + cql_filter) +
                      (!propertyName ? '' : '&propertyName=' + propertyName) +
                      (!simplify || url.indexOf('simplify=') >= 0 ? '' : '&simplify=' + simplify) +
-                     (url.indexOf('time=') >= 0 || !instant ? '' : '&time=' + instant + '/' + instant) +
+                     (url.indexOf('time=') >= 0 || url.indexOf('time-infra=') >= 0 || !instant ? '' : '&time=' + instant + '/' + instant) +
                      (!typeNames ? '' : '&typeNames=' + typeNames);
 
             var layerTitle = ret.mkLayerTitle(title_fi, title_en);
