@@ -138,8 +138,8 @@ var olstuff = function(constants, util) {
                 map.mystate.closed = {};
             }
             
-            container.innerHTML = '<input class="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><input class="show" type="checkbox" title="Pidä näkyvissä / keep visible" /><div class="listcontent"></div>';
-            var elem = container.querySelector(':scope .listcontent');
+            container.innerHTML = '<input class="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><input class="show" type="checkbox" title="Pidä näkyvissä / keep visible" /><div class="list-content"></div>';
+            var elem = container.querySelector(':scope .list-content');
             var input = container.querySelector(':scope .rajoita');
             
             var limit = function() {
