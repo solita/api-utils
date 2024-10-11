@@ -33,6 +33,7 @@ import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.ApplyBiVoid;
 import fi.solita.utils.functional.Either;
@@ -336,7 +337,7 @@ public abstract class HtmlSerializers {
     private final HtmlSerializer<Map.Entry<?,?>> entry = new HtmlSerializer<Map.Entry<?,?>>() {
         @Override
         public void renderOn(Map.Entry<?,?> value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.render(module.toRenderable(Pair.of(value)));
+            html.render(module.toRenderable(Pair.of(value.getKey(), value.getValue())));
         }
     };
     
@@ -414,7 +415,7 @@ public abstract class HtmlSerializers {
         @Override
         public void renderOn(Interval value, HtmlCanvas html, HtmlModule module) throws IOException {
             Pair<DateTime,DateTime> i = s.ser(value);
-            html.span(class_("type-interval"))
+            html.span(class_("type-interval").add("x-data-start", RequestUtil.instant2string(i.left())).add("x-data-end", RequestUtil.instant2string(i.right())))
                   .render(module.toRenderable(i.left()))
                   .write(" - ")
                   .render(module.toRenderable(i.right()))
