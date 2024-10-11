@@ -405,7 +405,7 @@ public abstract class HtmlSerializers {
         
         @Override
         public void renderOn(DateTime value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-datetime").title(isBeginOfTime(value) || isEndOfAllTimes(value) ? null : "UTC: " + s.ser(value)))
+            html.span(class_("type-datetime").title(isBeginOfTime(value) || isEndOfAllTimes(value) ? null : "UTC: " + s.ser(value)).add("x-data-instant", RequestUtil.instant2string(value)))
                   .write(isBeginOfTime(value) || isEndOfAllTimes(value) ? "∞" : s.serZoned(value))
                 ._span();
         }
@@ -415,7 +415,7 @@ public abstract class HtmlSerializers {
         @Override
         public void renderOn(Interval value, HtmlCanvas html, HtmlModule module) throws IOException {
             Pair<DateTime,DateTime> i = s.ser(value);
-            html.span(class_("type-interval").add("x-data-start", RequestUtil.instant2string(i.left())).add("x-data-end", RequestUtil.instant2string(i.right())))
+            html.span(class_("type-interval"))
                   .render(module.toRenderable(i.left()))
                   .write(" - ")
                   .render(module.toRenderable(i.right()))
