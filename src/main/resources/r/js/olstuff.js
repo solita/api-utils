@@ -132,24 +132,35 @@ var olstuff = function(constants, util) {
             return null;
         },
         
-        registerListView: function(map, elem, selectInteraction, select, unselect, click) {
+        registerListView: function(map, container, selectInteraction, select, unselect, click) {
             if (!map.mystate) {
                 map.mystate = {};
                 map.mystate.closed = {};
             }
+            
+            container.innerHTML = '<input class="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><input class="show" type="checkbox" title="Pidä näkyvissä / keep visible" /><div class="listcontent"></div>';
+            var elem = container.querySelector(':scope .listcontent');
+            var input = container.querySelector(':scope .rajoita');
+            
+            var limit = function() {
+                var inputvalue = input.value.toLowerCase();
+                [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].forEach(function(x) { x.style.display = (x.textContent.toLowerCase().indexOf(inputvalue) >= 0 ? 'block' : 'none'); });
+            };
+            
             document.onkeydown = function(e) {
-                if (!e.ctrlKey && !e.metaKey && !document.querySelector('input:not(#rajoita):focus')) {
-                    document.getElementById('rajoita').focus();
+                if (!e.ctrlKey && !e.metaKey && !document.querySelector('input:not(.rajoita):focus')) {
+                    input.focus();
+                    container.querySelector(':scope .show').checked = true;
                 }
             };
-            var f = function(evt) {
-                elem.innerHTML = '<input id="rajoita" autofocus type="text" placeholder="rajoita/restrict..." /><br />' + util.prettyPrint(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'labelPoint'));
+            
+            var f = function() {
+                elem.innerHTML = util.prettyPrint(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'labelPoint'));
                 util.initPrettyPrinted(elem);
-                var input = elem.querySelector(':scope input');
-                input.onkeyup = function() {
-                    [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) >= 0; }).forEach(function(x) { x.style.display = 'block'; });
-                    [...elem.querySelectorAll(':scope > ul > li > span > span > ul')].filter(function(x) { return x.textContent.indexOf(input.value) < 0;  }).forEach(function(x) { x.style.display = 'none'; });
-                };
+                
+                limit();
+                input.onkeyup = limit;
+                
                 elem.querySelectorAll(':scope > * > * > .key').forEach(function(x) {
                     if (map.mystate.closed[x.textContent]) {
                         util.getSiblings(x).forEach(function(y) { y.style.display = 'none'; });
