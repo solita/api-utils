@@ -33,6 +33,7 @@ import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
+import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.ApplyBiVoid;
 import fi.solita.utils.functional.Either;
@@ -336,7 +337,7 @@ public abstract class HtmlSerializers {
     private final HtmlSerializer<Map.Entry<?,?>> entry = new HtmlSerializer<Map.Entry<?,?>>() {
         @Override
         public void renderOn(Map.Entry<?,?> value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.render(module.toRenderable(Pair.of(value)));
+            html.render(module.toRenderable(Pair.of(value.getKey(), value.getValue())));
         }
     };
     
@@ -404,7 +405,7 @@ public abstract class HtmlSerializers {
         
         @Override
         public void renderOn(DateTime value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-datetime").title(isBeginOfTime(value) || isEndOfAllTimes(value) ? null : "UTC: " + s.ser(value)))
+            html.span(class_("type-datetime").title(isBeginOfTime(value) || isEndOfAllTimes(value) ? null : "UTC: " + s.ser(value)).add("x-data-instant", RequestUtil.instant2string(value)))
                   .write(isBeginOfTime(value) || isEndOfAllTimes(value) ? "∞" : s.serZoned(value))
                 ._span();
         }

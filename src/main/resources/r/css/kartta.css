@@ -8,19 +8,31 @@
   height: 100%;
   width: 100%;
 }
+.map {
+  position: relative;
+}
 .map input {
-    font-size: 11px;
+  font-size: 11px;
 }
 .layer-switcher {
   max-width: 30%;
   font-size: 0.75em;
+  top: 0.5em;
+  opacity: 0.75;
 }
 .layer-switcher .panel label {
   font-family: sans-serif;
+  padding-left: 4em;
+}
+.layer-switcher li input {
+  margin-left: 0.5rem;
+  height: 1rem;
+  width: 1rem;
 }
 .layer-switcher .group button {
-    width: 8px;
-    height: 12px;
+    width: 20px;
+    height: 20px;
+    background-position: center 0px;
 }
 .layer-switcher.shown {
   max-height: 80%;
@@ -48,10 +60,16 @@
     z-index: 10 !important; /* to make layer-switcher be on top of listview */
 }
 .ol-popup {
-  max-width: 50%;
   position: absolute;
   background-color: white;
   overflow: auto;
+}
+.ol-mouse-position {
+  top: 2.5rem;
+  right: 3.5rem;
+}
+.ol-zoom-out {
+  display: block;
 }
 .ol-rotate {
   top: 17.5em;
@@ -67,7 +85,7 @@
 }
 
 .ol-popup iframe {
-  width: 42em;
+  width: 100%;
 }
 
 #hovertitle {
@@ -79,46 +97,76 @@
   padding: 0.5em;
 }
 #hovertitle ul {
-    padding-left: 0.5em;
+  padding-left: 0.5em;
 }
 #hovertitle > * > ul > li > .key {
   font-weight: bold;
 }
+#hovertitle ul {
+  list-style: none;
+}
 
 #popup {
   left: 0;
-  top: 0;
-  padding-top: 6em;
-  background: none;
+  top: 4em;
+  bottom: 0;
+  background: white;
   z-index: 10;
-  height: 100%;
+  resize: both;
+  padding-bottom: 0.5em;
+  display: none;
+}
+#popup:has(#popup-content > *) {
+  display: block;
 }
 #popup-content {
   display: flex;
   flex-flow: column;
   align-items: stretch;
   background-color: white;
-  height: 95%;
+  height: 100%;
 }
 #popup-content > * {
-    flex: auto;
+  flex: auto;
 }
 
 #list {
-  max-height: 75%;
+  min-height: 50%;
+  max-height: 50%;
   max-width: 33%;
   right: 0;
   bottom: 0.9em;
   border: 1px solid #cccccc;
+  opacity: 0.75;
+}
+#list:not(:hover):has(.show:not(:checked)) {
+  width: 2.2em !important;
+}
+#list:has(.show:checked) {
+  resize: both;
+}
+#list:has(.show:checked),
+#list:hover {
+  width: auto;
+  max-height: 75%;
+}
+#list .show {
+  position: absolute;
+  top: 0;
+}
+#list:has(.show:checked) .show,
+#list:hover .show {
+  right: 0;
 }
 #list input {
   border-width: 0 0 1px 0;
-  width: 100%;
+  text-align: center;
 }
 #list ul {
   padding: 0.25em 0 0.25em 0.5em;
   margin: 0;
   border-bottom: 1px solid #eee;
+  list-style: none;
 }
 #list ul ul {
   border: 1px solid transparent;
@@ -131,46 +179,49 @@
 #list ul .array:after {
   content: '';
 }
-.ol-popup > ul {
+.list-content > ul {
   padding-top: 0.5em;
 }
-.ol-popup > ul > li {
+.list-content > ul > li {
   padding: 0.5em 0;
+  font-weight: 200;
 }
-.ol-popup > ul > li > .key {
+.list-content > ul > li > .key {
   font-weight: 400;
 }
 .value {
   margin-left: 20px;
 }
-.app-button {
-  width: 11em;
-  margin-left: 0;
-  margin-top: 0.5em;
-  left: 20em;
+.button-container {
+  display: flex;
   position: absolute;
-  top: 0;
-  background: transparent;
+  top: 0.5em;
+  padding-left: 3em;
+  gap: 1em;
+  left: 0;
+  right: 3.5em;
 }
-.app-button:hover {
-  background: transparent;
+.button-container input[type=text] {
+  height: 100%;
 }
-.app-button:nth-child(2) {
-  margin-left: 8em;
+.app-button {
+  position: static;
+  white-space: nowrap;
+  opacity: 0.75;
 }
-.app-button:nth-child(3) {
-  margin-left: 17em;
+.app-button:has(#search) {
+  flex-grow: 1;
 }
-.app-button:nth-child(4) {
-  margin-left: 49em;
-}
-.app-button > button {
+.app-button button {
   width: auto;
   padding: 0 0.25em;
+  display: inline-block;
+  pointer-events: none;
 }
 .app-button input[type=checkbox] {
-    float:left;
-    margin-top: 5px;
+  display: inline-block;
+  vertical-align: text-top;
+  margin-left: 7px;
 }
 
 .ol-selectable {
@@ -179,11 +230,8 @@
   -ms-user-select: text;
   user-select: text;
 }
-#time {
-    width: 12em;
-}
 #search {
-    width: 45em;
+  width: 100%;
 }
 .close {
     position: absolute;
