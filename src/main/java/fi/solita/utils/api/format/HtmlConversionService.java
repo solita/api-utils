@@ -54,7 +54,6 @@ import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
-import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
@@ -244,7 +243,7 @@ public abstract class HtmlConversionService {
                         ._h1()
                         .if_(includeFormats)
                             .div(class_("formats"))
-                                .render(linksForDifferentFormats(request))
+                                .render(linksForDifferentFormats())
                             ._div()
                         ._if()
                         .if_(properties.isDefined())
@@ -333,6 +332,9 @@ public abstract class HtmlConversionService {
         }
     }
     
+    /**
+     * @param includes 
+     */
     protected <T> Pair<Renderable,Set<String>> additionalQueryParameters(Includes<T> includes) {
         return Pair.of(new Renderable() {
             @Override
@@ -342,7 +344,7 @@ public abstract class HtmlConversionService {
         }, Collections.<String>emptySet());
     }
 
-    private static Renderable linksForDifferentFormats(final Request request) {
+    private static Renderable linksForDifferentFormats() {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -414,7 +416,7 @@ public abstract class HtmlConversionService {
                           .render(tableBody)
                         ._tbody()
                       ._table()
-                      .render(initHtmx(request))
+                      .render(initHtmx())
                       .div(class_("lds-dual-ring"))._div()
                       .div(class_("load-more"))
                           .if_(sseEnabled)
@@ -470,7 +472,7 @@ public abstract class HtmlConversionService {
         return os.toByteArray();
     }
     
-    private static Renderable initHtmx(final Request request) {
+    private static Renderable initHtmx() {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -565,6 +567,9 @@ public abstract class HtmlConversionService {
         };
     }
     
+    /**
+     * @param member  
+     */
     protected String extraClasses(AccessibleObject member) {
         return "";
     }

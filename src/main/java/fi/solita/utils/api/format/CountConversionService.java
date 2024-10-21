@@ -20,6 +20,9 @@ public class CountConversionService {
         return Long.toString(size(obj)).getBytes(Charset.forName("UTF-8"));
     }
     
+    /**
+     * @param obj  
+     */
     public byte[] serialize(Object obj) {
         return Integer.toString(1).getBytes(Charset.forName("UTF-8"));
     }

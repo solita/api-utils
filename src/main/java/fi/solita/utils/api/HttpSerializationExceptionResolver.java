@@ -13,6 +13,10 @@ public abstract class HttpSerializationExceptionResolver<REQ,RESP> implements Or
     
     protected abstract void respondError(RESP response, int status, String message);
     
+    /**
+     * @param request  
+     * @param handler 
+     */
     @SuppressWarnings("unused")
     public ModelAndView resolveException(REQ request, RESP response, Object handler, Exception ex) {
         for (HttpSerializers.InvalidValueException e: ExceptionUtils.findCauseFromHierarchy(ex, HttpSerializers.InvalidValueException.class)) {

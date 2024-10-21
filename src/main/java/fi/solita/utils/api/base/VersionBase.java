@@ -186,6 +186,9 @@ public abstract class VersionBase<REQ> {
         return includes.includesEverything ? t : resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(t));
     }
     
+    /**
+     * @param option  
+     */
     public FunctionProvider functionProvider(Option<REQ> option) {
         return new FunctionProvider();
     }

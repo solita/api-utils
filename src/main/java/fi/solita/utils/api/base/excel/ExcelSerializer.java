@@ -40,6 +40,10 @@ public abstract class ExcelSerializer<T> {
     
     public abstract Cells render(ExcelModule module, Row row, int columnIndex, T value);
     
+    /**
+     * @param module  
+     * @param type 
+     */
     public List<String> columns(ExcelModule module, Class<T> type) {
         return newList("");
     }
