@@ -205,7 +205,7 @@ public class JsonSerializers {
         };
     }
     public static final <T> JsonDeserializer<T> booleanDeserializer(Class<T> clazz, final Apply<Boolean,T> f) {
-        return new StdDeserializer<T>(Boolean.class) {
+        return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
                 return f.apply(p.getBooleanValue());

@@ -29,6 +29,9 @@ public abstract class GeneralExceptionResolver<REQ,RESP> implements Ordered {
     
     protected abstract ETags getETags(REQ request);
 
+    /**
+     * @param handler  
+     */
     @SuppressWarnings("unused")
     public ModelAndView resolveException(REQ request, RESP response, Object handler, Exception ex) {
         for (NotFoundException e: ExceptionUtils.findCauseFromHierarchy(ex, NotFoundException.class)) {

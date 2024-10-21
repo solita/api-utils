@@ -38,6 +38,10 @@ public abstract class CsvSerializer<T> {
 
     public abstract Cells render(CsvModule module, T value);
     
+    /**
+     * @param module  
+     * @param type 
+     */
     public List<String> columns(CsvModule module, Class<T> type) {
         return newList("");
     }
