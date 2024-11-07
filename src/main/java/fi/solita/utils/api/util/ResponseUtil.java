@@ -132,7 +132,7 @@ public abstract class ResponseUtil {
             DateTime now = DateTime.now(DateTimeZone.UTC);
             response.setDateHeader(Headers.DATE, now.getMillis());
             response.setDateHeader(Headers.EXPIRES, now.plus(age).getMillis());
-            response.setHeader(Headers.CACHE_CONTROL, "public, no-cache=\"Set-Cookie\", max-age=" + age.getStandardSeconds()); // no-cache=Set-Cookie, because it seems to be the only way to prevent CloudFront to cache set-cookie headers
+            response.setHeader(Headers.CACHE_CONTROL, "public, max-age=" + age.getStandardSeconds());
             response.setHeader(Headers.PRAGMA, "cache");
             response.addHeader(Headers.VARY, Headers.ACCEPT_ENCODING); // cache different compressions separately 
             response.addHeader(Headers.VARY, Headers.CACHE_CONTEXT); // this custom header can be used to split a cache by a known key 
