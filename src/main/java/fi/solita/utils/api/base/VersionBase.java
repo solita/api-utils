@@ -74,12 +74,12 @@ public abstract class VersionBase<REQ> {
         return new Serializers();
     }
     
-    public HttpSerializers httpSerializers() { return new HttpSerializers(serializers()); }
-    public JsonSerializers jsonSerializers() { return new JsonSerializers(serializers()); }
-    public abstract HtmlSerializers htmlSerializers();
-    public CsvSerializers csvSerializers() { return new CsvSerializers(serializers()); }
-    public ExcelSerializers excelSerializers() { return new ExcelSerializers(serializers()); }
-    public XmlSerializers xmlSerializers() { return new XmlSerializers(serializers()); }
+    protected HttpSerializers httpSerializers() { return new HttpSerializers(serializers()); }
+    protected JsonSerializers jsonSerializers() { return new JsonSerializers(serializers()); }
+    protected abstract HtmlSerializers htmlSerializers();
+    protected CsvSerializers csvSerializers() { return new CsvSerializers(serializers()); }
+    protected ExcelSerializers excelSerializers() { return new ExcelSerializers(serializers()); }
+    protected XmlSerializers xmlSerializers() { return new XmlSerializers(serializers()); }
     
     public final HttpModule httpModule = new HttpModule(httpSerializers().converters());
     public final JsonModule jsonModule = new JsonModule(jsonSerializers().serializers(), jsonSerializers().keySerializers(), jsonSerializers().deserializers(), jsonSerializers().rawTypes());
@@ -102,8 +102,15 @@ public abstract class VersionBase<REQ> {
     };
     
     @SuppressWarnings("unchecked")
-    public ResolvableMemberProvider<REQ> resolvableMemberProvider() {
+    protected ResolvableMemberProvider<REQ> resolvableMemberProvider() {
         return (ResolvableMemberProvider<REQ>) ResolvableMemberProvider.NONE;
+    }
+    
+    /**
+     * @param option
+     */
+    protected FunctionProvider functionProvider(Option<REQ> option) {
+        return new FunctionProvider();
     }
     
     public Filtering filtering(REQ req) {
@@ -184,13 +191,6 @@ public abstract class VersionBase<REQ> {
     
     public final <T> T filter(REQ req, Includes<T> includes, T t) {
         return includes.includesEverything ? t : resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(t));
-    }
-    
-    /**
-     * @param option  
-     */
-    public FunctionProvider functionProvider(Option<REQ> option) {
-        return new FunctionProvider();
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
