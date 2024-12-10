@@ -114,7 +114,7 @@ public class PngConversionService {
     }
 
     public byte[] render(int imageWidth, int imageHeight, URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) throws IOException {
-        Style layerStyle = find(layerName, defaultStyles).get();
+        Style layerStyle = find(layerName, defaultStyles).orElse(() -> {throw new RuntimeException("Couldn't find layer with name: " + layerName);});
         logger.debug("Fetching geojson...");
         FeatureJSON io = new FeatureJSON();
         Reader reader = new InputStreamReader(fetchGeojson(uri, apikey), Charset.forName("UTF-8"));
