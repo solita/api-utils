@@ -73,7 +73,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(f.apply(value).toString())
                     ._span();
             }
@@ -83,7 +83,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(f.apply(value))
                     ._span();
             }
@@ -94,7 +94,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write((int)f.apply(value))
                     ._span();
             }
@@ -104,7 +104,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(f.apply(value))
                     ._span();
             }
@@ -114,7 +114,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(Long.toString(f.apply(value)))
                     ._span();
             }
@@ -124,7 +124,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(Double.toString(f.apply(value)))
                     ._span();
             }
@@ -134,7 +134,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(f.apply(value).toString())
                     ._span();
             }
@@ -144,7 +144,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                       .write(f.apply(value).toPlainString())
                     ._span();
             }
@@ -155,7 +155,7 @@ public abstract class HtmlSerializers {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
                 Boolean x = f.apply(value);
-                html.span(class_(("type-" + cssTypeName).intern()).title(x ? "true" : "false"))
+                html.span(class_(("t-" + cssTypeName).intern()).title(x ? "true" : "false"))
                       .write(x ? "&#9989;" : "&#9940;", false)
                     ._span();
             }
@@ -166,7 +166,7 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(class_(("type-" + cssTypeName).intern()))
+                html.span(class_(("t-" + cssTypeName).intern()))
                         .render(module.toRenderable(f.apply(value)))
                     ._span();
             }
@@ -180,10 +180,10 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(lang("fi").class_(("type-" + typeClassSuffix).intern()).title(docDescription(value).getOrElse(null)))
+                html.span(lang("fi").class_(("t-" + typeClassSuffix).intern()).title(docDescription(value).getOrElse(null)))
                         .write(valueProducer.apply(value))
                     ._span()
-                    .span(lang("en").class_(("type-" + typeClassSuffix).intern()).title(docDescription_en(value).getOrElse(null)))
+                    .span(lang("en").class_(("t-" + typeClassSuffix).intern()).title(docDescription_en(value).getOrElse(null)))
                         .write(useValueAlsoForEnglish ? valueProducer.apply(value) : docName_en(value).getOrElse(valueProducer.apply(value)))
                     ._span();
             }
@@ -257,7 +257,7 @@ public abstract class HtmlSerializers {
         public void renderOn(ResolvedMember value, HtmlCanvas html, HtmlModule module) throws IOException {
             try {
                 String content = SECTION_END.matcher(SECTION_START.matcher(new String(value.getData(), Charset.forName("UTF-8"))).replaceFirst("")).replaceFirst("");
-                html.span(class_("type-resolved"))
+                html.span(class_("t-re"))
                       .write(content, false)
                     ._span();
             } catch (Exception e) {
@@ -369,11 +369,11 @@ public abstract class HtmlSerializers {
         @Override
         public void renderOn(URI value, HtmlCanvas html, HtmlModule module) throws IOException {
             if (value.getPath().endsWith(".svg") || value.getPath().endsWith(".png") || value.getPath().endsWith(".gif") || value.getPath().endsWith(".jpg")) {
-                html.span(class_("type-uri"))
+                html.span(class_("t-uri"))
                       .img(src(s.ser(value)).alt(s.ser(value)))
                     ._span();
             } else {
-                html.span(class_("type-uri"))
+                html.span(class_("t-uri"))
                       .a(href(s.ser(value)))
                         .write(s.ser(value))
                       ._a()
@@ -385,7 +385,7 @@ public abstract class HtmlSerializers {
     private final HtmlSerializer<UUID> uuid = new HtmlSerializer<UUID>() {
         @Override
         public void renderOn(UUID value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-uuid"))
+            html.span(class_("t-uuid"))
                   .write(s.ser(value))
                 ._span();
         }
@@ -405,7 +405,7 @@ public abstract class HtmlSerializers {
         
         @Override
         public void renderOn(DateTime value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.span(class_("type-datetime").title(isBeginOfTime(value) || isEndOfAllTimes(value) ? null : "UTC: " + s.ser(value)).add("x-data-instant", RequestUtil.instant2string(value)))
+            html.span(class_("t-dt").title(isBeginOfTime(value) || isEndOfAllTimes(value) ? null : "UTC: " + s.ser(value)).add("x-data-dt", RequestUtil.instant2string(value)))
                   .write(isBeginOfTime(value) || isEndOfAllTimes(value) ? "∞" : s.serZoned(value))
                 ._span();
         }
@@ -415,7 +415,7 @@ public abstract class HtmlSerializers {
         @Override
         public void renderOn(Interval value, HtmlCanvas html, HtmlModule module) throws IOException {
             Pair<DateTime,DateTime> i = s.ser(value);
-            html.span(class_("type-interval"))
+            html.span(class_("t-i"))
                   .render(module.toRenderable(i.left()))
                   .write(" - ")
                   .render(module.toRenderable(i.right()))
