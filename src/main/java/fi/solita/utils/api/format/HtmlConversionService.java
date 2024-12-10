@@ -643,8 +643,8 @@ public abstract class HtmlConversionService {
         + "header, footer { display: flex; padding: 0.5em; }"
         + "h1             { flex: 1; }"
         + "header .page   { padding-left: 1em; }"
-        + "header .type-datetime, header .type-oid, header .type-rectangle { font-size: small; font-style: italic; padding: 1em; }"
-        + "header .type-rectangle { color: #bbb; }"
+        + "header .t-dt, header .type-oid, header .t-rec { font-size: small; font-style: italic; padding: 1em; }"
+        + "header .t-rec  { color: #bbb; }"
         + ".lang-selector { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
         
         + "footer *       { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
@@ -717,10 +717,10 @@ public abstract class HtmlConversionService {
         + "iframe         { position: absolute; right: 0; visibility: hidden; margin-top: 1px; height: 45em; width: 45em; z-index: -1; background: white; border: 1px solid #ddd; }"
         
         + "td.null        { background: #f8f8f8; }"
-        + ".type-interval, .type-point, .type-kmetaisyys, .type-ratakmetaisyys, .type-ratakmvali { white-space: nowrap; }"
-        + ".type-multiline, .type-multipolygon { overflow: hidden; height: 1em; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
-        + ".type-multiline:hover, .type-multipolygon:hover { overflow: visible; height: auto; display: inline; }"
-        + ".type-resolved table { display: table; }"
+        + ".t-i, .t-p, .t-k, .t-r, .t-v { white-space: nowrap; }"
+        + ".t-ml, .t-mg   { overflow: hidden; height: 1em; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }"
+        + ".t-ml:hover, .t-mg:hover { overflow: visible; height: auto; display: inline; }"
+        + ".t-re table { display: table; }"
         
         + ".color-red      { color: red; }"
         + ".color-green    { color: green; }"
@@ -747,7 +747,7 @@ public abstract class HtmlConversionService {
         
         + mkString(" ", sequence(
              ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
-            + "  h1 .type-datetime { display: block; }"
+            + "  h1 .t-dt       { display: block; }"
             + "  table          { display: flex; position: relative; width: 100%; white-space: nowrap; counter-reset: none; }"
             + "  table tr       { border-top: none; counter-increment: none; }"
             + "  thead          { display: inline-block; font-size: small; max-width: 33%; min-width: 5em; overflow-x: auto; }"
@@ -855,7 +855,7 @@ public abstract class HtmlConversionService {
     
     public static final String initTableFilter(String contextPath) {
         return "if (window.TableFilter) {"
-             + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.type-resolved')).forEach(function(x) {"
+             + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.t-re')).forEach(function(x) {"
              + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/', extensions: [{name: 'sort'}] });"
              + "    tf.init();"
              + "    x.addEventListener('htmx:afterSwap', function(ev) { tf.filter(); });"

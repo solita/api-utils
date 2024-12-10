@@ -19,6 +19,7 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.poi.util.IOUtils;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import ar.com.hjg.pngj.FilterType;
 import fi.solita.utils.api.util.RequestUtil;
+import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import it.geosolutions.imageio.plugins.png.PNGWriter;
@@ -114,7 +116,11 @@ public class PngConversionService {
     }
 
     public byte[] render(int imageWidth, int imageHeight, URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) throws IOException {
-        Style layerStyle = find(layerName, defaultStyles).get();
+        Style layerStyle = find(layerName, defaultStyles).orElse(new ApplyZero<Style>() {
+            @Override
+            public Style get() {
+                throw new RuntimeException("Couldn't find layer with name: " + layerName);
+            } });
         logger.debug("Fetching geojson...");
         FeatureJSON io = new FeatureJSON();
         Reader reader = new InputStreamReader(fetchGeojson(uri, apikey), Charset.forName("UTF-8"));
