@@ -28,7 +28,6 @@ import static org.rendersnake.HtmlAttributesFactory.rowspan;
 import static org.rendersnake.HtmlAttributesFactory.type;
 import static org.rendersnake.HtmlAttributesFactory.value;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.AccessibleObject;
@@ -44,6 +43,7 @@ import java.util.regex.Pattern;
 import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
+import org.springframework.util.FastByteArrayOutputStream;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.Includes.Include;
@@ -390,7 +390,7 @@ public abstract class HtmlConversionService {
     }
     
     private <T> byte[] serialize(HtmlTitle title, Renderable tableHeader, Renderable tableBody, Request request, int rows, Includes<T> includes) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
+        FastByteArrayOutputStream os = new FastByteArrayOutputStream();
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
         HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
         
@@ -469,7 +469,7 @@ public abstract class HtmlConversionService {
             throw new RuntimeException(e);
         }
         
-        return os.toByteArray();
+        return os.toByteArrayUnsafe();
     }
     
     private static Renderable initHtmx() {
