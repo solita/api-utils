@@ -68,7 +68,9 @@ public class WMTS {
                                 .replace("{TileRow}", Integer.toString(i))
                                 .replace("{TileCol}", Integer.toString(j))
                                 .replace("&amp;", "&")
-                                .replace("?time={time}", ""));
+                                .replace("time={time}", "")
+                                .replace("?&", "?")
+                                .replaceAll("[?]$", ""));
                     }
                 }
             }
