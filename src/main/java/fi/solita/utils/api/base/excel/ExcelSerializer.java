@@ -24,7 +24,7 @@ public abstract class ExcelSerializer<T> {
             super(cells, stringRepresentation);
         }
         
-        private Cells(List<Cell> cells, Option<CharSequence> stringRepresentation, Option<String> unit, List<String> headers) {
+        public Cells(List<Cell> cells, Option<CharSequence> stringRepresentation, Option<String> unit, List<String> headers) {
             super(cells, stringRepresentation, unit, headers);
         }
         

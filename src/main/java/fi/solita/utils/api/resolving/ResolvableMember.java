@@ -8,7 +8,9 @@ import static fi.solita.utils.functional.Functional.fold;
 import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 
 import fi.solita.utils.api.resolving.ResolvableMemberProvider.Type;
@@ -23,11 +25,11 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
     public static final SortedSet<PropertyName> ALL_DATA = newSortedSet(Ordering.Natural(), newList(PropertyName.of("")));
     
     public final MetaNamedMember<? super T,?> original;
-    private final SortedSet<PropertyName> resolvablePropertyNames;
+    private final Set<PropertyName> resolvablePropertyNames;
 
     public final Type type;
 
-    public ResolvableMember(MetaNamedMember<? super T,?> original, SortedSet<PropertyName> resolvablePropertyNames, Type type) {
+    public ResolvableMember(MetaNamedMember<? super T,?> original, Set<PropertyName> resolvablePropertyNames, Type type) {
         this.original = original;
         this.resolvablePropertyNames = resolvablePropertyNames;
         this.type = type;
@@ -52,13 +54,13 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
             throw new RedundantPropertiesException(resolvablePropertyNames);
         }
         
-        SortedSet<PropertyName> newSet = newSortedSet(concat(resolvablePropertyNames, other.resolvablePropertyNames));
+        Set<PropertyName> newSet = new LinkedHashSet<PropertyName>(newList(concat(resolvablePropertyNames, other.resolvablePropertyNames)));
         Assert.equal(resolvablePropertyNames.size() + other.resolvablePropertyNames.size(), newSet.size());
         
         return new ResolvableMember<T>(original, newSet, type);
     }
     
-    public SortedSet<PropertyName> getResolvablePropertyNames() {
+    public Set<PropertyName> getResolvablePropertyNames() {
         return resolvablePropertyNames;
     }
     
