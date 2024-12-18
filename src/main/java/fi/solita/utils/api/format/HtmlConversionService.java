@@ -151,21 +151,20 @@ public abstract class HtmlConversionService {
     }
     
     public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Includes<T> members) {
-        return serialize(title, tableHeader(members), regularBody(obj, members), request, obj.size(), members);
+        return serialize(title, tableHeader(members.includesFromColumnFiltering), regularBody(obj, members.includesFromColumnFiltering), request, obj.size(), members);
     }
     
     public <K,V> byte[] serialize(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members) {
-        return serialize(title, tableHeader(members), regularBody(flatten(obj.values()), members), request, obj.size(), members);
+        return serialize(title, tableHeader(members.includesFromColumnFiltering), regularBody(flatten(obj.values()), members.includesFromColumnFiltering), request, obj.size(), members);
     }
     
     public <K,V> byte[] serializeSingle(Request request, HtmlTitle title, final Map<K,V> obj, Includes<V> members) {
-        return serialize(title, tableHeader(members), regularBody(obj.values(), members), request, obj.size(), members);
+        return serialize(title, tableHeader(members.includesFromColumnFiltering), regularBody(obj.values(), members.includesFromColumnFiltering), request, obj.size(), members);
     }
     
     public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members) {
-        Includes<V> headers = (Includes<V>)members;
         // empty header if there's no simple key. This is a bit too hackish...
-        headers = new Includes<V>(newList(cons(new MetaNamedMember<V, Object>() {
+        Includes<V> headers = new Includes<V>(newList(cons(new MetaNamedMember<V, Object>() {
             @Override
             public Object apply(V t) {
                 throw new UnsupportedOperationException();
@@ -184,9 +183,8 @@ public abstract class HtmlConversionService {
     
     @SuppressWarnings("unchecked")
     public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members, final MetaNamedMember<? super V,?> key) {
-        Includes<V> headers = (Includes<V>)members;
-        members = new Includes<V>(newList(filter(not(equalTo((MetaNamedMember<V,Object>)key)), members)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
-        headers = new Includes<V>(newList(cons((MetaNamedMember<V,Object>)key, members)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        members = new Includes<V>(newList(filter(not(equalTo((MetaNamedMember<V,Object>)key)), members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        Includes<V> headers = new Includes<V>(newList(cons((MetaNamedMember<V,Object>)key, members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
         return serialize(title, tableHeader(headers), mapBody(obj, members), request, obj.size(), members);
     }
     
@@ -614,7 +612,7 @@ public abstract class HtmlConversionService {
                             }
                           })
                           ._tr()
-                          .render(regularBody(tail(values), members));
+                          .render(regularBody(tail(values), members.includesFromColumnFiltering));
                   }
               }
           };
