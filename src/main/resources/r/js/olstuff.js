@@ -567,8 +567,7 @@ var olstuff = function(constants, util) {
             return group;
         },
         
-        taustaGroup: function(opacity, baseUrl) {
-            var parser = new ol.format.WMTSCapabilities();
+        taustaGroup: function(opacity, baseUrl, includeMML) {
             var osm = ret.tileLayer('OpenStreetMap', new ol.source.OSM());
             osm.setVisible(true);
             var group = new ol.layer.Group({
@@ -581,36 +580,39 @@ var olstuff = function(constants, util) {
                 fold: 'close'
             });
             
-            var createLayer = function(matrix, host) { return function(response) {
-                var result = parser.read(response);
-                result.Contents.Layer.map(function(l) {
-                    var id = l.Identifier;
-                    var tms = l.TileMatrixSetLink.map(function(t) { return t.TileMatrixSet; });
-                    if (tms.indexOf(matrix) > -1) {
-                        var options = ol.source.WMTS.optionsFromCapabilities(result, {layer: id, matrixSet: matrix});
-                        if (host !== null) {
-                            options.urls[0] = options.urls[0].replace(/[-a-z]+\.[a-z]+\.local/, host)
-                                                             .replace(/\d+\.\d+\.\d+\.\d+/, host)
-                                                             .replace(/[^.]+.maanmittauslaitos.fi/, host);
+            if (includeMML) {
+                var parser = new ol.format.WMTSCapabilities();
+                var createLayer = function(matrix, host) { return function(response) {
+                    var result = parser.read(response);
+                    result.Contents.Layer.map(function(l) {
+                        var id = l.Identifier;
+                        var tms = l.TileMatrixSetLink.map(function(t) { return t.TileMatrixSet; });
+                        if (tms.indexOf(matrix) > -1) {
+                            var options = ol.source.WMTS.optionsFromCapabilities(result, {layer: id, matrixSet: matrix});
+                            if (host !== null) {
+                                options.urls[0] = options.urls[0].replace(/[-a-z]+\.[a-z]+\.local/, host)
+                                                                 .replace(/\d+\.\d+\.\d+\.\d+/, host)
+                                                                 .replace(/[^.]+.maanmittauslaitos.fi/, host);
+                            }
+                            group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), opacity));
                         }
-                        group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), opacity));
-                    }
-                });
-              };
-            };
-            
-            var maasto     = baseUrl + '/maasto/wmts/1.0.0/WMTSCapabilities.xml';
-            var teema      = baseUrl + '/teema/wmts/1.0.0/WMTSCapabilities.xml';
-            var kiinteisto = baseUrl + '/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
-            fetch(maasto, {credentials: 'include'})    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
-                                                       .then(createLayer('ETRS-TM35FIN', baseUrl))
-                                                       .catch(console.log);
-            fetch(teema, {credentials: 'include'})     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
-                                                       .then(createLayer('ETRS-TM35FIN', baseUrl))
-                                                       .catch(console.log);
-            fetch(kiinteisto, {credentials: 'include'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
-                                                       .then(createLayer('ETRS-TM35FIN', baseUrl))
-                                                       .catch(console.log);
+                    });
+                  };
+                };
+                
+                var maasto     = baseUrl + '/maasto/wmts/1.0.0/WMTSCapabilities.xml';
+                var teema      = baseUrl + '/teema/wmts/1.0.0/WMTSCapabilities.xml';
+                var kiinteisto = baseUrl + '/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
+                fetch(maasto, {credentials: 'include'})    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                           .then(createLayer('ETRS-TM35FIN', baseUrl))
+                                                           .catch(console.log);
+                fetch(teema, {credentials: 'include'})     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                           .then(createLayer('ETRS-TM35FIN', baseUrl))
+                                                           .catch(console.log);
+                fetch(kiinteisto, {credentials: 'include'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                                                           .then(createLayer('ETRS-TM35FIN', baseUrl))
+                                                           .catch(console.log);
+            }
             
             return group;
         },
