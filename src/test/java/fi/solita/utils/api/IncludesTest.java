@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.SortedSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class IncludesTest {
         }
 
         @Override
-        public void mutateResolvable(Object request, SortedSet<PropertyName> propertyNames, Object apply) {
+        public void mutateResolvable(Object request, Set<PropertyName> propertyNames, Object apply) {
         }
     };
     

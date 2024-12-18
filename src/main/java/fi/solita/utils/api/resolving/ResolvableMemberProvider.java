@@ -14,8 +14,8 @@ import static fi.solita.utils.functional.Predicates.not;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,7 +66,7 @@ public abstract class ResolvableMemberProvider<REQ> {
         }
         
         @Override
-        public void mutateResolvable(Object request, SortedSet<PropertyName> propertyNames, Object apply) {
+        public void mutateResolvable(Object request, Set<PropertyName> propertyNames, Object apply) {
             throw new UnsupportedOperationException();
         }
     };
@@ -78,7 +78,7 @@ public abstract class ResolvableMemberProvider<REQ> {
     /**
      * Aaargh, mutable, but would need Lenses here to update a single value...
      */
-    public abstract void mutateResolvable(REQ request, SortedSet<PropertyName> propertyNames, Object object);
+    public abstract void mutateResolvable(REQ request, Set<PropertyName> propertyNames, Object object);
     
     public <K,T> Map<K,T> mutateResolvablesSingle(REQ request, Includes<T> includes, Map<K,T> ts) {
         if (includes.includesEverything || !exists(ResolvableMemberProvider_.isResolvableMember, includes)) {
@@ -137,7 +137,7 @@ public abstract class ResolvableMemberProvider<REQ> {
         }
         
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
-            final SortedSet<PropertyName> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
+            final Set<PropertyName> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
             try {
                 List<Future<Void>> futures = pool.invokeAll(newList(map(new Apply<Object, Callable<Void>>() {
                     @Override
