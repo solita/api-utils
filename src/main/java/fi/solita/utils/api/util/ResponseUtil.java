@@ -134,7 +134,6 @@ public abstract class ResponseUtil {
             response.setDateHeader(Headers.EXPIRES, now.plus(age).getMillis());
             response.setHeader(Headers.CACHE_CONTROL, "public, max-age=" + age.getStandardSeconds());
             response.setHeader(Headers.PRAGMA, "cache");
-            response.addHeader(Headers.VARY, Headers.ACCEPT_ENCODING); // cache different compressions separately 
             response.addHeader(Headers.VARY, Headers.CACHE_CONTEXT); // this custom header can be used to split a cache by a known key 
         }
     }
