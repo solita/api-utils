@@ -30,9 +30,18 @@ public class SupportServiceBaseTest {
     }
     
     @Test
-    public void relatePeriod() {
+    public void relatePeriod_inaccurate() {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.days(42);
+        
+        assertEquals(someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, false, somePeriod));
+        assertEquals(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, true, somePeriod));
+    }
+    
+    @Test
+    public void relatePeriod_accurate() {
+        DateTime someDateTime = DateTime.now();
+        Period somePeriod = Period.minutes(42);
         
         assertEquals(someDateTime.plus(somePeriod), SupportServiceBase.relate(someDateTime, false, somePeriod));
         assertEquals(someDateTime.minus(somePeriod), SupportServiceBase.relate(someDateTime, true, somePeriod));
@@ -83,9 +92,18 @@ public class SupportServiceBaseTest {
     }
     
     @Test
-    public void intervalForRedirectPeriod() {
+    public void intervalForRedirectPeriod_inaccurate() {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.days(42);
+        
+        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay()), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false));
+        assertEquals(new Interval(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true));
+    }
+    
+    @Test
+    public void intervalForRedirectPeriod_accurate() {
+        DateTime someDateTime = DateTime.now();
+        Period somePeriod = Period.minutes(42);
         
         assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod)), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false));
         assertEquals(new Interval(someDateTime.minus(somePeriod), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true));
@@ -94,8 +112,8 @@ public class SupportServiceBaseTest {
     @Test
     public void intervalForRedirect() {
         DateTime someDateTime = DateTime.now();
-        Duration someDuration = Duration.standardDays(1);
-        Period somePeriod = Period.days(42);
+        Duration someDuration = Duration.standardHours(1);
+        Period somePeriod = Period.hours(1);
         
         assertEquals(new Interval(someDateTime.plus(someDuration), someDateTime.plus(somePeriod)), SupportServiceBase.intervalForRedirect(someDateTime, Pair.of(Either.<Duration,Period>left(someDuration), false), Pair.of(Either.<Duration,Period>right(somePeriod), false)));
         assertEquals(new Interval(someDateTime.minus(somePeriod), someDateTime.minus(someDuration)), SupportServiceBase.intervalForRedirect(someDateTime, Pair.of(Either.<Duration,Period>right(somePeriod), true), Pair.of(Either.<Duration,Period>left(someDuration), true)));

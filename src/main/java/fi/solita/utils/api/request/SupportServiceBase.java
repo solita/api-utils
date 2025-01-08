@@ -99,8 +99,13 @@ public class SupportServiceBase {
         return negate ? now.minus(d) : now.plus(d);
     }
     
+    static boolean containsMoreAccurateThanDays(Period p) {
+        return p.getHours() != 0 || p.getMinutes() != 0 || p.getSeconds() != 0 || p.getMillis() != 0;
+    }
+    
     static DateTime relate(DateTime now, boolean negate, Period p) {
-        return negate ? now.minus(p) : now.plus(p);
+        return negate ? (containsMoreAccurateThanDays(p) ? now.minus(p) : now.minus(p).withTimeAtStartOfDay())
+                      : (containsMoreAccurateThanDays(p) ? now.plus(p) : now.plus(p).plusDays(1).withTimeAtStartOfDay());
     }
     
     static Pair<Either<Duration,Period>,Boolean> parse(String durationOrPeriod) throws InvalidValueException {
@@ -121,11 +126,11 @@ public class SupportServiceBase {
     }
     
     static Interval intervalForRedirect(DateTime now, Duration duration, boolean negate) {
-        return negate ? new Interval(now.minus(duration), now) : new Interval(now, now.plus(duration));
+        return negate ? new Interval(relate(now, true, duration), now) : new Interval(now, relate(now, false, duration));
     }
     
     static Interval intervalForRedirect(DateTime now, Period period, boolean negate) {
-        return negate ? new Interval(now.minus(period), now) : new Interval(now, now.plus(period));
+        return negate ? new Interval(relate(now, true, period), now) : new Interval(now, relate(now, false, period));
     }
     
     static Interval intervalForRedirect(DateTime now, Pair<Either<Duration, Period>, Boolean> start, Pair<Either<Duration, Period>, Boolean> end) {
