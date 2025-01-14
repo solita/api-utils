@@ -7,6 +7,7 @@ import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.head;
@@ -270,6 +271,8 @@ public class ChartConversionService {
         List<Map<Object,Object>> data = newMutableList();
         List<String> yNames = emptyList();
         if (!isEmpty(members)) {
+            objs = newList(objs); // don't iterate more than once
+            
             for (MetaNamedMember<T, ?> m: members) {
                 Class<?> finalType = resolveType(m);
                 Class<?> propertyType = resolvePropertyType(m);
@@ -320,7 +323,7 @@ public class ChartConversionService {
                     }
                 }
             } else {
-                List<T> objs_ = newList(objs);
+                Iterable<T> objs_ = objs;
                 yNames = newList(sort(flatMap(new Apply<MetaNamedMember<T,Object>,Iterable<String>>() {
                     @Override
                     public Iterable<String> apply(MetaNamedMember<T, Object> m) {
@@ -386,8 +389,11 @@ public class ChartConversionService {
                                              map(categoryValues(categoryObjects), tailMembers))));
                         }
                     } else {
-                        for (Object category: xIsInstant ? sort((Iterable<DateTime>)(Object)xValues) : xValues) {
-                            List<T> categoryObjects = newList(filter(x.andThen(equalTo(category)), objs));
+                        @SuppressWarnings("unchecked")
+                        Iterable<?> categories = xIsInstant ? newList(sort((Iterable<DateTime>)(Object)xValues)) : xValues;
+                        Map<Object, List<T>> byCat = groupBy(x, objs);
+                        for (Object category: categories) {
+                            List<T> categoryObjects = find(category, byCat).getOrElse(emptyList());
                             data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)category).getMillis() : category,
                                          reduce(Monoids.mapCombine(SemiGroups.longSum),
                                              map(categoryValues(categoryObjects), tail(members)))));
