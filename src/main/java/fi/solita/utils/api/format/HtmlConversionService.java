@@ -192,10 +192,6 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected String base(Request request, String contextPath) {
-        return ServletRequestUtil.getRequestURI(request).toString().replaceFirst("(https?://[^/?]+)" + contextPath + "/.*", "$1" + contextPath + "/");
-    }
-    
     protected Renderable pageHead(final HtmlTitle title, final Request request) {
         return new Renderable() {
             @Override
@@ -213,7 +209,6 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
-                    .base(href(base(request, contextPath)))
                     .title().write(title.plainTextTitle)._title()
                     .style()
                         .write(styles(), false)
