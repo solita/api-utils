@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 
+import fi.solita.utils.functional.Pred;
+import fi.solita.utils.functional.Tuple;
+import fi.solita.utils.functional.Tuple3;
 import fi.solita.utils.functional.Tuple4;
 
 public class WMTS {
@@ -45,7 +48,7 @@ public class WMTS {
         }
     }
     
-    public static List<String> luoWmtsSeedUrlit(String time, String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers) {
+    public static List<String> luoWmtsSeedUrlit(String time, String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers, Pred<Tuple3<Integer,Integer,Integer>> acceptSetRowCol) {
         List<String> ret = newMutableList();
         
         for (int taso: newList(WMTS.MIN_LAYER_ID)) {
@@ -55,22 +58,24 @@ public class WMTS {
             for (Tuple4<String, String, String, String> layer: wmtsLayers) {
                 for (int i: range(0, tileja)) {
                     for (int j: range(0, tileja)) {
-                        ret.add(
-                            WMTS.LAYER_URL_TEMPLATE
-                                .replace("{{name}}", layer._1)
-                                .replace("{{time}}", time)
-                                .replace("{{path}}", layer._2)
-                                .replace("{{qsPreTime}}", "")
-                                .replace("{{qsPostTime}}", layer._4)
-                                .replace("{{url}}", "latest/")
-                                .replace("{TileMatrixSet}", tilematrixset)
-                                .replace("{TileMatrix}", Integer.toString(taso))
-                                .replace("{TileRow}", Integer.toString(i))
-                                .replace("{TileCol}", Integer.toString(j))
-                                .replace("&amp;", "&")
-                                .replace("time={time}", "")
-                                .replace("?&", "?")
-                                .replaceAll("[?]$", ""));
+                        if (acceptSetRowCol.apply(Tuple.of(taso, i, j))) {
+                            ret.add(
+                                WMTS.LAYER_URL_TEMPLATE
+                                    .replace("{{name}}", layer._1)
+                                    .replace("{{time}}", time)
+                                    .replace("{{path}}", layer._2)
+                                    .replace("{{qsPreTime}}", "")
+                                    .replace("{{qsPostTime}}", layer._4)
+                                    .replace("{{url}}", "latest/")
+                                    .replace("{TileMatrixSet}", tilematrixset)
+                                    .replace("{TileMatrix}", Integer.toString(taso))
+                                    .replace("{TileRow}", Integer.toString(i))
+                                    .replace("{TileCol}", Integer.toString(j))
+                                    .replace("&amp;", "&")
+                                    .replace("time={time}", "")
+                                    .replace("?&", "?")
+                                    .replaceAll("[?]$", ""));
+                        }
                     }
                 }
             }
