@@ -309,11 +309,12 @@ var olstuff = function(constants, util) {
                 });
             },
             
-            line: function(width, color) {
+            line: function(width, color, lineDash) {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
                         color: color,
-                        width: width
+                        width: width,
+                        lineDash: lineDash
                     })
                 });
             },

@@ -54,7 +54,6 @@ import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
-import fi.solita.utils.api.util.ServletRequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
@@ -192,7 +191,7 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected Renderable pageHead(final HtmlTitle title, final Request request) {
+    protected Renderable pageHead(final HtmlTitle title) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -394,7 +393,7 @@ public abstract class HtmlConversionService {
             html.html()
                 .render(DocType.HTML5)
                 .head()
-                  .render(pageHead(title, request))
+                  .render(pageHead(title))
                 ._head()
                 .body(class_(rows == 1 ? "singleton" : "").add("hx-ext", "persist-fields,refresh-href,target-top"))
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
