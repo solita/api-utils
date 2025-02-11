@@ -7,12 +7,14 @@ import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
 
+import fi.solita.utils.api.NestedMember;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Predicates;
+import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class NestedMember<S,T> implements MetaNamedMember<S,T> {
@@ -46,6 +48,11 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
 
     public static final <S,T> MetaNamedMember<S,T> unchecked(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child) {
         return new NestedMember<S,T>(parent, child, Function.id(), false);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionItFlatType(MetaNamedMember<S, ? extends Option<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
+        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, (Function1<Object,Object>)(Object)Transformers.flatten(), true);
     }
 
     private NestedMember(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child, Function1<Object,Object> parentModifier, boolean flatten) {
