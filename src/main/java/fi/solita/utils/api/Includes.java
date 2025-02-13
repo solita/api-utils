@@ -27,6 +27,7 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.greaterThan;
 import static fi.solita.utils.functional.Predicates.not;
 
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -39,12 +40,14 @@ import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.types.PropertyName_;
+import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function;
+import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Transformers;
@@ -231,13 +234,21 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     public static <T> List<MetaNamedMember<? super T, ?>> withNestedMembers(Collection<? extends MetaNamedMember<? super T, ?>> members, Includes.Include include, Builder<?>... builders) {
         List<MetaNamedMember<? super T, ?>> ret = newMutableList();
         for (MetaNamedMember<? super T, ?> member: members) {
+            Type actualType = ClassUtils.getGenericType(member.getMember());
             ret.add(member);
-            for (Builder<?> builder: MemberUtil.findBuilderFor(newList(builders), MemberUtil.memberClassUnwrappingGeneric(member))) {
+            for (Builder<?> builder: MemberUtil.findBuilderFor(newList(builders), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member))) {
                 if (include == Includes.Include.NoBuildable) {
                     ret.remove(member);
                 }
                 for (MetaNamedMember<?, ?> nestedMember: withNestedMembers((Collection<? extends MetaNamedMember<T, ?>>) builder.getMembers(), include, newArray(Builder.class, remove(builder, builders)))) {
-                    ret.add(NestedMember.unchecked(member, nestedMember));
+                    Class<?> actualNestedType = MemberUtil.actualTypeUnwrappingOptionAndEither(nestedMember);
+                    boolean flatten = Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(actualNestedType);
+                    NestedMember<? super T,?> mem = NestedMember.unchecked(member, nestedMember, flatten);
+                    if (Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(ClassUtils.typeClass(ClassUtils.getFirstTypeArgument(actualType).getOrElse(void.class)))) {
+                        // parent returns iterable of iterable -> flatten
+                        mem = mem.modifyParent((Function1<Object,Object>)(Object)Transformers.flatten());
+                    }
+                    ret.add(mem);
                     if (include == Includes.Include.OnlyLeaf) {
                         ret.remove(member);
                     }

@@ -1,6 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Predicates.not;
@@ -46,8 +47,8 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return (NestedMember<S, Iterable<T>>) new NestedMember<S,T>(parent, child, Function.id(), false);
     }
 
-    public static final <S,T> MetaNamedMember<S,T> unchecked(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child) {
-        return new NestedMember<S,T>(parent, child, Function.id(), false);
+    public static final <S,T> NestedMember<S,T> unchecked(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child, boolean flatten) {
+        return new NestedMember<S,T>(parent, child, Function.id(), flatten);
     }
     
     @SuppressWarnings("unchecked")
@@ -65,25 +66,19 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     @SuppressWarnings("unchecked")
     @Override
     public T apply(S t) {
-        // Hmm, I somehow feel bad about this...
         Object u = parentModifier.apply(parent.apply(t));
         if (u == null) {
             return null;
         } else if (u instanceof Option) {
-            if (flatten) {
-                return (T) Functional.flatten((Iterable<? extends Iterable<? extends T>>) filter(not(Predicates.isNull()), map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u)));
-            } else if (((Option<?>) u).isDefined()) {
-                return (T)Option.of(((MetaNamedMember<Object,T>)child).apply(((Option<?>)u).get()));
+            if (((Option<?>) u).isDefined()) {
+                Iterable<T> xs = map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u);
+                return (T)headOption(filter(not(Predicates.isNull()), flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs));
             } else {
                 return (T)None();
             }
         } else if (u instanceof Iterable) {
-            // not sure if this is smart...
-            if (flatten) {
-                return (T) Functional.flatten((Iterable<? extends Iterable<? extends T>>) filter(not(Predicates.isNull()), map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u)));
-            } else {
-                return (T) filter(not(Predicates.isNull()), map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u));
-            }
+            Iterable<T> xs = map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u);
+            return (T) filter(not(Predicates.isNull()), flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs);
         } else {
             return ((MetaNamedMember<Object,T>)child).apply(u);
         }

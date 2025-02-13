@@ -4,12 +4,15 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatMap;
+import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.FunctionalA.concat;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -40,13 +43,22 @@ public class ClassUtils {
         }
         return None();
     }
+    
+    public static Option<Type> getFirstTypeArgument(Type type) {
+        if (type instanceof ParameterizedType) {
+            Type[] args = ((ParameterizedType)type).getActualTypeArguments();
+            return headOption(newList(args[0]));
+        }
+        return None();
+    }
+    
+    public static Type getGenericType(AccessibleObject member) {
+        return member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType();
+    }
 
     public static Class<?> typeClass(Type type) {
         if (type instanceof ParameterizedType) {
-            Type[] args = ((ParameterizedType)type).getActualTypeArguments();
-            return args.length == 0         ? (Class<?>)((ParameterizedType)type).getRawType() :
-                   args[0] instanceof Class ? (Class<?>)args[0]                                :
-                                              (Class<?>)((ParameterizedType)args[0]).getRawType();
+            return typeClass(((ParameterizedType)type).getRawType());
         } else if (type instanceof Class) {
             return (Class<?>) type;
         } else if (type instanceof TypeVariable<?>) {

@@ -225,7 +225,7 @@ public class ExcelConversionService {
     
     @SuppressWarnings("unchecked")
     static <V,O> Pair<Object,Class<Object>> foo(V value, MetaNamedMember<V, O> member) {
-        return (Pair<Object,Class<Object>>)(Object)Pair.of(member.apply(value), MemberUtil.actualTypeUnwrappingOptionAndEither(member));
+        return (Pair<Object,Class<Object>>)(Object)Pair.of(member.apply(value), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member));
     }
     
     static <K,V> Iterable<Map.Entry<K,V>> flatKeyToValues(K key, Iterable<V> values) {
@@ -250,7 +250,7 @@ public class ExcelConversionService {
             // oma dummy-otsikko
             return Pair.of((Object)member.apply(obj), (Class<Object>)(obj instanceof Option && ((Option<?>)obj).isDefined() ? ((Option<?>)obj).get().getClass() : obj.getClass()));
         } else {
-            return Pair.of((Object)member.apply(obj), (Class<Object>)MemberUtil.actualTypeUnwrappingOptionAndEither(member));
+            return Pair.of((Object)member.apply(obj), (Class<Object>)MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member));
         }
     }
 }

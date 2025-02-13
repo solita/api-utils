@@ -1,7 +1,9 @@
 package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.newList;
-import static org.junit.Assert.assertEquals;
+import static fi.solita.utils.functional.Functional.head;
+import static fi.solita.utils.functional.Functional.last;
+import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Set;
@@ -14,6 +16,7 @@ import fi.solita.utils.api.resolving.ResolvableMember;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.MemberUtilTest_.FooDto_;
+import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -43,8 +46,11 @@ public class MemberUtilTest {
         
         public String bar;
         
-        public FooDto(String bar) {
+        public Option<Set<String>> baz;
+        
+        public FooDto(String bar, Option<Set<String>> baz) {
             this.bar = bar;
+            this.baz = baz;
         }
     }
 
@@ -62,5 +68,12 @@ public class MemberUtilTest {
         MetaNamedMember<? super FooDto, ?> member = Assert.singleton(members);
         Assert.True(member instanceof FunctionCallMember);
         assertEquals(PropertyName.of("round(bar)"), ((FunctionCallMember<?>)member).propertyName);
+    }
+    
+    @Test
+    public void actualTypeUnwrappingOptionAndEitherAndIterables() {
+        List<MetaNamedMember<MemberUtilTest.FooDto,?>> members = (List<MetaNamedMember<FooDto, ?>>) MemberUtil.toMembers(externalProvider, new FunctionProvider(), false, FooDto.FIELDS, PropertyName.of("baz"));
+        Class<?> ret = MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(head(members));
+        assertEquals(String.class, ret);
     }
 }

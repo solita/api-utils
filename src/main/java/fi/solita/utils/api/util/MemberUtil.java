@@ -49,48 +49,48 @@ public class MemberUtil {
         }
     }
     
-    public static Class<?> memberTypeUnwrappingOptionAndEither(AccessibleObject member) {
-        Class<?> type = member instanceof Field ? ((Field)member).getType() : ((Method)member).getReturnType();
-        if (Option.class.isAssignableFrom(type)) {
-            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
-        } else if (Either.class.isAssignableFrom(type)) {
-            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
-        }
-        return type;
-    }
-    
     public static Class<?> memberTypeUnwrappingOption(AccessibleObject member) {
-        Class<?> type = member instanceof Field ? ((Field)member).getType() : ((Method)member).getReturnType();
-        if (Option.class.isAssignableFrom(type)) {
-            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
-        }
-        return type;
+        return memberTypeUnwrappingOption(ClassUtils.getGenericType(member));
     }
     
-    public static <T> Class<?> actualTypeUnwrappingOptionAndEither(final MetaNamedMember<T, ?> member) {
-        if (member instanceof NestedMember) {
-            Class<?> par = memberTypeUnwrappingOptionAndEither(((NestedMember<?,?>) member).parent.getMember());
-            if (Iterable.class.isAssignableFrom(par) && !Option.class.isAssignableFrom(par)) {
-                return par;
-            }
-        }
-        return MemberUtil.memberTypeUnwrappingOptionAndEither(member.getMember());
+    public static Class<?> memberTypeUnwrappingOptionAndEither(AccessibleObject member) {
+        return memberTypeUnwrappingOptionAndEither(ClassUtils.getGenericType(member));
     }
     
     public static Class<?> memberTypeUnwrappingOptionAndEitherAndIterables(AccessibleObject member) {
-        Class<?> type = member instanceof Field ? ((Field)member).getType() : ((Method)member).getReturnType();
-        if (Option.class.isAssignableFrom(type)) {
-            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
-        } else if (Either.class.isAssignableFrom(type)) {
-            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
-        } else if (Iterable.class.isAssignableFrom(type)) {
-            return ClassUtils.typeClass(member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType());
-        }
-        return type;
+        return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getGenericType(member));
     }
     
+    public static <T> Class<?> actualTypeUnwrappingOptionAndEither(final MetaNamedMember<T, ?> member) {
+        return memberTypeUnwrappingOptionAndEither(member.getMember());
+    }
+
     public static <T> Class<?> actualTypeUnwrappingOptionAndEitherAndIterables(final MetaNamedMember<T, ?> member) {
-        return MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(member.getMember());
+        return memberTypeUnwrappingOptionAndEitherAndIterables(member.getMember());
+    }
+    
+    public static Class<?> memberTypeUnwrappingOption(Type type) {
+        Class<?> c = ClassUtils.typeClass(type);
+        if (Option.class.isAssignableFrom(c)) {
+            return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+        }
+        return c;
+    }
+    
+    public static Class<?> memberTypeUnwrappingOptionAndEither(Type type) {
+        Class<?> c = ClassUtils.typeClass(type);
+        if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c)) {
+            return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+        }
+        return c;
+    }
+    
+    public static Class<?> memberTypeUnwrappingOptionAndEitherAndIterables(Type type) {
+        Class<?> c = ClassUtils.typeClass(type);
+        if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
+            return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+        }
+        return c;
     }
     
     static PropertyName propertyNameFromMember(MetaNamedMember<?,?> member) {
@@ -139,19 +139,16 @@ public class MemberUtil {
     public static <T> Class<T> memberClass(MetaNamedMember<?, T> member) {
         return (Class<T>)(member.getMember() instanceof Field ? ((Field)member.getMember()).getType() : ((Method)member.getMember()).getReturnType());
     }
-    
-    @SuppressWarnings("unchecked")
-    public
-    static <T> Class<T> memberClassUnwrappingGeneric(MetaNamedMember<?, T> member) {
-        return (Class<T>) ClassUtils.typeClass(member.getMember() instanceof Field ? ((Field)member.getMember()).getGenericType() : ((Method)member.getMember()).getGenericReturnType());
-    }
-    
+
     public static String ownerType(MetaNamedMember<?, ?> member) {
         return member.getMember() instanceof Field ? ((Field)member.getMember()).getDeclaringClass().getName() : ((Method)member.getMember()).getDeclaringClass().getName();
     }
     
     @SuppressWarnings("unchecked")
     public static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Class<T> clazz) {
+        if (clazz.isPrimitive() || clazz.getName().startsWith("java.")) {
+            return None();
+        }
         for (Builder<?> b: builders) {
             if (b.resultType().equals(clazz)) {
                 return Some((Builder<T>)b);

@@ -1,5 +1,6 @@
 package fi.solita.utils.api.base.excel;
 
+import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.FunctionalM.find;
@@ -15,6 +16,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
+import fi.solita.utils.api.base.csv.CsvSerializer;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.ClassUtils;
@@ -126,6 +128,7 @@ public class ExcelModule {
     
     @SuppressWarnings("unchecked")
     public List<String> columns(Class<?> type) {
-        return resolveSerializer(type).get().columns(this, (Class<Object>) type);
+        Option<ExcelSerializer<Object>> serializer = resolveSerializer(type);
+        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : emptyList();
     }
 }

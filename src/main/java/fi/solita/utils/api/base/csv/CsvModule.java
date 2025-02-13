@@ -1,5 +1,6 @@
 package fi.solita.utils.api.base.csv;
 
+import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.FunctionalM.find;
@@ -116,6 +117,7 @@ public class CsvModule {
 
     @SuppressWarnings("unchecked")
     public List<String> columns(Class<?> type) {
-        return resolveSerializer(type).get().columns(this, (Class<Object>) type);
+        Option<CsvSerializer<Object>> serializer = resolveSerializer(type);
+        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : emptyList();
     }
 }

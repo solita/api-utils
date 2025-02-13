@@ -168,7 +168,7 @@ public class CsvConversionService {
     
     @SuppressWarnings("unchecked")
     static <V,O> Pair<Object,Class<Object>> foo(V value, MetaNamedMember<V, O> member) {
-        return (Pair<Object,Class<Object>>)(Object)Pair.of(member.apply(value), MemberUtil.actualTypeUnwrappingOptionAndEither(member));
+        return (Pair<Object,Class<Object>>)(Object)Pair.of(member.apply(value), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member));
     }
     
     static <K,V> Iterable<Map.Entry<K,V>> flatKeyToValues(K key, Iterable<V> values) {
@@ -192,7 +192,7 @@ public class CsvConversionService {
             // oma dummy-otsikko
             return module.serialize(member.apply(obj));
         } else {
-            return module.serialize(member.apply(obj), MemberUtil.actualTypeUnwrappingOptionAndEither(member));
+            return module.serialize(member.apply(obj), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member));
         }
     }
 }
