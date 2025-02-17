@@ -2,6 +2,7 @@ package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.head;
+import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.FunctionalC.mkString;
 
 import fi.solita.utils.functional.Functional;
@@ -39,6 +40,20 @@ public abstract class Assert {
             throw new IllegalArgumentException(message.toString());
         }
         return o;
+    }
+    
+    public static <T extends Iterable<?>> T empty(T iterable) {
+        if (!isEmpty(iterable)) {
+            throw new IllegalArgumentException("Given iterable was not empty: " + newList(iterable));
+        }
+        return iterable;
+    }
+    
+    public static <T extends Iterable<?>> T notEmpty(T iterable) {
+        if (isEmpty(iterable)) {
+            throw new IllegalArgumentException("Given iterable was empty");
+        }
+        return iterable;
     }
 
     public static void notEqual(Object o1, Object o2) {

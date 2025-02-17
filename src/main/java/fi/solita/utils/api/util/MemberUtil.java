@@ -19,7 +19,6 @@ import java.util.List;
 
 import com.google.common.collect.Ordering;
 
-import fi.solita.utils.api.NestedMember;
 import fi.solita.utils.api.functions.FunctionCallMember;
 import fi.solita.utils.api.functions.FunctionCallMember_;
 import fi.solita.utils.api.functions.FunctionProvider;
@@ -72,7 +71,7 @@ public class MemberUtil {
     public static Class<?> memberTypeUnwrappingOption(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
         if (Option.class.isAssignableFrom(c)) {
-            return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+            return memberTypeUnwrappingOption(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
         }
         return c;
     }
@@ -80,7 +79,7 @@ public class MemberUtil {
     public static Class<?> memberTypeUnwrappingOptionAndEither(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
         if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c)) {
-            return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+            return memberTypeUnwrappingOptionAndEither(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
         }
         return c;
     }

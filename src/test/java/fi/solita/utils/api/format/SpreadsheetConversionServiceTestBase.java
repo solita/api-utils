@@ -18,6 +18,8 @@ import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.Cells;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Tuple;
+import fi.solita.utils.functional.Tuple3;
 
 public abstract class SpreadsheetConversionServiceTestBase {
 
@@ -66,6 +68,16 @@ public abstract class SpreadsheetConversionServiceTestBase {
     @JsonSerializeAsBean
     public static class CollectionMulticolumnDto {
         public final Collection<Interval> collectionIntervals = newList(new Interval(DateTime.now(), DateTime.now()), new Interval(DateTime.now(), DateTime.now()));
+    }
+    
+    @JsonSerializeAsBean
+    public static class CollectionPairDto {
+        public final Collection<Pair<?,?>> collectionTuples = newList(Pair.of(1,2), Pair.of(3,4));
+    }
+    
+    @JsonSerializeAsBean
+    public static class CollectionTupleDto {
+        public final Collection<Tuple3<?,?,?>> collectionTuples = newList(Tuple.of(1,2,3), Tuple.of(4,5,6));
     }
     
     @JsonSerializeAsBean
@@ -144,6 +156,20 @@ public abstract class SpreadsheetConversionServiceTestBase {
         Cells<?> res = serialize(new CollectionMulticolumnDto());
         assertEquals(1, res.cells.size());
         assertEquals(newList("collectionIntervals"), res.headers);
+    }
+    
+    @Test
+    public void otsikotOikeinPairCollectionille() {
+        Cells<?> res = serialize(new CollectionPairDto());
+        assertEquals(1, res.cells.size());
+        assertEquals(newList("collectionTuples"), res.headers);
+    }
+    
+    @Test
+    public void otsikotOikeinTupleCollectionille() {
+        Cells<?> res = serialize(new CollectionTupleDto());
+        assertEquals(1, res.cells.size());
+        assertEquals(newList("collectionTuples"), res.headers);
     }
     
     @Test

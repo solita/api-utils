@@ -192,7 +192,12 @@ public class ExcelConversionService {
             CharSequence currentFieldName = fieldNames.next();
             String unit = cells.unit.map(prepend(" (").andThen(append(")"))).getOrElse("");
             if (cells.headers.isEmpty()) {
-                // skip
+                for (@SuppressWarnings("unused") Cell h: cells.cells) {
+                    Cell headerCell = header.createCell(column);
+                    headerCell.setCellValue("");
+                    headerCell.setCellStyle(headerStyle);
+                    column += 1;
+                }
             } else if (cells.headers.equals(newList(""))) {
                 Cell headerCell = header.createCell(column);
                 headerCell.setCellValue(currentFieldName + unit);

@@ -9,6 +9,7 @@ import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
@@ -133,7 +134,7 @@ public class CsvConversionService {
             CharSequence currentFieldName = fieldNames.next();
             String unit = cells.unit.map(prepend(" (").andThen(append(")"))).getOrElse("");
             if (cells.headers.isEmpty()) {
-                // skip
+                header.addAll(newList(repeat("", cells.cells.size())));
             } else if (cells.headers.equals(newList(""))) {
                 header.add(currentFieldName + unit);
                 for (@SuppressWarnings("unused") Object o: tail(cells.cells)) {

@@ -46,7 +46,7 @@ public class CsvModule {
             Cells ret = ser.render(this, obj);
             if (obj instanceof Option) {
                 if (Option.class.isAssignableFrom(type)) {
-                    return ret;
+                    return ret.withHeaders(ret.headers.isEmpty() ? newList("") : ret.headers);
                 } else {
                     List<String> cols = ret.headers.isEmpty() ? columns(type) : ret.headers;
                     return ret.withHeaders(cols);
