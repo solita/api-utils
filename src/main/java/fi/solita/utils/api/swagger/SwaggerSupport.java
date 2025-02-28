@@ -23,18 +23,26 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.Period;
 import org.springframework.core.Ordered;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -80,7 +88,12 @@ import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
 import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
 import springfox.documentation.spi.service.OperationBuilderPlugin;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
-import springfox.documentation.spi.service.contexts.*;
+import springfox.documentation.spi.service.contexts.DocumentationContext;
+import springfox.documentation.spi.service.contexts.DocumentationContextBuilder;
+import springfox.documentation.spi.service.contexts.OperationContext;
+import springfox.documentation.spi.service.contexts.ParameterContext;
+import springfox.documentation.spi.service.contexts.PathContext;
+import springfox.documentation.spi.service.contexts.RequestMappingContext;
 import springfox.documentation.spring.web.WebMvcRequestHandler;
 import springfox.documentation.spring.web.paths.DefaultPathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -318,8 +331,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 Type type = ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType();
                 if (type instanceof ParameterizedType && ((ParameterizedType)type).getRawType().getClass().getName().equals(Either.class.getName())) {
                     // delegate to both parts inversely, so left overrides right if they set same stuff
-                    apply(name, MemberUtil.typeClass(((ParameterizedType) type).getActualTypeArguments()[1]), ae, builder);
-                    apply(name, MemberUtil.typeClass(((ParameterizedType) type).getActualTypeArguments()[0]), ae, builder);
+                    apply(name, ClassUtils.typeClass(((ParameterizedType) type).getActualTypeArguments()[1]), ae, builder);
+                    apply(name, ClassUtils.typeClass(((ParameterizedType) type).getActualTypeArguments()[0]), ae, builder);
                 }
             }
         }

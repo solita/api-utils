@@ -241,7 +241,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     ret.remove(member);
                 }
                 for (MetaNamedMember<?, ?> nestedMember: withNestedMembers((Collection<? extends MetaNamedMember<T, ?>>) builder.getMembers(), include, newArray(Builder.class, remove(builder, builders)))) {
-                    Class<?> actualNestedType = MemberUtil.actualTypeUnwrappingOptionAndEither(nestedMember);
+                    Class<?> actualNestedType = MemberUtil.memberClass(nestedMember);
                     boolean flatten = Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(actualNestedType);
                     NestedMember<? super T,?> mem = NestedMember.unchecked(member, nestedMember, flatten);
                     if (Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(ClassUtils.typeClass(ClassUtils.getFirstTypeArgument(actualType).getOrElse(void.class)))) {
