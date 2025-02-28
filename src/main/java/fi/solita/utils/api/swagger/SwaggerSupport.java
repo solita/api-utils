@@ -555,7 +555,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     }
                     String ret = super.getOperationPath(operationPath);
                     if (ignoreRevision) {
-                        ret = ret.replace("{revision}/", "");      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
+                        ret = ret.replaceAll("[{][^}]*[rR]evision[}]/", "");      // Poistetaan revision-pathparam koska se tulee implisiittisesti redirectistä.
                     }
                     return ret.replace("{?*****}", "")     // Poistetaan springin precedenssejä varten lisätyt tähtöset näkyvistä.
                               .replace("{*****}", "")
