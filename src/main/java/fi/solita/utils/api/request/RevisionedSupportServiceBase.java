@@ -123,7 +123,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
     protected Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, Request request, Response response, String... acceptedParams) throws NotFoundException {
         for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
             checkUrl(request, acceptedParams);
-            RequestData data = NotFoundException.assertFound(resolveFormat(request, response)).get();
+            RequestData data = NotFoundException.assertFound(resolveFormat(request, response));
             return Some(new RevisionedRequestData(data.format, data.etags, revision));
         }
         return None();
