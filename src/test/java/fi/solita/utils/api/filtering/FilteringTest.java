@@ -73,7 +73,7 @@ public class FilteringTest {
         public String toString() {
             return "Data [required=" + required + ", defined=" + defined + ", undefined=" + undefined + "]";
         }
-    };
+    }
     public static final Data data = new Data();
 
     private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);

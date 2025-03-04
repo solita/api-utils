@@ -38,5 +38,5 @@ public class JakartaHttpServletCanvas extends HttpServletCanvas<HttpServletReque
 
     public Option<String> getRequestQueryString() {
         return Option.of(((HttpServletRequest) request).getQueryString());
-    };
+    }
 }

@@ -222,7 +222,7 @@ public abstract class HtmlConversionService {
                     ._script();
             }
         };
-    };
+    }
     
     public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, Option<Pair<Includes<T>, Apply<MetaNamedMember<T, ?>,Renderable>>> properties, Pair<Renderable,Set<String>> additionalQueryParameters) {
         return new Renderable() {
@@ -790,12 +790,11 @@ public abstract class HtmlConversionService {
             + "};"
             + ""
             + "window.addEventListener('load', function() { "
-            + "    let m = window.location.href.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
+            + "    let m = window.location.pathname.match(/^\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+\\//) || window.location.pathname.match(/^\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+$/);"
             + "    if (m) {"
             + "        document.body.setAttribute('data-revision', m[1]);"
+            + "        window.history.replaceState(undefined, undefined, window.location.pathname.replace(/^(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));"
             + "    }"
-            + "    window.history.replaceState(undefined, undefined, window.location.href.replace(/(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));"
-            + ""
             + "    document.body.addEventListener('mouseover', window.iframeLoad);"
             + "});"
             + ""

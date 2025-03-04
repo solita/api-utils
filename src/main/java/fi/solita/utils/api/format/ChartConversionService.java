@@ -444,7 +444,7 @@ public class ChartConversionService {
                     .title().write(title)._title();
             }
         };
-    };
+    }
 
     private final String scripts(String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
         return  "let data = " + jsonData + ";\n"

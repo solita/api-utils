@@ -39,5 +39,5 @@ public class JavaxHttpServletCanvas extends HttpServletCanvas<HttpServletRequest
 
     public Option<String> getRequestQueryString() {
         return Option.of(((HttpServletRequest) request).getQueryString());
-    };
+    }
 }

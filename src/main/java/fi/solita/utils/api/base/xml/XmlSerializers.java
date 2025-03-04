@@ -76,7 +76,7 @@ public class XmlSerializers {
         public LocalDate unmarshal(String v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
-    };
+    }
     
     public static final class LocalTimeAdapter extends XmlAdapterBase<Serializers,String,LocalTime> {
         @Override
@@ -88,7 +88,7 @@ public class XmlSerializers {
         public LocalTime unmarshal(String v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
-    };
+    }
     
     public static final class DateTimeAdapter extends XmlAdapterBase<Serializers,String,DateTime> {
         @Override
@@ -100,7 +100,7 @@ public class XmlSerializers {
         public DateTime unmarshal(String v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
-    };
+    }
     
     public static final class IntervalAdapter extends XmlAdapterBase<Serializers,IntervalAdapter.IntervalWrapper,Interval> {
         public static class IntervalWrapper {
@@ -126,7 +126,7 @@ public class XmlSerializers {
         public Interval unmarshal(IntervalWrapper v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
-    };
+    }
     
     public static final class DurationAdapter extends XmlAdapterBase<Serializers,String,Duration> {
         @Override
@@ -138,7 +138,7 @@ public class XmlSerializers {
         public Duration unmarshal(String v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
-    };
+    }
     
     public static final class DateTimeZoneAdapter extends XmlAdapterBase<Serializers,String,DateTimeZone> {
         @Override
@@ -150,7 +150,7 @@ public class XmlSerializers {
         public DateTimeZone unmarshal(String v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
-    };
+    }
     
     
 }

@@ -152,9 +152,11 @@ public abstract class SwaggerSupport extends ApiResourceController {
                         break;
                     }
                 }
+            } 
+            if (modifiersField != null) {
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
             }
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
             @SuppressWarnings("unchecked")
             Map<String, Function<String, ? extends Property>> map = (Map<String, Function<String, ? extends Property>>) field.get(null);
             Map<String, Function<String, ? extends Property>> newMap = new HashMap<>();
