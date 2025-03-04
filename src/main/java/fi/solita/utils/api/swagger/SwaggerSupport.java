@@ -478,6 +478,9 @@ public abstract class SwaggerSupport extends ApiResourceController {
             } else if (pathVariableName.getOrElse("").equals("versio")) {
                 parameterContext.parameterBuilder()
                     .description("Objektin versionumero / Object version number");
+            } else if (Collection.class.isAssignableFrom(type)) {
+                parameterContext.parameterBuilder()
+                    .collectionFormat("csv");
             }
         }
         
