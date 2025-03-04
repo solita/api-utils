@@ -722,14 +722,14 @@ public abstract class HtmlConversionService {
         + ".load-more         { padding-top: 1em; }"
         + ".load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
         
-        + ".formats       { display: flex; flex-direction: column; }"
-        + ".formats a     { padding: 0 1em; font-size: 0.75em; }"
+        + ".formats:not([hidden]) { display: flex; flex-direction: column; }"
+        + ".formats a             { padding: 0 1em; font-size: 0.75em; }"
         
-        + ".parameters          { display: flex; flex-direction: column; padding: 0 0.5em; }"
-        + ".properties          { display: flex; flex-direction: column; max-height: 5.7em; overflow-y: scroll; }"
-        + ".properties:hover    { max-height: inherit; }"
-        + ".properties label    { margin: 1px; border-radius: 5px; background-color: aliceblue; border: 1px dotted gray; font-size: 0.5em; }"
-        + ".properties .negated { display: none; }"
+        + ".parameters:not([hidden]) { display: flex; flex-direction: column; padding: 0 0.5em; }"
+        + ".properties:not([hidden]) { display: flex; flex-direction: column; max-height: 5.7em; overflow-y: scroll; }"
+        + ".properties:hover         { max-height: inherit; }"
+        + ".properties label         { margin: 1px; border-radius: 5px; background-color: aliceblue; border: 1px dotted gray; font-size: 0.5em; }"
+        + ".properties .negated      { display: none; }"
         
         // spinner
         + ".htmx-Requestuest.lds-dual-ring { display: inline-block; }"
