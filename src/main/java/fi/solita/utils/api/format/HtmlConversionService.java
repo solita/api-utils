@@ -240,6 +240,7 @@ public abstract class HtmlConversionService {
                         ._if()
                         .if_(properties.isDefined())
                             .div(class_("parameters").add("persist-fields-query", ""))
+                                .input(type("hidden").class_("dummy")) // dummy included field to prevent htmx not complaining about nothing to include
                                 .select(name("count"))
                                     .render(new Renderable() {
                                         @Override
@@ -345,7 +346,7 @@ public abstract class HtmlConversionService {
                 
                 for (String format: newList("html","json","jsonl","geojson","csv","xlsx")) {
                     html.a(href(path.replace(".html", "." + format) + queryString).add("hx-get", path.replace(".html", "." + format))
-                                                                                  .add("hx-include", ".parameters input:not(:placeholder-shown):not([value='']), .parameters select:has(option[value='']:not(:checked))")
+                                                                                  .add("hx-include", ".parameters input:not(:placeholder-shown):not([value='']), .parameters select:has(option[value='']:not(:checked)), .parameters dummy")
                                                                                   .add("hx-swap", "ignoreTitle:true"))
                             .write(format)
                         ._a();
