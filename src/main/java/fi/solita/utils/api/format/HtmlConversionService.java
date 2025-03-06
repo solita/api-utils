@@ -793,7 +793,7 @@ public abstract class HtmlConversionService {
             + "    let m = window.location.pathname.match(/^\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+\\//) || window.location.pathname.match(/^\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+$/);"
             + "    if (m) {"
             + "        document.body.setAttribute('data-revision', m[1]);"
-            + "        window.history.replaceState(undefined, undefined, window.location.pathname.replace(/^(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));"
+            + "        window.history.replaceState(undefined, undefined, window.location.pathname.replace(/^(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x) + window.location.search + window.location.hash);"
             + "    }"
             + "    document.body.addEventListener('mouseover', window.iframeLoad);"
             + "});"
