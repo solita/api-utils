@@ -636,7 +636,7 @@ public abstract class HtmlConversionService {
         + "header, footer { display: flex; padding: 0.5em; }"
         + "h1             { flex: 1; }"
         + "header .page   { padding-left: 1em; }"
-        + "header .t-dt, header .type-oid, header .t-rec { font-size: small; font-style: italic; padding: 1em; }"
+        + "header .t-dt, header .t-oid, header .t-rec { font-size: small; font-style: italic; padding: 1em; }"
         + "header .t-rec  { color: #bbb; }"
         + ".lang-selector { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
         
@@ -775,7 +775,7 @@ public abstract class HtmlConversionService {
         return
               "window.iframeLoad = function(ev) {"
             + "var anchor = ev.target;"
-            + "if (anchor.tagName.toUpperCase() == 'A' && anchor.parentElement.classList.contains('type-oid') && anchor.getElementsByTagName('iframe').length == 0) {"
+            + "if (anchor.tagName.toUpperCase() == 'A' && anchor.parentElement.classList.contains('t-oid') && anchor.getElementsByTagName('iframe').length == 0) {"
             + "  var iframe = document.createElement('iframe');"
             + "  iframe.style.display = 'none';"
             + "  anchor.appendChild(iframe);"
@@ -813,7 +813,7 @@ public abstract class HtmlConversionService {
             + "};"
             + ""
             + "window.loadAdditionalContent = function() { "
-            + "  var links = document.body.getElementsByClassName('type-oid');"
+            + "  var links = document.body.getElementsByClassName('t-oid');"
             + "  for (var i = 0; i < links.length; ++i) {"
             + "    var link = links[i].parentElement;"
             + "    while (link.nodeName.toLowerCase() != 'td' && link.nodeName.toLowerCase() != 'body') { link = link.parentElement; }"
