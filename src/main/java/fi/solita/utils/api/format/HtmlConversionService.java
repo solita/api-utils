@@ -27,6 +27,8 @@ import static org.rendersnake.HtmlAttributesFactory.name;
 import static org.rendersnake.HtmlAttributesFactory.rowspan;
 import static org.rendersnake.HtmlAttributesFactory.type;
 import static org.rendersnake.HtmlAttributesFactory.value;
+import static org.rendersnake.HtmlAttributesFactory.add;
+import static org.rendersnake.HtmlAttributesFactory.ESCAPE_CHARS;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -216,6 +218,7 @@ public abstract class HtmlConversionService {
                         .write(additionalHeadScript(), false)
                     ._script()
                     .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/tablefilter/sortabletable.js"))._script()
                     .script(type("text/javascript").src(contextPath + "/r/tablefilter/tablefilter.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
