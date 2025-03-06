@@ -229,7 +229,7 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 html.render(UI.langSelectorInput)
-                    .header()
+                    .header(add("hx-ext", "persist-fields,refresh-href,target-top", ESCAPE_CHARS))
                         .h1()
                           .render(title)
                         ._h1()
@@ -395,9 +395,9 @@ public abstract class HtmlConversionService {
                 .head()
                   .render(pageHead(title))
                 ._head()
-                .body(class_(rows == 1 ? "singleton" : "").add("hx-ext", "persist-fields,refresh-href,target-top"))
+                .body(class_(rows == 1 ? "singleton" : ""))
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
-                  .section(id("content").add("persist-fields-query", ""))
+                  .section(id("content"))
                       .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
                         .thead()
                           .tr()
