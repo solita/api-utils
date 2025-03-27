@@ -33,10 +33,10 @@ import fi.solita.utils.functional.Pair;
 public class SupportServiceBase {
     
     /**
-     * @return Current time. Previous UTC midnight by default.
+     * @return Current time. Second precision by default.
      */
     public DateTime currentTime() {
-        return LocalDate.now(DateTimeZone.UTC).toDateTimeAtStartOfDay(DateTimeZone.UTC);
+        return DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
     }
     
     /**
