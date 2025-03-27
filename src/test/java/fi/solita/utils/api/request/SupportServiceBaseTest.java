@@ -15,6 +15,7 @@ import fi.solita.utils.api.util.JakartaRequest;
 import fi.solita.utils.api.util.JakartaResponse;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Tuple;
 
 public class SupportServiceBaseTest {
     
@@ -34,8 +35,8 @@ public class SupportServiceBaseTest {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.days(42);
         
-        assertEquals(someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, false, somePeriod));
-        assertEquals(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, true, somePeriod));
+        assertEquals(someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, false, false, somePeriod));
+        assertEquals(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, true, false, somePeriod));
     }
     
     @Test
@@ -43,20 +44,24 @@ public class SupportServiceBaseTest {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.minutes(42);
         
-        assertEquals(someDateTime.plus(somePeriod), SupportServiceBase.relate(someDateTime, false, somePeriod));
-        assertEquals(someDateTime.minus(somePeriod), SupportServiceBase.relate(someDateTime, true, somePeriod));
+        assertEquals(someDateTime.plus(somePeriod), SupportServiceBase.relate(someDateTime, false, true, somePeriod));
+        assertEquals(someDateTime.minus(somePeriod), SupportServiceBase.relate(someDateTime, true, true, somePeriod));
     }
     
     @Test
     public void parse() {
         Duration someDuration = Duration.standardDays(1);
-        Period somePeriod = Period.days(42);
+        Period somePeriodInaccurate = Period.days(42);
+        Period somePeriodAccurate = Period.hours(42);
         
-        assertEquals(Pair.of(Either.left(someDuration), false), SupportServiceBase.parse(      someDuration.toString()));
-        assertEquals(Pair.of(Either.left(someDuration), true) , SupportServiceBase.parse("-" + someDuration.toString()));
+        assertEquals(Tuple.of(Either.left(someDuration), false, true), SupportServiceBase.parse(      someDuration.toString()));
+        assertEquals(Tuple.of(Either.left(someDuration), true, true) , SupportServiceBase.parse("-" + someDuration.toString()));
         
-        assertEquals(Pair.of(Either.right(somePeriod), false), SupportServiceBase.parse(      somePeriod.toString()));
-        assertEquals(Pair.of(Either.right(somePeriod), true) , SupportServiceBase.parse("-" + somePeriod.toString()));
+        assertEquals(Tuple.of(Either.right(somePeriodInaccurate), false, false), SupportServiceBase.parse(      somePeriodInaccurate.toString()));
+        assertEquals(Tuple.of(Either.right(somePeriodInaccurate), true, false) , SupportServiceBase.parse("-" + somePeriodInaccurate.toString()));
+        
+        assertEquals(Tuple.of(Either.right(somePeriodAccurate), false, true), SupportServiceBase.parse(      somePeriodAccurate.toString()));
+        assertEquals(Tuple.of(Either.right(somePeriodAccurate), true, true) , SupportServiceBase.parse("-" + somePeriodAccurate.toString()));
     }
     
     @Test(expected = InvalidValueException.class)
@@ -96,8 +101,8 @@ public class SupportServiceBaseTest {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.days(42);
         
-        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay()), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false));
-        assertEquals(new Interval(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true));
+        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay()), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false, false));
+        assertEquals(new Interval(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true, false));
     }
     
     @Test
@@ -105,8 +110,8 @@ public class SupportServiceBaseTest {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.minutes(42);
         
-        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod)), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false));
-        assertEquals(new Interval(someDateTime.minus(somePeriod), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true));
+        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod)), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false, true));
+        assertEquals(new Interval(someDateTime.minus(somePeriod), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true, true));
     }
     
     @Test
@@ -115,7 +120,7 @@ public class SupportServiceBaseTest {
         Duration someDuration = Duration.standardHours(1);
         Period somePeriod = Period.hours(1);
         
-        assertEquals(new Interval(someDateTime.plus(someDuration), someDateTime.plus(somePeriod)), SupportServiceBase.intervalForRedirect(someDateTime, Pair.of(Either.<Duration,Period>left(someDuration), false), Pair.of(Either.<Duration,Period>right(somePeriod), false)));
-        assertEquals(new Interval(someDateTime.minus(somePeriod), someDateTime.minus(someDuration)), SupportServiceBase.intervalForRedirect(someDateTime, Pair.of(Either.<Duration,Period>right(somePeriod), true), Pair.of(Either.<Duration,Period>left(someDuration), true)));
+        assertEquals(new Interval(someDateTime.plus(someDuration), someDateTime.plus(somePeriod)), SupportServiceBase.intervalForRedirect(someDateTime, Pair.of(Either.<Duration,Period>left(someDuration), false, true), Pair.of(Either.<Duration,Period>right(somePeriod), false, true)));
+        assertEquals(new Interval(someDateTime.minus(somePeriod), someDateTime.minus(someDuration)), SupportServiceBase.intervalForRedirect(someDateTime, Pair.of(Either.<Duration,Period>right(somePeriod), true, true), Pair.of(Either.<Duration,Period>left(someDuration), true, true)));
     }
 }

@@ -19,6 +19,7 @@ import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.api.util.ResponseUtil.Response;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
+import fi.solita.utils.functional.Apply4;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Option;
@@ -69,31 +70,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
     }
     
     public void redirectToCurrentRevisionAndInterval(Request req, Response res, String durationOrPeriod) throws InvalidValueException {
-        String[] parts = durationOrPeriod.split("/");
-        
-        if (parts.length == 1) {
-            // create an interval either starting from or ending to current time.
-            Pair<Either<Duration, Period>, Boolean> dp = parse(parts[0]);
-            for (Duration d: dp.left().left) {
-                redirectToCurrentRevisionAndInterval(req, res, adjustTime(intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), d, dp.right())), newSet("duration"));
-            }
-            for (Period p: dp.left().right) {
-                redirectToCurrentRevisionAndInterval(req, res, adjustTime(intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), p, dp.right())), newSet("duration"));
-            }
-        } else if (parts.length == 2) {
-            // create an interval where start and end are separately related to current time.
-            Pair<Either<Duration, Period>, Boolean> start = parse(parts[0]);
-            Pair<Either<Duration, Period>, Boolean> end = parse(parts[1]);
-            Interval interval;
-            try {
-                interval = intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), start, end);
-            } catch (RuntimeException e) {
-                throw new InvalidValueException("duration", durationOrPeriod);
-            }
-            redirectToCurrentRevisionAndInterval(req, res, adjustTime(interval), newSet("duration"));
-        } else {
-            throw new InvalidValueException("duration", durationOrPeriod);
-        }
+        redirectToCurrentInterval(RevisionedSupportServiceBase_.redirectToCurrentRevisionAndInterval.ap(this), req, res, durationOrPeriod);
     }
     
     protected Option<Void> checkRevisions(Revision currentRevision, Revision revision, Request request, Response response) {

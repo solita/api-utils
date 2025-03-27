@@ -4,6 +4,7 @@ import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
+import static fi.solita.utils.functional.FunctionalA.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
@@ -14,7 +15,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
-import org.joda.time.LocalDate;
 import org.joda.time.Period;
 
 import fi.solita.utils.api.NotFoundException;
@@ -27,8 +27,10 @@ import fi.solita.utils.api.util.ServletRequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
+import fi.solita.utils.functional.Function4;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Tuple3;
 
 public class SupportServiceBase {
     
@@ -68,28 +70,32 @@ public class SupportServiceBase {
     }
     
     public void redirectToCurrentInterval(Request req, Response res, String durationOrPeriod) throws InvalidValueException {
+        redirectToCurrentInterval(SupportServiceBase_.redirectToInterval, req, res, durationOrPeriod);
+    }
+    
+    protected void redirectToCurrentInterval(Function4<Request,Response,Interval,Set<String>,Void> f, Request req, Response res, String durationOrPeriod) throws InvalidValueException {
         String[] parts = durationOrPeriod.split("/");
         
         if (parts.length == 1) {
             // create an interval either starting from or ending to current time.
-            Pair<Either<Duration, Period>, Boolean> dp = parse(parts[0]);
-            for (Duration d: dp.left().left) {
-                redirectToInterval(req, res, adjustTime(intervalForRedirect(currentTime(), d, dp.right())), newSet("duration"));
+            Tuple3<Either<Duration, Period>, Boolean, Boolean> dp = parse(parts[0]);
+            for (Duration d: dp._1.left) {
+                f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now(), d, dp._2)), newSet("duration"));
             }
-            for (Period p: dp.left().right) {
-                redirectToInterval(req, res, adjustTime(intervalForRedirect(currentTime(), p, dp.right())), newSet("duration"));
+            for (Period p: dp._1.right) {
+                f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now(), p, dp._2, dp._3)), newSet("duration"));
             }
         } else if (parts.length == 2) {
             // create an interval where start and end are separately related to current time.
-            Pair<Either<Duration, Period>, Boolean> start = parse(parts[0]);
-            Pair<Either<Duration, Period>, Boolean> end = parse(parts[1]);
+            Tuple3<Either<Duration, Period>, Boolean, Boolean> start = parse(parts[0]);
+            Tuple3<Either<Duration, Period>, Boolean, Boolean> end = parse(parts[1]);
             Interval interval;
             try {
-                interval = intervalForRedirect(currentTime(), start, end);
+                interval = intervalForRedirect(DateTime.now(), start, end);
             } catch (RuntimeException e) {
                 throw new InvalidValueException("duration", durationOrPeriod);
             }
-            redirectToInterval(req, res, adjustTime(interval), newSet("duration"));
+            f.apply(req, res, adjustTime(interval), newSet("duration"));
         } else {
             throw new InvalidValueException("duration", durationOrPeriod);
         }
@@ -99,26 +105,23 @@ public class SupportServiceBase {
         return negate ? now.minus(d) : now.plus(d);
     }
     
-    static boolean containsMoreAccurateThanDays(Period p) {
-        return p.getHours() != 0 || p.getMinutes() != 0 || p.getSeconds() != 0 || p.getMillis() != 0;
+    static DateTime relate(DateTime now, boolean negate, boolean containsMoreAccurateThanDays, Period p) {
+        return negate ? (containsMoreAccurateThanDays ? now.minus(p) : now.minus(p).withTimeAtStartOfDay())
+                      : (containsMoreAccurateThanDays ? now.plus(p) : now.plus(p).plusDays(1).withTimeAtStartOfDay());
     }
     
-    static DateTime relate(DateTime now, boolean negate, Period p) {
-        return negate ? (containsMoreAccurateThanDays(p) ? now.minus(p) : now.minus(p).withTimeAtStartOfDay())
-                      : (containsMoreAccurateThanDays(p) ? now.plus(p) : now.plus(p).plusDays(1).withTimeAtStartOfDay());
-    }
-    
-    static Pair<Either<Duration,Period>,Boolean> parse(String durationOrPeriod) throws InvalidValueException {
+    static Tuple3<Either<Duration,Period>,Boolean,Boolean> parse(String durationOrPeriod) throws InvalidValueException {
         boolean negate = false;
         if (durationOrPeriod.startsWith("-")) {
             negate = true;
             durationOrPeriod = tail(durationOrPeriod);
         }
+        boolean containsMoreAccurateThanDays = durationOrPeriod.contains("T");
         try {
-            return Pair.of(Either.<Duration,Period>left(Duration.parse(durationOrPeriod)), negate);
+            return Pair.of(Either.<Duration,Period>left(Duration.parse(durationOrPeriod)), negate, containsMoreAccurateThanDays);
         } catch (Exception e) {
             try {
-                return Pair.of(Either.<Duration,Period>right(Period.parse(durationOrPeriod)), negate);
+                return Pair.of(Either.<Duration,Period>right(Period.parse(durationOrPeriod)), negate, containsMoreAccurateThanDays);
             } catch (Exception e1) {
                 throw new InvalidValueException("duration", durationOrPeriod);
             }
@@ -129,13 +132,13 @@ public class SupportServiceBase {
         return negate ? new Interval(relate(now, true, duration), now) : new Interval(now, relate(now, false, duration));
     }
     
-    static Interval intervalForRedirect(DateTime now, Period period, boolean negate) {
-        return negate ? new Interval(relate(now, true, period), now) : new Interval(now, relate(now, false, period));
+    static Interval intervalForRedirect(DateTime now, Period period, boolean negate, boolean containsMoreAccurateThanDays) {
+        return negate ? new Interval(relate(now, true, containsMoreAccurateThanDays, period), now) : new Interval(now, relate(now, false, containsMoreAccurateThanDays, period));
     }
     
-    static Interval intervalForRedirect(DateTime now, Pair<Either<Duration, Period>, Boolean> start, Pair<Either<Duration, Period>, Boolean> end) {
-        DateTime start_ = start.left().fold(SupportServiceBase_.relate.ap(now, start.right()), SupportServiceBase_.relate1.ap(now, start.right()));
-        DateTime end_   = end  .left().fold(SupportServiceBase_.relate.ap(now, end  .right()), SupportServiceBase_.relate1.ap(now, end  .right()));
+    static Interval intervalForRedirect(DateTime now, Tuple3<Either<Duration, Period>, Boolean, Boolean> start, Tuple3<Either<Duration, Period>, Boolean, Boolean> end) {
+        DateTime start_ = start._1.fold(SupportServiceBase_.relate.ap(now, start._2), SupportServiceBase_.relate1.ap(now, start._2, start._3));
+        DateTime end_   = end  ._1.fold(SupportServiceBase_.relate.ap(now, end  ._2), SupportServiceBase_.relate1.ap(now, end  ._2, start._3));
         return new Interval(start_, end_);
     }
     
