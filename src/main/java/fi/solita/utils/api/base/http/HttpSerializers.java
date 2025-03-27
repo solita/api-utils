@@ -279,7 +279,14 @@ public class HttpSerializers {
             try {
                 ret = dateTimeParser.parseDateTime(source);
             } catch (Exception e) {
-                throw new InvalidValueException("datetime", source);
+                try {
+                    // some leniency: accept an interval of 0 length as an instant
+                    Interval asInterval = interval.apply(source);
+                    Assert.equal(asInterval.getStart(), asInterval.getEnd());
+                    ret = asInterval.getStart();
+                } catch (Exception e1) {
+                    throw new InvalidValueException("datetime", source);
+                }
             }
             
             if (ret.isBefore(VALID_BEGIN) || ret.isAfter(VALID_END)) {
