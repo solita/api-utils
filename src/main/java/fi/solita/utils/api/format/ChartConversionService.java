@@ -458,6 +458,10 @@ public class ChartConversionService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return  "let dat = " + jsonData + ";\n"
+              + "let allKeys = [...new Set(dat.map(x => Object.keys(x)).flat())];\n"
+              + "let toFill = Object.assign(...allKeys.map(k => ({[k]: 0})));\n"
+              + "let data = dat.map(d => ({...toFill, ...d}));\n"
               + "let root = am5.Root.new('chart', {"
               + "  timezone: am5.Timezone.new('Europe/Helsinki'),\n"
               + "  locale: am5locales_fi_FI"
