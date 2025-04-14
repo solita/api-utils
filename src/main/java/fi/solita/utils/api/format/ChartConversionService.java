@@ -414,7 +414,7 @@ public class ChartConversionService {
             html.html()
                 .render(DocType.HTML5)
                 .head()
-                  .render(pageHead(title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
+                  .render(pageHead(request, title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
                 ._head()
                 .body()
                   .input(type("checkbox").name("connection").hidden("hidden").checked("checked").value(""))
@@ -424,7 +424,7 @@ public class ChartConversionService {
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-xy.min.js"))._script()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-Animated.min.js"))._script()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-locale-fi_FI.min.js"))._script()
-                .script(type("text/javascript")).write(scripts(title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
+                .script(type("text/javascript")).write(scripts(request, title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
                 .script(type("text/javascript")).write(scripts2(), false)._script()
                 .script(type("text/javascript"))
                     .write(additionalHeadScript(), false)
@@ -439,7 +439,7 @@ public class ChartConversionService {
         return os.toByteArray();
     }
     
-    protected Renderable pageHead(HtmlTitle title, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isNumeric, boolean xIsInterval) {
+    protected Renderable pageHead(Request request, HtmlTitle title, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isNumeric, boolean xIsInterval) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -449,7 +449,7 @@ public class ChartConversionService {
                             + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
                             + UI.calculateHash(scripts2()) + "' '"
                             + UI.calculateHash(additionalHeadScript()) + "' '"
-                            + UI.calculateHash(scripts(title, jsonData, yNames, isTemporal, isStacked, isGrouped, isNumeric, xIsInterval)) + "'"))
+                            + UI.calculateHash(scripts(request, title, jsonData, yNames, isTemporal, isStacked, isGrouped, isNumeric, xIsInterval)) + "'"))
                     .title().write(title.plainTextTitle)._title()
                     .style().write(styles(), false)
                     ._style();
@@ -463,8 +463,8 @@ public class ChartConversionService {
              + ".title > * { padding: 0.5em; }";
     }
 
-    private final String scripts(HtmlTitle title, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
-        HtmlCanvas titleCanvas = new HtmlCanvas();
+    private final String scripts(Request request, HtmlTitle title, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
+        HtmlCanvas titleCanvas = HttpServletCanvas.of(request.getHttpServletRequest(), new OutputStreamWriter(new ByteArrayOutputStream(), StandardCharsets.UTF_8));
         try {
             title.renderOn(titleCanvas);
         } catch (IOException e) {
