@@ -417,6 +417,7 @@ public class ChartConversionService {
                   .render(pageHead(title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
                 ._head()
                 .body()
+                  .input(type("checkbox").name("connection").hidden("hidden").checked("checked").value(""))
                   .div(id("chart"))._div()
                 ._body()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts.min.js"))._script()
@@ -444,13 +445,24 @@ public class ChartConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
-                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';script-src 'self' 'unsafe-eval' '" + UI.calculateHash(scripts2()) + "' '" + UI.calculateHash(scripts(jsonData, yNames, isTemporal, isStacked, isGrouped, isNumeric, xIsInterval)) + "'"))
+                    .meta(http_equiv("Content-Security-Policy").content("default-src 'self';frame-src *; style-src 'self' '"
+                            + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
+                            + UI.calculateHash(scripts2()) + "' '"
+                            + UI.calculateHash(additionalHeadScript()) + "' '"
+                            + UI.calculateHash(scripts(title, jsonData, yNames, isTemporal, isStacked, isGrouped, isNumeric, xIsInterval)) + "'"))
                     .title().write(title.plainTextTitle)._title()
+                    .style().write(styles(), false)
+                    ._style();
             }
         };
     }
+    
+    private static final String styles() {
+        return "body:has(input[name='connection']:not([value='']):not(:disabled)) { border: 5px solid red; }"
+             + "body:has(input[name='connection']:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
+             + ".title > * { padding: 0.5em; }";
+    }
 
-        return  "let data = " + jsonData + ";\n"
     private final String scripts(HtmlTitle title, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
         HtmlCanvas titleCanvas = new HtmlCanvas();
         try {

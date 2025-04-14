@@ -233,7 +233,7 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 html.render(UI.langSelectorInput)
                     .header(add("hx-ext", "persist-fields,refresh-href,target-top", ESCAPE_CHARS))
-                        .h1()
+                        .h1(class_("title"))
                           .render(title)
                         ._h1()
                         .if_(includeFormats)
@@ -400,6 +400,7 @@ public abstract class HtmlConversionService {
                   .render(pageHead(title))
                 ._head()
                 .body(class_(rows == 1 ? "singleton" : ""))
+                  .input(type("checkbox").name("connection").hidden("hidden").checked("checked").value(""))
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
                   .section(id("content"))
                       .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
@@ -638,9 +639,10 @@ public abstract class HtmlConversionService {
         
         + "header, footer { display: flex; padding: 0.5em; }"
         + "h1             { flex: 1; }"
-        + "header .page   { padding-left: 1em; }"
-        + "header .t-dt, header .t-oid, header .t-rec { font-size: small; font-style: italic; padding: 1em; }"
-        + "header .t-rec  { color: #bbb; }"
+        + ".title > *     { padding: 0.5em; }"
+        + ".title .page   { font-size: small; }"
+        + ".title .t-i, .title .t-dt, .title .t-oid, .title .t-rec { font-size: small; font-style: italic; }"
+        + ".title .t-rec  { color: #bbb; }"
         + ".lang-selector { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
         
         + "footer *       { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
@@ -740,6 +742,9 @@ public abstract class HtmlConversionService {
         + ".lds-dual-ring { display: none; width: 30px; height: 30px; margin-right: auto; margin-left: auto; }"
         + ".lds-dual-ring:after { content: ' '; display: block; width: 14px; height: 14px; margin: 8px; border-radius: 50%; border: 6px solid #000; border-color: #000 transparent #000 transparent; animation: lds-dual-ring 1.2s linear infinite; }"
         + "@keyframes lds-dual-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }"
+        
+        + "body:has(input[name='connection']:not([value='']):not(:disabled))         { border: 5px solid red; }"
+        + "body:has(input[name='connection']:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
         
         + mkString(" ", sequence(
              ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
