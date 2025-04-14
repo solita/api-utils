@@ -171,7 +171,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case CHART:
-            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
+            response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case GML:
         case XML:
@@ -235,7 +235,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case CHART:
-            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
+            response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case GML:
         case XML:
@@ -294,7 +294,7 @@ public abstract class StdSerialization<BOUNDS> {
         response = Pair.of(count.serialize(data.get()), emptyMap());
         break;
     case CHART:
-        response = Pair.of(chart.serializeSingle(req, title.plainTextTitle, mapValue(dataTransformer, data.get()), includes), emptyMap());
+        response = Pair.of(chart.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
         break;
     case GML:
     case XML:
@@ -349,7 +349,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case CHART:
-            response = Pair.of(chart.serializeSingle(req, title.plainTextTitle, mapValue(dataTransformer, data.get()), includes), emptyMap());
+            response = Pair.of(chart.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
             break;
         case PNG:
         case GML:
@@ -423,7 +423,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case CHART:
-            response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
+            response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
             break;
         case GML:
         case XML:
@@ -491,7 +491,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
+                response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -584,7 +584,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, dataTransformer.apply(data.get()), includes), emptyMap());
+                response = Pair.of(chart.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -636,7 +636,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case CHART:
-            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
+            response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case PNG:
         case GML:
@@ -689,7 +689,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
         case CHART:
-            response = Pair.of(chart.serialize(req, title.plainTextTitle, mapValues(dataTransformer, data.get()), includes), emptyMap());
+            response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
         case PNG:
         case GML:
@@ -741,7 +741,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
+                response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -791,7 +791,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, dataTransformer.apply(data.get()), includes), emptyMap());
+                response = Pair.of(chart.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -838,7 +838,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, data), emptyMap());
+                response = Pair.of(chart.serialize(req, title, data), emptyMap());
                 break;
             case PNG:
             case GML:
@@ -890,7 +890,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, newList(map(dataTransformer, data.get())), includes), emptyMap());
+                response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case PNG:
             case XML:
@@ -940,7 +940,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
             case CHART:
-                response = Pair.of(chart.serialize(req, title.plainTextTitle, map(dataTransformer, data.get())), emptyMap());
+                response = Pair.of(chart.serialize(req, title, map(dataTransformer, data.get())), emptyMap());
                 break;
             case PNG:
             case XML:

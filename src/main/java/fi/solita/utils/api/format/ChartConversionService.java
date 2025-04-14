@@ -62,6 +62,7 @@ import com.google.common.collect.TreeRangeMap;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.JsonSerializeAsBean;
+import fi.solita.utils.api.format.HtmlConversionService.HtmlTitle;
 import fi.solita.utils.api.html.HttpServletCanvas;
 import fi.solita.utils.api.html.UI;
 import fi.solita.utils.api.util.Assert;
@@ -115,28 +116,28 @@ public class ChartConversionService {
         this.json = json;
     }
     
-    public <T> byte[] serialize(Request request, String title, T obj, final Includes<T> members) {
+    public <T> byte[] serialize(Request request, HtmlTitle title, T obj, final Includes<T> members) {
         return serialize(request, title, newList(obj), members);
     }
     
-    public <T> byte[] serialize(Request request, String title, T[] obj) {
+    public <T> byte[] serialize(Request request, HtmlTitle title, T[] obj) {
         return serialize(request, title, newList(obj));
     }
     
     @SuppressWarnings("unchecked")
-    public <T> byte[] serialize(Request request, String title, final Iterable<T> obj) {
+    public <T> byte[] serialize(Request request, HtmlTitle title, final Iterable<T> obj) {
         return serialize(request, title, newList(filter(not(isNull()), obj)), new Includes<T>(newList((MetaNamedMember<T,T>)DUMMY_MEMBER), emptyList(), emptyList(), true, emptyList()));
     }
     
-    public <T> byte[] serialize(Request request, String title, final Collection<T> obj, final Includes<T> members) {
+    public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Includes<T> members) {
         return serialize(title, request, obj, members.includesFromColumnFiltering);
     }
     
-    public <K,V> byte[] serialize(Request request, String title, final Map<K,? extends Iterable<V>> obj, Includes<V> members) {
+    public <K,V> byte[] serialize(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members) {
         return serialize(title, request, flatten(obj.values()), members.includesFromColumnFiltering);
     }
     
-    public <K,V> byte[] serializeSingle(Request request, String title, final Map<K,V> obj, Includes<V> members) {
+    public <K,V> byte[] serializeSingle(Request request, HtmlTitle title, final Map<K,V> obj, Includes<V> members) {
         return serialize(title, request, newList(obj.values()), members.includesFromColumnFiltering);
     }
     
@@ -259,7 +260,7 @@ public class ChartConversionService {
         return jsonSerializeKey(o);
     }
     
-    private <T> byte[] serialize(String title, Request request, Iterable<T> objs, final Iterable<? extends MetaNamedMember<T, ?>> members_) throws CannotChartByStructureException {
+    private <T> byte[] serialize(HtmlTitle title, Request request, Iterable<T> objs, final Iterable<? extends MetaNamedMember<T, ?>> members_) throws CannotChartByStructureException {
         @SuppressWarnings("unchecked")
         List<MetaNamedMember<T, Object>> members = (List<MetaNamedMember<T, Object>>) newList(members_);
         final boolean xIsInstant  = !members.isEmpty() && DateTime.class.isAssignableFrom(resolveType(head(members)));
@@ -422,8 +423,11 @@ public class ChartConversionService {
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-xy.min.js"))._script()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-Animated.min.js"))._script()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-locale-fi_FI.min.js"))._script()
-                .script(type("text/javascript")).write(scripts(jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
+                .script(type("text/javascript")).write(scripts(title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
                 .script(type("text/javascript")).write(scripts2(), false)._script()
+                .script(type("text/javascript"))
+                    .write(additionalHeadScript(), false)
+                ._script()
               ._html();
 
             ow.close();
@@ -434,20 +438,26 @@ public class ChartConversionService {
         return os.toByteArray();
     }
     
-    protected Renderable pageHead(final String title, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isNumeric, boolean xIsInterval) {
+    protected Renderable pageHead(HtmlTitle title, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isNumeric, boolean xIsInterval) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
                     .meta(http_equiv("Content-Security-Policy").content("default-src 'self';script-src 'self' 'unsafe-eval' '" + UI.calculateHash(scripts2()) + "' '" + UI.calculateHash(scripts(jsonData, yNames, isTemporal, isStacked, isGrouped, isNumeric, xIsInterval)) + "'"))
-                    .title().write(title)._title();
+                    .title().write(title.plainTextTitle)._title()
             }
         };
     }
 
-    private final String scripts(String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
         return  "let data = " + jsonData + ";\n"
+    private final String scripts(HtmlTitle title, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
+        HtmlCanvas titleCanvas = new HtmlCanvas();
+        try {
+            title.renderOn(titleCanvas);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
               + "let root = am5.Root.new('chart', {"
               + "  timezone: am5.Timezone.new('Europe/Helsinki'),\n"
               + "  locale: am5locales_fi_FI"
@@ -601,6 +611,12 @@ public class ChartConversionService {
                   + "});\n")
               + "let legend = chart.children.push(am5.Legend.new(root, {}));\n"
               + "legend.data.setAll(chart.series.values);\n"
+              + "chart.children.push(am5.Label.new(root, {\n"
+              + "  html: '<span class=\"title\">" + titleCanvas.toHtml() + "</span>',\n"
+              + "  paddingLeft: 50,\n"
+              + "  paddingTop: 0,\n"
+              + "  paddingBottom: 0\n"
+              + "}));\n"
               + "chart.set('cursor', am5xy.XYCursor.new(root, {behavior: 'zoomX'}));";
     }
     
@@ -609,5 +625,9 @@ public class ChartConversionService {
             + "    let m = window.location.href.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
             + "    window.history.replaceState(undefined, undefined, window.location.href.replace(/(\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x));"
             + "});";
+    }
+    
+    public String additionalHeadScript() {
+        return "";
     }
 }
