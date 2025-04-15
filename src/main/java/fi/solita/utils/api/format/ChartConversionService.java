@@ -384,7 +384,8 @@ public class ChartConversionService {
                     if (xIsListOfValuesFromASingleRow) {
                         Iterable<Iterable<Object>> allRows = map(ChartConversionService_.handleCollections, sequence(Assert.singleton(objs), members));
                         Iterable<Function1<Object, Object>> tailMembers = repeat(Function.id(), size(tail(members)));
-                        for (Iterable<Object> category: transpose(allRows)) {
+                        for (Iterable<Object> cat: transpose(allRows)) {
+                            Iterable<Object> category = newList(cat);
                             List<Object> categoryObjects = newList(tail(category));
                             data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)head(category)).getMillis() : head(category),
                                          reduce(Monoids.mapCombine(SemiGroups.longSum),
@@ -596,7 +597,7 @@ public class ChartConversionService {
                          + (xIsLinear ? (
                             (isGrouped ? "am5xy.StepLineSeries.new(root, {connect:" + xIsInterval + ",\n" : "am5xy.LineSeries.new(root, {\n")
                            + "    valueXField: 'c',\n"
-                           + (isGrouped && !xIsInterval ? "valueYGrouped: 'sum',\nvalueYShow: 'valueYTotal',\n"
+                           + (isGrouped && !xIsInterval ? "valueYGrouped: 'sum',\n"
                                         : "")
                            + "    tooltip: am5.Tooltip.new(root, { pointerOrientation: 'horizontal', labelText: '" + yName.right() + ": {" + (isGrouped ? "valueY" : yName.right()) + "}\\n{valueX" + (xIsTemporal ? ".formatDate(\"yyyy-MM-dd HH:mm:ss\")" : "") + "}' }),\n"
                              ) : (
