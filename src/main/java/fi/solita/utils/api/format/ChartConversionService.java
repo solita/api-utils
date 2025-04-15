@@ -38,6 +38,7 @@ import static org.rendersnake.HtmlAttributesFactory.type;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.lang.reflect.AccessibleObject;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -406,6 +407,19 @@ public class ChartConversionService {
         
         String jsonData = new String(json.serialize(data), StandardCharsets.UTF_8).replace("\n", "");
         
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        HtmlCanvas titleCanvas = HttpServletCanvas.of(request.getHttpServletRequest(), new OutputStreamWriter(out, StandardCharsets.UTF_8));
+        String titleHtml;
+        try {
+            title.renderOn(titleCanvas);
+            try (Writer writer = titleCanvas.getOutputWriter()) {
+                writer.flush();
+                titleHtml = out.toString(StandardCharsets.UTF_8.name());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
         ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
         HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
@@ -414,7 +428,7 @@ public class ChartConversionService {
             html.html()
                 .render(DocType.HTML5)
                 .head()
-                  .render(pageHead(request, title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
+                  .render(pageHead(title.plainTextTitle, titleHtml, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
                 ._head()
                 .body()
                   .input(type("checkbox").name("connection").hidden("hidden").checked("checked").value(""))
@@ -424,11 +438,9 @@ public class ChartConversionService {
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-xy.min.js"))._script()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-Animated.min.js"))._script()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-locale-fi_FI.min.js"))._script()
-                .script(type("text/javascript")).write(scripts(request, title, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
+                .script(type("text/javascript")).write(scripts(titleHtml, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
                 .script(type("text/javascript")).write(scripts2(), false)._script()
-                .script(type("text/javascript"))
-                    .write(additionalHeadScript(), false)
-                ._script()
+                .script(type("text/javascript")).write(additionalHeadScript(), false)._script()
               ._html();
 
             ow.close();
@@ -439,7 +451,7 @@ public class ChartConversionService {
         return os.toByteArray();
     }
     
-    protected Renderable pageHead(Request request, HtmlTitle title, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isNumeric, boolean xIsInterval) {
+    protected Renderable pageHead(String titleText, String titleHtml, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isLinear, boolean isInterval) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -449,8 +461,8 @@ public class ChartConversionService {
                             + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
                             + UI.calculateHash(scripts2()) + "' '"
                             + UI.calculateHash(additionalHeadScript()) + "' '"
-                            + UI.calculateHash(scripts(request, title, jsonData, yNames, isTemporal, isStacked, isGrouped, isNumeric, xIsInterval)) + "'"))
-                    .title().write(title.plainTextTitle)._title()
+                            + UI.calculateHash(scripts(titleHtml, jsonData, yNames, isTemporal, isStacked, isGrouped, isLinear, isInterval)) + "'"))
+                    .title().write(titleText)._title()
                     .style().write(styles(), false)
                     ._style();
             }
@@ -460,16 +472,10 @@ public class ChartConversionService {
     private static final String styles() {
         return "body:has(input[name='connection']:not([value='']):not(:disabled)) { border: 5px solid red; }"
              + "body:has(input[name='connection']:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
-             + ".title > * { padding: 0.5em; }";
+             + ".title > * { padding: 0.5em; font-style: italic; }";
     }
 
-    private final String scripts(Request request, HtmlTitle title, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
-        HtmlCanvas titleCanvas = HttpServletCanvas.of(request.getHttpServletRequest(), new OutputStreamWriter(new ByteArrayOutputStream(), StandardCharsets.UTF_8));
-        try {
-            title.renderOn(titleCanvas);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private final String scripts(String titleHtml, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
         return  "let dat = " + jsonData + ";\n"
               + "let allKeys = [...new Set(dat.map(x => Object.keys(x)).flat())];\n"
               + "let toFill = Object.assign(...allKeys.map(k => ({[k]: 0})));\n"
@@ -628,7 +634,7 @@ public class ChartConversionService {
               + "let legend = chart.children.push(am5.Legend.new(root, {}));\n"
               + "legend.data.setAll(chart.series.values);\n"
               + "chart.children.push(am5.Label.new(root, {\n"
-              + "  html: '<span class=\"title\">" + titleCanvas.toHtml() + "</span>',\n"
+              + "  html: '<span class=\"title\">" + titleHtml + "</span>',\n"
               + "  paddingLeft: 50,\n"
               + "  paddingTop: 0,\n"
               + "  paddingBottom: 0\n"
