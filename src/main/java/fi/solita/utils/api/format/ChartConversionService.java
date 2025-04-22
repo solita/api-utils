@@ -142,10 +142,6 @@ public class ChartConversionService {
         return serialize(title, request, newList(obj.values()), members.includesFromColumnFiltering);
     }
     
-    private static final Pattern P1 = Pattern.compile("^\\s*\\{\\s*\"");
-    private static final Pattern P2 = Pattern.compile("\"\\s*:\\s*0\\s*\\}\\s*$");
-    private static final Pattern P3 = Pattern.compile("\\{\\}");
-    
     @SuppressWarnings("unchecked")
     static final Iterable<Object> handleCollections(Object s) {
         return s instanceof Iterable
@@ -205,13 +201,15 @@ public class ChartConversionService {
         return Range.closed(RequestUtil.limit(i), RequestUtil.limit(i));
     }
     
+    private static final Pattern P1 = Pattern.compile("^\\s*\\{\\s*\"([^\"]*)\"\\s*:\\s*0\\s*\\}\\s*$");
+    
     String jsonSerializeKey(Object key) {
         if (key == null || key == None()) {
             return "-";
         }
         String serialized = new String(json.serialize(newMap(Pair.of(key, 0))), StandardCharsets.UTF_8);
-        String ret = P3.matcher(P2.matcher(P1.matcher(serialized).replaceAll("")).replaceAll("")).replaceAll("");
-        return ret.trim().isEmpty() ? "-" : ret;
+        String ret = P1.matcher(serialized).replaceFirst("$1");
+        return ret.isEmpty() ? "-" : ret;
     }
     
     private <T> BiFunction<List<T>, List<T>, List<T>> coalesce() {
