@@ -107,7 +107,7 @@ public class SupportServiceBase {
     
     static DateTime relate(DateTime now, boolean negate, boolean containsMoreAccurateThanDays, Period p) {
         return negate ? (containsMoreAccurateThanDays ? now.minus(p) : now.minus(p).withTimeAtStartOfDay())
-                      : (containsMoreAccurateThanDays ? now.plus(p) : now.plus(p).plusDays(1).withTimeAtStartOfDay());
+                      : (containsMoreAccurateThanDays ? now.plus(p) : now.plus(p).withTimeAtStartOfDay());
     }
     
     static Tuple3<Either<Duration,Period>,Boolean,Boolean> parse(String durationOrPeriod) throws InvalidValueException {

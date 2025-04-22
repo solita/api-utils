@@ -35,7 +35,7 @@ public class SupportServiceBaseTest {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.days(42);
         
-        assertEquals(someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, false, false, somePeriod));
+        assertEquals(someDateTime.plus(somePeriod).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, false, false, somePeriod));
         assertEquals(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), SupportServiceBase.relate(someDateTime, true, false, somePeriod));
     }
     
@@ -101,7 +101,7 @@ public class SupportServiceBaseTest {
         DateTime someDateTime = DateTime.now();
         Period somePeriod = Period.days(42);
         
-        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod).plusDays(1).withTimeAtStartOfDay()), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false, false));
+        assertEquals(new Interval(someDateTime, someDateTime.plus(somePeriod).withTimeAtStartOfDay()), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, false, false));
         assertEquals(new Interval(someDateTime.minus(somePeriod).withTimeAtStartOfDay(), someDateTime), SupportServiceBase.intervalForRedirect(someDateTime, somePeriod, true, false));
     }
     
