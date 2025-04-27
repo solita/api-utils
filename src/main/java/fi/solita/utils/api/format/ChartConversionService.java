@@ -6,6 +6,7 @@ import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Collections.newSet;
+import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.flatMap;
@@ -53,6 +54,7 @@ import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.joda.time.LocalDate;
 import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
@@ -287,7 +289,10 @@ public class ChartConversionService {
             
             Function1<T, Object> x = Function.of(head(members));
             
-            Set<Object> xValues = newSet(map(x, objs));
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Set<Object> xValues = !isEmpty(objs) && head(map(x, objs)) instanceof Comparable
+                ? newSortedSet((Iterable<Comparable>)(Object)map(x, objs))
+                : newSet(map(x, objs));
     
             final boolean xIsListOfValuesFromASingleRow = size(objs) == 1 && head(members) != DUMMY_MEMBER && Iterable.class.isAssignableFrom(resolvePropertyType(head(members)));
             
@@ -296,7 +301,9 @@ public class ChartConversionService {
                     // a single object with a single member that is a collection -> use the target collection as objects
                     objs = (Iterable<T>) head(xValues);
                     x = (Function1<T, Object>) Function.id();
-                    xValues = newSet(map(x, objs));
+                    xValues = !isEmpty(objs) && head(map(x, objs)) instanceof Comparable
+                        ? newSortedSet((Iterable<Comparable>)(Object)map(x, objs))
+                        : newSet(map(x, objs));
                 }
                 
                 // single member -> always chart counts
@@ -390,10 +397,8 @@ public class ChartConversionService {
                                              map(categoryValues(categoryObjects), tailMembers))));
                         }
                     } else {
-                        @SuppressWarnings("unchecked")
-                        Iterable<?> categories = xIsInstant ? newList(sort((Iterable<DateTime>)(Object)xValues)) : xValues;
                         Map<Object, List<T>> byCat = groupBy(x, objs);
-                        for (Object category: categories) {
+                        for (Object category: xValues) {
                             List<T> categoryObjects = find(category, byCat).getOrElse(emptyList());
                             data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)category).getMillis() : category,
                                          reduce(Monoids.mapCombine(SemiGroups.longSum),
