@@ -290,7 +290,7 @@ public abstract class HtmlConversionService {
                                     }
                                 })
                             ._div()
-                            .div(class_("properties sortable").add("persist-fields-query", ""))
+                            .div(id("sortable").class_("properties sortable").add("persist-fields-query", ""))
                                 .render(new Renderable() {
                                     @SuppressWarnings("unchecked")
                                     @Override
@@ -400,7 +400,7 @@ public abstract class HtmlConversionService {
                   .render(pageHead(title))
                 ._head()
                 .body(class_(rows == 1 ? "singleton" : ""))
-                  .input(type("checkbox").name("connection").hidden("hidden").checked("checked").value(""))
+                  .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
                   .section(id("content"))
                       .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
@@ -417,7 +417,7 @@ public abstract class HtmlConversionService {
                       .div(class_("lds-dual-ring"))._div()
                       .div(class_("load-more"))
                           .if_(sseEnabled)
-                              .a(href("").class_("sse").hidden("hidden"))
+                              .a(href("").id("sse").class_("sse").hidden("hidden"))
                                   .span(lang("fi")).write("Päivitä taulukkoa automaattisesti...")._span()
                                   .span(lang("en")).write("Refresh table automatically...")._span()
                               ._a()
@@ -738,13 +738,13 @@ public abstract class HtmlConversionService {
         + ".properties .negated      { display: none; }"
         
         // spinner
-        + ".htmx-Requestuest.lds-dual-ring { display: inline-block; }"
+        + ".htmx-request.lds-dual-ring { display: inline-block; }"
         + ".lds-dual-ring { display: none; width: 30px; height: 30px; margin-right: auto; margin-left: auto; }"
         + ".lds-dual-ring:after { content: ' '; display: block; width: 14px; height: 14px; margin: 8px; border-radius: 50%; border: 6px solid #000; border-color: #000 transparent #000 transparent; animation: lds-dual-ring 1.2s linear infinite; }"
         + "@keyframes lds-dual-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }"
         
-        + "body:has(input[name='connection']:not([value='']):not(:disabled))         { border: 5px solid red; }"
-        + "body:has(input[name='connection']:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
+        + "body:has(#connection:not([value='']):not(:disabled))         { border: 5px solid red; }"
+        + "body:has(#connection:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
         
         + mkString(" ", sequence(
              ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
@@ -855,42 +855,48 @@ public abstract class HtmlConversionService {
     
     public static final String initTableFilter(String contextPath) {
         return "if (window.TableFilter) {"
-             + "  [...document.querySelectorAll('#table:not(.TF)')].filter(x => !x.closest('.t-re')).forEach(function(x) {"
-             + "    window.tf = new TableFilter(x, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/', extensions: [{name: 'sort'}] });"
+             + "  const tab = document.getElementById('table');"
+             + "  if (tab && !tab.classList.contains('TF') && !tab.closest('.t-re')) {"
+             + "    window.tf = new TableFilter(tab, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/', extensions: [{name: 'sort'}] });"
              + "    tf.init();"
-             + "    x.addEventListener('htmx:afterSwap', function(ev) { tf.filter(); });"
-             + "  });"
+             + "    tab.addEventListener('htmx:afterSwap', function() { tf.filter(); });"
+             + "  }"
              + "}";
     }
     
     public static final String initSortable() {
         return "if (window.Sortable) {"
-             + "    document.querySelectorAll('.sortable').forEach(function(x) { new Sortable(x, { animation: 150 }) });"
+             + "    const srt = document.getElementById('sortable');"
+             + "    if (srt) {"
+             + "        new Sortable(srt, { animation: 150 });"
+             + "    }"
              + "}";
     }
     
     public static final String scripts3() {
-        return "document.querySelector('#table').removeAttribute('hidden');" // show table when it's completely done, to prevent reflows.
-           + "  if (!document.head.classList.contains('sse-done')) {"
-           + "        document.head.classList.add('sse-done');"
-           + "        document.querySelectorAll('.sse').forEach(function(sse) {"
-           + "            sse.addEventListener('click', function(ev) {"
-           + "                sse.setAttribute('hidden', 'hidden');"
-           + "                document.querySelector('.lds-dual-ring').style.display = 'block';"
-           + "                document.querySelectorAll('.load-more > *').forEach(function(child) {"
-           + "                    if (child.classList.contains('sse-loading')) { child.removeAttribute('hidden'); } else { child.setAttribute('hidden', 'hidden'); }"
-           + "                });"
-           + "                document.querySelectorAll('#table').forEach(function(e) {"
-           + "                    e.addEventListener('htmx:sseMessage', function(ev) { if (window.tf) { window.tf.filter(); } });"
-           + "                    e.setAttribute('sse-connect', window.location.href);"
-           + "                    htmx.process(e);"
-           + "                });"
-           + "                ev.preventDefault();"
-           + "                return false;"
-           + "            });"
-           + "            sse.removeAttribute('hidden');"
-           + "        });"
-           + "  }";
+        return "if (!document.head.classList.contains('sse-done')) {"
+           + "      document.head.classList.add('sse-done');"
+           + "      const sse = document.getElementById('sse');"
+           + "      sse.addEventListener('click', function(ev) {"
+           + "          sse.setAttribute('hidden', 'hidden');"
+           + "          document.querySelector('.lds-dual-ring').style.display = 'block';"
+           + "          document.querySelectorAll('.load-more > *').forEach(function(child) {"
+           + "              if (child.classList.contains('sse-loading')) {"
+           + "                  child.removeAttribute('hidden');"
+           + "              } else {"
+           + "                  child.setAttribute('hidden', 'hidden');"
+           + "              }"
+           + "          });"
+           + "          const tab = document.getElementById('table');"
+           + "          tab.addEventListener('htmx:sseMessage', function() { if (window.tf) { window.tf.filter(); } });"
+           + "          tab.setAttribute('sse-connect', window.location.href);"
+           + "          htmx.process(tab);"
+           + "          ev.preventDefault();"
+           + "          return false;"
+           + "      });"
+           + "      sse.removeAttribute('hidden');"
+           + "}"
+           + "document.getElementById('table').removeAttribute('hidden');"; // show table when it's completely done, to prevent reflows.
     }
     
     public String additionalHeadScript() {
