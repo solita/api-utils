@@ -896,7 +896,10 @@ public abstract class HtmlConversionService {
            + "      });"
            + "      sse.removeAttribute('hidden');"
            + "}"
-           + "document.getElementById('table').removeAttribute('hidden');"; // show table when it's completely done, to prevent reflows.
+           + "const tab = document.getElementById('table');"
+           + "if (tab) {"
+           + "    tab.removeAttribute('hidden');" // show table when it's completely done, to prevent reflows.
+           + "}";
     }
     
     public String additionalHeadScript() {
