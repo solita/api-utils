@@ -249,16 +249,17 @@ public abstract class HtmlSerializers {
     /**
      * Some concrete serializers for common types
      */
-    
+
     private final HtmlSerializer<ResolvedMember> resolvedMember = new HtmlSerializer<ResolvedMember>() {
-        private Pattern SECTION_START = Pattern.compile(".*<section\\s+id=\"content\"[^>]*>");
-        private Pattern SECTION_END = Pattern.compile("</section>.*");
         @Override
         public void renderOn(ResolvedMember value, HtmlCanvas html, HtmlModule module) throws IOException {
             try {
-                String content = SECTION_END.matcher(SECTION_START.matcher(new String(value.getData(), Charset.forName("UTF-8"))).replaceFirst("")).replaceFirst("");
+                String val = new String(value.getData(), Charset.forName("UTF-8"));
+                int contentStart = val.indexOf("<table id=\"table\"") + "<table id=\"table\"".length();
+                int contentEnd = val.lastIndexOf("</table>") + "</table>".length();
+                val = "<table " + val.substring(contentStart, contentEnd);
                 html.span(class_("t-re"))
-                      .write(content, false)
+                      .write(val, false)
                     ._span();
             } catch (Exception e) {
                 throw new RuntimeException(e);
