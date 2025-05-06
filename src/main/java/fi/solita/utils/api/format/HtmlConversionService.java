@@ -658,6 +658,7 @@ public abstract class HtmlConversionService {
         + "tbody tr       { border-top: 1px dotted #ccc; counter-increment: rowNumber; }"
         + "thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 1em; }"
         + "tbody > tr > td:first-child::before { content: counter(rowNumber); margin-right: 1em; color: #ddd; }"
+        + "table table tbody > tr > td:first-child::before { content: '' }"
         
         + "input.flt { height: 20px; }"
         + "table.TF tr th { padding-top: 0.5em; }"
@@ -700,10 +701,10 @@ public abstract class HtmlConversionService {
         + "ul li ul li    { border: none !important; }"
         + "ul li ul li    { background-color: transparent !important; }"
         
-        + "table table { counter-reset: none; }"
-        + "table table tr { border: none; counter-increment: none; }"
-        + "table table th { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; }"
-        + "table table td { border: none; padding: 1px 3px; line-height: 1em; }"
+        + "table table,    table.TF table { counter-reset: none; }"
+        + "table table tr, table.TF table tr { border: none; counter-increment: none; }"
+        + "table table th, table.TF table th, table.TF table th:last-child { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; height: auto; }"
+        + "table table td, table.TF table td { border: none; padding: 1px 3px; line-height: 1em; }"
         
         + UI.langSelectorCSS
         
@@ -742,9 +743,6 @@ public abstract class HtmlConversionService {
         + ".lds-dual-ring { display: none; width: 30px; height: 30px; margin-right: auto; margin-left: auto; }"
         + ".lds-dual-ring:after { content: ' '; display: block; width: 14px; height: 14px; margin: 8px; border-radius: 50%; border: 6px solid #000; border-color: #000 transparent #000 transparent; animation: lds-dual-ring 1.2s linear infinite; }"
         + "@keyframes lds-dual-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }"
-        
-        + "body:has(#connection:not([value='']):not(:disabled))         { border: 5px solid red; }"
-        + "body:has(#connection:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
         
         + mkString(" ", sequence(
              ("  h1             { font-size: 1.4em; margin-bottom: 0.1em; }"
