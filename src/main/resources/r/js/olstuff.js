@@ -1,4 +1,4 @@
-var olstuff = function(constants, util) {
+var olstuff = function(constants, util, includeCredentials) {
     proj4.defs("EPSG:3067", "+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs");
     proj4.defs("EPSG:4326","+proj=longlat +datum=WGS84 +no_defs +type=crs");
     proj4.defs("EPSG:3857","+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs");
@@ -327,7 +327,7 @@ var olstuff = function(constants, util) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         src: url,
-                        crossOrigin: 'use-credentials',
+                        crossOrigin: includeCredentials ? 'use-credentials' : 'anonymous',
                         scale: scale ? scale : 1,
                         rotateWithView: true,
                         anchor: anchor ? anchor : [0.5, 0.5],
@@ -388,7 +388,7 @@ var olstuff = function(constants, util) {
                     }
                     var kaavio = document.getElementById('kaavio');
                     layer.dispatchEvent("loadStart");
-                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal, credentials: 'include'})
+                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal, credentials: includeCredentials ? 'include' : 'same-origin'})
                         .then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                         .then(function(response) {
                           layer.dispatchEvent("loadSuccess");
@@ -561,7 +561,7 @@ var olstuff = function(constants, util) {
               };
             };
             
-            fetch(url, {credentials: 'include'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+            fetch(url, {credentials: includeCredentials ? 'include' : 'same-origin'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                                 .then(createLayer(matrix))
                                                 .catch(console.log);
             
@@ -604,13 +604,13 @@ var olstuff = function(constants, util) {
                 var maasto     = baseUrl + '/maasto/wmts/1.0.0/WMTSCapabilities.xml';
                 var teema      = baseUrl + '/teema/wmts/1.0.0/WMTSCapabilities.xml';
                 var kiinteisto = baseUrl + '/kiinteisto/wmts/1.0.0/WMTSCapabilities.xml';
-                fetch(maasto, {credentials: 'include'})    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                fetch(maasto, {credentials: includeCredentials ? 'include' : 'same-origin'})    .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                                            .then(createLayer('ETRS-TM35FIN', baseUrl))
                                                            .catch(console.log);
-                fetch(teema, {credentials: 'include'})     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                fetch(teema, {credentials: includeCredentials ? 'include' : 'same-origin'})     .then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                                            .then(createLayer('ETRS-TM35FIN', baseUrl))
                                                            .catch(console.log);
-                fetch(kiinteisto, {credentials: 'include'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
+                fetch(kiinteisto, {credentials: includeCredentials ? 'include' : 'same-origin'}).then(function(response) { if (response.ok) { return response.text(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                                            .then(createLayer('ETRS-TM35FIN', baseUrl))
                                                            .catch(console.log);
             }
@@ -626,7 +626,7 @@ var olstuff = function(constants, util) {
                 fold: 'close'
             });
             
-            fetch(collectionsUrl + '?f=json', {credentials: 'include'}).then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
+            fetch(collectionsUrl + '?f=json', {credentials: includeCredentials ? 'include' : 'same-origin'}).then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                                  .then(function(x) {
                 var cols = x.collections;
                 cols.sort(function(a,b) { return a.id < b.id; })
