@@ -8,7 +8,6 @@ import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
-import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.head;
@@ -24,6 +23,7 @@ import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Functional.transpose;
 import static fi.solita.utils.functional.Functional.zip;
 import static fi.solita.utils.functional.Functional.zipWithIndex;
+import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.FunctionalM.with;
@@ -54,7 +54,6 @@ import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.joda.time.LocalDate;
 import org.rendersnake.DocType;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
@@ -435,7 +434,7 @@ public class ChartConversionService {
                   .render(pageHead(title.plainTextTitle, titleHtml, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
                 ._head()
                 .body()
-                  .input(type("checkbox").name("connection").hidden("hidden").checked("checked").value(""))
+                  .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
                   .div(id("chart"))._div()
                 ._body()
                 .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts.min.js"))._script()
@@ -473,10 +472,13 @@ public class ChartConversionService {
         };
     }
     
-    private static final String styles() {
-        return "body:has(input[name='connection']:not([value='']):not(:disabled)) { border: 5px solid red; }"
-             + "body:has(input[name='connection']:not([value='']):not(:disabled):checked) { border: 5px solid lightgreen; }"
-             + ".title > * { padding: 0.5em; font-style: italic; }";
+    private final String styles() {
+        return ".title > * { padding: 0.5em; font-style: italic; }"
+             + extraStyle();
+    }
+    
+    protected String extraStyle() {
+        return "";
     }
 
     private final String scripts(String titleHtml, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
