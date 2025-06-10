@@ -568,9 +568,9 @@ var olstuff = function(constants, util, includeCredentials) {
             return group;
         },
         
-        taustaGroup: function(opacity, baseUrl, includeMML) {
+        taustaGroup: function(opacity, baseUrl, includeMML, showOSM) {
             var osm = ret.tileLayer('OpenStreetMap', new ol.source.OSM());
-            osm.setVisible(true);
+            osm.setVisible(showOSM);
             var group = new ol.layer.Group({
                 title: ret.mkLayerTitle('Taustat', 'Backgrounds'),
                 layers: [ret.newImageLayer('https://placehold.it/256/eeffee?text=+', 'Green', opacity),
