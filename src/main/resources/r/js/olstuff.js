@@ -319,10 +319,6 @@ var olstuff = function(constants, util, includeCredentials) {
                 });
             },
             
-            onLoad: function(func) {
-                return func;
-            },
-            
             icon: function(url, flipped, rotation, anchor, scale, opacity) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
@@ -430,12 +426,25 @@ var olstuff = function(constants, util, includeCredentials) {
                             }
                           });
                           if (styleOrHandler instanceof Function) {
+                              var layerBaseStyle = layer.get('_highlight');
                               if (styleOrHandler.length == 1) {
                                   // on feature load
-                                  features.forEach(styleOrHandler);
+                                  features.forEach(function(f) {
+                                      styleOrHandler(f);
+                                      if (layerBaseStyle) {
+                                          var fStyle = f.getStyle();
+                                          f.setStyle(typeof fStyle === 'function' ? function(f,r) { return [layerBaseStyle].concat([fStyle(f,r)].flat()); } : [layerBaseStyle].concat([fStyle].flat()));
+                                      }
+                                  });
                               } else {
                                   // dynamic style
-                                  features.forEach(function(f) { f.setStyle(styleOrHandler); });
+                                  features.forEach(function(f) {
+                                      if (layerBaseStyle) {
+                                          f.setStyle(function(f, r) { return [layerBaseStyle].concat([styleOrHandler(f, r)].flat()); });
+                                      } else {
+                                          f.setStyle(styleOrHandler);
+                                      }
+                                  });
                               }
                           }
                           source.addFeatures(features);
