@@ -17,7 +17,8 @@ public enum SerializationFormat {
     GML("application/gml+xml"),
     COUNT("text/plain"),
     MVT("application/vnd.mapbox-vector-tile"),
-    CHART("text/html;charset=UTF-8")
+    CHART("text/html;charset=UTF-8"),
+    PDF("application/pdf")
     ;
     
     public final String mediaType;
@@ -50,6 +51,8 @@ public enum SerializationFormat {
             return Some(SerializationFormat.MVT);
         } else if (extension.equals("chart")) {
             return Some(SerializationFormat.CHART);
+        } else if (extension.equals("pdf")) {
+            return Some(SerializationFormat.PDF);
         }
         return None();
     }

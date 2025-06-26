@@ -591,7 +591,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                   .modelRef(new ModelRef("String"))
                   .parameterType("path")
                   .required(true)
-                  .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML, SerializationFormat.MVT)))), "String"))
+                  .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.enumName.andThen(SwaggerSupport_.toLowerCase), subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML, SerializationFormat.MVT, SerializationFormat.PDF)))), "String"))
                   .build()
             ));
         }
