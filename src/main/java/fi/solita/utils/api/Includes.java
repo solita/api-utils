@@ -156,6 +156,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 case XML:
                 case COUNT:
                 case MVT:
+                case PDF:
                     ret = Includes.withNestedMembers(members, Includes.Include.All, builders);
                     break;
             }
@@ -186,6 +187,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             case XLSX:
             case XML:
             case COUNT:
+            case PDF:
         }
         
         // Exclusions. Also excludes geometries if explicitly excluded.
