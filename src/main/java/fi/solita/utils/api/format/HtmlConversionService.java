@@ -863,43 +863,43 @@ public abstract class HtmlConversionService {
     }
     
     public static final String initSortable() {
-        return "if (window.Sortable) {\n"
-             + "    const srt = document.getElementById('sortable');\n"
-             + "    if (srt) {\n"
-             + "        new Sortable(srt, { animation: 150 });\n"
-             + "    }\n"
-             + "}\n";
+        return "if (window.Sortable) {"
+             + "    const srt = document.getElementById('sortable');"
+             + "    if (srt) {"
+             + "        new Sortable(srt, { animation: 150 });"
+             + "    }"
+             + "}";
     }
     
     public static final String scripts3() {
-        return "if (!document.head.classList.contains('sse-done')) {\n"
-             + "    document.head.classList.add('sse-done');\n"
-             + "    const sse = document.getElementById('sse');\n"
-             + "    if (sse) {\n"
-             + "        sse.addEventListener('click', function(ev) {\n"
-             + "            sse.setAttribute('hidden', 'hidden');\n"
-             + "            document.querySelector('.lds-dual-ring').style.display = 'block';\n"
-             + "            document.querySelectorAll('.load-more > *').forEach(function(child) {\n"
-             + "                if (child.classList.contains('sse-loading')) {\n"
-             + "                    child.removeAttribute('hidden');\n"
-             + "                } else {\n"
-             + "                    child.setAttribute('hidden', 'hidden');\n"
-             + "                }\n"
-             + "            });\n"
-             + "            const tab = document.getElementById('table');\n"
-             + "            tab.addEventListener('htmx:sseMessage', function() { if (window.tf) { window.tf.filter(); } });\n"
-             + "            tab.setAttribute('sse-connect', window.location.href);\n"
-             + "            htmx.process(tab);\n"
-             + "            ev.preventDefault();\n"
-             + "            return false;\n"
-             + "        });\n"
-             + "        sse.removeAttribute('hidden');\n"
-             + "    }\n"
-             + "}\n"
-             + "const tab = document.getElementById('table');\n"
-             + "if (tab) {\n"
-             + "    tab.removeAttribute('hidden');\n" // show table when it's completely done, to prevent reflows.
-             + "}\n";
+        return "if (!document.head.classList.contains('sse-done')) {"
+             + "    document.head.classList.add('sse-done');"
+             + "    const sse = document.getElementById('sse');"
+             + "    if (sse) {"
+             + "        sse.addEventListener('click', function(ev) {"
+             + "            sse.setAttribute('hidden', 'hidden');"
+             + "            document.querySelector('.lds-dual-ring').style.display = 'block';"
+             + "            document.querySelectorAll('.load-more > *').forEach(function(child) {"
+             + "                if (child.classList.contains('sse-loading')) {"
+             + "                    child.removeAttribute('hidden');"
+             + "                } else {"
+             + "                    child.setAttribute('hidden', 'hidden');"
+             + "                }"
+             + "            });"
+             + "            const tab = document.getElementById('table');"
+             + "            tab.addEventListener('htmx:sseMessage', function() { if (window.tf) { window.tf.filter(); } });"
+             + "            tab.setAttribute('sse-connect', window.location.href);"
+             + "            htmx.process(tab);"
+             + "            ev.preventDefault();"
+             + "            return false;"
+             + "        });"
+             + "        sse.removeAttribute('hidden');"
+             + "    }"
+             + "}"
+             + "const tab = document.getElementById('table');"
+             + "if (tab) {"
+             + "    tab.removeAttribute('hidden');" // show table when it's completely done, to prevent reflows.
+             + "}";
     }
     
     public String additionalHeadScript() {
