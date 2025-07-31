@@ -534,7 +534,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
     /**
      * @param info  
      */
-    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase publishedVersion, ApiInfo info, final boolean ignoreRevision, boolean includeFormatParameter) {
+    public static Docket createDocket(final String contextPath, TypeResolver typeResolver, VersionBase<?> publishedVersion, ApiInfo info, final boolean ignoreRevision, boolean includeFormatParameter) {
         Docket docket = new Docket(DocumentationType.SWAGGER_2) {
             @Override
             public DocumentationContext configure(DocumentationContextBuilder builder) {

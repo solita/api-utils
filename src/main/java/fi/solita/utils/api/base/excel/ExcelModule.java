@@ -16,7 +16,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
-import fi.solita.utils.api.base.csv.CsvSerializer;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.ClassUtils;
