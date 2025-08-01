@@ -173,6 +173,7 @@ public abstract class StdSerialization<BOUNDS> {
         case CHART:
             response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
+        case PDF:
         case GML:
         case XML:
         case MVT:
@@ -237,6 +238,7 @@ public abstract class StdSerialization<BOUNDS> {
         case CHART:
             response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
+        case PDF:
         case GML:
         case XML:
         case MVT:
@@ -296,6 +298,7 @@ public abstract class StdSerialization<BOUNDS> {
     case CHART:
         response = Pair.of(chart.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
         break;
+    case PDF:
     case GML:
     case XML:
     case MVT:
@@ -351,6 +354,7 @@ public abstract class StdSerialization<BOUNDS> {
         case CHART:
             response = Pair.of(chart.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
             break;
+        case PDF:
         case PNG:
         case GML:
         case XML:
@@ -425,6 +429,7 @@ public abstract class StdSerialization<BOUNDS> {
         case CHART:
             response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
             break;
+        case PDF:
         case GML:
         case XML:
         case MVT:
@@ -493,6 +498,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case GML:
             case XML:
@@ -586,6 +592,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case GML:
             case XML:
@@ -638,6 +645,7 @@ public abstract class StdSerialization<BOUNDS> {
         case CHART:
             response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
+        case PDF:
         case PNG:
         case GML:
         case XML:
@@ -691,6 +699,7 @@ public abstract class StdSerialization<BOUNDS> {
         case CHART:
             response = Pair.of(chart.serialize(req, title, mapValues(dataTransformer, data.get()), includes), emptyMap());
             break;
+        case PDF:
         case PNG:
         case GML:
         case XML:
@@ -743,6 +752,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case GML:
             case XML:
@@ -793,6 +803,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case GML:
             case XML:
@@ -840,6 +851,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, data), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case GML:
             case XML:
@@ -892,6 +904,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case XML:
             case GML:
@@ -942,6 +955,7 @@ public abstract class StdSerialization<BOUNDS> {
             case CHART:
                 response = Pair.of(chart.serialize(req, title, map(dataTransformer, data.get())), emptyMap());
                 break;
+            case PDF:
             case PNG:
             case XML:
             case GML:
