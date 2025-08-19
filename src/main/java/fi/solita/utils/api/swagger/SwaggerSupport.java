@@ -500,7 +500,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
         try {
             String path = version + (ignoreRevision ? "" : ".extended");
             registry.addResourceHandler("/" + path + "/swagger*.html")
-                    .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
+                    .addResourceLocations("classpath:/META-INF/resources/");
             registry.addResourceHandler("/" + path + "/webjars/**")
                     .addResourceLocations("classpath:/META-INF/resources/webjars/");
         } catch (Exception e) {
