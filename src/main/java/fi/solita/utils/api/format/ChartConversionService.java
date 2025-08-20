@@ -484,7 +484,7 @@ public class ChartConversionService {
     private final String scripts(String titleHtml, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
         return  "let dat = " + jsonData + ";\n"
               + "let allKeys = [...new Set(dat.map(x => Object.keys(x)).flat())];\n"
-              + "let toFill = Object.assign(...allKeys.map(k => ({[k]: 0})));\n"
+              + "let toFill = allKeys.length === 0 ? {} : Object.assign(...allKeys.map(k => ({[k]: 0})));\n"
               + "let data = dat.map(d => ({...toFill, ...d}));\n"
               + "let root = am5.Root.new('chart', {"
               + "  timezone: am5.Timezone.new('Europe/Helsinki'),\n"
