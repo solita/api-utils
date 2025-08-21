@@ -29,7 +29,6 @@ import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.FunctionalM.with;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.isNull;
 import static fi.solita.utils.functional.Predicates.not;
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
@@ -322,10 +321,16 @@ public class ChartConversionService {
                                         Pair.of("count", entry.getValue().size())));
                     }
                 } else {
+                    List<Object> os = newList(map(x, objs));
                     for (Object category: xValues) {
-                        List<T> categoryObjects = newList(filter(x.andThen(equalTo(category)), objs));
+                        long categoryObjects = 0;
+                        for (Object o: os) {
+                            if (category.equals(o)) {
+                                categoryObjects++;
+                            };
+                        }
                         data.add(newMap(Pair.of("c", category),
-                                        Pair.of("count", Long.valueOf(categoryObjects.size()))));
+                                        Pair.of("count", Long.valueOf(categoryObjects))));
                     }
                 }
             } else {
