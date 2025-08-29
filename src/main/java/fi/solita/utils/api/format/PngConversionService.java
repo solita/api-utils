@@ -16,6 +16,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -74,21 +76,33 @@ public class PngConversionService {
         System.setProperty("org.apache.batik.warn_destination", "false");
     }
     
-    private final byte[] emptyTile;
+    private static final byte[] emptyTile;
+    static {
+        try {
+            emptyTile = IOUtils.toByteArray(PngConversionService.class.getResource("/empty256.png").openStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     
-    private final Map<String,Style> defaultStyles = newMutableMap();
+    private static final ConcurrentMap<String,Map<String,Style>> allDefaultStyles = new ConcurrentHashMap<String, Map<String,Style>>();
+    
+    private final Map<String,Style> defaultStyles;
     
     private final URI baseURI;
 
     public PngConversionService(String imageBasePath, URI baseURI) {
         this.baseURI = baseURI;
         try {
-            for (StyledLayer layer: createStyles(imageBasePath, getSld())) {
-                // use only the first style in the layer...
-                defaultStyles.put(layer.getName(), ((NamedLayer)layer).getStyles()[0]);
+            if (!allDefaultStyles.containsKey(imageBasePath)) {
+                Map<String,Style> styles = newMutableMap();
+                for (StyledLayer layer: createStyles(imageBasePath, getSld())) {
+                    // use only the first style in the layer...
+                    styles.put(layer.getName(), ((NamedLayer)layer).getStyles()[0]);
+                }
+                allDefaultStyles.put(imageBasePath, styles);
             }
-            
-            this.emptyTile = IOUtils.toByteArray(PngConversionService.class.getResource("/empty256.png").openStream());
+            this.defaultStyles = allDefaultStyles.get(imageBasePath);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
