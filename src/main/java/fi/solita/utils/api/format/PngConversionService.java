@@ -11,19 +11,30 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.poi.util.IOUtils;
+import org.geotools.api.feature.simple.SimpleFeature;
+import org.geotools.api.feature.simple.SimpleFeatureType;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.style.NamedLayer;
+import org.geotools.api.style.ResourceLocator;
+import org.geotools.api.style.Style;
+import org.geotools.api.style.StyledLayer;
+import org.geotools.api.style.StyledLayerDescriptor;
+import org.geotools.data.collection.ListFeatureCollection;
+import org.geotools.data.geojson.GeoJSONReader;
 import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.geojson.feature.FeatureJSON;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.map.FeatureLayer;
@@ -33,19 +44,15 @@ import org.geotools.renderer.RenderListener;
 import org.geotools.renderer.lite.StreamingRenderer;
 import org.geotools.sld.SLDConfiguration;
 import org.geotools.styling.DefaultResourceLocator;
-import org.geotools.styling.NamedLayer;
-import org.geotools.styling.ResourceLocator;
-import org.geotools.styling.Style;
-import org.geotools.styling.StyledLayer;
-import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.xsd.Parser;
 import org.joda.time.Duration;
-import org.opengis.feature.simple.SimpleFeature;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ar.com.hjg.pngj.FilterType;
+import fi.solita.utils.api.filtering.Filtering;
+import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Option;
@@ -54,13 +61,20 @@ import it.geosolutions.imageio.plugins.png.PNGWriter;
 
 public class PngConversionService {
     
-    public static final int tileSize = 256;
+    public static final int tileSize = 4096;
     
-    public static final float COMPRESSION_QUALITY = 1.0F;
+    public static final float COMPRESSION_QUALITY = 0.01F;
     
     private static final Logger logger = LoggerFactory.getLogger(PngConversionService.class);
     
-    private final byte[] empty256;
+    private static final Pattern PROPERTY_NAME_EXTRACTOR = Pattern.compile("Could not find '([^']+)' in the FeatureType");
+    
+    static {
+        // to get rid of "Graphics2D from BufferedImage lacks BUFFERED_IMAGE hint" logging
+        System.setProperty("org.apache.batik.warn_destination", "false");
+    }
+    
+    private final byte[] emptyTile;
     
     private final Map<String,Style> defaultStyles = newMutableMap();
     
@@ -74,7 +88,7 @@ public class PngConversionService {
                 defaultStyles.put(layer.getName(), ((NamedLayer)layer).getStyles()[0]);
             }
             
-            this.empty256 = IOUtils.toByteArray(PngConversionService.class.getResource("/empty" + tileSize + ".png").openStream());
+            this.emptyTile = IOUtils.toByteArray(PngConversionService.class.getResource("/empty256.png").openStream());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -84,12 +98,12 @@ public class PngConversionService {
         return getClass().getResource("/defaultStyle.sld");
     }
     
-    public byte[] render(String requestURI, Option<String> apikey, ReferencedEnvelope paikka, String layerName) {
+    public byte[] render(String requestURI, Option<String> apikey, Option<ReferencedEnvelope> paikka, String layerName) {
         URI uri = baseURI.resolve(requestURI.replaceFirst(".png", ".geojson"));
         return render(uri, paikka, layerName, apikey);
     }
     
-    public byte[] render(URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) {
+    public byte[] render(URI uri, Option<ReferencedEnvelope> paikka, String layerName, Option<String> apikey) {
         try {
             return render(tileSize, tileSize, uri, paikka, layerName, apikey);
         } catch (RuntimeException e) {
@@ -115,25 +129,48 @@ public class PngConversionService {
         return in;
     }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, ReferencedEnvelope paikka, String layerName, Option<String> apikey) throws IOException {
+    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> paikka, String layerName, Option<String> apikey) throws IOException {
         Style layerStyle = find(layerName, defaultStyles).orElse(new ApplyZero<Style>() {
             @Override
             public Style get() {
                 throw new RuntimeException("Couldn't find layer with name: " + layerName);
             } });
         logger.debug("Fetching geojson...");
-        FeatureJSON io = new FeatureJSON();
-        Reader reader = new InputStreamReader(fetchGeojson(uri, apikey), Charset.forName("UTF-8"));
-        FeatureCollection<?,?> featureCollection;
+        String geojson = org.apache.commons.io.IOUtils.toString(fetchGeojson(uri, apikey), "UTF-8");
+        FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection;
+        
+        GeoJSONReader reader = new GeoJSONReader(geojson);
         try {
-            featureCollection = io.readFeatureCollection(reader);
+            featureCollection = reader.getFeatures();
         } finally {
             reader.close();
         }
         
         if (featureCollection.isEmpty()) {
-            return empty256;
+            GeoJSONReader reader2 = new GeoJSONReader(geojson);
+            try {
+                SimpleFeature feature = reader2.getFeature();
+                featureCollection = new ListFeatureCollection(feature.getFeatureType(), feature) ;
+            } catch (Exception e) {
+                logger.debug("Could not parse a Feature", e);
+            } finally {
+                reader2.close();
+            }
         }
+        
+        if (featureCollection.isEmpty()) {
+            return emptyTile;
+        }
+        
+        // "GeoJSON is always WGS84" my ass!
+        CoordinateReferenceSystem crs = new FeatureJSON().readCRS(geojson);
+        SimpleFeatureType ft = SimpleFeatureTypeBuilder.retype(featureCollection.getSchema(), crs);
+        FeatureIterator<SimpleFeature> f = featureCollection.features();
+        List<SimpleFeature> feats = newMutableList();
+        while (f.hasNext()) {
+            feats.add(SimpleFeatureBuilder.retype(f.next(), ft));
+        }
+        featureCollection = new ListFeatureCollection(ft, feats);
         
         long started = System.nanoTime();
 
@@ -143,7 +180,7 @@ public class PngConversionService {
         BufferedImage image;
         try {
             map.addLayer(new FeatureLayer(featureCollection, layerStyle));
-            map.getViewport().setBounds(paikka);
+            map.getViewport().setBounds(paikka.getOrElse(featureCollection.getBounds()));
             
             final GTRenderer renderer = new StreamingRenderer();
             renderer.setMapContent(map);
@@ -158,7 +195,7 @@ public class PngConversionService {
             renderer.addRenderListener(new RenderListener() {
                 @Override
                 public void featureRenderer(SimpleFeature feature) {
-                    // no-op
+                    logger.debug("Rendered: {}", feature);
                 }
                 @Override
                 public void errorOccurred(Exception e) {
@@ -169,7 +206,7 @@ public class PngConversionService {
             });
             
             image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-            renderer.paint(image.createGraphics(), new Rectangle(imageWidth, imageWidth), map.getViewport().getBounds());
+            renderer.paint(image.createGraphics(), new Rectangle(imageWidth, imageHeight), map.getViewport().getBounds());
         } finally {
             map.dispose();
         }
@@ -178,6 +215,13 @@ public class PngConversionService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         
         for (Exception e: errors) {
+            if (e instanceof org.geotools.filter.IllegalFilterException) {
+                Matcher m = PROPERTY_NAME_EXTRACTOR.matcher(e.getMessage());
+                
+                if (m.find() && m.groupCount() > 0) {
+                    throw new Filtering.FilterPropertyNotFoundException(PropertyName.of(m.group(1)), e);
+                }
+            }
             throw new RuntimeException(e);
         }
         

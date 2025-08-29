@@ -1,6 +1,5 @@
 package fi.solita.utils.api;
 
-import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
@@ -9,10 +8,10 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.geotools.geometry.DirectPosition2D;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.operation.MathTransform;
+import org.geotools.geometry.Position2D;
 import org.geotools.referencing.CRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.MathTransform;
 
 import fi.solita.utils.api.filtering.Filter;
 import fi.solita.utils.api.filtering.FilterType;
@@ -76,7 +75,7 @@ public class Transform {
             if (sourceCRS.equals(SRSName.CRS84)) {
                 from = new double[] {from[1], from[0]};
             }
-            double[] to = transformer.transform(new DirectPosition2D(from[0], from[1]), null).getCoordinate();
+            double[] to = transformer.transform(new Position2D(from[0], from[1]), null).getCoordinate();
             if (targetCRS.equals(SRSName.CRS84)) {
                 to = new double[] { to[1], to[0] };
             }

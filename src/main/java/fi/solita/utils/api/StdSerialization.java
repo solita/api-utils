@@ -165,7 +165,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title)), emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
@@ -230,7 +230,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title)), emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
@@ -290,7 +290,7 @@ public abstract class StdSerialization<BOUNDS> {
         response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
     case PNG:
-        response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
+        response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title)), emptyMap());
         break;
     case COUNT:
         response = Pair.of(count.serialize(data.get()), emptyMap());
@@ -348,6 +348,9 @@ public abstract class StdSerialization<BOUNDS> {
         case XLSX:
             response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
+        case PNG:
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), None(), title2layerName(title)), emptyMap());
+            break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
             break;
@@ -355,7 +358,6 @@ public abstract class StdSerialization<BOUNDS> {
             response = Pair.of(chart.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
             break;
         case PDF:
-        case PNG:
         case GML:
         case XML:
         case MVT:
@@ -421,7 +423,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), bounds2envelope(bbox), title2layerName(title)), emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title)), emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), emptyMap());
@@ -492,6 +494,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
+            case PNG:
+                response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), None(), title2layerName(title)), emptyMap());
+                break;
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
@@ -499,7 +504,6 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(chart.serialize(req, title, newList(map(dataTransformer, data.get())), includes), emptyMap());
                 break;
             case PDF:
-            case PNG:
             case GML:
             case XML:
             case MVT:
@@ -586,6 +590,9 @@ public abstract class StdSerialization<BOUNDS> {
             case XLSX:
                 response = excel.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case PNG:
+                response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), None(), title2layerName(title)), emptyMap());
+                break;
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), emptyMap());
                 break;
@@ -593,7 +600,6 @@ public abstract class StdSerialization<BOUNDS> {
                 response = Pair.of(chart.serialize(req, title, dataTransformer.apply(data.get()), includes), emptyMap());
                 break;
             case PDF:
-            case PNG:
             case GML:
             case XML:
             case MVT:
