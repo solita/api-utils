@@ -319,7 +319,7 @@ var olstuff = function(constants, util, includeCredentials) {
                 });
             },
             
-            icon: function(url, flipped, rotation, anchor, scale, opacity) {
+            icon: function(url, flipped, rotation, anchor, scale, opacity, displacement) {
                 return new ol.style.Style({
                     image: new ol.style.Icon({
                         src: url,
@@ -328,7 +328,8 @@ var olstuff = function(constants, util, includeCredentials) {
                         rotateWithView: true,
                         anchor: anchor ? anchor : [0.5, 0.5],
                         rotation: rotation ? 2*Math.PI*rotation/360 : 0,
-                        opacity: opacity ? opacity : 1.0
+                        opacity: opacity ? opacity : 1.0,
+                        displacement: displacement
                     })
                 });
             },
