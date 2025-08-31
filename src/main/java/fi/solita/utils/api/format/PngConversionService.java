@@ -27,12 +27,12 @@ import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.api.style.NamedLayer;
-import org.geotools.api.style.ResourceLocator;
 import org.geotools.api.style.Style;
 import org.geotools.api.style.StyledLayer;
 import org.geotools.api.style.StyledLayerDescriptor;
 import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.geojson.GeoJSONReader;
+import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -44,11 +44,9 @@ import org.geotools.map.MapContent;
 import org.geotools.renderer.GTRenderer;
 import org.geotools.renderer.RenderListener;
 import org.geotools.renderer.lite.StreamingRenderer;
-import org.geotools.sld.SLDConfiguration;
 import org.geotools.styling.DefaultResourceLocator;
-import org.geotools.xsd.Parser;
+import org.geotools.xml.styling.SLDParser;
 import org.joda.time.Duration;
-import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -266,27 +264,11 @@ public class PngConversionService {
         } catch (Exception e) {
             throw new RuntimeException("Error constructing URL for styles, based on: " + url.toString(), e);
         }
-        Parser parser = new Parser(new SLDConfiguration() {
-            // suhteellisten urlien parsinta vaatii ilmeisesti tällaista...
-            // https://osgeo-org.atlassian.net/browse/GEOS-5800
-            @Override
-            protected void configureContext(MutablePicoContainer container) {
-                super.configureContext(container);
-                DefaultResourceLocator locator = new DefaultResourceLocator();
-                locator.setSourceUrl(sourceUrl);
-                for (Object o: container.getComponentInstancesOfType(ResourceLocator.class)) {
-                    container.unregisterComponentByInstance(o);
-                }
-                container.registerComponentInstance(ResourceLocator.class, locator); 
-            }
-        });
-        
-        InputStream in = url.openStream();
-        try {
-            StyledLayerDescriptor sld = (StyledLayerDescriptor) parser.parse(in);
-            return sld.getStyledLayers();
-        } finally {
-            in.close();
-        }
+        SLDParser parser = new SLDParser(CommonFactoryFinder.getStyleFactory(null), url);
+        DefaultResourceLocator resLoc = new DefaultResourceLocator();
+        resLoc.setSourceUrl(sourceUrl);
+        parser.setOnLineResourceLocator(resLoc);
+        StyledLayerDescriptor sld = (StyledLayerDescriptor) parser.parseSLD();
+        return sld.getStyledLayers();
     }
 }

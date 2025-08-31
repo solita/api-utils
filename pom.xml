@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.20.62</version>
+    <version>0.20.63</version>
     <build>
         <resources>
             <resource>
@@ -296,11 +296,6 @@
             <groupId>org.locationtech.jts</groupId>
             <artifactId>jts-core</artifactId>
             <version>1.19.0</version>
-        </dependency>
-        <dependency>
-            <groupId>picocontainer</groupId>
-            <artifactId>picocontainer</artifactId>
-            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>it.geosolutions.imageio-ext</groupId>
