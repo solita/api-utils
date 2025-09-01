@@ -329,7 +329,7 @@ var olstuff = function(constants, util, includeCredentials) {
                         anchor: anchor ? anchor : [0.5, 0.5],
                         rotation: rotation ? 2*Math.PI*rotation/360 : 0,
                         opacity: opacity ? opacity : 1.0,
-                        displacement: displacement
+                        displacement: displacement || [0, 0]
                     })
                 });
             },
