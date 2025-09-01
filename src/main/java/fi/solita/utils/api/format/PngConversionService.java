@@ -1,10 +1,14 @@
 package fi.solita.utils.api.format;
 
+import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
+import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.FunctionalM.find;
 
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -57,6 +61,7 @@ import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Transformers;
 import it.geosolutions.imageio.plugins.png.PNGWriter;
 
 public class PngConversionService {
@@ -64,6 +69,9 @@ public class PngConversionService {
     public static final int tileSize = 4096;
     
     public static final float COMPRESSION_QUALITY = 0.01F;
+    
+    private static final Pattern BBOX_INT = Pattern.compile("bbox=[0-9,]+");
+    private static final Pattern BBOX_DEC = Pattern.compile("bbox=[0-9,.]+");
     
     private static final Logger logger = LoggerFactory.getLogger(PngConversionService.class);
     
@@ -110,14 +118,33 @@ public class PngConversionService {
         return getClass().getResource("/defaultStyle.sld");
     }
     
-    public byte[] render(String requestURI, Option<String> apikey, Option<ReferencedEnvelope> paikka, String layerName) {
-        URI uri = baseURI.resolve(requestURI.replaceFirst(".png", ".geojson"));
+    static final int toInt(double d) {
+        return (int) Math.round(d);
+    }
+    
+    public byte[] render(String pngRequestURI, Option<String> apikey, Option<ReferencedEnvelope> paikka, String layerName) {
+        for (ReferencedEnvelope p: paikka) {
+            // add some buffer to the bbox, so that we retrieve features slightly
+            // larger area than we are going to render. This way we get to render images
+            // whose geometry point is in another tile, but whose graphic extends to this one.
+            p.expandBy(p.getWidth()/4, p.getHeight()/4);
+            Matcher matcher = BBOX_INT.matcher(pngRequestURI);
+            if (matcher.find()) {
+                String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                pngRequestURI = matcher.replaceAll(bbox);
+            } else {
+                matcher = BBOX_DEC.matcher(pngRequestURI);
+                String bbox = "bbox=" + mkString(",", map(Transformers.toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                pngRequestURI = matcher.replaceAll(bbox);
+            }
+        }
+        URI uri = baseURI.resolve(pngRequestURI.replaceFirst(".png", ".geojson"));
         return render(uri, paikka, layerName, apikey);
     }
     
-    public byte[] render(URI uri, Option<ReferencedEnvelope> paikka, String layerName, Option<String> apikey) {
+    private byte[] render(URI geojsonURI, Option<ReferencedEnvelope> paikka, String layerName, Option<String> apikey) {
         try {
-            return render(tileSize, tileSize, uri, paikka, layerName, apikey);
+            return render(tileSize, tileSize, geojsonURI, paikka, layerName, apikey);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -217,8 +244,10 @@ public class PngConversionService {
                 }
             });
             
-            image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-            renderer.paint(image.createGraphics(), new Rectangle(imageWidth, imageHeight), map.getViewport().getBounds());
+            BufferedImage imageWithBuffer = new BufferedImage(imageWidth+imageWidth/2, imageHeight+imageHeight/2, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D graphics = imageWithBuffer.createGraphics();
+            renderer.paint(graphics, new Rectangle(imageWidth+imageWidth/2, imageHeight+imageHeight/2), paikka.getOrElse(featureCollection.getBounds()));
+            image = imageWithBuffer.getSubimage(imageWidth/4, imageHeight/4, imageWidth, imageHeight);
         } finally {
             map.dispose();
         }
