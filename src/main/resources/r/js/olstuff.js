@@ -564,7 +564,20 @@ var olstuff = function(constants, util, includeCredentials) {
                     var id = l.Identifier;
                     var tms = l.TileMatrixSetLink.map(function(t) { return t.TileMatrixSet; });
                     if (tms.indexOf(matrix) > -1) {
-                        var options = ol.source.WMTS.optionsFromCapabilities(result, {layer: id, matrixSet: matrix});
+                        var options = {
+                            ...ol.source.WMTS.optionsFromCapabilities(result, {layer: id, matrixSet: matrix}),
+                            tileLoadFunction: function (imageTile, src) {
+                              var instant = new URLSearchParams(window.location.search).get('time');
+                              var kaavio = document.getElementById('kaavio');
+                              if (instant) {
+                                src = src.replace(/time=[^&#]+/, "time=" + (instant.indexOf('/') < 0 ? instant + '/' + instant : instant));
+                              }
+                              if (kaavio && kaavio.checked) {
+                                src = src.replace(/presentation=map/, 'presentation=diagram');
+                              }
+                              imageTile.getImage().src = src;
+                            }
+                        };
                         group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), 1.0));
                     }
                 });
