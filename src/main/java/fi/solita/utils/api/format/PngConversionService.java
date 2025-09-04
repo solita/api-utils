@@ -4,9 +4,12 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
+import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.FunctionalM.find;
+import static fi.solita.utils.functional.Option.None;
+import static fi.solita.utils.functional.Option.Some;
 
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -27,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.poi.util.IOUtils;
+import org.geotools.api.feature.Property;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
@@ -51,8 +55,12 @@ import org.geotools.renderer.lite.StreamingRenderer;
 import org.geotools.styling.DefaultResourceLocator;
 import org.geotools.xml.styling.SLDParser;
 import org.joda.time.Duration;
+import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ar.com.hjg.pngj.FilterType;
 import fi.solita.utils.api.filtering.Filtering;
@@ -61,14 +69,16 @@ import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Transformers;
 import it.geosolutions.imageio.plugins.png.PNGWriter;
 
 public class PngConversionService {
     
-    public static final int tileSize = 4096;
+    public static final int tileSize = 256;
+    public static final int imageSize = 4096;
     
-    public static final float COMPRESSION_QUALITY = 0.01F;
+    public static final float COMPRESSION_QUALITY = 0.05F;
     
     private static final Pattern BBOX_INT = Pattern.compile("bbox=[0-9,]+");
     private static final Pattern BBOX_DEC = Pattern.compile("bbox=[0-9,.]+");
@@ -96,6 +106,8 @@ public class PngConversionService {
     private final Map<String,Style> defaultStyles;
     
     private final URI baseURI;
+    
+    private static final ObjectMapper DEFAULT_OM = new ObjectMapper();
 
     public PngConversionService(String imageBasePath, URI baseURI) {
         this.baseURI = baseURI;
@@ -122,44 +134,9 @@ public class PngConversionService {
         return (int) Math.round(d);
     }
     
-    public byte[] render(String pngRequestURI, Option<String> apikey, Option<ReferencedEnvelope> paikka, String layerName) {
-        double ratioX = 1;
-        double ratioY = 1;
-        for (ReferencedEnvelope p: paikka) {
-            // add some buffer to the bbox, so that we retrieve features slightly
-            // larger area than we are going to render. This way we get to render images
-            // whose geometry point is in another tile, but whose graphic extends to this one.
-            double originalWidth = p.getWidth();
-            double originalHeight = p.getHeight();
-            p.expandBy(20, 20);
-            Matcher matcher = BBOX_INT.matcher(pngRequestURI);
-            if (matcher.find()) {
-                String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
-                pngRequestURI = matcher.replaceAll(bbox);
-            } else {
-                matcher = BBOX_DEC.matcher(pngRequestURI);
-                String bbox = "bbox=" + mkString(",", map(Transformers.toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
-                pngRequestURI = matcher.replaceAll(bbox);
-            }
-            if (originalWidth != 0) {
-                ratioX = p.getWidth()/originalWidth;
-            }
-            if (originalHeight != 0) {
-                ratioY = p.getHeight()/originalHeight;
-            }
-        }
-        URI uri = baseURI.resolve(pngRequestURI.replaceFirst(".png", ".geojson"));
-        return render(uri, paikka, ratioX, ratioY, layerName, apikey);
-    }
-    
-    private byte[] render(URI geojsonURI, Option<ReferencedEnvelope> paikka, double ratioX, double ratioY, String layerName, Option<String> apikey) {
-        try {
-            return render(tileSize, tileSize, geojsonURI, paikka, ratioX, ratioY, layerName, apikey);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    static final double buffer(double x) {
+        int numberOfDigits = String.valueOf((long)x).length();
+        return 3*x/Math.pow(10, numberOfDigits-1);
     }
     
     protected InputStream fetchGeojson(URI uri, Option<String> apikey) throws IOException {
@@ -177,8 +154,53 @@ public class PngConversionService {
         
         return in;
     }
+    
+    public byte[] render(String pngRequestURI, Option<String> apikey, Option<ReferencedEnvelope> requestedBounds, String layerName) {
+        double bufferRatioX = 1;
+        double bufferRatioY = 1;
+        boolean isTile = requestedBounds.isDefined() && requestedBounds.get().getWidth() == requestedBounds.get().getHeight();
+        for (ReferencedEnvelope p: requestedBounds) {
+            // add some buffer to the bbox, so that we retrieve features slightly
+            // larger area than we are going to render. This way we get to render images
+            // whose geometry point is in another tile, but whose graphic extends to this one.
+            double originalWidth = p.getWidth();
+            double originalHeight = p.getHeight();
+            p.expandBy(buffer(originalWidth), buffer(originalHeight));
+            Matcher matcher = BBOX_INT.matcher(pngRequestURI);
+            if (matcher.find()) {
+                String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                pngRequestURI = matcher.replaceAll(bbox);
+            } else {
+                matcher = BBOX_DEC.matcher(pngRequestURI);
+                String bbox = "bbox=" + mkString(",", map(Transformers.toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                pngRequestURI = matcher.replaceAll(bbox);
+            }
+            if (originalWidth != 0) {
+                bufferRatioX = p.getWidth()/originalWidth;
+            }
+            if (originalHeight != 0) {
+                bufferRatioY = p.getHeight()/originalHeight;
+            }
+        }
+        URI uri = baseURI.resolve(pngRequestURI.replaceFirst(".png", ".geojson"));
+        try {
+            return render(isTile ? tileSize : imageSize, isTile ? tileSize : imageSize, uri, requestedBounds, bufferRatioX, bufferRatioY, layerName, apikey);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    static Option<Pair<String,Object>> toEntry(Property p) throws JsonProcessingException {
+        if (p.getName().getLocalPart().isEmpty() || p.getValue() instanceof Geometry) {
+            return None();
+        }
+        
+        return Some(Pair.of(p.getName().getLocalPart(), p.getValue()));
+    }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> paikka, double ratioX, double ratioY, String layerName, Option<String> apikey) throws IOException {
+    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> requestedBounds, double bufferRatioX, double bufferRatioY, String layerName, Option<String> apikey) throws IOException {
         Style layerStyle = find(layerName, defaultStyles).orElse(new ApplyZero<Style>() {
             @Override
             public Style get() {
@@ -214,10 +236,20 @@ public class PngConversionService {
         // "GeoJSON is always WGS84" my ass!
         CoordinateReferenceSystem crs = new FeatureJSON().readCRS(geojson);
         SimpleFeatureType ft = SimpleFeatureTypeBuilder.retype(featureCollection.getSchema(), crs);
+        SimpleFeatureTypeBuilder ftb = new SimpleFeatureTypeBuilder();
+        ftb.init(ft);
+        ftb.add("json", String.class);
+        ft = ftb.buildFeatureType();
         FeatureIterator<SimpleFeature> f = featureCollection.features();
         List<SimpleFeature> feats = newMutableList();
+        SimpleFeatureBuilder fb = new SimpleFeatureBuilder(ft);
         while (f.hasNext()) {
-            feats.add(SimpleFeatureBuilder.retype(f.next(), ft));
+            SimpleFeature feature = f.next();
+            fb.init(feature);
+            // put all fields into custom "json" attribute so that it can be access from SLD using jsonPointer without property-not-found-errors...
+            fb.set("json", DEFAULT_OM.writeValueAsString(newMap(SemiGroups.failUnequal(), flatMap(PngConversionService_.toEntry, feature.getProperties()))));
+            feats.add(SimpleFeatureBuilder.retype(fb.buildFeature(null), ft));
+            fb.reset();
         }
         featureCollection = new ListFeatureCollection(ft, feats);
         
@@ -225,6 +257,7 @@ public class PngConversionService {
         if (bounds.getArea() == 0) {
             return emptyTile;
         }
+        bounds = requestedBounds.getOrElse(bounds);
         
         long started = System.nanoTime();
 
@@ -234,7 +267,7 @@ public class PngConversionService {
         BufferedImage image;
         try {
             map.addLayer(new FeatureLayer(featureCollection, layerStyle));
-            map.getViewport().setBounds(paikka.getOrElse(bounds));
+            map.getViewport().setBounds(bounds);
             
             final GTRenderer renderer = new StreamingRenderer();
             renderer.setMapContent(map);
@@ -259,10 +292,26 @@ public class PngConversionService {
                 }
             });
             
-            BufferedImage imageWithBuffer = new BufferedImage((int)(imageWidth*ratioX), (int)(imageHeight*ratioY), BufferedImage.TYPE_INT_ARGB);
+            // render to a bit larger image to include added buffer.
+            int renderWidth  = bufferRatioX == 1.0 ? imageWidth  : (int)(bufferRatioX*imageWidth);
+            int renderHeight = bufferRatioY == 1.0 ? imageHeight : (int)(bufferRatioY*imageHeight);
+            
+            BufferedImage imageWithBuffer = new BufferedImage(renderWidth, renderHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D graphics = imageWithBuffer.createGraphics();
-            renderer.paint(graphics, new Rectangle((int)(imageWidth*ratioX), (int)(imageHeight*ratioY)), paikka.getOrElse(bounds));
-            image = imageWithBuffer.getSubimage((int)(imageWidth*ratioX-imageWidth)/2, (int)(imageHeight*ratioY-imageHeight)/2, imageWidth, imageHeight);
+            Rectangle paintArea = new Rectangle(renderWidth, renderHeight);
+            
+            // make mapArea the same ratio as output image (square)
+            double ratio = bounds.getWidth()/bounds.getHeight();
+            ReferencedEnvelope mapArea = ReferencedEnvelope.create(bounds);
+            mapArea.expandBy(ratio < 1 ? (bounds.getHeight()-bounds.getWidth())/2 : 0,
+                             ratio > 1 ? (bounds.getWidth()-bounds.getHeight())/2 : 0);
+            
+            renderer.paint(graphics, paintArea, mapArea);
+            
+            // Remove added buffer. If no requestedBounds, then no need for buffering, and no need to clip the output.
+            image = requestedBounds.isDefined()
+                ? imageWithBuffer.getSubimage((int)(renderWidth-imageWidth)/2, (int)(renderHeight-imageHeight)/2, imageWidth, imageHeight)
+                : imageWithBuffer.getSubimage(0, 0, imageWidth, imageHeight);
         } finally {
             map.dispose();
         }
