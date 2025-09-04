@@ -271,7 +271,7 @@ public abstract class HtmlConversionService {
                                     ._select()
                                 ._if()
                                 .input(name("propertyName").type("hidden").value("")) // dummy field to use in linksForDifferentFormats
-                                .input(name("startIndex").type("text").min(1).size(6).placeholder("startIndex"))
+                                .input(name("startIndex").type("text").add("min", "1").add("size", "6").placeholder("startIndex"))
                                 .render(new Renderable() {
                                     Set<String> knownParams = newSet("count", "cql_filter", "srsName", "startIndex", "propertyName");
                                     @Override
@@ -394,8 +394,8 @@ public abstract class HtmlConversionService {
         String contextPath = (((HttpServletCanvas<?>)html).getContextPath());
         
         try {
-            html.html()
-                .render(DocType.HTML5)
+            html.render(DocType.HTML5)
+                .html()
                 .head()
                   .render(pageHead(title))
                 ._head()
@@ -403,7 +403,7 @@ public abstract class HtmlConversionService {
                   .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
                   .section(id("content"))
-                      .table(id("table").hidden("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
+                      .table(id("table").class_("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
                         .thead()
                           .tr()
                             .render(tableHeader)
@@ -639,6 +639,7 @@ public abstract class HtmlConversionService {
         
         + "header, footer { display: flex; padding: 0.5em; }"
         + "h1             { flex: 1; }"
+        + ".hidden        { display: none; }"
         + ".title > *     { padding: 0.5em; }"
         + ".title .page   { font-size: small; }"
         + ".title .t-i, .title .t-dt, .title .t-oid, .title .t-rec { font-size: small; font-style: italic; }"
@@ -898,7 +899,7 @@ public abstract class HtmlConversionService {
              + "}"
              + "const tab = document.getElementById('table');"
              + "if (tab) {"
-             + "    tab.removeAttribute('hidden');" // show table when it's completely done, to prevent reflows.
+             + "    tab.classList.remove('hidden');" // show table when it's completely done, to prevent reflows.
              + "}";
     }
     

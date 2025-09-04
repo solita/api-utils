@@ -79,6 +79,11 @@ public class Serializers {
         return Pair.of(v.getStart(), v.getEnd());
     }
     
+    public Interval deserInterval(String value) {
+        String[] parts = value.split("/");
+        return new Interval(deserDateTime(parts[0]), deserDateTime(parts[1]));
+    }
+    
     public String ser(Duration v) {
         return v.toString();
     }

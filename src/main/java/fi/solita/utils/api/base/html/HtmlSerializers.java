@@ -16,7 +16,6 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

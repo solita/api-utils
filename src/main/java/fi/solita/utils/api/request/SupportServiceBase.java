@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
-import static fi.solita.utils.functional.FunctionalA.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
@@ -73,7 +72,7 @@ public class SupportServiceBase {
         redirectToCurrentInterval(SupportServiceBase_.redirectToInterval, req, res, durationOrPeriod);
     }
     
-    protected void redirectToCurrentInterval(Function4<Request,Response,Interval,Set<String>,Void> f, Request req, Response res, String durationOrPeriod) throws InvalidValueException {
+    public void redirectToCurrentInterval(Function4<Request,Response,Interval,Set<String>,Void> f, Request req, Response res, String durationOrPeriod) throws InvalidValueException {
         String[] parts = durationOrPeriod.split("/");
         
         if (parts.length == 1) {
