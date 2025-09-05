@@ -396,6 +396,7 @@ public class JsonSerializers {
     }
     
     public Map<Class<?>,JsonDeserializer<?>> deserializers() { return newMap(
+            Pair.<Class<?>,JsonDeserializer<?>>of(BigDecimal.class, bigDecimalDeserializer(BigDecimal.class, Function.id())),
             Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s))),
             Pair.<Class<?>,JsonDeserializer<?>>of(Interval.class, stringDeserializer(Interval.class, Serializers_.deserInterval.ap(s))),
             Pair.<Class<?>,JsonDeserializer<?>>of(LocalDate.class, stringDeserializer(LocalDate.class, Serializers_.deserLocalDate.ap(s))),

@@ -78,6 +78,8 @@ public class PngConversionService {
     public static final int tileSize = 256;
     public static final int imageSize = 4096;
     
+    public static final int BUFFER_AROUND_POINTS = 20;
+    
     public static final float COMPRESSION_QUALITY = 0.05F;
     
     private static final Pattern BBOX_INT = Pattern.compile("bbox=[0-9,]+");
@@ -155,36 +157,48 @@ public class PngConversionService {
         return in;
     }
     
+    private static boolean isTile(Option<ReferencedEnvelope> bounds) {
+        return bounds.isDefined() && bounds.get().getWidth() == bounds.get().getHeight();
+    }
+    
     public byte[] render(String pngRequestURI, Option<String> apikey, Option<ReferencedEnvelope> requestedBounds, String layerName) {
         double bufferRatioX = 1;
         double bufferRatioY = 1;
-        boolean isTile = requestedBounds.isDefined() && requestedBounds.get().getWidth() == requestedBounds.get().getHeight();
-        for (ReferencedEnvelope p: requestedBounds) {
-            // add some buffer to the bbox, so that we retrieve features slightly
-            // larger area than we are going to render. This way we get to render images
-            // whose geometry point is in another tile, but whose graphic extends to this one.
-            double originalWidth = p.getWidth();
-            double originalHeight = p.getHeight();
-            p.expandBy(buffer(originalWidth), buffer(originalHeight));
-            Matcher matcher = BBOX_INT.matcher(pngRequestURI);
-            if (matcher.find()) {
-                String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
-                pngRequestURI = matcher.replaceAll(bbox);
-            } else {
-                matcher = BBOX_DEC.matcher(pngRequestURI);
-                String bbox = "bbox=" + mkString(",", map(Transformers.toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
-                pngRequestURI = matcher.replaceAll(bbox);
-            }
-            if (originalWidth != 0) {
-                bufferRatioX = p.getWidth()/originalWidth;
-            }
-            if (originalHeight != 0) {
-                bufferRatioY = p.getHeight()/originalHeight;
+        if (isTile(requestedBounds)) {
+            for (ReferencedEnvelope p: requestedBounds) {
+                // add some buffer to the bbox, so that we retrieve features slightly
+                // larger area than we are going to render. This way we get to render images
+                // whose geometry point is in another tile, but whose graphic extends to this one.
+                double originalWidth = p.getWidth();
+                double originalHeight = p.getHeight();
+                //p.expandBy(buffer(originalWidth), buffer(originalHeight));
+                Matcher matcher = BBOX_INT.matcher(pngRequestURI);
+                if (matcher.find()) {
+                    String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                    pngRequestURI = matcher.replaceAll(bbox);
+                } else {
+                    matcher = BBOX_DEC.matcher(pngRequestURI);
+                    String bbox = "bbox=" + mkString(",", map(Transformers.toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                    pngRequestURI = matcher.replaceAll(bbox);
+                }
+                if (originalWidth != 0) {
+                    bufferRatioX = p.getWidth()/originalWidth;
+                }
+                if (originalHeight != 0) {
+                    bufferRatioY = p.getHeight()/originalHeight;
+                }
             }
         }
         URI uri = baseURI.resolve(pngRequestURI.replaceFirst(".png", ".geojson"));
         try {
-            return render(isTile ? tileSize : imageSize, isTile ? tileSize : imageSize, uri, requestedBounds, bufferRatioX, bufferRatioY, layerName, apikey);
+            return render(isTile(requestedBounds) ? tileSize : imageSize,
+                          isTile(requestedBounds) ? tileSize : imageSize,
+                          uri,
+                          requestedBounds,
+                          bufferRatioX,
+                          bufferRatioY,
+                          layerName,
+                          apikey);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -254,8 +268,14 @@ public class PngConversionService {
         featureCollection = new ListFeatureCollection(ft, feats);
         
         ReferencedEnvelope bounds = featureCollection.getBounds();
-        if (bounds.getArea() == 0) {
-            return emptyTile;
+        if (!requestedBounds.isDefined()) {
+            // no explicit bounds given, so add some buffer around points
+            if (bounds.getWidth() == 0) {
+                bounds.expandBy(BUFFER_AROUND_POINTS, 0);
+            }
+            if (bounds.getHeight() == 0) {
+                bounds.expandBy(0, BUFFER_AROUND_POINTS);
+            }
         }
         bounds = requestedBounds.getOrElse(bounds);
         
@@ -309,7 +329,7 @@ public class PngConversionService {
             renderer.paint(graphics, paintArea, mapArea);
             
             // Remove added buffer. If no requestedBounds, then no need for buffering, and no need to clip the output.
-            image = requestedBounds.isDefined()
+            image = isTile(requestedBounds)
                 ? imageWithBuffer.getSubimage((int)(renderWidth-imageWidth)/2, (int)(renderHeight-imageHeight)/2, imageWidth, imageHeight)
                 : imageWithBuffer.getSubimage(0, 0, imageWidth, imageHeight);
         } finally {

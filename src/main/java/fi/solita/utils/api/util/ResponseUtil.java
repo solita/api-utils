@@ -1,5 +1,7 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.emptyMap;
+import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.map;
@@ -153,22 +155,28 @@ public abstract class ResponseUtil {
         redirect307(version + path, request, response);
     }
     
-    public static void redirectToRevision(long revision, Request request, Response response) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(request)));
+    public static void redirectToSelf(Request req, Response res, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
+        redirect307(drop(1, ServletRequestUtil.getContextRelativePath(req)), req, res, additionalUnescapedQueryParams, queryParamsToExclude);
+    }
+    
+    public static void redirectToRevision(long revision, Request req, Response res, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
+        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(req)));
         // path == <Whole API path>
         // path.left == <API version>
         // path.right == <remaining API path, if any?>
-        redirect307(path.left() + "/" + revision + path.right(), request, response);
+        redirect307(path.left() + "/" + revision + path.right(), req, res, additionalUnescapedQueryParams, queryParamsToExclude);
+    }
+    
+    public static void redirectToRevision(long revision, Request req, Response res) {
+        redirectToRevision(revision, req, res, emptyMap(), emptySet());
     }
     
     public static void redirectToRevisionAndDateTime(Request req, Response res, long revision, DateTime dateTime, Set<String> queryParamsToExclude) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(req)));
-        redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.instant2string(dateTime))), queryParamsToExclude);
+        redirectToRevision(revision, req, res, newMap(Pair.of("time", RequestUtil.instant2string(dateTime))), queryParamsToExclude);
     }
 
     public static void redirectToRevisionAndInterval(Request req, Response res, long revision, Interval interval, Set<String> queryParamsToExclude) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(req)));
-        redirect307(path.left() + "/" + revision + path.right(), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
+        redirectToRevision(revision, req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
     
     public static void redirectToAnotherRevision(long revision, Request request, Response response) {
