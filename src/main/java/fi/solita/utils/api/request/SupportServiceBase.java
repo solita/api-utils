@@ -1,13 +1,16 @@
 package fi.solita.utils.api.request;
 
 import static fi.solita.utils.functional.Collections.newArray;
+import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
+import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -154,12 +157,15 @@ public class SupportServiceBase {
         return None();
     }
     
+    private static final Set<String> defaultCaseIgnoredParams = newSet("propertyName", "cql_filter", "time");
+    private static final String[] defaultKnownParameters = { "time", "presentation", "profile", "srsName" };
+    
     protected Set<String> getCaseIgnoredParams() {
-        return newSet("propertyName", "cql_filter", "time");
+        return defaultCaseIgnoredParams;
     }
-
+    
     public void checkUrl(Request request, String... acceptedParams) {
-        ServletRequestUtil.checkURL(request, getCaseIgnoredParams(), newArray(String.class, cons("time", cons("presentation", cons("profile", cons("srsName", acceptedParams))))));
+        ServletRequestUtil.checkURL(request, getCaseIgnoredParams(), acceptedParams.length == 0 ? defaultKnownParameters : newArray(String.class, concat(defaultKnownParameters, acceptedParams)));
     }
     
     /**

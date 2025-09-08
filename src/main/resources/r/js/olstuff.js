@@ -334,7 +334,7 @@ var olstuff = function(constants, util, includeCredentials) {
                 });
             },
             
-            text: function(color, txt, offsetY) {
+            text: function(color, txt, offsetX, offsetY) {
                 return new ol.style.Style({
                     text: new ol.style.Text({
                         text: txt,
@@ -344,6 +344,7 @@ var olstuff = function(constants, util, includeCredentials) {
                         fill: new ol.style.Fill({
                             color: color
                         }),
+                        offsetX: offsetX || 0,
                         offsetY: offsetY || 0
                     })
                 });
