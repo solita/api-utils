@@ -138,7 +138,7 @@ public class PngConversionService {
     
     static final double buffer(double x) {
         int numberOfDigits = String.valueOf((long)x).length();
-        return 3*x/Math.pow(10, numberOfDigits-1);
+        return 5*x/Math.pow(10, numberOfDigits-2);
     }
     
     protected InputStream fetchGeojson(URI uri, Option<String> apikey) throws IOException {
@@ -164,14 +164,15 @@ public class PngConversionService {
     public byte[] render(String pngRequestURI, Option<String> apikey, Option<ReferencedEnvelope> requestedBounds, String layerName) {
         double bufferRatioX = 1;
         double bufferRatioY = 1;
-        if (isTile(requestedBounds)) {
+        boolean isTile = isTile(requestedBounds);
+        if (isTile) {
             for (ReferencedEnvelope p: requestedBounds) {
                 // add some buffer to the bbox, so that we retrieve features slightly
                 // larger area than we are going to render. This way we get to render images
                 // whose geometry point is in another tile, but whose graphic extends to this one.
                 double originalWidth = p.getWidth();
                 double originalHeight = p.getHeight();
-                //p.expandBy(buffer(originalWidth), buffer(originalHeight));
+                p.expandBy(buffer(originalWidth), buffer(originalHeight));
                 Matcher matcher = BBOX_INT.matcher(pngRequestURI);
                 if (matcher.find()) {
                     String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
@@ -195,6 +196,7 @@ public class PngConversionService {
                           isTile(requestedBounds) ? tileSize : imageSize,
                           uri,
                           requestedBounds,
+                          isTile,
                           bufferRatioX,
                           bufferRatioY,
                           layerName,
@@ -214,7 +216,7 @@ public class PngConversionService {
         return Some(Pair.of(p.getName().getLocalPart(), p.getValue()));
     }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> requestedBounds, double bufferRatioX, double bufferRatioY, String layerName, Option<String> apikey) throws IOException {
+    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> requestedBoundsWithBuffer, boolean isTile, double bufferRatioX, double bufferRatioY, String layerName, Option<String> apikey) throws IOException {
         Style layerStyle = find(layerName, defaultStyles).orElse(new ApplyZero<Style>() {
             @Override
             public Style get() {
@@ -267,17 +269,17 @@ public class PngConversionService {
         }
         featureCollection = new ListFeatureCollection(ft, feats);
         
-        ReferencedEnvelope bounds = featureCollection.getBounds();
-        if (!requestedBounds.isDefined()) {
+        ReferencedEnvelope boundsWithBuffer = featureCollection.getBounds();
+        if (!requestedBoundsWithBuffer.isDefined()) {
             // no explicit bounds given, so add some buffer around points
-            if (bounds.getWidth() == 0) {
-                bounds.expandBy(BUFFER_AROUND_POINTS, 0);
+            if (boundsWithBuffer.getWidth() == 0) {
+                boundsWithBuffer.expandBy(BUFFER_AROUND_POINTS, 0);
             }
-            if (bounds.getHeight() == 0) {
-                bounds.expandBy(0, BUFFER_AROUND_POINTS);
+            if (boundsWithBuffer.getHeight() == 0) {
+                boundsWithBuffer.expandBy(0, BUFFER_AROUND_POINTS);
             }
         }
-        bounds = requestedBounds.getOrElse(bounds);
+        boundsWithBuffer = requestedBoundsWithBuffer.getOrElse(boundsWithBuffer);
         
         long started = System.nanoTime();
 
@@ -287,7 +289,7 @@ public class PngConversionService {
         BufferedImage image;
         try {
             map.addLayer(new FeatureLayer(featureCollection, layerStyle));
-            map.getViewport().setBounds(bounds);
+            map.getViewport().setBounds(boundsWithBuffer);
             
             final GTRenderer renderer = new StreamingRenderer();
             renderer.setMapContent(map);
@@ -321,15 +323,15 @@ public class PngConversionService {
             Rectangle paintArea = new Rectangle(renderWidth, renderHeight);
             
             // make mapArea the same ratio as output image (square)
-            double ratio = bounds.getWidth()/bounds.getHeight();
-            ReferencedEnvelope mapArea = ReferencedEnvelope.create(bounds);
-            mapArea.expandBy(ratio < 1 ? (bounds.getHeight()-bounds.getWidth())/2 : 0,
-                             ratio > 1 ? (bounds.getWidth()-bounds.getHeight())/2 : 0);
+            double ratio = boundsWithBuffer.getWidth()/boundsWithBuffer.getHeight();
+            ReferencedEnvelope mapArea = ReferencedEnvelope.create(boundsWithBuffer);
+            mapArea.expandBy(ratio < 1 ? (boundsWithBuffer.getHeight()-boundsWithBuffer.getWidth())/2 : 0,
+                             ratio > 1 ? (boundsWithBuffer.getWidth()-boundsWithBuffer.getHeight())/2 : 0);
             
             renderer.paint(graphics, paintArea, mapArea);
             
             // Remove added buffer. If no requestedBounds, then no need for buffering, and no need to clip the output.
-            image = isTile(requestedBounds)
+            image = isTile
                 ? imageWithBuffer.getSubimage((int)(renderWidth-imageWidth)/2, (int)(renderHeight-imageHeight)/2, imageWidth, imageHeight)
                 : imageWithBuffer.getSubimage(0, 0, imageWidth, imageHeight);
         } finally {
