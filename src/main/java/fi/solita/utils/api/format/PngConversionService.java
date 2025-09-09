@@ -295,7 +295,7 @@ public class PngConversionService {
             renderer.setMapContent(map);
             renderer.setJava2DHints(new RenderingHints(newMap(
                 Pair.of(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY),
-                Pair.of(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT),
+                Pair.of(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON),
                 Pair.of(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY),
                 Pair.of(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY),
                 Pair.of(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE)
