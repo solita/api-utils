@@ -9,7 +9,7 @@
         <ows:Identifier>time</ows:Identifier>
         <ows:UOM>ISO8601</ows:UOM>
         <Default>{{time}}</Default>
-        <Current>false</Current>
+        <Current>true</Current>
         <Value>2010-01-01T00:00:00Z/2030-01-01T00:00:00Z/PT1S</Value>
     </Dimension>
     <Dimension>
