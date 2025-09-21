@@ -155,7 +155,7 @@ var olstuff = function(constants, util, includeCredentials) {
             };
             
             var f = function() {
-                elem.innerHTML = util.prettyPrint(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'labelPoint'));
+                elem.innerHTML = util.prettyPrint(util.withoutProp(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'geometria'), 'labelPoint'));
                 util.initPrettyPrinted(elem);
                 
                 limit();
