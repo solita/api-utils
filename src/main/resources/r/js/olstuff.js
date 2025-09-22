@@ -7,6 +7,8 @@ var olstuff = function(constants, util, includeCredentials) {
     var ret = {
         projection: ol.proj.get('EPSG:3067'),
         
+        mercatorProjection: ol.proj.get('EPSG:3857'),
+        
         geojsonProjection: ol.proj.get('EPSG:4326'),
         
         tileGrid: new ol.tilegrid.TileGrid({
