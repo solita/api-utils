@@ -73,6 +73,7 @@ public class WMTS {
                                     .replace("{TileCol}", Integer.toString(j))
                                     .replace("&amp;", "&")
                                     .replace("time={time}", "")
+                                    .replace("presentation={presentation}&", "")
                                     .replace("?&", "?")
                                     .replaceAll("[?]$", ""));
                         }
