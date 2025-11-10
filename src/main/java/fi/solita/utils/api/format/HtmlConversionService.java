@@ -18,17 +18,18 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
+import static org.rendersnake.HtmlAttributesFactory.ESCAPE_CHARS;
+import static org.rendersnake.HtmlAttributesFactory.add;
 import static org.rendersnake.HtmlAttributesFactory.class_;
 import static org.rendersnake.HtmlAttributesFactory.href;
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
 import static org.rendersnake.HtmlAttributesFactory.id;
 import static org.rendersnake.HtmlAttributesFactory.lang;
 import static org.rendersnake.HtmlAttributesFactory.name;
+import static org.rendersnake.HtmlAttributesFactory.rel;
 import static org.rendersnake.HtmlAttributesFactory.rowspan;
 import static org.rendersnake.HtmlAttributesFactory.type;
 import static org.rendersnake.HtmlAttributesFactory.value;
-import static org.rendersnake.HtmlAttributesFactory.add;
-import static org.rendersnake.HtmlAttributesFactory.ESCAPE_CHARS;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -218,11 +219,11 @@ public abstract class HtmlConversionService {
                         .write(additionalHeadScript(), false)
                     ._script()
                     .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/tablefilter/sortabletable.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/tablefilter/tablefilter.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.0.min.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
-                    ._script();
+                    ._script()
+                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.0.css"));
             }
         };
     }
@@ -403,7 +404,7 @@ public abstract class HtmlConversionService {
                   .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
                   .section(id("content"))
-                      .table(id("table").class_("hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
+                      .table(id("table").class_("tafs hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
                         .thead()
                           .tr()
                             .render(tableHeader)
@@ -653,7 +654,7 @@ public abstract class HtmlConversionService {
         + "section        { flex: 1; overflow-y: auto; }"
         + "table          { border-collapse: collapse; counter-reset: rowNumber; }"
         + "th,td          { vertical-align: top; padding: 0.5em 1em 0.5em 0; }"
-        + "th             { position: -webkit-sticky; position: sticky; top: 0; z-index: 999; background-color: white; text-align: left; }"
+        + "th             { position: -webkit-sticky; position: sticky; top: 0; z-index: 999; background-color: white; text-align: left; white-space: nowrap; }"
         + "thead          { whitespace: nowrap; }"
         + "tbody          { font-size: small; }"
         + "tbody tr       { border-top: 1px dotted #ccc; counter-increment: rowNumber; }"
@@ -662,7 +663,6 @@ public abstract class HtmlConversionService {
         + "table table tbody > tr > td:first-child::before { content: '' }"
         
         + "input.flt { height: 20px; }"
-        + "table.TF tr th { padding-top: 0.5em; }"
         
         + "ul             { list-style: none; padding: 0; margin: 0; white-space: normal; }"
         + "ul li          { border-top: 1px dotted #ddd; }"
@@ -702,10 +702,10 @@ public abstract class HtmlConversionService {
         + "ul li ul li    { border: none !important; }"
         + "ul li ul li    { background-color: transparent !important; }"
         
-        + "table table,    table.TF table { counter-reset: none; }"
-        + "table table tr, table.TF table tr { border: none; counter-increment: none; }"
-        + "table table th, table.TF table th, table.TF table th:last-child { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; height: auto; }"
-        + "table table td, table.TF table td { border: none; padding: 1px 3px; line-height: 1em; }"
+        + "table table,    table.tafs table { counter-reset: none; }"
+        + "table table tr, table.tafs table tr { border: none; counter-increment: none; }"
+        + "table table th, table.tafs table th, table.tafs table th:last-child { border: none; padding: 1px 3px; text-align: left; background: none; vertical-align: top; height: auto; }"
+        + "table table td, table.tafs table td { border: none; padding: 1px 3px; line-height: 1em; }"
         
         + UI.langSelectorCSS
         
@@ -756,8 +756,10 @@ public abstract class HtmlConversionService {
             + "  tbody tr       { display: flex; flex-direction: column; vertical-align: top; }"
             + "  tbody td       { overflow-x: auto; }"
             + "  tbody > tr > td:first-child::before { content: ''; margin-right: 0; }"
+            + "  thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 0; }"
             + "  th, td         { display: block; height: 1.5em; min-height: 1.5em; max-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; padding: 0.25em; }"
             + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
+            + "  th .tafs-filter, th .tafs-sort { display: none; }"
             + "  td:first-child { border-left: 1px solid #eee; }"
             + "  td:last-child  { border-bottom: none; }"
             + "  ul             { white-space: nowrap; max-width: 20em; }"
@@ -853,12 +855,10 @@ public abstract class HtmlConversionService {
     }
     
     public static final String initTableFilter(String contextPath) {
-        return "if (window.TableFilter) {"
+        return "if (tafs) {"
              + "  const tab = document.getElementById('table');"
-             + "  if (tab && !tab.classList.contains('TF') && !tab.closest('.t-re')) {"
-             + "    window.tf = new TableFilter(tab, { auto_filter: { delay: 200 }, base_path: '" + contextPath + "/r/tablefilter/', extensions: [{name: 'sort'}] });"
-             + "    tf.init();"
-             + "    tab.addEventListener('htmx:afterSwap', function() { tf.filter(); });"
+             + "  if (tab && tab.classList.contains('tafs') && !tab.closest('.t-re')) {"
+             + "    tab.addEventListener('htmx:afterSwap', function() { tafs.filter(tab); tafs.sort(tab); });"
              + "  }"
              + "}";
     }
@@ -888,7 +888,7 @@ public abstract class HtmlConversionService {
              + "                }"
              + "            });"
              + "            const tab = document.getElementById('table');"
-             + "            tab.addEventListener('htmx:sseMessage', function() { if (window.tf) { window.tf.filter(); } });"
+             + "            tab.addEventListener('htmx:sseMessage', function() { if (window.tafs) { window.tafs.filter(); window.tafs.sort(); } });"
              + "            tab.setAttribute('sse-connect', window.location.href);"
              + "            htmx.process(tab);"
              + "            ev.preventDefault();"
