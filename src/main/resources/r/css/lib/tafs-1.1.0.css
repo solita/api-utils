@@ -1,0 +1,43 @@
+table.tafs {
+    .tafs-hidden {
+        display: none;
+    }
+
+    th {
+        &[aria-sort] .tafs-sort {
+            opacity: 0.5;
+        }
+        .tafs-sort {
+            cursor: pointer;
+            opacity: 0.25;
+            font-size: 0.8em;
+            padding: 0;
+            background: none;
+            border: none;
+            outline: none;
+            &:focus {
+                outline: revert;
+            }
+            &:hover,
+            &:focus {
+                opacity: 1;
+            }
+        }
+
+        .tafs-filter {
+            field-sizing: content;
+            &:placeholder-shown:not(:hover) {
+                border-color: transparent;
+            }
+            &::placeholder {
+                opacity: 0.5;
+            }
+            &:focus::placeholder {
+                opacity: 0;
+            }
+            &:hover::placeholder {
+                opacity: 1;
+            }
+        }
+    }
+}
