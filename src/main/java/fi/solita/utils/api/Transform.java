@@ -59,6 +59,9 @@ public class Transform {
     }
     
     public static Pair<BigDecimal,BigDecimal> transformCoordinate(SRSName sourceCRS, SRSName targetCRS, Pair<BigDecimal,BigDecimal> coord) {
+        if (sourceCRS.equals(targetCRS)) {
+            return coord;
+        }
         try {
             double[] from = {coord.left().doubleValue(), coord.right().doubleValue()};
             double[] ret = transformCoordinate(sourceCRS, targetCRS, from);
@@ -69,6 +72,9 @@ public class Transform {
     }
 
     public static double[] transformCoordinate(SRSName sourceCRS, SRSName targetCRS, double[] coord) {
+        if (sourceCRS.equals(targetCRS)) {
+            return coord;
+        }
         final MathTransform transformer = findMathTransform(sourceCRS, targetCRS);
         try {
             double[] from = coord;
