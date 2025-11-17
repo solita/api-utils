@@ -219,11 +219,11 @@ public abstract class HtmlConversionService {
                         .write(additionalHeadScript(), false)
                     ._script()
                     .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.0.min.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.1.0.min.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
                     ._script()
-                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.0.css"));
+                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.1.0.css"));
             }
         };
     }
