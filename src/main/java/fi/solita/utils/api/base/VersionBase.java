@@ -115,7 +115,7 @@ public abstract class VersionBase<REQ> {
     }
     
     public Filtering filtering(REQ req) {
-        return new Filtering(httpModule, resolvableMemberProvider(), functionProvider(Some(req)));
+        return new Filtering(httpModule, jsonModule, resolvableMemberProvider(), functionProvider(Some(req)));
     }
     
     public <K,T> Map<K,T> filterRowsSingle(REQ req, Includes<T> includes, Filters filters, Map<K,T> ts) {

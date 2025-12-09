@@ -8,6 +8,7 @@ import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.forall;
 import static fi.solita.utils.functional.Functional.headOption;
@@ -34,10 +35,12 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 import org.joda.time.Period;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.http.HttpModule;
+import fi.solita.utils.api.base.json.JsonModule;
 import fi.solita.utils.api.functions.FunctionCallMember;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.functions.FunctionProvider_;
@@ -59,16 +62,22 @@ import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Predicates;
+import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.functional.Tuple3;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class Filtering {
     private final HttpModule httpModule;
+    private final ObjectMapper om;
     final ResolvableMemberProvider<?> resolvableMemberProvider;
     final FunctionProvider fp;
     
-    public Filtering(HttpModule httpModule, ResolvableMemberProvider<?> resolvableMemberProvider, FunctionProvider fp) {
+    /**
+     * Uses JsonModule to serialize objects as string in LIKE-pattern matching. Not the optimal solution, but don't know what would be...
+     */
+    public Filtering(HttpModule httpModule, JsonModule jsonModule, ResolvableMemberProvider<?> resolvableMemberProvider, FunctionProvider fp) {
         this.httpModule = httpModule;
+        this.om = new ObjectMapper().registerModule(jsonModule);
         this.resolvableMemberProvider = resolvableMemberProvider;
         this.fp = fp;
     }
@@ -77,7 +86,6 @@ public class Filtering {
         return with(filters.getOrElse(Filters.EMPTY), includes);
     }
     
-    @SuppressWarnings({ "unchecked" })
     public <T> Constraints<T> with(Filters filters, Includes<T> includes) {
         if (filters == null) {
             return Constraints.empty();
@@ -93,18 +101,21 @@ public class Filtering {
                 c.put(f.getKey(), lst);
                 // leave out function calls, since the functions aren't found in the database anyway
                 for (Filter filter: filter(not(Filter_.property.andThen(PropertyName_.isFunctionCall)), f.getValue())) {
-                    MetaNamedMember<T,Object> member;
+                    MetaNamedMember<T,?> m;
                     try {
-                        member = (MetaNamedMember<T, Object>) Assert.singleton(
+                        m = Assert.singleton(
                             newSet(filter(MemberUtil_.memberName.andThen(equalTo(filter.property.toProperty(fp).getValue())),
                                 includes.includesFromRowFiltering)));
                     } catch (UnknownPropertyNameException e) {
                         throw new Filtering.FilterPropertyNotFoundException(filter.property, e);
                     }
+                    @SuppressWarnings("unchecked")
+                    MetaNamedMember<T,Object> member = (MetaNamedMember<T, Object>) m;
                     if (!spatialFilters.contains(filter.pattern)) {
                         // leave spatial filters out from constraints for now
-                        Class<?> targetType = resolveTargetType(filter, member);
-                        lst.add(Pair.of(member, newList(map(Filtering_.convert().ap(this, targetType), filter.literals))));
+                        lst.add(Pair.of(member, newList(FilterType.PATTERN_TYPES.contains(filter.pattern)
+                                                    ? flatMap(Literal_.getValue.andThen(Transformers.eitherLeft()), filter.literals) // don't convert LIKE-pattern strings
+                                                    : map(Filtering_.convert().ap(this, resolveTargetType(filter, member)), filter.literals))));
                     }
                 }
             }
@@ -407,19 +418,19 @@ public class Filtering {
     }
     
     public <T> Predicate<T> like(MetaNamedMember<T,String> member, String likePattern) {
-        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))));
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Filtering_.serializeToString.ap(this)).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*"))))));
     }
     
     public <T> Predicate<T> notLike(MetaNamedMember<T,String> member, String likePattern) {
-        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*")))))));
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Filtering_.serializeToString.ap(this)).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, likePattern.replace("%", ".*")))))));
     }
     
     public <T> Predicate<T> ilike(MetaNamedMember<T,String> member, String likePattern) {
-        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))));
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Filtering_.serializeToString.ap(this)).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*"))))));
     }
     
     public <T> Predicate<T> notILike(MetaNamedMember<T,String> member, String likePattern) {
-        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*")))))));
+        return Predicate.of(Function.of(member).andThen(Filtering_.<String>unwrapOption()).andThen(Filtering_.serializeToString.ap(this)).andThen(not(Predicates.<String>isNull()).and(doFilter(MatchAction.Any, not(Filtering_.matches.apply(Function.__, "(?i)" + likePattern.replace("%", ".*")))))));
     }
     
     public <T,V> Predicate<T> in(MetaNamedMember<T,V> member, List<Literal> values, Class<?> targetType) {
@@ -436,6 +447,10 @@ public class Filtering {
     
     public <T> Predicate<T> isNotNull(MetaNamedMember<T,?> member) {
         return Predicate.of(Function.of(member).andThen(not(Filtering_.isNullOrEmpty)));
+    }
+    
+    String serializeToString(Object o) {
+        return o == null ? null : o instanceof String ? (String) o : om.convertValue(o, String.class);
     }
     
     @SuppressWarnings("unchecked")

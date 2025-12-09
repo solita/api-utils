@@ -1,6 +1,7 @@
 package fi.solita.utils.api.filtering;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.emptyMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Option.None;
@@ -15,6 +16,7 @@ import org.junit.Test;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.http.HttpModule;
 import fi.solita.utils.api.base.http.HttpSerializers;
+import fi.solita.utils.api.base.json.JsonModule;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.functional.Collections;
@@ -76,7 +78,7 @@ public class FilteringTest {
     }
     public static final Data data = new Data();
 
-    private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);
+    private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), new JsonModule(emptyMap(),emptyMap(),emptyMap(),emptyMap()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);
     
     
     
