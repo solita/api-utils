@@ -660,7 +660,9 @@ public abstract class HtmlConversionService {
         + "tbody tr       { border-top: 1px dotted #ccc; counter-increment: rowNumber; }"
         + "thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 1em; }"
         + "tbody > tr > td:first-child::before { content: counter(rowNumber); margin-right: 1em; color: #ddd; }"
+        + "tbody tr:nth-last-child(1 of :not(.tafs-hidden))::after { content: '☰' counter(rowNumber); position: absolute; top: 0.1rem; color: lightgray; font-style: italic; left: 0.1rem; }"
         + "table table tbody > tr > td:first-child::before { content: '' }"
+        + "table table tbody > tr:nth-last-child(1 of :not(.tafs-hidden))::after { content: '' }"
         
         + "input.flt { height: 20px; }"
         
@@ -756,6 +758,7 @@ public abstract class HtmlConversionService {
             + "  tbody tr       { display: flex; flex-direction: column; vertical-align: top; }"
             + "  tbody td       { overflow-x: auto; }"
             + "  tbody > tr > td:first-child::before { content: ''; margin-right: 0; }"
+            + "  tbody > tr:nth-last-child(1 of :not(.tafs-hidden))::after { content: '' }"
             + "  thead > tr > th:first-child,tbody > tr > td:first-child { margin-right: 0; }"
             + "  th, td         { display: block; height: 1.5em; min-height: 1.5em; max-height: 1.5em; text-align: left; border-bottom: 1px solid #eee; border-left: 1px solid #eee; padding: 0.25em; }"
             + "  th             { border-left: none; text-align: right; font-weight: normal; font-variant: small-caps; }"
