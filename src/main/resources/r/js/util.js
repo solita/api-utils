@@ -1,5 +1,7 @@
 var util = function(customPrettyPrinting, customInit) {
     var ret = {
+        tooMassiveProperties: ['geometry', 'geometria', 'laskennallinenGeometria', 'labelPoint'],
+        
         toISOStringNoMillis: function(d) {
             function pad(n) {
                 return n < 10 ? '0' + n : n;
@@ -34,7 +36,7 @@ var util = function(customPrettyPrinting, customInit) {
                 if (!r) {
                     r = '';
                     for (var key in obj) {
-                        if (obj.hasOwnProperty(key)) {
+                        if (obj.hasOwnProperty(key) && !ret.tooMassiveProperties.includes(key)) {
                             if (r === '') {
                                 r = '<ul>';
                             }

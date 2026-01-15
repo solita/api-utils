@@ -103,7 +103,7 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                 if (layer.getSource && layer.getSource().getFeaturesInExtent) {
                     var props = layer.getProperties();
                     results[props.title] = layer.getSource().getFeaturesInExtent(mapExtent).map(function(x) {
-                        return util.withoutProp(util.withoutProp(x.getProperties(), 'geometry'), 'labelPoint');
+                        return x.getProperties();
                     }).filter(onlyUnique)
                       .sort(function(a,b) { return a.tunniste - b.tunniste || a._tunniste - b._tunniste || a.external_id - b.external_id; });
                 }
@@ -157,7 +157,7 @@ var olstuff = function(constants, util, includeCredentials, headers) {
             };
             
             var f = function() {
-                elem.innerHTML = util.prettyPrint(util.withoutProp(util.withoutProp(util.withoutProp(ret.featuresOnScreen(map), 'geometry'), 'geometria'), 'labelPoint'));
+                elem.innerHTML = util.prettyPrint(ret.featuresOnScreen(map));
                 util.initPrettyPrinted(elem);
                 
                 limit();
