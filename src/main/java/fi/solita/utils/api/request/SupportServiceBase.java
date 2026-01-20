@@ -82,10 +82,10 @@ public class SupportServiceBase {
             // create an interval either starting from or ending to current time.
             Tuple3<Either<Duration, Period>, Boolean, Boolean> dp = parse(parts[0]);
             for (Duration d: dp._1.left) {
-                f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now(), d, dp._2)), newSet("duration"));
+                f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), d, dp._2)), newSet("duration"));
             }
             for (Period p: dp._1.right) {
-                f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now(), p, dp._2, dp._3)), newSet("duration"));
+                f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), p, dp._2, dp._3)), newSet("duration"));
             }
         } else if (parts.length == 2) {
             // create an interval where start and end are separately related to current time.
@@ -93,7 +93,7 @@ public class SupportServiceBase {
             Tuple3<Either<Duration, Period>, Boolean, Boolean> end = parse(parts[1]);
             Interval interval;
             try {
-                interval = intervalForRedirect(DateTime.now(), start, end);
+                interval = intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), start, end);
             } catch (RuntimeException e) {
                 throw new InvalidValueException("duration", durationOrPeriod);
             }
