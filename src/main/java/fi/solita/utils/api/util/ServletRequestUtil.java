@@ -5,14 +5,13 @@ import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Transformers.prepend;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.IOUtils;
 
 import fi.solita.utils.api.NotFoundException;
 import fi.solita.utils.api.format.SerializationFormat;
@@ -98,7 +97,15 @@ public abstract class ServletRequestUtil {
     
     public static final byte[] uncompressIfNeeded(Request req, byte[] data) throws IOException {
         if (Option.of(req.getHeader(Headers.CONTENT_ENCODING)).getOrElse("").contains("gzip")) {
-            return IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(data)));
+            GZIPInputStream is = new GZIPInputStream(new ByteArrayInputStream(data));
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            int nRead;
+            byte[] d = new byte[4096];
+            while ((nRead = is.read(d, 0, d.length)) != -1) {
+                buffer.write(d, 0, nRead);
+            }
+            buffer.flush();
+            return buffer.toByteArray();
         }
         return data;
     }

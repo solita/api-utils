@@ -15,18 +15,22 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.poi.util.IOUtils;
@@ -223,7 +227,13 @@ public class PngConversionService {
                 throw new RuntimeException("Couldn't find layer with name: " + layerName);
             } });
         logger.debug("Fetching geojson...");
-        String geojson = org.apache.commons.io.IOUtils.toString(fetchGeojson(uri, apikey), "UTF-8");
+        BufferedReader bf = new BufferedReader(new InputStreamReader(fetchGeojson(uri, apikey), StandardCharsets.UTF_8));
+        String geojson;
+        try {
+            geojson = bf.lines().collect(Collectors.joining("\n"));
+        } finally {
+            bf.close();
+        }
         FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection;
         
         GeoJSONReader reader = new GeoJSONReader(geojson);

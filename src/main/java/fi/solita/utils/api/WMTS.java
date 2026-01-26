@@ -5,14 +5,14 @@ import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.min;
 import static fi.solita.utils.functional.FunctionalS.range;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.io.IOUtils;
+import java.util.stream.Collectors;
 
 import fi.solita.utils.functional.Pred;
 import fi.solita.utils.functional.Tuple;
@@ -30,8 +30,15 @@ public class WMTS {
     public static final int MIN_LAYER_ID;
     static {
         try {
-            WMTS_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/wmts_template.xml"), Charset.forName("UTF-8"));
-            LAYER_TEMPLATE = IOUtils.toString(WMTS.class.getResource("/layer_template.xml"), Charset.forName("UTF-8"));
+            BufferedReader bf1 = new BufferedReader(new InputStreamReader(WMTS.class.getResource("/wmts_template.xml").openStream()));
+            BufferedReader bf2 = new BufferedReader(new InputStreamReader(WMTS.class.getResource("/layer_template.xml").openStream()));
+            try {
+                WMTS_TEMPLATE = bf1.lines().collect(Collectors.joining("\n"));
+                LAYER_TEMPLATE = bf2.lines().collect(Collectors.joining("\n"));
+            } finally {
+                bf1.close();
+                bf2.close();
+            }
             
             Matcher ma = Pattern.compile("template=\"([^\"]+)\"").matcher(LAYER_TEMPLATE);
             ma.find();

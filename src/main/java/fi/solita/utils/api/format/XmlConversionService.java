@@ -6,6 +6,7 @@ import static fi.solita.utils.functional.Collections.newMutableMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.flatMap;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 import jakarta.xml.bind.JAXBContext;
@@ -14,7 +15,6 @@ import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.eclipse.persistence.jaxb.JAXBContextProperties;
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 

@@ -16,10 +16,11 @@ import static fi.solita.utils.functional.Predicates.not;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -109,7 +110,20 @@ public abstract class ResponseUtil {
     }
     
     public static String calculateETag(byte[] data) {
-        return "W/\"" + DigestUtils.md5Hex(data) + "\"";
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(data);
+            
+            // Convert to hex string
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            
+            return "W/\"" + sb.toString() + "\"";
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public static final void cacheForInfinity(Response response) {
