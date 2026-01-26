@@ -18,7 +18,7 @@ import static fi.solita.utils.functional.Predicates.equalTo;
 import static fi.solita.utils.functional.Predicates.not;
 import static fi.solita.utils.functional.Transformers.append;
 import static fi.solita.utils.functional.Transformers.prepend;
-import static org.rendersnake.HtmlAttributesFactory.ESCAPE_CHARS;
+import static org.rendersnake.HtmlAttributesFactory.*;
 import static org.rendersnake.HtmlAttributesFactory.add;
 import static org.rendersnake.HtmlAttributesFactory.class_;
 import static org.rendersnake.HtmlAttributesFactory.href;
@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.AccessibleObject;
 import java.nio.charset.Charset;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,11 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.joda.time.DateTime;
+import org.joda.time.Instant;
+import org.joda.time.Interval;
 import org.rendersnake.DocType;
+import org.rendersnake.HtmlAttributes;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 import org.springframework.util.FastByteArrayOutputStream;
@@ -57,6 +62,7 @@ import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
+import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
@@ -219,11 +225,11 @@ public abstract class HtmlConversionService {
                         .write(additionalHeadScript(), false)
                     ._script()
                     .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.4.0.min.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.5.0.min.js"))._script()
                     .script(type("text/javascript"))
                         .write(scripts(), false)
                     ._script()
-                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.4.0.css"));
+                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.5.0.css"));
             }
         };
     }
@@ -541,7 +547,7 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 for (MetaNamedMember<T, ?> member: members) {
-                    html.th()
+                    html.th(extraTHAttributes(member.getMember()))
                         .render(header(member))
                         ._th();
                 }
@@ -563,6 +569,20 @@ public abstract class HtmlConversionService {
                     ._span();
             }
         };
+    }
+    
+    /**
+     * @param member
+     */
+    protected HtmlAttributes extraTHAttributes(AccessibleObject member) {
+        Class<?> memberType = MemberUtil.memberTypeUnwrappingOption(member);
+        HtmlAttributes attr = new HtmlAttributes();
+        if (Boolean.class.isAssignableFrom(memberType)) {
+            attr.add("tafs-sort-function", "bool", true);
+        } else if (Number.class.isAssignableFrom(memberType)) {
+            attr.add("tafs-sort-function", "number", true);
+        }
+        return attr;
     }
     
     /**
