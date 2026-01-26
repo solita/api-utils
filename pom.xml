@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.20.82</version>
+    <version>0.20.83</version>
     <build>
         <resources>
             <resource>
@@ -230,12 +230,12 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-main</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-render</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>javax.xml.bind</groupId>
@@ -250,37 +250,37 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-geojson</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-geojson-core</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-metadata</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-referencing</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools.xsd</groupId>
             <artifactId>gt-xsd-core</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools.xsd</groupId>
             <artifactId>gt-xsd-sld</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-xml</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>
@@ -321,13 +321,13 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-epsg-hsql</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-svg</artifactId>
-            <version>33.2</version>
+            <version>34.2</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
