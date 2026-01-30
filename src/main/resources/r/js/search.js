@@ -21,7 +21,10 @@ var search = function(map, searchUrlFunction, olstuff, select) {
                     layer.once('change', function(e) {
                         if (layer.getSource().getFeatures().length == 1) {
                             layer.getSource().getFeatures().forEach(f => select(f, true));
-                            map.getView().fit(layer.getSource().getExtent(), {'maxZoom': 10, 'padding': [50, 50, 50, 50], 'duration': 1000});
+                            var extent = layer.getSource().getExtent();
+                            if (!ol.extent.isEmpty(extent)) {
+                                map.getView().fit(extent, {'maxZoom': 10, 'padding': [50, 50, 50, 50], 'duration': 1000});
+                            }
                         }
                     });
                 }

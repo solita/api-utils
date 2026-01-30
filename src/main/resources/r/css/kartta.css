@@ -224,6 +224,9 @@
   vertical-align: text-top;
   margin-left: 7px;
 }
+.app-button input:invalid {
+  background-color: lightcoral;
+}
 
 .ol-selectable {
   -webkit-user-select: text;
