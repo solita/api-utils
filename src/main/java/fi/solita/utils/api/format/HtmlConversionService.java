@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.AccessibleObject;
 import java.nio.charset.Charset;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +43,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.joda.time.DateTime;
-import org.joda.time.Instant;
-import org.joda.time.Interval;
 import org.rendersnake.DocType;
 import org.rendersnake.HtmlAttributes;
 import org.rendersnake.HtmlCanvas;
@@ -547,7 +543,8 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 for (MetaNamedMember<T, ?> member: members) {
-                    html.th(extraTHAttributes(member.getMember()))
+                    boolean pseudo = member.getName().isEmpty();
+                    html.th(pseudo ? new HtmlAttributes() : extraTHAttributes(member.getMember()))
                         .render(header(member))
                         ._th();
                 }
