@@ -1,5 +1,7 @@
 package fi.solita.utils.api.format;
 
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,6 +48,22 @@ public class JsonConversionService {
         }
     }
     
+    public <T> T deserialize(Class<T> targetClass, InputStream in) {
+        try {
+            return om.readValue(in, targetClass);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public <T> T deserialize(Class<T> targetClass, Reader in) {
+        try {
+            return om.readValue(in, targetClass);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public <T> List<T> deserializeList(Class<T> targetClass, byte[] bytes) {
         try {
             CollectionType type = om.getTypeFactory().constructCollectionType(List.class, targetClass);
@@ -59,6 +77,24 @@ public class JsonConversionService {
         try {
             CollectionType type = om.getTypeFactory().constructCollectionType(List.class, targetClass);
             return om.readValue(str, type);
+        } catch ( Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public <T> List<T> deserializeList(Class<T> targetClass, InputStream in) {
+        try {
+            CollectionType type = om.getTypeFactory().constructCollectionType(List.class, targetClass);
+            return om.readValue(in, type);
+        } catch ( Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public <T> List<T> deserializeList(Class<T> targetClass, Reader in) {
+        try {
+            CollectionType type = om.getTypeFactory().constructCollectionType(List.class, targetClass);
+            return om.readValue(in, type);
         } catch ( Exception e) {
             throw new RuntimeException(e);
         }
