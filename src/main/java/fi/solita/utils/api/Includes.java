@@ -144,6 +144,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     ret = emptyList();
                     break;
                 case CSV:
+                case TSV:
                 case XLSX:
                 case HTML:
                 case CHART:
@@ -184,6 +185,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             case HTML:
             case CHART:
             case CSV:
+            case TSV:
             case XLSX:
             case XML:
             case COUNT:

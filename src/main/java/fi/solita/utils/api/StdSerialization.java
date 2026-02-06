@@ -27,6 +27,7 @@ import fi.solita.utils.api.format.JsonConversionService;
 import fi.solita.utils.api.format.JsonLinesConversionService;
 import fi.solita.utils.api.format.PngConversionService;
 import fi.solita.utils.api.format.SerializationFormat;
+import fi.solita.utils.api.format.TsvConversionService;
 import fi.solita.utils.api.format.geojson.Crs;
 import fi.solita.utils.api.format.geojson.Feature;
 import fi.solita.utils.api.format.geojson.FeatureCollection;
@@ -59,6 +60,7 @@ public abstract class StdSerialization<BOUNDS> {
     public final JsonLinesConversionService jsonlines;
     public final HtmlConversionService html;
     public final CsvConversionService csv;
+    public final TsvConversionService tsv;
     public final ExcelConversionService excel;
     public final PngConversionService png;
     public final CountConversionService count;
@@ -73,6 +75,7 @@ public abstract class StdSerialization<BOUNDS> {
         JsonLinesConversionService jsonlines,
         HtmlConversionService html,
         CsvConversionService csv,
+        TsvConversionService tsv,
         ExcelConversionService excel,
         PngConversionService png,
         GeojsonResolver geojsonResolver,
@@ -83,6 +86,7 @@ public abstract class StdSerialization<BOUNDS> {
         this.jsonlines = jsonlines;
         this.html = html;
         this.csv = csv;
+        this.tsv = tsv;
         this.excel = excel;
         this.png = png;
         this.geojsonResolver = geojsonResolver;
@@ -161,6 +165,9 @@ public abstract class StdSerialization<BOUNDS> {
         case CSV:
             response = csv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
+        case TSV:
+            response = tsv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
         case XLSX:
             response = excel.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
@@ -226,6 +233,9 @@ public abstract class StdSerialization<BOUNDS> {
         case CSV:
             response = csv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
+        case TSV:
+            response = tsv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            break;
         case XLSX:
             response = excel.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
@@ -286,6 +296,9 @@ public abstract class StdSerialization<BOUNDS> {
     case CSV:
         response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
+    case TSV:
+        response = tsv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+        break;
     case XLSX:
         response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
@@ -344,6 +357,9 @@ public abstract class StdSerialization<BOUNDS> {
             break;
         case CSV:
             response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case TSV:
+            response = tsv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case XLSX:
             response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
@@ -419,6 +435,9 @@ public abstract class StdSerialization<BOUNDS> {
         case CSV:
             response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
+        case TSV:
+            response = tsv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+            break;
         case XLSX:
             response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
@@ -490,6 +509,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
@@ -587,6 +609,9 @@ public abstract class StdSerialization<BOUNDS> {
             case CSV:
                 response = csv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
@@ -642,6 +667,9 @@ public abstract class StdSerialization<BOUNDS> {
         case CSV:
             response = csv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
+        case TSV:
+            response = tsv.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
         case XLSX:
             response = excel.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
@@ -696,6 +724,9 @@ public abstract class StdSerialization<BOUNDS> {
         case CSV:
             response = csv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
+        case TSV:
+            response = tsv.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
+            break;
         case XLSX:
             response = excel.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
@@ -749,6 +780,9 @@ public abstract class StdSerialization<BOUNDS> {
             case CSV:
                 response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
+                break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
@@ -800,6 +834,9 @@ public abstract class StdSerialization<BOUNDS> {
             case CSV:
                 response = csv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
+                break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
@@ -847,6 +884,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), data);
+                break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), data);
                 break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), data);
@@ -901,6 +941,9 @@ public abstract class StdSerialization<BOUNDS> {
             case CSV:
                 response = csv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes);
+                break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes);
                 break;
@@ -951,6 +994,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case CSV:
                 response = csv.serialize(title2fileName(title), map(dataTransformer, data.get()));
+                break;
+            case TSV:
+                response = tsv.serialize(title2fileName(title), map(dataTransformer, data.get()));
                 break;
             case XLSX:
                 response = excel.serialize(title2fileName(title), map(dataTransformer, data.get()));

@@ -29,6 +29,8 @@ import fi.solita.utils.api.base.http.HttpModule;
 import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.base.json.JsonModule;
 import fi.solita.utils.api.base.json.JsonSerializers;
+import fi.solita.utils.api.base.tsv.TsvModule;
+import fi.solita.utils.api.base.tsv.TsvSerializers;
 import fi.solita.utils.api.base.xml.XmlMetadataSource;
 import fi.solita.utils.api.base.xml.XmlModule;
 import fi.solita.utils.api.base.xml.XmlRegistry;
@@ -79,6 +81,7 @@ public abstract class VersionBase<REQ> {
     protected JsonSerializers jsonSerializers() { return new JsonSerializers(serializers()); }
     protected abstract HtmlSerializers htmlSerializers();
     protected CsvSerializers csvSerializers() { return new CsvSerializers(serializers()); }
+    protected TsvSerializers tsvSerializers() { return new TsvSerializers(serializers()); }
     protected ExcelSerializers excelSerializers() { return new ExcelSerializers(serializers()); }
     protected XmlSerializers xmlSerializers() { return new XmlSerializers(serializers()); }
     
@@ -86,6 +89,7 @@ public abstract class VersionBase<REQ> {
     public final JsonModule jsonModule = new JsonModule(jsonSerializers().serializers(), jsonSerializers().keySerializers(), jsonSerializers().deserializers(), jsonSerializers().rawTypes());
     public final HtmlModule htmlModule = new HtmlModule(htmlSerializers().serializers());
     public final CsvModule csvModule = new CsvModule(csvSerializers().serializers());
+    public final TsvModule tsvModule = new TsvModule(tsvSerializers().serializers());
     public final ExcelModule excelModule = new ExcelModule(excelSerializers().serializers());
     public final XmlModule xmlModule = new XmlModule() {
         @Override

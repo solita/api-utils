@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 import fi.solita.utils.api.base.Cells_;
-import fi.solita.utils.api.base.csv.CsvModule;
-import fi.solita.utils.api.base.csv.CsvModule_;
-import fi.solita.utils.api.base.csv.CsvSerializer.Cells;
+import fi.solita.utils.api.base.tsv.TsvModule;
+import fi.solita.utils.api.base.tsv.TsvModule_;
+import fi.solita.utils.api.base.tsv.TsvSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
@@ -35,11 +35,11 @@ import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
-public class CsvConversionService {
+public class TsvConversionService {
 
-    private final CsvModule module;
+    private final TsvModule module;
 
-    public CsvConversionService(CsvModule module) {
+    public TsvConversionService(TsvModule module) {
         this.module = module;
     }
     
@@ -71,15 +71,15 @@ public class CsvConversionService {
     }
     
     public <T> Pair<byte[],Map<String,String>> serialize(String filename, final Collection<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
-        return serialize(filename, header(members), map(CsvConversionService_.<T>regularBodyRow().ap(this, members), obj));
+        return serialize(filename, header(members), map(TsvConversionService_.<T>regularBodyRow().ap(this, members), obj));
     }
     
     public <K,V> Pair<byte[],Map<String,String>> serialize(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(filename, header(members), map(CsvConversionService_.<V>regularBodyRow().ap(this, members), flatten(obj.values())));
+        return serialize(filename, header(members), map(TsvConversionService_.<V>regularBodyRow().ap(this, members), flatten(obj.values())));
     }
     
     public <K,V> Pair<byte[],Map<String,String>> serializeSingle(String filename, final Map<K,V> obj, Iterable<? extends MetaNamedMember<V, ?>> members) {
-        return serialize(filename, header(members), map(CsvConversionService_.<V>regularBodyRow().ap(this, members), obj.values()));
+        return serialize(filename, header(members), map(TsvConversionService_.<V>regularBodyRow().ap(this, members), obj.values()));
     }
     
     @SuppressWarnings("unchecked")
@@ -123,8 +123,8 @@ public class CsvConversionService {
             body.add(bodyRow);
         }
         
-        return Pair.of(mkString("\r\n", map(Transformers.map(CsvConversionService_.escape).andThen(CsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8")),
-                       newMap(Pair.of("Content-Disposition", "attachment; filename=" + filename + ".csv")));
+        return Pair.of(mkString("\r\n", map(Transformers.map(TsvConversionService_.escape).andThen(TsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8")),
+                       newMap(Pair.of("Content-Disposition", "attachment; filename=" + filename + ".tsv")));
     }
 
     private List<CharSequence> createHeader(Iterable<String> tableHeader, Iterable<Cells> row) {
@@ -152,19 +152,19 @@ public class CsvConversionService {
      * Remove newlines/cr:s and escape double quotes
      */
     static CharSequence escape(CharSequence str) {
-        return str.toString().replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n").replace("\"", "\"\"");
+        return str.toString().replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
     }
     
     static CharSequence joinCells(Iterable<CharSequence> str) {
-        return '"' + mkString("\",\"", str) + '"';
+        return mkString("\t", str);
     }
     
     private <K,V,O> Iterable<Iterable<Cells>> mapBody(final Map<K, ? extends Iterable<V>> obj, final Iterable<? extends MetaNamedMember<V, O>> members) {
-        return map((ApplyBi<K,V,Iterable<Cells>>)CsvConversionService_.<K,V,O>mapBodyRow().ap(this, members), flatMap(CsvConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
+        return map((ApplyBi<K,V,Iterable<Cells>>)TsvConversionService_.<K,V,O>mapBodyRow().ap(this, members), flatMap(TsvConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
     }
     
     <K,V,O> Iterable<Cells> mapBodyRow(Iterable<? extends MetaNamedMember<V, O>> members, K key, V value) {
-        return cons(module.serialize(key), map((ApplyBi<Object,Class<?>,Cells>)CsvModule_.serialize1().ap(module), map(CsvConversionService_.<V,O>foo().ap(value), members)));
+        return cons(module.serialize(key), map((ApplyBi<Object,Class<?>,Cells>)TsvModule_.serialize1().ap(module), map(TsvConversionService_.<V,O>foo().ap(value), members)));
     }
     
     @SuppressWarnings("unchecked")
@@ -173,7 +173,7 @@ public class CsvConversionService {
     }
     
     static <K,V> Iterable<Map.Entry<K,V>> flatKeyToValues(K key, Iterable<V> values) {
-        return map(CsvConversionService_.<K,V>makePair().ap(key), values);
+        return map(TsvConversionService_.<K,V>makePair().ap(key), values);
     }
     
     static <K,V> Map.Entry<K,V> makePair(K key, V value) {
@@ -185,7 +185,7 @@ public class CsvConversionService {
     }
     
     final <T> Iterable<Cells> regularBodyRow(final Iterable<? extends MetaNamedMember<T, ?>> members, final T obj) {
-        return map(CsvConversionService_.<T>cell().ap(this, obj), members);
+        return map(TsvConversionService_.<T>cell().ap(this, obj), members);
     }
     
     final <T> Cells cell(final T obj, final MetaNamedMember<T, ?> member) {

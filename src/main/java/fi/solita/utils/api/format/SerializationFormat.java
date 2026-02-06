@@ -11,6 +11,7 @@ public enum SerializationFormat {
     JSONL("application/x-ndjson"),
     HTML("text/html;charset=UTF-8"),
     CSV("text/csv;charset=UTF-8"),
+    TSV("text/tab-separated-values;charset=UTF-8"),
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"),
     PNG("image/png"),
     XML("application/xml"),
@@ -37,6 +38,8 @@ public enum SerializationFormat {
             return Some(SerializationFormat.HTML);
         } else if (extension.equals("csv")) {
             return Some(SerializationFormat.CSV);
+        } else if (extension.equals("tsv")) {
+            return Some(SerializationFormat.TSV);
         } else if (extension.equals("xlsx")) {
             return Some(SerializationFormat.XLSX);
         } else if (extension.equals("png")) {
