@@ -323,8 +323,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                        .example("13:20:45");
             } else if (clazz.equals(Duration.class)) {
                 builder.qualifiedType("duration")
-                       .description("Kesto sekunneissa ja millisekunneissa / Duration in seconds and milliseconds. ISO8601")
-                       .example("PT72.345S");
+                       .description("Kesto / Duration. ISO8601")
+                       .example("PT72S");
             } else if (clazz.equals(DateTimeZone.class)) {
                 builder.qualifiedType("datetimezone")
                        .description("Aikavyöhykekoodi / Time zone code")
