@@ -574,9 +574,7 @@ public abstract class HtmlConversionService {
     protected HtmlAttributes extraTHAttributes(AccessibleObject member) {
         Class<?> memberType = MemberUtil.memberTypeUnwrappingOption(member);
         HtmlAttributes attr = new HtmlAttributes();
-        if (Boolean.class.isAssignableFrom(memberType)) {
-            attr.add("tafs-sort-function", "bool", true);
-        } else if (Number.class.isAssignableFrom(memberType)) {
+        if (Number.class.isAssignableFrom(memberType)) {
             attr.add("tafs-sort-function", "number", true);
         }
         return attr;
