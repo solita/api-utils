@@ -103,7 +103,11 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                 if (layer.getSource && layer.getSource().getFeaturesInExtent) {
                     var props = layer.getProperties();
                     results[props.title] = layer.getSource().getFeaturesInExtent(mapExtent).map(function(x) {
-                        return x.getProperties();
+                        var ret = x.getProperties();
+                        for (var key in util.tooMassiveProperties) {
+                            delete ret[key];
+                        }
+                        return ret;
                     }).filter(onlyUnique)
                       .sort(function(a,b) { return a.tunniste - b.tunniste || a._tunniste - b._tunniste || a.external_id - b.external_id; });
                 }
