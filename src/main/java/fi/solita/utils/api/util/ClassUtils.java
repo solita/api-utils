@@ -19,6 +19,9 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
 
+import com.fasterxml.jackson.core.type.ResolvedType;
+import com.fasterxml.jackson.databind.type.SimpleType;
+
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Option;
@@ -48,6 +51,8 @@ public class ClassUtils {
         if (type instanceof ParameterizedType) {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
             return headOption(newList(args[0]));
+        } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 0) {
+            return Some(((SimpleType)type).containedType(0));
         }
         return None();
     }
@@ -57,14 +62,23 @@ public class ClassUtils {
     }
 
     public static Class<?> typeClass(Type type) {
+        for (Class<?> ret: resolveClass(type)) {
+            return ret;
+        }
+        throw new IllegalArgumentException("Could not handle Type: " + type.getClass());
+    }
+    
+    public static Option<Class<?>> resolveClass(Type type) {
         if (type instanceof ParameterizedType) {
-            return typeClass(((ParameterizedType)type).getRawType());
+            return resolveClass(((ParameterizedType)type).getRawType());
         } else if (type instanceof Class) {
-            return (Class<?>) type;
+            return Some((Class<?>) type);
         } else if (type instanceof TypeVariable<?>) {
-            return typeClass(((TypeVariable<?>) type).getBounds()[0]);
+            return resolveClass(((TypeVariable<?>) type).getBounds()[0]);
+        } else if (type instanceof ResolvedType) {
+            return Some(((ResolvedType)type).getRawClass());
         } else {
-            throw new IllegalArgumentException("Could not handle Type: " + type.getClass());
+            return None();
         }
     }
     

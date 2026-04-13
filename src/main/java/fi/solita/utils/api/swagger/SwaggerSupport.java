@@ -309,7 +309,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                        .example("tunniste<>1.2.246.578.2.3.4");
             } else if (clazz.equals(PropertyName.class)) {
                 builder.description(doc(PropertyName.class).getOrElse(""))
-                       .example("tunniste<>1.2.246.578.2.3.4");
+                       .example("tunniste,voimassa");
             } else if (clazz.equals(SRSName.class)) {
                 builder.example(SRSName.EPSG3067.value);
             } else if (clazz.equals(URI.class)) {

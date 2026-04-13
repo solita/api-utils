@@ -411,6 +411,7 @@ public class JsonSerializers {
         Pair.of(Character.class, String.class),
         Pair.of(LocalDate.class, java.sql.Date.class),
         Pair.of(DateTime.class, java.util.Date.class),
+        Pair.of(Interval.class, String.class),
         Pair.of(PropertyName.class, String.class)
     );
     }
