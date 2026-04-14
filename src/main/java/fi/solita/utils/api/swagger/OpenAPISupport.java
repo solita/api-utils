@@ -350,8 +350,14 @@ public abstract class OpenAPISupport {
 
         @Override
         public Operation customize(Operation operation, HandlerMethod handlerMethod) {
-            for (String d: doc(Some(handlerMethod.getMethod().getDeclaringClass().getName()), handlerMethod.getMethod().getDeclaringClass(), handlerMethod.getMethod().getDeclaringClass().getAnnotations(), None())) {
+            for (String d: doc(Some(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), None())) {
                 operation.setTags(newList(d));
+            }
+            
+            if (operation.getDeprecated() != null && operation.getDeprecated()
+                                                  && !handlerMethod.getMethod().isAnnotationPresent(Deprecated.class)
+                                                  && !handlerMethod.getBeanType().isAnnotationPresent(Deprecated.class)) {
+                operation.setDeprecated(false); // Don't mark as deprecated if not explicitly annotated as such (Springdoc considers also inherited class annotations)
             }
             
             if (includeFormatParameter) {
