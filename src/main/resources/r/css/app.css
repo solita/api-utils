@@ -32,6 +32,9 @@ section.menu h3 {
   margin: 1rem;
   margin-top: 1rem;
 }
+section.menu p {
+  margin-left: 0.5rem;
+}
 section.menu a {
   text-decoration: none;
 }

@@ -3,7 +3,7 @@ package fi.solita.utils.api.types;
 import fi.solita.utils.api.Documentation;
 import fi.solita.utils.api.util.Assert;
 
-@Documentation(name_en = "StartIndex", description = "Tulosjoukon alkuindeksi, oletuksena 1", description_en = "Result set start index. 1 by default")
+@Documentation(description = "Tulosjoukon alkuindeksi, oletuksena 1", description_en = "Result set start index. 1 by default")
 public final class StartIndex {
     public static final StartIndex DEFAULT = new StartIndex(1);
     

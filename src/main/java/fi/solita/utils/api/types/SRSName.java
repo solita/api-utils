@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import fi.solita.utils.api.Documentation;
 
-@Documentation(name_en = "SRSName", description = "Vastauksen koordinaattien muoto", description_en = "Response coordinate system")
+@Documentation(description = "Vastauksen koordinaattien muoto", description_en = "Response coordinate system")
 public final class SRSName {
     public static final SRSName EPSG3067 = new SRSName("epsg:3067", "urn:ogc:def:crs:EPSG::3067", false, false);
     public static final SRSName EPSG4326 = new SRSName("epsg:4326", "urn:ogc:def:crs:EPSG::4326", true, true);

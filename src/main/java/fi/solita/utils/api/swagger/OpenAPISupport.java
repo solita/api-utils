@@ -1,6 +1,7 @@
 package fi.solita.utils.api.swagger;
 
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
@@ -64,6 +65,7 @@ import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
@@ -80,12 +82,18 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 
 public abstract class OpenAPISupport {
     
-    public static final String DESCRIPTION_DateTime = "Ajanhetki / Instant. yyyy-MM-dd'T'HH:mm:ss'Z'";
-    public static final String DESCRIPTION_Interval = "Aikaväli / Interval. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'";
-    public static final String DESCRIPTION_IntervalPeriod = "Aikaväli ilmaistuna joko kahdella UTC-ajanhetkellä tai UTC-ajanhetkellä ja ISO8601-periodilla. / Interval expressed either with two UTC instants or a UTC-instant and a ISO8601 period. yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z' or yyyy-MM-dd'T'HH:mm:ss'Z'/PyYmMwWdDThHmMsS or PyYmMwWdDThHmMsS/yyyy-MM-dd'T'HH:mm:ss'Z'";
-    public static final String DESCRIPTION_Period = "Aikaväli ilmaistuna suhteessa nykyhetkeen joko yhdellä (negaatio tarkoittaa ajassa taaksepäin) tai kahdella ISO8601-periodilla. / Interval relative to current time expressed either with one (negation indicates backwards in time) or two ISO8601-periods. PyYmMwWdDThHmMsS or -PyYmMwWdDThHmMsS or PyYmMwWdDThHmMsS/PyYmMwWdDThHmMsS";
-    public static final String DESCRIPTION_LocalDate = "Päivämäärä / Date. yyyy-MM-dd";
-    public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
+    public static final String DESCRIPTION_DateTime       = "- Ajanhetki\n- Instant\n- `yyyy-MM-dd'T'HH:mm:ss'Z'`";
+    public static final String DESCRIPTION_Interval       = "- Aikaväli\n- Interval\n- [ISO8601](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals) varian 1\n- `yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'`";
+    public static final String DESCRIPTION_IntervalPeriod = "- Aikaväli ilmaistuna joko kahdella UTC-ajanhetkellä tai UTC-ajanhetkellä ja periodilla\n- Interval expressed either with two UTC instants or a UTC-instant and a period\n- [ISO8601](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals) variants 1-3\n- `yyyy-MM-dd'T'HH:mm:ss'Z'/yyyy-MM-dd'T'HH:mm:ss'Z'` | `yyyy-MM-dd'T'HH:mm:ss'Z'/PyYmMwWdDThHmMsS` | `PyYmMwWdDThHmMsS/yyyy-MM-dd'T'HH:mm:ss'Z'`";
+    public static final String DESCRIPTION_Period         = "- Aikaväli ilmaistuna suhteessa nykyhetkeen joko yhdellä (negaatio tarkoittaa ajassa taaksepäin) tai kahdella periodilla\n- Interval relative to current time expressed either with one (negation indicates backwards in time) or two periods\n- [ISO8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)\n- `PyYmMwWdDThHmMsS` | `-PyYmMwWdDThHmMsS` | `PyYmMwWdDThHmMsS/PyYmMwWdDThHmMsS`";
+    public static final String DESCRIPTION_Duration       = "- Kesto\n- Duration\n- [ISO8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)";
+    public static final String DESCRIPTION_LocalDate      = "- Päivämäärä\n- Date\n- `yyyy-MM-dd`";
+    public static final String DESCRIPTION_LocalTime      = "- Kellonaika\n- Time\n- `HH:mm:ss`";
+    public static final String DESCRIPTION_TimeZone       = "- Aikavyöhykekoodi\n- Time zone code";
+    public static final String DESCRIPTION_Filters        = "- [ECQL](https://docs.geoserver.org/latest/en/user/filter/ecql_reference.html#filter-ecql-reference)-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' ja useita ehtoja sanalla ' OR '\n- [ECQL](https://docs.geoserver.org/latest/en/user/filter/ecql_reference.html#filter-ecql-reference)-subset, multiple filters can be separated with ' AND ' and multiple conditions with ' OR '\n- `" + mkString(", ", Filters.SUPPORTED_OPERATIONS) + "`";
+    public static final String DESCRIPTION_Character      = "- Merkki\n- Character";
+    public static final String DESCRIPTION_URI            = "- URI";
+    public static final String DESCRIPTION_Format         = "- Vastauksen muoto\n- Response format";
     
     protected static final DateTime SOME_DATETIME = LocalDate.parse("1982-01-22").toDateTime(LocalTime.parse("13:20:45")).withZone(DateTimeZone.UTC);
     
@@ -133,7 +141,7 @@ public abstract class OpenAPISupport {
      * Customize parameter defined by OperationCustomizer
      */
     protected Option<Parameter> customize(boolean ignoreRevision, Parameter parameter, java.lang.reflect.Parameter methodParameter) {
-        Class<?> type = methodParameter.getType();
+        Class<?> type = MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
         if (Revision.class.isAssignableFrom(type)) {
             if (ignoreRevision) {
                 return None();
@@ -153,12 +161,11 @@ public abstract class OpenAPISupport {
                      .schema(new StringSchema().format("iso8601"));
         } else if (LocalDate.class.isAssignableFrom(type)) {
             parameter.description(DESCRIPTION_LocalDate)
-                     .schema(new StringSchema().format("date"))
-                     .example("1982-01-22");
+                     .schema(new StringSchema().format("date"));
         } else if (Count.class.isAssignableFrom(type)) {
             parameter
-                .example(1)
-                .schema(new IntegerSchema()._default(1)._enum(newList(Collections.newArray(Number.class, Count.validValues))));
+                .example(1) // intentionally, so that Swagger-UI uses 1 as the default
+                .schema(new IntegerSchema()._enum(newList(Collections.newArray(Number.class, Count.validValues))));
         } else if (StartIndex.class.isAssignableFrom(type)) {
             parameter
                 .schema(new IntegerSchema().minimum(BigDecimal.ONE));
@@ -166,31 +173,24 @@ public abstract class OpenAPISupport {
             parameter
                 .description(DESCRIPTION_Filters)
                 .schema(new StringSchema().format("ecql"));
-        } else if (parameter.getName().equals("propertyName")) {
-            parameter
-                .example("tunniste,voimassa")
-                .schema(new ArraySchema().items(new StringSchema()))
-                .explode(false);
         } else if (SRSName.class.isAssignableFrom(type)) {
             parameter
-                .example(SRSName.EPSG3067.value)
                 .schema(new StringSchema()._enum(newList(map(SRSName_.value, SRSName.validValues))));
         } else if (parameter.getName().equals("typeNames")) {
             parameter
-                .description("Palautettavat alityypit aakkosjärjestyksessä. Oletuksena kaikki. / Subtypes to return, in alphabetic order. All subtypes by default.")
+                .description("- Palautettavat alityypit aakkosjärjestyksessä. Oletuksena kaikki\n- Subtypes to return, in alphabetic order. All subtypes by default.")
                 .schema(new ArraySchema().items(new StringSchema()))
                 .explode(false);
         } else if (parameter.getName().equals("versio")) {
             parameter
-                .description("Objektin versionumero / Object version number");
+                .description("- Objektin versionumero\n- Object version number");
         } else if (Collection.class.isAssignableFrom(type)) {
             parameter.explode(false);
         }
         
-        for (String s: doc(Option.of(methodParameter.getName()), MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType()), methodParameter.getAnnotations(), None())) {
-            if (!s.isEmpty()) {
-                parameter.description(s);
-            }
+        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), type, methodParameter.getAnnotations(), None());
+        if (d.left().isDefined() || d.right().isDefined()) {
+            parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
         }
         
         return Some(parameter);
@@ -271,7 +271,7 @@ public abstract class OpenAPISupport {
                     schema.get().description(DESCRIPTION_DateTime)
                           .example(RequestUtil.instant2string(SOME_DATETIME));
                 } else if (clazz.equals(Character.class)) {
-                    schema.get().description("character")
+                    schema.get().description(DESCRIPTION_Character)
                           .example("c");
                 } else if (clazz.equals(Interval.class)) {
                     schema.get().format("interval")
@@ -283,27 +283,29 @@ public abstract class OpenAPISupport {
                           .example("1982-01-22");
                 } else if (clazz.equals(URI.class)) {
                     schema.get().format("uri")
-                          .description("URI")
+                          .description(DESCRIPTION_URI)
                           .example("https://www.liikennevirasto.fi");
                 } else if (clazz.equals(LocalTime.class)) {
                     schema.get().format("localtime")
-                          .description("Kellonaika / Time. HH:mm:ss")
+                          .description(DESCRIPTION_LocalTime)
                           .pattern("[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}")
                           .example("13:20:45");
                 } else if (clazz.equals(Duration.class)) {
                     schema.get().format("duration")
-                          .description("Kesto / Duration. ISO8601")
+                          .description(DESCRIPTION_Duration)
                           .example("PT67S");
                 } else if (clazz.equals(DateTimeZone.class)) {
                     schema.get().format("datetimezone")
-                          .description("Aikavyöhykekoodi / Time zone code")
+                          .description(DESCRIPTION_TimeZone)
                           .example("Europe/Helsinki");
                 }
                 
-                for (String s: doc(Option.of(type.getPropertyName()), type.getType(), Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]), None())) {
-                    if (!s.isEmpty()) {
-                        schema.get().description(s);
-                    }
+                Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]), None());
+                for (String s: d.left()) {
+                    schema.get().title(s);
+                }
+                for (String s: d.right()) {
+                    schema.get().description(langsToList(s));
                 }
             }
         }
@@ -350,8 +352,15 @@ public abstract class OpenAPISupport {
 
         @Override
         public Operation customize(Operation operation, HandlerMethod handlerMethod) {
-            for (String d: doc(Some(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), None())) {
-                operation.setTags(newList(d));
+            Pair<Option<String>, Option<String>> d = doc(Some(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), None());
+            operation.setTags(newList(mkString(" - ", concat(d.left(), d.right()))));
+            
+            Pair<Option<String>, Option<String>> dd = doc(Some(handlerMethod.getMethod().getName()), handlerMethod.getMethod().getReturnType(), handlerMethod.getMethod().getAnnotations(), Some(handlerMethod.getBeanType()));
+            for (String s: dd.left()) {
+                operation.setSummary(s);
+            }
+            for (String s: dd.right()) {
+                operation.setDescription(langsToList(s));
             }
             
             if (operation.getDeprecated() != null && operation.getDeprecated()
@@ -360,7 +369,7 @@ public abstract class OpenAPISupport {
                 operation.setDeprecated(false); // Don't mark as deprecated if not explicitly annotated as such (Springdoc considers also inherited class annotations)
             }
             
-            if (includeFormatParameter) {
+            if (includeFormatParameter && (operation.getParameters().size() == 0 || !operation.getParameters().get(0).getName().equals("format"))) {
                 if (exists(new Predicate<String>() {
                     @Override
                     public boolean accept(String candidate) {
@@ -369,9 +378,8 @@ public abstract class OpenAPISupport {
                 }, handlerMethod.getMethodAnnotation(RequestMapping.class).value())) {
                     StringSchema schema = new StringSchema();
                     schema.setEnum(newList(map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), VISIBLE_FORMATS)));
-                    schema.setDefault("json");
                     operation.getParameters().add(0, new Parameter().name("format")
-                                                                    .description("Vastauksen muoto / Response format")
+                                                                    .description(DESCRIPTION_Format)
                                                                     .in("path")
                                                                     .schema(schema));
                 }
@@ -406,14 +414,13 @@ public abstract class OpenAPISupport {
     }
     
     @SuppressWarnings("unchecked")
-    protected Option<String> doc(Option<String> name, Type genericType, Annotation[] annotations, Option<Class<?>> declaringClass) {
-        for (Documentation doc: (Option<Documentation>)(Object)find(OpenAPISupport_.equalsDocumentation, annotations)) {
-            return Some(doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
+    protected Pair<Option<String>,Option<String>> doc(Option<String> name, Type genericType, Annotation[] annotations, Option<Class<?>> declaringClass) {
+        for (Documentation doc: (Iterable<Documentation>)(Object)concat(find(OpenAPISupport_.equalsDocumentation, annotations),
+                                                                        find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations()))) {
+            return Pair.of(doc.name().isEmpty() && doc.name_en().isEmpty()               ? None() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
+                           doc.description().isEmpty() && doc.description_en().isEmpty() ? None() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
         }
-        for (Documentation doc: (Option<Documentation>)(Object)find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations())) {
-            return Some(doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
-        }
-        return None();
+        return Pair.of(None(), None());
     }
 
     public GroupedOpenApi createGroupedOpenApi(VersionBase<?> publishedVersion, final boolean ignoreRevision, boolean includeFormatParameter, String title, String description) {
@@ -484,5 +491,13 @@ public abstract class OpenAPISupport {
     
     static String int2string(Integer i) {
         return Integer.toString(i);
+    }
+    
+    static String langsToList(String description) {
+        return description.contains(" / ") ? "- " + description.replace(" / ", "\n- ") : description;
+    }
+    
+    static Option<String> str2option(String s) {
+        return s.isEmpty() ? None() : Option.Some(s);
     }
 }
