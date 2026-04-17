@@ -416,7 +416,7 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                               var parts = resolvedProps._source.split('.');
                               if (resolvedProps.tunniste && resolvedProps._source) {
                                 var x = direct.find(d => {
-                                    var directProps = parts.reduce((acc,cur) => acc instanceof Array ? acc.map(a => a[cur]) : acc[cur], d.getProperties());
+                                    var directProps = parts.reduce((acc,cur) => acc === undefined ? undefined : acc instanceof Array ? acc.flatMap(a => a[cur] === undefined ? [] : [a[cur]]) : acc[cur], d.getProperties());
                                     return directProps == resolvedProps.tunniste || directProps instanceof Array && directProps.includes(resolvedProps.tunniste);
                                 });
                                 if (x) {

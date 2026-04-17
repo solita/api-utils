@@ -1,12 +1,14 @@
 package fi.solita.utils.api.swagger;
 
+import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
+import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.concat;
+import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.FunctionalA.exists;
 import static fi.solita.utils.functional.FunctionalA.find;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.Option.None;
@@ -369,7 +371,10 @@ public abstract class OpenAPISupport {
                 operation.setDeprecated(false); // Don't mark as deprecated if not explicitly annotated as such (Springdoc considers also inherited class annotations)
             }
             
-            if (includeFormatParameter && (operation.getParameters().size() == 0 || !operation.getParameters().get(0).getName().equals("format"))) {
+            if (includeFormatParameter && !exists(OpenAPISupport_.parameterIsFormat, Option.of(operation.getParameters()).getOrElse(emptyList()))) {
+                if (operation.getParameters() == null) {
+                    operation.setParameters(newMutableList());
+                }
                 if (exists(new Predicate<String>() {
                     @Override
                     public boolean accept(String candidate) {
@@ -491,6 +496,10 @@ public abstract class OpenAPISupport {
     
     static String int2string(Integer i) {
         return Integer.toString(i);
+    }
+    
+    static boolean parameterIsFormat(Parameter p) {
+        return "format".equals(p.getName());
     }
     
     static String langsToList(String description) {
