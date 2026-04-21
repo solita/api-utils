@@ -154,7 +154,7 @@ public abstract class OpenAPISupport {
         
         if (DateTime.class.isAssignableFrom(type)) {
             parameter.description(DESCRIPTION_DateTime)
-                     .schema(new StringSchema()._default("2020-01-01T00:00:00Z").format("datetime"));
+                     .schema(new StringSchema().format("datetime"));
         } else if (Interval.class.isAssignableFrom(type)) {
             parameter.description(DESCRIPTION_IntervalPeriod)
                      .schema(new StringSchema().format("interval"));
