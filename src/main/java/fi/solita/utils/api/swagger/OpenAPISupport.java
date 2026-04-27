@@ -432,12 +432,12 @@ public abstract class OpenAPISupport {
         return Pair.of(None(), None());
     }
 
-    public GroupedOpenApi createGroupedOpenApi(VersionBase<?> publishedVersion, final boolean ignoreRevision, boolean includeFormatParameter, String title, String description) {
+    public GroupedOpenApi.Builder createGroupedOpenApi(VersionBase<?> version, final boolean ignoreRevision, boolean includeFormatParameter, String title, String description) {
         return GroupedOpenApi.builder()
-            .group(publishedVersion.getVersion() + (ignoreRevision ? "" : ".extended"))
-            .packagesToScan(publishedVersion.getBasePackage())
-            .pathsToMatch("/" + publishedVersion.getVersion() + "/**")
-            .addOpenApiCustomizer(new OpenApiCustomizerBase(publishedVersion, title, description))
+            .group(version.getVersion() + (ignoreRevision ? "" : ".extended"))
+            .packagesToScan(version.getBasePackage())
+            .pathsToMatch("/" + version.getVersion() + "/**")
+            .addOpenApiCustomizer(new OpenApiCustomizerBase(version, title, description))
             .addOpenApiMethodFilter(new OpenApiMethodFilter() {
                 @Override
                 public boolean isMethodToInclude(Method method) {
@@ -457,8 +457,7 @@ public abstract class OpenAPISupport {
                     return routerOperation;
                 }
             })
-            .addOperationCustomizer(new OperationCustomizerBase(ignoreRevision, includeFormatParameter))
-            .build();
+            .addOperationCustomizer(new OperationCustomizerBase(ignoreRevision, includeFormatParameter));
     }
     
     /**
