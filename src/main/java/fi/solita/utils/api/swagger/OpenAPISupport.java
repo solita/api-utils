@@ -22,6 +22,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.springdoc.core.customizers.RouterOperationCustomizer;
 import org.springdoc.core.filters.OpenApiMethodFilter;
 import org.springdoc.core.fn.RouterOperation;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.method.HandlerMethod;
@@ -390,7 +392,7 @@ public abstract class OpenAPISupport {
                 }
             }
             
-            operation.setParameters(newList(flatMap(new Apply<Parameter,Option<Parameter>>() {
+            operation.setParameters(new ArrayList<Parameter>(newList(flatMap(new Apply<Parameter,Option<Parameter>>() {
                 @Override
                 public Option<Parameter> apply(Parameter parameter) {
                     if (parameter.getName().equals("format")) {
@@ -400,8 +402,10 @@ public abstract class OpenAPISupport {
                             @Override
                             public boolean accept(java.lang.reflect.Parameter candidate) {
                                 return candidate.isAnnotationPresent(RequestParam.class)
-                                    ? candidate.getAnnotation(RequestParam.class).value().equals(parameter.getName())
-                                    : candidate.getName().equals(parameter.getName());
+                                    ? candidate.getAnnotation(RequestParam.class).value().equalsIgnoreCase(parameter.getName())
+                                    : candidate.isAnnotationPresent(PathVariable.class)
+                                    ? candidate.getAnnotation(PathVariable.class).value().equalsIgnoreCase(parameter.getName())
+                                    : candidate.getName().equalsIgnoreCase(parameter.getName());
                             }
                         }, handlerMethod.getMethod().getParameters()).orElse(new ApplyZero<java.lang.reflect.Parameter>() {
                             @Override
@@ -412,7 +416,7 @@ public abstract class OpenAPISupport {
                         return OpenAPISupport.this.customize(ignoreRevision, parameter, methodParameter);
                     }
                 }
-            }, operation.getParameters())));
+            }, operation.getParameters()))));
             
             return operation;
         }
