@@ -120,7 +120,8 @@ public abstract class OpenAPISupport {
         
         @Override
         public void customise(OpenAPI openApi) {
-            openApi.getComponents().addSecuritySchemes(RequestUtil.API_KEY, new SecurityScheme().type(SecurityScheme.Type.APIKEY).name(RequestUtil.API_KEY).in(SecurityScheme.In.HEADER));
+            openApi.getComponents().addSecuritySchemes(RequestUtil.API_KEY, new SecurityScheme().type(SecurityScheme.Type.APIKEY).name(RequestUtil.API_KEY).in(SecurityScheme.In.HEADER))
+                                   .addSecuritySchemes(RequestUtil.BEARER, new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme(RequestUtil.BEARER).bearerFormat("JWT"));
             openApi.info(openApi.getInfo().title(title)
                    .description(description)
                    .version(publishedVersion.getVersion()));

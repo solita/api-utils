@@ -236,6 +236,7 @@ public abstract class RequestUtil {
     }
 
     public static final String API_KEY = "Api-Key";
+    public static final String BEARER = "bearer";
 
     public static final String instant2string(DateTime instant) {
         return limit(instant).toString(ISODateTimeFormat.dateTimeNoMillis().withZoneUTC());
