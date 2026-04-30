@@ -41,9 +41,14 @@ import org.springdoc.core.customizers.RouterOperationCustomizer;
 import org.springdoc.core.filters.OpenApiMethodFilter;
 import org.springdoc.core.fn.RouterOperation;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.MatrixVariable;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.method.HandlerMethod;
 
 import com.fasterxml.jackson.databind.BeanDescription;
@@ -399,22 +404,31 @@ public abstract class OpenAPISupport {
                     if (parameter.getName().equals("format")) {
                         return Some(parameter);
                     } else {
-                        java.lang.reflect.Parameter methodParameter = find(new Predicate<java.lang.reflect.Parameter>() {
+                        String paramName = parameter.getName();
+                        String paramIn = parameter.getIn();
+                        for (java.lang.reflect.Parameter methodParameter: find(new Predicate<java.lang.reflect.Parameter>() {
                             @Override
                             public boolean accept(java.lang.reflect.Parameter candidate) {
-                                return candidate.isAnnotationPresent(RequestParam.class)
-                                    ? candidate.getAnnotation(RequestParam.class).value().equalsIgnoreCase(parameter.getName())
-                                    : candidate.isAnnotationPresent(PathVariable.class)
-                                    ? candidate.getAnnotation(PathVariable.class).value().equalsIgnoreCase(parameter.getName())
-                                    : candidate.getName().equalsIgnoreCase(parameter.getName());
+                                return "query".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(RequestParam.class)
+                                     ? candidate.getAnnotation(RequestParam.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestParam.class).name().equalsIgnoreCase(paramName)
+                                     : "path".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(PathVariable.class)
+                                     ? candidate.getAnnotation(PathVariable.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(PathVariable.class).name().equalsIgnoreCase(paramName)
+                                     : "path".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(MatrixVariable.class)
+                                     ? candidate.getAnnotation(MatrixVariable.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(MatrixVariable.class).name().equalsIgnoreCase(paramName)
+                                     : "header".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(RequestHeader.class)
+                                     ? candidate.getAnnotation(RequestHeader.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestHeader.class).name().equalsIgnoreCase(paramName)
+                                     : "cookie".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(CookieValue.class)
+                                     ? candidate.getAnnotation(CookieValue.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(CookieValue.class).name().equalsIgnoreCase(paramName)
+                                     : paramIn == null && candidate.isAnnotationPresent(RequestPart.class)
+                                     ? candidate.getAnnotation(RequestPart.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestPart.class).name().equalsIgnoreCase(paramName)
+                                     : paramIn == null && candidate.isAnnotationPresent(RequestAttribute.class)
+                                     ? candidate.getAnnotation(RequestAttribute.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestAttribute.class).name().equalsIgnoreCase(paramName)
+                                     : candidate.getName().equalsIgnoreCase(paramName);
                             }
-                        }, handlerMethod.getMethod().getParameters()).orElse(new ApplyZero<java.lang.reflect.Parameter>() {
-                            @Override
-                            public java.lang.reflect.Parameter get() {
-                                throw new RuntimeException("Could not find method parameter for " + parameter.getName() + " in " + handlerMethod.getMethod());
-                            }
-                        });
-                        return OpenAPISupport.this.customize(ignoreRevision, parameter, methodParameter);
+                        }, handlerMethod.getMethod().getParameters())) {
+                            return OpenAPISupport.this.customize(ignoreRevision, parameter, methodParameter);
+                        }
+                        return Some(parameter);
                     }
                 }
             }, operation.getParameters()))));
