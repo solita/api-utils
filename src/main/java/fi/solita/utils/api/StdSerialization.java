@@ -184,6 +184,7 @@ public abstract class StdSerialization<BOUNDS> {
         case GML:
         case XML:
         case MVT:
+        case DWG:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -252,6 +253,7 @@ public abstract class StdSerialization<BOUNDS> {
         case GML:
         case XML:
         case MVT:
+        case DWG:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -315,6 +317,7 @@ public abstract class StdSerialization<BOUNDS> {
     case GML:
     case XML:
     case MVT:
+    case DWG:
         throw new UnavailableContentTypeException();
     default:
         throw new IllegalStateException();
@@ -377,6 +380,7 @@ public abstract class StdSerialization<BOUNDS> {
         case GML:
         case XML:
         case MVT:
+        case DWG:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -454,6 +458,7 @@ public abstract class StdSerialization<BOUNDS> {
         case GML:
         case XML:
         case MVT:
+        case DWG:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -529,6 +534,7 @@ public abstract class StdSerialization<BOUNDS> {
             case GML:
             case XML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -628,6 +634,7 @@ public abstract class StdSerialization<BOUNDS> {
             case GML:
             case XML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -684,6 +691,7 @@ public abstract class StdSerialization<BOUNDS> {
         case GML:
         case XML:
         case MVT:
+        case DWG:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -741,6 +749,7 @@ public abstract class StdSerialization<BOUNDS> {
         case GML:
         case XML:
         case MVT:
+        case DWG:
             throw new UnavailableContentTypeException();
         default:
             throw new IllegalStateException();
@@ -797,6 +806,7 @@ public abstract class StdSerialization<BOUNDS> {
             case GML:
             case XML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -851,6 +861,7 @@ public abstract class StdSerialization<BOUNDS> {
             case GML:
             case XML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -902,6 +913,7 @@ public abstract class StdSerialization<BOUNDS> {
             case GML:
             case XML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -958,6 +970,7 @@ public abstract class StdSerialization<BOUNDS> {
             case XML:
             case GML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
@@ -1012,6 +1025,7 @@ public abstract class StdSerialization<BOUNDS> {
             case XML:
             case GML:
             case MVT:
+            case DWG:
                 throw new UnavailableContentTypeException();
             default:
                 throw new IllegalStateException();
