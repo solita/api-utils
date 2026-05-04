@@ -19,7 +19,8 @@ public enum SerializationFormat {
     COUNT("text/plain"),
     MVT("application/vnd.mapbox-vector-tile"),
     CHART("text/html;charset=UTF-8"),
-    PDF("application/pdf")
+    PDF("application/pdf"),
+    DWG("image/vnd.dwg")
     ;
     
     public final String mediaType;
