@@ -5,14 +5,17 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.exists;
+import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.FunctionalA.find;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
+import static fi.solita.utils.functional.Predicates.matches;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -27,6 +30,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -383,14 +387,22 @@ public abstract class OpenAPISupport {
                 if (operation.getParameters() == null) {
                     operation.setParameters(newMutableList());
                 }
-                if (exists(new Predicate<String>() {
+                for (String value: find(new Predicate<String>() {
                     @Override
                     public boolean accept(String candidate) {
-                        return candidate.contains("{format}");
+                        return candidate.contains("{format}") || candidate.contains("{format:");
                     }
                 }, handlerMethod.getMethodAnnotation(RequestMapping.class).value())) {
+                    Iterable<String> visibleFormats = map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), VISIBLE_FORMATS);
+                    String pattern = value.replaceFirst(".*[{]format([^}]*)[}].*", "$1");
                     StringSchema schema = new StringSchema();
-                    schema.setEnum(newList(map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), VISIBLE_FORMATS)));
+                    if (pattern.isEmpty()) {
+                        schema.setEnum(newList(visibleFormats));
+                    } else {
+                        Pattern pat = Pattern.compile(tail(pattern)); // strip leading ':'
+                        schema.setEnum(newList(pattern.isEmpty() ? visibleFormats
+                                                                 : filter(matches(pat), map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), SerializationFormat.values()))));
+                    }
                     operation.getParameters().add(0, new Parameter().name("format")
                                                                     .description(DESCRIPTION_Format)
                                                                     .in("path")
