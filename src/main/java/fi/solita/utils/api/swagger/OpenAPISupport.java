@@ -8,8 +8,10 @@ import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.head;
+import static fi.solita.utils.functional.Functional.init;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
+import static fi.solita.utils.functional.Functional.range;
 import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.FunctionalA.find;
 import static fi.solita.utils.functional.FunctionalA.subtract;
@@ -21,7 +23,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -59,6 +60,7 @@ import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+import com.fasterxml.jackson.databind.type.SimpleType;
 
 import fi.solita.utils.api.Documentation;
 import fi.solita.utils.api.base.VersionBase;
@@ -80,6 +82,7 @@ import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
+import fi.solita.utils.functional.Tuple;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -152,7 +155,8 @@ public abstract class OpenAPISupport {
     }
     
     /**
-     * Customize parameter defined by OperationCustomizer
+     * Customize parameter defined by OperationCustomizer.
+     * @return A new schema to be used to completely replace the original one.
      */
     protected Option<Parameter> customize(boolean ignoreRevision, Parameter parameter, java.lang.reflect.Parameter methodParameter) {
         Class<?> type = MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
@@ -218,6 +222,12 @@ public abstract class OpenAPISupport {
             this.directSubstitutions = directSubstitutions;
         }
         
+        protected void checkEnum(Schema<?> ret, Schema<?> effective) {
+            if (ret.getEnum() != null && ret.getEnum() == effective.getEnum()) {
+                throw new RuntimeException(ret.getTitle() + "/" + ret.getDescription() +  ": Enum schema was not customized. You want to define schema for all Enums with e.g. fi.solita.utils.api.swagger.OpenAPISupport.enumValue or however, otherwise default enum.name() would be used. Or override fi.solita.utils.api.swagger.OpenAPISupport.ModelConverterBase.checkEnum to skip this check.");
+            }
+        }
+        
         @Override
         public final Schema<?> resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
             Schema<?> ret = ClassUtils.resolveClass(type.getType()).flatMap(new Apply<Class<?>,Option<Schema<?>>>() {
@@ -226,11 +236,18 @@ public abstract class OpenAPISupport {
                     if (Option.class.isAssignableFrom(clazz)) {
                         return Some(context.resolve(new AnnotatedType(ClassUtils.getFirstTypeArgument(type.getType()).getOrElse(Object.class))));
                     } else if (Either.class.isAssignableFrom(clazz)) {
-                        Type left = ((ParameterizedType) type).getActualTypeArguments()[0];
-                        Type right = ((ParameterizedType) type).getActualTypeArguments()[1];
+                        Type left = ClassUtils.getFirstTypeArgument(type.getType()).get();
+                        Type right = ClassUtils.getSecondTypeArgument(type.getType()).get();
                         Schema<?> schemaLeft = context.resolve(new AnnotatedType(left));
                         Schema<?> schemaRight = context.resolve(new AnnotatedType(right));
-                        return Some(new Schema<>().anyOf(newList(schemaLeft, schemaRight)));
+                        return Some(new Schema<Object>().anyOf(newList(schemaLeft, schemaRight)));
+                    } else if (Tuple.class.isAssignableFrom(clazz)) {
+                        return Some(new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema<?>>() {
+                            @Override
+                            public Schema<?> apply(Integer i) {
+                                return context.resolve(new AnnotatedType(((SimpleType)type.getType()).containedType(i)));
+                            }
+                        }, init(range(0, ((SimpleType)type.getType()).containedTypeCount())))))));
                     }
                     
                     for (Class<?> substitute: find(clazz, directSubstitutions)) {
@@ -270,7 +287,10 @@ public abstract class OpenAPISupport {
                         return effective[0];
                     }
                 });
-                customize(type, context, schemaProvider);
+                for (Schema<?> replacement: customize(type, context, schemaProvider)) {
+                    effective[0] = replacement;
+                }
+                checkEnum(ret, effective[0]);
                 ret = effective[0];
             }
             return ret;
@@ -279,7 +299,7 @@ public abstract class OpenAPISupport {
         /**
          * Customize schema defined by ModelConverter
          */
-        protected void customize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
+        protected Option<Schema<?>> customize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
             for (Class<?> clazz: Some(MemberUtil.memberTypeUnwrappingOption(type.getType()))) {
                 if (clazz.equals(DateTime.class)) {
                     schema.get().description(DESCRIPTION_DateTime)
@@ -315,13 +335,11 @@ public abstract class OpenAPISupport {
                 }
                 
                 Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]), None());
-                for (String s: d.left()) {
-                    schema.get().title(s);
-                }
                 for (String s: d.right()) {
                     schema.get().description(langsToList(s));
                 }
             }
+            return None();
         }
         
     }

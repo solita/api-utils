@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.headOption;
+import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.FunctionalA.concat;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
@@ -50,9 +51,19 @@ public class ClassUtils {
     public static Option<Type> getFirstTypeArgument(Type type) {
         if (type instanceof ParameterizedType) {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
-            return headOption(newList(args[0]));
+            return headOption(newList(args));
         } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 0) {
             return Some(((SimpleType)type).containedType(0));
+        }
+        return None();
+    }
+    
+    public static Option<Type> getSecondTypeArgument(Type type) {
+        if (type instanceof ParameterizedType) {
+            Type[] args = ((ParameterizedType)type).getActualTypeArguments();
+            return headOption(tail(newList(args)));
+        } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 1) {
+            return Some(((SimpleType)type).containedType(1));
         }
         return None();
     }
