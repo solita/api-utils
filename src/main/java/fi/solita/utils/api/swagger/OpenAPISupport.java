@@ -3,6 +3,7 @@ package fi.solita.utils.api.swagger;
 import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
+import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.filter;
@@ -11,10 +12,10 @@ import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.init;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
-import static fi.solita.utils.functional.Functional.range;
-import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.FunctionalA.find;
 import static fi.solita.utils.functional.FunctionalA.subtract;
+import static fi.solita.utils.functional.FunctionalC.tail;
+import static fi.solita.utils.functional.FunctionalS.range;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.matches;
@@ -28,9 +29,11 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
@@ -63,10 +66,13 @@ import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.type.SimpleType;
 
 import fi.solita.utils.api.Documentation;
+import fi.solita.utils.api.JsonDeserializeAsBean;
+import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.VersionBase;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.Count;
 import fi.solita.utils.api.types.Filters;
+import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.SRSName_;
@@ -91,6 +97,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.IntegerSchema;
+import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
@@ -213,86 +220,146 @@ public abstract class OpenAPISupport {
         
         return Some(parameter);
     }
-
+    
     /** Make this a spring-bean to enable. */
     public class ModelConverterBase implements ModelConverter {
         private final Map<Class<?>, Class<?>> directSubstitutions;
+        
+        private final Set<Class<?>> ACCEPT = newSet(
+            Object.class,
+            String.class,
+            String[].class,
+            Boolean.class,
+            Boolean[].class,
+            Byte.class,
+            Byte[].class,
+            Character.class,
+            Character[].class,
+            Short.class,
+            Short[].class,
+            Integer.class,
+            Integer[].class,
+            Long.class,
+            Long[].class,
+            Float.class,
+            Float[].class,
+            Double.class,
+            Double[].class,
+            Date.class,
+            Either.class,
+            Option.class
+        );
 
         public ModelConverterBase(Map<Class<?>,Class<?>> directSubstitutions) {
             this.directSubstitutions = directSubstitutions;
         }
         
-        protected void checkEnum(Schema<?> ret, Schema<?> effective) {
-            if (ret.getEnum() != null && ret.getEnum() == effective.getEnum()) {
-                throw new RuntimeException(ret.getTitle() + "/" + ret.getDescription() +  ": Enum schema was not customized. You want to define schema for all Enums with e.g. fi.solita.utils.api.swagger.OpenAPISupport.enumValue or however, otherwise default enum.name() would be used. Or override fi.solita.utils.api.swagger.OpenAPISupport.ModelConverterBase.checkEnum to skip this check.");
-            }
+        protected void checkType(Schema<?> ret, Type type) {
+            Class<?> clazz = ClassUtils.typeClass(type);
+            if (!Map.class.isAssignableFrom(clazz) &&
+                !String.class.isAssignableFrom(clazz) &&
+                !Number.class.isAssignableFrom(clazz) &&
+                !Tuple.class.isAssignableFrom(clazz) &&
+                !clazz.isPrimitive() &&
+                !(clazz.isArray() && clazz.getComponentType().isPrimitive()) &&
+                !ACCEPT.contains(clazz) &&
+                !"array".equals(ret.getType()) &&
+                (ret instanceof JsonSchema || ret.getEnum() == null || ret.getEnum().isEmpty()) &&
+                !clazz.isAnnotationPresent(JsonSerializeAsBean.class) &&
+                !clazz.isAnnotationPresent(JsonDeserializeAsBean.class)) {
+                throw new RuntimeException(ret.getTitle() + "/" + ret.getDescription() +  ": Schema for type " + clazz + " was not customized. If you want to use default schema, annotate your type with fi.solita.utils.api.JsonSerializeAsBean. Or override fi.solita.utils.api.swagger.OpenAPISupport.ModelConverterBase.checkType to skip this check.");
+            } 
         }
         
         @Override
         public final Schema<?> resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
-            Schema<?> ret = ClassUtils.resolveClass(type.getType()).flatMap(new Apply<Class<?>,Option<Schema<?>>>() {
-                @Override
-                public Option<Schema<?>> apply(Class<?> clazz) {
-                    if (Option.class.isAssignableFrom(clazz)) {
-                        return Some(context.resolve(new AnnotatedType(ClassUtils.getFirstTypeArgument(type.getType()).getOrElse(Object.class))));
-                    } else if (Either.class.isAssignableFrom(clazz)) {
-                        Type left = ClassUtils.getFirstTypeArgument(type.getType()).get();
-                        Type right = ClassUtils.getSecondTypeArgument(type.getType()).get();
-                        Schema<?> schemaLeft = context.resolve(new AnnotatedType(left));
-                        Schema<?> schemaRight = context.resolve(new AnnotatedType(right));
-                        return Some(new Schema<Object>().anyOf(newList(schemaLeft, schemaRight)));
-                    } else if (Tuple.class.isAssignableFrom(clazz)) {
-                        return Some(new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema<?>>() {
-                            @Override
-                            public Schema<?> apply(Integer i) {
-                                return context.resolve(new AnnotatedType(((SimpleType)type.getType()).containedType(i)));
-                            }
-                        }, init(range(0, ((SimpleType)type.getType()).containedTypeCount())))))));
-                    }
-                    
-                    for (Class<?> substitute: find(clazz, directSubstitutions)) {
-                        return Some(context.resolve(new AnnotatedType(substitute)));
-                    }
-                    for (Map.Entry<Class<?>, Class<?>> e: directSubstitutions.entrySet()) {
-                        if (e.getKey().isAssignableFrom(clazz)) {
-                            return Some(context.resolve(new AnnotatedType(e.getValue())));
+            Option<Class<?>> clazz_ = ClassUtils.resolveClass(type.getType());
+            Schema<?> ret = null;
+            if (!clazz_.isDefined()) {
+                ret = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
+            } else {
+                final Type[] effectiveType = new Type[] { type.getType() };
+                Class<?> clazz = clazz_.get();
+                
+                if (Option.class.isAssignableFrom(clazz)) {
+                    Type nested = ClassUtils.getFirstTypeArgument(type.getType()).getOrElse(Object.class);
+                    ret = context.resolve(new AnnotatedType(nested).resolveAsRef(true));
+                } else if (Either.class.isAssignableFrom(clazz)) {
+                    Type left = ClassUtils.getFirstTypeArgument(type.getType()).get();
+                    Type right = ClassUtils.getSecondTypeArgument(type.getType()).get();
+                    Schema<?> schemaLeft = context.resolve(new AnnotatedType(left).resolveAsRef(true));
+                    Schema<?> schemaRight = context.resolve(new AnnotatedType(right).resolveAsRef(true));
+                    ret = new Schema<Object>().anyOf(newList(schemaLeft, schemaRight));
+                } else if (Tuple.class.isAssignableFrom(clazz)) {
+                    ret = new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema<?>>() {
+                        @Override
+                        public Schema<?> apply(Integer i) {
+                            return context.resolve(new AnnotatedType(((SimpleType)type.getType()).containedType(i)).resolveAsRef(true));
                         }
+                    }, init(range(0, ((SimpleType)type.getType()).containedTypeCount()))))));
+                }
+                
+                for (Class<?> substitute: find(clazz, directSubstitutions)) {
+                    effectiveType[0] = substitute;
+                    ret = context.resolve(new AnnotatedType(substitute).resolveAsRef(true));
+                }
+                for (Map.Entry<Class<?>, Class<?>> e: directSubstitutions.entrySet()) {
+                    if (e.getKey().isAssignableFrom(clazz)) {
+                        effectiveType[0] = e.getValue();
+                        ret = context.resolve(new AnnotatedType(e.getValue()).resolveAsRef(true));
                     }
-                    return Option.<Schema<?>>None();
                 }
-            }).orElse(new ApplyZero<Schema<?>>() {
-                @Override
-                public Schema<?> get() {
-                    return chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
-                }
-            });
-
-            if (ret != null) {
-                addRequiredProperties(type, context, ret);
                 
                 // Need to ensure all modifications are made to a clone, since springdoc reuses the same schema instances.
-                Schema<?>[] effective = new Schema<?>[] {ret};
+                Schema<?>[] modified = new Schema<?>[] {ret};
                 ApplyZero<Schema<?>> schemaProvider = Function.memoize(new ApplyZero<Schema<?>>() {
                     @Override
                     public Schema<?> get() {
-                        if (effective[0].get$ref() != null) {
-                            String ref = effective[0].get$ref();
-                            String schemaName = ref.substring(ref.lastIndexOf('/') + 1);
-                            Schema<?> definedSchema = context.getDefinedModels().get(schemaName);
+                        if (modified[0] == null) {
+                            modified[0] = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
+                        }
+                        if (modified[0].get$ref() != null) {
+                            Schema<?> definedSchema = getRef(context, modified[0]);
                             if (definedSchema != null) {
-                                effective[0] = definedSchema;
+                                modified[0] = definedSchema;
                             }
                         }
-                        effective[0] = cloneSchema(effective[0]);
-                        return effective[0];
+                        modified[0] = cloneSchema(modified[0]);
+                        return modified[0];
                     }
                 });
+                
                 for (Schema<?> replacement: customize(type, context, schemaProvider)) {
-                    effective[0] = replacement;
+                    modified[0] = replacement;
                 }
-                checkEnum(ret, effective[0]);
-                ret = effective[0];
+                if (modified[0] == null) {
+                    // default to regular resolution from chain.
+                    modified[0] = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
+                    ret = modified[0];
+                }
+                
+                if (modified[0] == ret) {
+                    // not modified or replaced -> check if should have been
+                    checkType(ret.get$ref() != null ? getRef(context, ret) : ret, effectiveType[0]);
+                } else {
+                    ret = modified[0];
+                }
             }
+            
+            if (ret != null) {
+                Annotation[] annotations = Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]);
+                Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, None());
+                for (String s: d.right()) {
+                    ret.description(langsToList(s));
+                }
+                for (Class<?> clazz: clazz_) {
+                    for (String title: getSchemaTitle(clazz)) {
+                        ret.title(title);
+                    }
+                }
+                addRequiredProperties(type, context, ret);
+            }
+            
             return ret;
         }
         
@@ -332,16 +399,29 @@ public abstract class OpenAPISupport {
                     schema.get().format("datetimezone")
                           .description(DESCRIPTION_TimeZone)
                           .example("Europe/Helsinki");
-                }
-                
-                Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]), None());
-                for (String s: d.right()) {
-                    schema.get().description(langsToList(s));
+                } else if (clazz.equals(PropertyName.class)) {
+                    schema.get().items(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
                 }
             }
             return None();
         }
         
+    }
+    
+    protected Option<String> getSchemaTitle(Class<?> clazz) {
+        for (Documentation doc: Option.of(clazz.getAnnotation(Documentation.class))) {
+            if (!doc.name().isEmpty()) {
+                return Some(doc.name());
+            }
+        }
+        return None();
+    }
+    
+    private static Schema<?> getRef(ModelConverterContext context, Schema<?> refSchema) {
+        String ref = refSchema.get$ref();
+        String schemaName = ref.substring(ref.lastIndexOf('/') + 1);
+        Schema<?> definedSchema = context.getDefinedModels().get(schemaName);
+        return definedSchema;
     }
     
     private static void addRequiredProperties(AnnotatedType type, ModelConverterContext context, Schema<?> schema) {
