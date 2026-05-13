@@ -97,7 +97,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.IntegerSchema;
-import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
@@ -264,7 +263,6 @@ public abstract class OpenAPISupport {
                 !(clazz.isArray() && clazz.getComponentType().isPrimitive()) &&
                 !ACCEPT.contains(clazz) &&
                 !"array".equals(ret.getType()) &&
-                (ret instanceof JsonSchema || ret.getEnum() == null || ret.getEnum().isEmpty()) &&
                 !clazz.isAnnotationPresent(JsonSerializeAsBean.class) &&
                 !clazz.isAnnotationPresent(JsonDeserializeAsBean.class)) {
                 throw new RuntimeException(ret.getTitle() + "/" + ret.getDescription() +  ": Schema for type " + clazz + " was not customized. If you want to use default schema, annotate your type with fi.solita.utils.api.JsonSerializeAsBean. Or override fi.solita.utils.api.swagger.OpenAPISupport.ModelConverterBase.checkType to skip this check.");
@@ -344,6 +342,8 @@ public abstract class OpenAPISupport {
                 } else {
                     ret = modified[0];
                 }
+                
+                postCustomize(type, context, schemaProvider);
             }
             
             if (ret != null) {
@@ -406,6 +406,8 @@ public abstract class OpenAPISupport {
             return None();
         }
         
+        protected void postCustomize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
+        }
     }
     
     protected Option<String> getSchemaTitle(Class<?> clazz) {
