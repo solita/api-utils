@@ -287,7 +287,7 @@ public abstract class OpenAPISupport {
                     Type right = ClassUtils.getSecondTypeArgument(type.getType()).get();
                     Schema<?> schemaLeft = context.resolve(new AnnotatedType(left).resolveAsRef(true));
                     Schema<?> schemaRight = context.resolve(new AnnotatedType(right).resolveAsRef(true));
-                    ret = new Schema<Object>().anyOf(newList(schemaLeft, schemaRight));
+                    ret = new Schema<Object>().oneOf(newList(schemaLeft, schemaRight));
                 } else if (Tuple.class.isAssignableFrom(clazz)) {
                     ret = new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema<?>>() {
                         @Override
@@ -632,7 +632,7 @@ public abstract class OpenAPISupport {
         return "format".equals(p.getName());
     }
     
-    static String langsToList(String description) {
+    public static String langsToList(String description) {
         return description.contains(" / ") ? "- " + description.replace(" / ", "\n- ") : description;
     }
     
