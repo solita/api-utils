@@ -165,8 +165,8 @@ public abstract class OpenAPISupport {
      * @return A new schema to be used to completely replace the original one.
      */
     protected Option<Parameter> customize(boolean ignoreRevision, Parameter parameter, java.lang.reflect.Parameter methodParameter) {
-        Class<?> type = MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
-        if (Revision.class.isAssignableFrom(type)) {
+        Class<?> unwrappedType = MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
+        if (Revision.class.isAssignableFrom(unwrappedType)) {
             if (ignoreRevision) {
                 return None();
             } else {
@@ -174,30 +174,30 @@ public abstract class OpenAPISupport {
             }
         }
         
-        if (DateTime.class.isAssignableFrom(type)) {
+        if (DateTime.class.isAssignableFrom(unwrappedType)) {
             parameter.description(DESCRIPTION_DateTime)
                      .schema(new StringSchema().format("datetime"));
-        } else if (Interval.class.isAssignableFrom(type)) {
+        } else if (Interval.class.isAssignableFrom(unwrappedType)) {
             parameter.description(DESCRIPTION_IntervalPeriod)
                      .schema(new StringSchema().format("interval"));
-        } else if (Period.class.isAssignableFrom(type)) {
+        } else if (Period.class.isAssignableFrom(unwrappedType)) {
             parameter.description(DESCRIPTION_Period)
                      .schema(new StringSchema().format("iso8601"));
-        } else if (LocalDate.class.isAssignableFrom(type)) {
+        } else if (LocalDate.class.isAssignableFrom(unwrappedType)) {
             parameter.description(DESCRIPTION_LocalDate)
                      .schema(new StringSchema().format("date"));
-        } else if (Count.class.isAssignableFrom(type)) {
+        } else if (Count.class.isAssignableFrom(unwrappedType)) {
             parameter
                 .example(1) // intentionally, so that Swagger-UI uses 1 as the default
                 .schema(new IntegerSchema()._enum(newList(Collections.newArray(Number.class, Count.validValues))));
-        } else if (StartIndex.class.isAssignableFrom(type)) {
+        } else if (StartIndex.class.isAssignableFrom(unwrappedType)) {
             parameter
                 .schema(new IntegerSchema().minimum(BigDecimal.ONE));
-        } else if (Filters.class.isAssignableFrom(type)) {
+        } else if (Filters.class.isAssignableFrom(unwrappedType)) {
             parameter
                 .description(DESCRIPTION_Filters)
                 .schema(new StringSchema().format("ecql"));
-        } else if (SRSName.class.isAssignableFrom(type)) {
+        } else if (SRSName.class.isAssignableFrom(unwrappedType)) {
             parameter
                 .schema(new StringSchema()._enum(newList(map(SRSName_.value, SRSName.validValues))));
         } else if (parameter.getName().equals("typeNames")) {
@@ -208,11 +208,11 @@ public abstract class OpenAPISupport {
         } else if (parameter.getName().equals("versio")) {
             parameter
                 .description("- Objektin versionumero\n- Object version number");
-        } else if (Collection.class.isAssignableFrom(type)) {
+        } else if (Collection.class.isAssignableFrom(MemberUtil.memberTypeUnwrappingOptionAndEither(methodParameter.getParameterizedType()))) {
             parameter.explode(false);
         }
         
-        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), type, methodParameter.getAnnotations(), None());
+        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), None());
         if (d.left().isDefined() || d.right().isDefined()) {
             parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
         }
@@ -400,7 +400,7 @@ public abstract class OpenAPISupport {
                           .description(DESCRIPTION_TimeZone)
                           .example("Europe/Helsinki");
                 } else if (clazz.equals(PropertyName.class)) {
-                    schema.get().items(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
+                    schema.get().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?");
                 }
             }
             return None();
