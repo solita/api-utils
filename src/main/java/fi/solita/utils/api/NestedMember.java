@@ -69,13 +69,6 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         Object u = parentModifier.apply(parent.apply(t));
         if (u == null) {
             return null;
-        } else if (u instanceof Option) {
-            if (((Option<?>) u).isDefined()) {
-                Iterable<T> xs = map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u);
-                return (T)headOption(filter(not(Predicates.isNull()), flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs));
-            } else {
-                return (T)None();
-            }
         } else if (u instanceof Iterable) {
             Iterable<T> xs = map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u);
             return (T) filter(not(Predicates.isNull()), flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs);
