@@ -2,6 +2,7 @@ package fi.solita.utils.api.base.html;
 
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.zipWithIndex;
 import static fi.solita.utils.functional.Predicates.not;
 import static org.rendersnake.HtmlAttributesFactory.*;
@@ -303,26 +304,30 @@ public abstract class HtmlSerializers {
     private final HtmlSerializer<?> array = new HtmlSerializer<Object>() {
         @Override
         public void renderOn(Object value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.ul();
-            for (int i = 0; i < Array.getLength(value); ++i) {
-                html.li(class_("i-" + i))
-                      .render(module.toRenderable(Array.get(value, i)))
-                    ._li();
+            if (Array.getLength(value) > 0) {
+                html.ul();
+                for (int i = 0; i < Array.getLength(value); ++i) {
+                    html.li(class_("i-" + i))
+                          .render(module.toRenderable(Array.get(value, i)))
+                        ._li();
+                }
+                html._ul();
             }
-            html._ul();
         }
     };
     
     private final HtmlSerializer<Iterable<?>> iterable = new HtmlSerializer<Iterable<?>>() {
         @Override
         public void renderOn(Iterable<?> value, HtmlCanvas html, HtmlModule module) throws IOException {
-            html.ul();
-            for (Tuple2<Integer, ?> o: zipWithIndex(value)) {
-                html.li(class_("i-" + o._1))
-                      .render(module.toRenderable(o._2))
-                    ._li();
+            if (!isEmpty(value)) {
+                html.ul();
+                for (Tuple2<Integer, ?> o: zipWithIndex(value)) {
+                    html.li(class_("i-" + o._1))
+                          .render(module.toRenderable(o._2))
+                        ._li();
+                }
+                html._ul();
             }
-            html._ul();
         }
     };
     

@@ -681,43 +681,10 @@ public abstract class HtmlConversionService {
         
         + "input.flt { height: 20px; }"
         
-        + "ul             { list-style: none; padding: 0; margin: 0; white-space: normal; }"
-        + "ul li          { border-top: 1px dotted #ddd; }"
+        + "ul                { list-style: none; padding: 0; margin: 0; white-space: normal; }"
+        + "ul li:not(:empty) { border-top: 1px dotted #ddd; }"
         + "ul li:first-child { border: none; }"
-        + "ul li.i-1  { background-color: #fffafa; }"
-        + "ul li.i-2  { background-color: #f0fff0; }"
-        + "ul li.i-3  { background-color: #f5fffa; }"
-        + "ul li.i-4  { background-color: #f0ffff; }"
-        + "ul li.i-5  { background-color: #f0f8ff; }"
-        + "ul li.i-6  { background-color: #f8f8ff; }"
-        + "ul li.i-7  { background-color: #f5f5f5; }"
-        + "ul li.i-8  { background-color: #fff5ee; }"
-        + "ul li.i-9  { background-color: #f5f5dc; }"
-        + "ul li.i-10 { background-color: #fdf5e6; }"
-        + "ul li.i-11 { background-color: #fffaf0; }"
-        + "ul li.i-12 { background-color: #fffff0; }"
-        + "ul li.i-13 { background-color: #faebd7; }"
-        + "ul li.i-14 { background-color: #faf0e6; }"
-        + "ul li.i-15 { background-color: #fff0f5; }"
-        + "ul li.i-16 { background-color: #ffe4e1; }"
-        + "ul li.i-17 { background-color: #fffafa; }"
-        + "ul li.i-18 { background-color: #f0fff0; }"
-        + "ul li.i-19 { background-color: #f5fffa; }"
-        + "ul li.i-20 { background-color: #f0ffff; }"
-        + "ul li.i-21 { background-color: #f0f8ff; }"
-        + "ul li.i-22 { background-color: #f8f8ff; }"
-        + "ul li.i-23 { background-color: #f5f5f5; }"
-        + "ul li.i-24 { background-color: #fff5ee; }"
-        + "ul li.i-25 { background-color: #f5f5dc; }"
-        + "ul li.i-26 { background-color: #fdf5e6; }"
-        + "ul li.i-27 { background-color: #fffaf0; }"
-        + "ul li.i-28 { background-color: #fffff0; }"
-        + "ul li.i-29 { background-color: #faebd7; }"
-        + "ul li.i-30 { background-color: #faf0e6; }"
-        + "ul li.i-31 { background-color: #fff0f5; }"
-        + "ul li.i-32 { background-color: #ffe4e1; }"
-        + "ul li ul li    { border: none !important; }"
-        + "ul li ul li    { background-color: transparent !important; }"
+        + nestedListStyles()
         
         + "table table,    table.tafs table { counter-reset: none; }"
         + "table table tr, table.tafs table tr { border: none; counter-increment: none; }"
@@ -792,6 +759,23 @@ public abstract class HtmlConversionService {
                  HtmlConversionService_.prefixed.ap(".nested") )))
                 
         + extraStyle();
+    }
+
+    private static String nestedListStyles() {
+        StringBuilder ret = new StringBuilder();
+        for (int i = 1; i <= 64; ++i) {
+            int hue = ((i - 1) * 137) % 360;
+            int lightness = i % 2 == 0 ? 88 : 92;
+            ret.append("ul li.i-")
+               .append(i)
+               .append(":not(:empty)")
+               .append(" { background-color: hsl(")
+               .append(hue)
+               .append(", 60%, ")
+               .append(lightness)
+               .append("%); }");
+        }
+        return ret.toString();
     }
     
     static String prefixed(String prefix, String rules) {
