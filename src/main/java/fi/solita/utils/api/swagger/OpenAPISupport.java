@@ -335,6 +335,7 @@ public abstract class OpenAPISupport {
                     modified[0] = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
                     ret = modified[0];
                 }
+                postCustomize(type, context, schemaProvider);
                 
                 if (modified[0] == ret) {
                     // not modified or replaced -> check if should have been
@@ -342,22 +343,6 @@ public abstract class OpenAPISupport {
                 } else {
                     ret = modified[0];
                 }
-                
-                postCustomize(type, context, schemaProvider);
-            }
-            
-            if (ret != null) {
-                Annotation[] annotations = Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]);
-                Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, None());
-                for (String s: d.right()) {
-                    ret.description(langsToList(s));
-                }
-                for (Class<?> clazz: clazz_) {
-                    for (String title: getSchemaTitle(clazz)) {
-                        ret.title(title);
-                    }
-                }
-                addRequiredProperties(type, context, ret);
             }
             
             return ret;
@@ -407,6 +392,17 @@ public abstract class OpenAPISupport {
         }
         
         protected void postCustomize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
+            Annotation[] annotations = Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]);
+            Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, None());
+            for (String s: d.right()) {
+                schema.get().description(langsToList(s));
+            }
+            for (Class<?> clazz: Some(MemberUtil.memberTypeUnwrappingOption(type.getType()))) {
+                for (String title: getSchemaTitle(clazz)) {
+                    schema.get().title(title);
+                }
+            }
+            addRequiredProperties(type, context, schema.get());
         }
     }
     
