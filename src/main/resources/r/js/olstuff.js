@@ -625,7 +625,11 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                                                                  .replace(/\d+\.\d+\.\d+\.\d+/, host)
                                                                  .replace(/[^.]+.maanmittauslaitos.fi/, host);
                             }
-                            group.getLayers().push(ret.tileLayer(id, new ol.source.WMTS(options), opacity));
+                            var layer = ret.tileLayer(id, new ol.source.WMTS(options), opacity);
+                            if (id === includeMML) {
+                                layer.setVisible(true);
+                            }
+                            group.getLayers().push(layer);
                         }
                     });
                   };
