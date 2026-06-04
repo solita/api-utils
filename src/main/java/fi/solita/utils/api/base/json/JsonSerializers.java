@@ -409,16 +409,9 @@ public class JsonSerializers {
     // Toteutus varmistaa, että nämä sitten toimivat myös generics-luokkien sisälle käärittyinä (mihin pelkkä direcModelSubstitutes ei riitä).
     public Map<Class<?>,Class<?>> rawTypes() { return Collections.<Class<?>,Class<?>>newMap(
         Pair.of(Character.class, String.class),
-        Pair.of(LocalDate.class, String.class),
+        Pair.of(LocalDate.class, java.sql.Date.class),
         Pair.of(DateTime.class, java.util.Date.class),
-        Pair.of(LocalTime.class, String.class),
-        Pair.of(Duration.class, String.class),
-        Pair.of(Period.class, String.class),
-        Pair.of(Interval.class, String.class),
-        Pair.of(DateTimeZone.class, String.class),
-        Pair.of(PropertyName.class, String.class),
-        Pair.of(UUID.class, String.class),
-        Pair.of(URI.class, String.class)
+        Pair.of(PropertyName.class, String.class)
     );
     }
 }

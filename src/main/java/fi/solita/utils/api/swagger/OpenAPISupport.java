@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
@@ -77,6 +78,7 @@ import fi.solita.utils.api.types.Revision;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.api.types.StartIndex;
+import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RequestUtil;
@@ -222,8 +224,6 @@ public abstract class OpenAPISupport {
     
     /** Make this a spring-bean to enable. */
     public class ModelConverterBase implements ModelConverter {
-        private final Map<Class<?>, Class<?>> directSubstitutions;
-        
         private final Set<Class<?>> ACCEPT = newSet(
             Object.class,
             String.class,
@@ -249,10 +249,6 @@ public abstract class OpenAPISupport {
             Option.class
         );
 
-        public ModelConverterBase(Map<Class<?>,Class<?>> directSubstitutions) {
-            this.directSubstitutions = directSubstitutions;
-        }
-        
         protected void checkType(Schema<?> ret, Type type) {
             Class<?> clazz = ClassUtils.typeClass(type);
             if (!Map.class.isAssignableFrom(clazz) &&
@@ -282,6 +278,7 @@ public abstract class OpenAPISupport {
                 if (Option.class.isAssignableFrom(clazz)) {
                     Type nested = ClassUtils.getFirstTypeArgument(type.getType()).getOrElse(Object.class);
                     ret = context.resolve(new AnnotatedType(nested).resolveAsRef(true));
+                    effectiveType[0] = nested;
                 } else if (Either.class.isAssignableFrom(clazz)) {
                     Type left = ClassUtils.getFirstTypeArgument(type.getType()).get();
                     Type right = ClassUtils.getSecondTypeArgument(type.getType()).get();
@@ -295,17 +292,6 @@ public abstract class OpenAPISupport {
                             return context.resolve(new AnnotatedType(((SimpleType)type.getType()).containedType(i)).resolveAsRef(true));
                         }
                     }, init(range(0, ((SimpleType)type.getType()).containedTypeCount()))))));
-                }
-                
-                for (Class<?> substitute: find(clazz, directSubstitutions)) {
-                    effectiveType[0] = substitute;
-                    ret = context.resolve(new AnnotatedType(substitute).resolveAsRef(true));
-                }
-                for (Map.Entry<Class<?>, Class<?>> e: directSubstitutions.entrySet()) {
-                    if (e.getKey().isAssignableFrom(clazz)) {
-                        effectiveType[0] = e.getValue();
-                        ret = context.resolve(new AnnotatedType(e.getValue()).resolveAsRef(true));
-                    }
                 }
                 
                 // Need to ensure all modifications are made to a clone, since springdoc reuses the same schema instances.
@@ -327,17 +313,28 @@ public abstract class OpenAPISupport {
                     }
                 });
                 
-                for (Schema<?> replacement: customize(type, context, schemaProvider)) {
-                    modified[0] = replacement;
+                try {
+                    for (Schema<?> replacement: customize(type, context, schemaProvider)) {
+                        modified[0] = Assert.notNull(replacement);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to customize schema for type " + type.getType(), e);
                 }
                 if (modified[0] == null) {
                     // default to regular resolution from chain.
                     modified[0] = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
                     ret = modified[0];
                 }
-                postCustomize(type, context, schemaProvider);
                 
-                if (modified[0] == ret) {
+                if (modified[0] != null) {
+                    try {
+                        postCustomize(type, context, schemaProvider);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to post-customize schema for type " + type.getType(), e);
+                    }
+                }
+                
+                if (modified[0] == ret && ret != null) {
                     // not modified or replaced -> check if should have been
                     checkType(ret.get$ref() != null ? getRef(context, ret) : ret, effectiveType[0]);
                 } else {
@@ -360,32 +357,38 @@ public abstract class OpenAPISupport {
                     schema.get().description(DESCRIPTION_Character)
                           .example("c");
                 } else if (clazz.equals(Interval.class)) {
-                    schema.get().format("interval")
-                          .description(DESCRIPTION_Interval)
-                          .example(RequestUtil.interval2stringRestrictedToInfinity(new Interval(SOME_DATETIME, SOME_DATETIME.plusHours(1))));
+                    return Some(new StringSchema().format("interval")
+                                                  .description(DESCRIPTION_Interval)
+                                                  .example(RequestUtil.interval2stringRestrictedToInfinity(new Interval(SOME_DATETIME, SOME_DATETIME.plusHours(1)))));
                 } else if (clazz.equals(LocalDate.class)) {
-                    schema.get().description(DESCRIPTION_LocalDate)
-                          .format("date")
-                          .example("1982-01-22");
+                    return Some(new StringSchema().description(DESCRIPTION_LocalDate)
+                                                  .format("date")
+                                                  .example("1982-01-22"));
+                } else if (clazz.equals(UUID.class)) {
+                    return Some(new StringSchema().format("uuid"));
                 } else if (clazz.equals(URI.class)) {
                     schema.get().format("uri")
                           .description(DESCRIPTION_URI)
                           .example("https://www.liikennevirasto.fi");
                 } else if (clazz.equals(LocalTime.class)) {
-                    schema.get().format("localtime")
-                          .description(DESCRIPTION_LocalTime)
-                          .pattern("[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}")
-                          .example("13:20:45");
+                    return Some(new StringSchema().format("localtime")
+                                                  .description(DESCRIPTION_LocalTime)
+                                                  .pattern("[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}")
+                                                  .example("13:20:45"));
                 } else if (clazz.equals(Duration.class)) {
-                    schema.get().format("duration")
-                          .description(DESCRIPTION_Duration)
-                          .example("PT67S");
+                    return Some(new StringSchema().format("duration")
+                                                  .description(DESCRIPTION_Duration)
+                                                  .example("PT67S"));
+                } else if (clazz.equals(Period.class)) {
+                    return Some(new StringSchema().format("iso8601")
+                                                  .description(DESCRIPTION_Period)
+                                                  .example("P2Y4M6W5DT12H35M30S"));
                 } else if (clazz.equals(DateTimeZone.class)) {
-                    schema.get().format("datetimezone")
-                          .description(DESCRIPTION_TimeZone)
-                          .example("Europe/Helsinki");
+                    return Some(new StringSchema().format("datetimezone")
+                                                  .description(DESCRIPTION_TimeZone)
+                                                  .example("Europe/Helsinki"));
                 } else if (clazz.equals(PropertyName.class)) {
-                    schema.get().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?");
+                    return Some(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
                 }
             }
             return None();
