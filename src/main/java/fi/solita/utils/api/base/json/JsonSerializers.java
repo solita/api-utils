@@ -279,6 +279,11 @@ public class JsonSerializers {
     @SuppressWarnings("rawtypes")
     private final JsonSerializer<Option> option = new StdSerializer<Option>(Option.class) {
         @Override
+        public boolean isEmpty(SerializerProvider provider, Option value) {
+            return value == null || !value.isDefined();
+        }
+
+        @Override
         public void serialize(Option value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
             if (value.isDefined()) {
                 jgen.writeObject(value.get());

@@ -1,5 +1,6 @@
 package fi.solita.utils.api.format;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
@@ -186,7 +187,9 @@ public class JsonObjectMapper extends ObjectMapper {
         super(null, null, new DefaultDeserializationContext.Impl(new CustomBeanDeserializerFactory(BeanDeserializerFactory.instance.getFactoryConfig())));
 
         // leave nulls out. This way we can restrict the serialized properties while using the same Dto.
-        setSerializationInclusion(Include.NON_NULL);
+        setSerializationInclusion(Include.NON_ABSENT);
+        // cannot set earlier line to Include.NON_EMPTY because it would leave out a lot of objects (like empty collections and strings), so let's just set Option.None to be left out:
+        configOverride(Option.class).setInclude(JsonInclude.Value.construct(Include.NON_EMPTY, Include.NON_EMPTY));
 
         configure(MapperFeature.AUTO_DETECT_GETTERS, false);
         configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false);

@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
@@ -18,14 +16,12 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.BeanDeserializer;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.deser.std.DelegatingDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import fi.solita.utils.api.format.JsonObjectMapper.SerializingDeserializingProhibitedException;
 import fi.solita.utils.api.util.ClassUtils;
@@ -67,17 +63,6 @@ public class JsonModule extends SimpleModule {
                     return des;
                 }
 
-            }
-        });
-
-        addSerializer(new StdSerializer<Option<?>>(Option.class, false) {
-            @Override
-            public void serialize(Option<?> value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
-                if (value.isDefined()) {
-                    jgen.writeObject(value.get());
-                } else {
-                    jgen.writeNull();
-                }
             }
         });
     }
