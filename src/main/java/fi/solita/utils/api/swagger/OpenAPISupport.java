@@ -214,9 +214,11 @@ public abstract class OpenAPISupport {
             parameter.explode(false);
         }
         
-        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), None());
-        if (d.left().isDefined() || d.right().isDefined()) {
-            parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
+        if (parameter.getDescription() == null) {
+            Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), None());
+            if (d.left().isDefined() || d.right().isDefined()) {
+                parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
+            }
         }
         
         return Some(parameter);
@@ -398,7 +400,9 @@ public abstract class OpenAPISupport {
             Annotation[] annotations = Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]);
             Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, None());
             for (String s: d.right()) {
-                schema.get().description(langsToList(s));
+                if (schema.get().getDescription() == null) {
+                    schema.get().description(langsToList(s));
+                }
             }
             for (Class<?> clazz: Some(MemberUtil.memberTypeUnwrappingOption(type.getType()))) {
                 for (String title: getSchemaTitle(clazz)) {

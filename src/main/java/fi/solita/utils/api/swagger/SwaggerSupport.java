@@ -354,9 +354,11 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     }
                     apply(name, clazz, ae, builder);
                     
-                    for (String s: doc(ae)) {
-                        if (!s.isEmpty()) {
-                            builder.description(s);
+                    if (builder.build().getDescription() == null) {
+                        for (String s: doc(ae)) {
+                            if (!s.isEmpty()) {
+                                builder.description(s);
+                            }
                         }
                     }
                 }
