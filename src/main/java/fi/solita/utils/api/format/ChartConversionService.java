@@ -1,10 +1,13 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
+import static fi.solita.utils.functional.Collections.newMutableLinkedMapOfSize;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
+import static fi.solita.utils.functional.Collections.newMutableSet;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
@@ -48,6 +51,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
@@ -295,15 +299,6 @@ public class ChartConversionService {
             final boolean xIsListOfValuesFromASingleRow = size(objs) == 1 && head(members) != DUMMY_MEMBER && Iterable.class.isAssignableFrom(resolvePropertyType(head(members)));
             
             if (members.size() == 1) {
-                if (xIsListOfValuesFromASingleRow) {
-                    // a single object with a single member that is a collection -> use the target collection as objects
-                    objs = (Iterable<T>) head(xValues);
-                    x = (Function1<T, Object>) Function.id();
-                    xValues = !isEmpty(objs) && head(map(x, objs)) instanceof Comparable
-                        ? newSortedSet((Iterable<Comparable>)(Object)map(x, objs))
-                        : newSet(map(x, objs));
-                }
-                
                 // single member -> always chart counts
                 yNames = newList("count");
                 if (xIsTemporal) {
@@ -318,19 +313,32 @@ public class ChartConversionService {
     
                     for (Map.Entry<Range<DateTime>, List<T>> entry: m.asMapOfRanges().entrySet()) {
                         data.add(newMap(Pair.of("c", entry.getKey().lowerEndpoint().getMillis()),
-                                        Pair.of("count", entry.getValue().size())));
+                                        internedCountPair(entry.getValue().size())));
                     }
                 } else {
-                    List<Object> os = newList(map(x, objs));
-                    for (Object category: xValues) {
-                        long categoryObjects = 0;
-                        for (Object o: os) {
-                            if (category.equals(o)) {
-                                categoryObjects++;
-                            };
+                    if (xIsListOfValuesFromASingleRow) {
+                        // a single object with a single member that is a collection -> use the target collection as objects
+                        objs = (Iterable<T>) head(xValues);
+                        x = (Function1<T, Object>) Function.id();
+                    }
+                    
+                    List<Object> os = newList(recursivelyFlatten(map(x, objs)));
+                    xValues = !isEmpty(objs) && head(os) instanceof Comparable
+                        ? newSortedSet((Iterable<Comparable>)(Object)os)
+                        : newSet(os);
+                    
+                    Map<Object, Integer> m = newMutableLinkedMapOfSize(xValues.size());
+                    for (Object o: xValues) {
+                        m.put(o, 0);
+                    }
+                    for (Object o: os) {
+                        if (m.containsKey(o)) {
+                            m.put(o, m.get(o) + 1);
                         }
-                        data.add(newMap(Pair.of("c", category),
-                                        Pair.of("count", Long.valueOf(categoryObjects))));
+                    }
+                    for (Map.Entry<Object, Integer> entry: m.entrySet()) {
+                        data.add(newMap(Pair.of("c", entry.getKey()),
+                                        internedCountPair(entry.getValue())));
                     }
                 }
             } else {
@@ -338,15 +346,16 @@ public class ChartConversionService {
                 yNames = newList(sort(flatMap(new Apply<MetaNamedMember<T,Object>,Iterable<String>>() {
                     @Override
                     public Iterable<String> apply(MetaNamedMember<T, Object> m) {
-                        return newSet(flatMap(new Apply<T,Iterable<String>>() {
-                            @Override
-                            public Iterable<String> apply(T t) {
-                                Object val = m.apply(t);
-                                return val instanceof Iterable
-                                    ? map(ChartConversionService_.jsonSerializeKey.ap(ChartConversionService.this), recursivelyFlatten(val))
-                                    : newList(jsonSerializeKey(val));
+                        Set<String> ret = newMutableSet();
+                        for (T t: objs_) {
+                            Object val = m.apply(t);
+                            if (val instanceof Iterable) {
+                                ret.addAll(newList(map(ChartConversionService_.jsonSerializeKey.ap(ChartConversionService.this), recursivelyFlatten(val))));
+                            } else {
+                                ret.add(jsonSerializeKey(val));
                             }
-                        }, objs_));
+                        }
+                        return ret;
                     }}, tail(members))));
     
                 if (xIsInterval) {
@@ -459,6 +468,16 @@ public class ChartConversionService {
         return os.toByteArray();
     }
     
+    private static final Map<Long,Pair<String,Long>> interned = new ConcurrentHashMap<>();
+    private static Pair<String,Long> internedCountPair(long x) {
+        Pair<String, Long> key = interned.get(x);
+        if (key == null) {
+            key = Pair.of("count", x);
+            interned.put(x, key);
+        }
+        return key;
+    }
+
     protected Renderable pageHead(String titleText, String titleHtml, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isLinear, boolean isInterval) {
         return new Renderable() {
             @Override
