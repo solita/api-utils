@@ -216,7 +216,7 @@ public class ChartConversionService {
         return ret.isEmpty() ? "-" : ret;
     }
     
-    private <T> BiFunction<List<T>, List<T>, List<T>> coalesce() {
+    private static <T> BiFunction<List<T>, List<T>, List<T>> coalesce() {
         return new BiFunction<List<T>, List<T>, List<T>>() {
             @Override
             public List<T> apply(List<T> first, List<T> second) {
@@ -272,8 +272,59 @@ public class ChartConversionService {
         final boolean xIsLinear = !members.isEmpty() && isLinear(head(members));
         final boolean isStacked = members.size() == 2;
         final boolean isGrouped = members.size() == 1 || xIsTemporal || !xIsLinear;
+        
+        Pair<List<Map<Object, Object>>, List<String>> data = calculateChartData(objs, members, xIsInstant, xIsInterval, xIsTemporal, xIsLinear);
+        
+        String jsonData = new String(json.serialize(data.left()), StandardCharsets.UTF_8).replace("\n", "");
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        HtmlCanvas titleCanvas = HttpServletCanvas.of(request.getHttpServletRequest(), new OutputStreamWriter(out, StandardCharsets.UTF_8));
+        String titleHtml;
+        try {
+            title.renderOn(titleCanvas);
+            try (Writer writer = titleCanvas.getOutputWriter()) {
+                writer.flush();
+                titleHtml = out.toString(StandardCharsets.UTF_8.name());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
+        ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
+        OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
+        HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
+        String contextPath = ((HttpServletCanvas<?>)html).getContextPath();
+        try {
+            html.html()
+                .render(DocType.HTML5)
+                .head()
+                  .render(pageHead(title.plainTextTitle, titleHtml, jsonData, data.right(), xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
+                ._head()
+                .body()
+                  .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
+                  .div(id("chart"))._div()
+                ._body()
+                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts.min.js"))._script()
+                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-xy.min.js"))._script()
+                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-Animated.min.js"))._script()
+                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-locale-fi_FI.min.js"))._script()
+                .script(type("text/javascript")).write(scripts(titleHtml, jsonData, data.right(), xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
+                .script(type("text/javascript")).write(scripts2(), false)._script()
+                .script(type("text/javascript")).write(additionalHeadScript(), false)._script()
+              ._html();
+
+            ow.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
+        return os.toByteArray();
+    }
+
+    <T> Pair<List<Map<Object,Object>>,List<String>> calculateChartData(Iterable<T> objs, List<MetaNamedMember<T, Object>> members, final boolean xIsInstant, final boolean xIsInterval, final boolean xIsTemporal, final boolean xIsLinear) {
         List<Map<Object,Object>> data = newMutableList();
         List<String> yNames = emptyList();
+        
         if (!isEmpty(members)) {
             objs = newList(objs); // don't iterate more than once
             
@@ -421,51 +472,7 @@ public class ChartConversionService {
                 }
             }
         }
-        
-        String jsonData = new String(json.serialize(data), StandardCharsets.UTF_8).replace("\n", "");
-        
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        HtmlCanvas titleCanvas = HttpServletCanvas.of(request.getHttpServletRequest(), new OutputStreamWriter(out, StandardCharsets.UTF_8));
-        String titleHtml;
-        try {
-            title.renderOn(titleCanvas);
-            try (Writer writer = titleCanvas.getOutputWriter()) {
-                writer.flush();
-                titleHtml = out.toString(StandardCharsets.UTF_8.name());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        
-        ByteArrayOutputStream os = new ByteArrayOutputStream(32000);
-        OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
-        HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
-        String contextPath = ((HttpServletCanvas<?>)html).getContextPath();
-        try {
-            html.html()
-                .render(DocType.HTML5)
-                .head()
-                  .render(pageHead(title.plainTextTitle, titleHtml, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval))
-                ._head()
-                .body()
-                  .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
-                  .div(id("chart"))._div()
-                ._body()
-                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts.min.js"))._script()
-                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-xy.min.js"))._script()
-                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-Animated.min.js"))._script()
-                .script(type("text/javascript").src(contextPath + "/r/js/lib/amcharts-locale-fi_FI.min.js"))._script()
-                .script(type("text/javascript")).write(scripts(titleHtml, jsonData, yNames, xIsTemporal, isStacked, isGrouped, xIsLinear, xIsInterval), false)._script()
-                .script(type("text/javascript")).write(scripts2(), false)._script()
-                .script(type("text/javascript")).write(additionalHeadScript(), false)._script()
-              ._html();
-
-            ow.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        
-        return os.toByteArray();
+        return Pair.of(data, yNames);
     }
     
     private static final Map<Long,Pair<String,Long>> interned = new ConcurrentHashMap<>();
