@@ -78,7 +78,9 @@ public class ModificationUtils {
         if (t == null) {
             return t;
         }
-        Assert.defined(MemberUtil.findBuilderFor(builders, t.getClass()), "No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
+        if (!MemberUtil.findBuilderFor(builders, t.getClass()).isDefined()) {
+            throw new IllegalArgumentException("No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
+        }
         return ModificationUtils.withProperties(propertyNames, builders, fp, t);
     }
 

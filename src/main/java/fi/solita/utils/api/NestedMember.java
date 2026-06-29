@@ -1,9 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Functional.filter;
-import static fi.solita.utils.functional.Functional.headOption;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
@@ -23,6 +21,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     public final MetaNamedMember<?,T> child;
     private final Function1<Object,Object> parentModifier;
     private final boolean flatten;
+    private final String name;
 
     public static final <S,U,T> NestedMember<S,T> of(MetaNamedMember<S, U> parent, MetaNamedMember<? super U,T> child) {
         return new NestedMember<S,T>(parent, child, Function.id(), false);
@@ -61,6 +60,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         this.child = child;
         this.parentModifier = parentModifier;
         this.flatten = flatten;
+        this.name = parent.getName() + "." + child.getName();
     }
 
     @SuppressWarnings("unchecked")
@@ -89,7 +89,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
 
     @Override
     public String getName() {
-        return parent.getName() + "." + child.getName();
+        return name;
     }
 
     @Override
@@ -125,6 +125,6 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
 
     @Override
     public String toString() {
-        return getName();
+        return name;
     }    
 }
