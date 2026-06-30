@@ -1,7 +1,6 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.emptyList;
-import static fi.solita.utils.functional.Collections.newLinkedMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMapOfSize;
@@ -374,7 +373,7 @@ public class ChartConversionService {
                     }
                     
                     List<Object> os = newList(recursivelyFlatten(map(x, objs)));
-                    xValues = !isEmpty(objs) && head(os) instanceof Comparable
+                    xValues = !isEmpty(os) && head(os) instanceof Comparable
                         ? newSortedSet((Iterable<Comparable>)(Object)os)
                         : newSet(os);
                     
