@@ -160,6 +160,10 @@ public abstract class VersionBase<REQ> {
         return includes.includesEverything ? ts : map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), ts);
     }
     
+    @Deprecated
+    public <K,T> Map<K,T> filterSingle(REQ req, Includes<T> includes, Filters filters, Map<K,T> ts) {
+        return includes.includesEverything ? (Map<K, T>)ts : resolvableMemberProvider().mutateResolvablesSingle(req, includes, filterColumnsSingle(includes, filterRowsSingle(req, includes, filters, ts)));
+    }
     @SuppressWarnings("unchecked")
     @Deprecated
     public <K,T> Map<K,Iterable<T>> filter(REQ req, Includes<T> includes, Filters filters, Map<K,? extends Iterable<T>> ts) {
@@ -179,6 +183,9 @@ public abstract class VersionBase<REQ> {
         return includes.includesEverything ? ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters, ts)));
     }
     
+    public <K,T> Map<K,T> filterSingle(REQ req, Includes<T> includes, Option<Filters> filters, Map<K,T> ts) {
+        return includes.includesEverything ? (Map<K, T>)ts : resolvableMemberProvider().mutateResolvablesSingle(req, includes, filterColumnsSingle(includes, filterRowsSingle(req, includes, filters.getOrElse(Filters.EMPTY), ts)));
+    }
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filter(REQ req, Includes<T> includes, Option<Filters> filters, Map<K,? extends Iterable<T>> ts) {
         return includes.includesEverything ? (Map<K, Iterable<T>>)ts : resolvableMemberProvider().mutateResolvables(req, includes, filterColumns(includes, filterRows(req, includes, filters.getOrElse(Filters.EMPTY), ts)));

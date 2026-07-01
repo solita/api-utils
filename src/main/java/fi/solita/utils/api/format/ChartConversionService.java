@@ -183,11 +183,11 @@ public class ChartConversionService {
     }
     
     protected static Class<?> resolveType(MetaNamedMember<?, ?> m) {
-        return m == DUMMY_MEMBER ? Object.class : MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(m);
+        return m == DUMMY_MEMBER ? Object.class : MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(m);
     }
     
     protected static Class<?> resolvePropertyType(MetaNamedMember<?, ?> m) {
-        return m == DUMMY_MEMBER ? Object.class : MemberUtil.actualTypeUnwrappingOptionAndEither(m);
+        return m == DUMMY_MEMBER ? Object.class : MemberUtil.actualClassUnwrappingOptionAndEither(m);
     }
     
     protected boolean isLinear(MetaNamedMember<?,?> m) {

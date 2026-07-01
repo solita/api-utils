@@ -10,6 +10,7 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Predicates.not;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -78,16 +79,21 @@ public class ModificationUtils {
         if (t == null) {
             return t;
         }
-        if (!MemberUtil.findBuilderFor(builders, t.getClass()).isDefined()) {
-            throw new IllegalArgumentException("No Builder found for the type of the root object: " + t.getClass().getName() + ". You have a bug?");
+        if (!MemberUtil.findBuilderFor(builders, builderType(t)).isDefined()) {
+            throw new IllegalArgumentException("No Builder found for the type of the root object: " + builderType(t) + ". You have a bug?");
         }
         return ModificationUtils.withProperties(propertyNames, builders, fp, t);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static <T> Type builderType(T t) {
+        return t instanceof Map ? new Builder.MapType<T>(((Map<T,?>)t).keySet()) : (Class<T>)t.getClass();
     }
 
     @SuppressWarnings("unchecked")
     static final <T> T withProperties(Collection<PropertyName> propertyNames, Iterable<Builder<?>> builders, FunctionProvider fp, T t) {
         logger.debug("Including properties {} in {}", propertyNames, t);
-        for (Builder<T> builder: MemberUtil.findBuilderFor(builders, (Class<T>)t.getClass())) {
+        for (Builder<T> builder: MemberUtil.<T>findBuilderFor(builders, builderType(t))) {
             logger.debug("Found Builder for {}", t.getClass());
             for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);

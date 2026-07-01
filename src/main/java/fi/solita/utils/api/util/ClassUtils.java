@@ -19,14 +19,17 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 
+import fi.solita.utils.api.DynamicMember;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Transformer;
+import fi.solita.utils.functional.lens.Builder;
 
 public class ClassUtils {
     
@@ -69,7 +72,13 @@ public class ClassUtils {
     }
     
     public static Type getGenericType(AccessibleObject member) {
-        return member instanceof Field ? ((Field)member).getGenericType() : ((Method)member).getGenericReturnType();
+        return member instanceof Field
+            ? ((Field)member).getGenericType()
+            : member instanceof Method
+            ? ((Method)member).getGenericReturnType()
+            : member instanceof DynamicMember.DynamicAccessibleObject
+            ? ((DynamicMember.DynamicAccessibleObject)member).type
+            : null;
     }
 
     public static Class<?> typeClass(Type type) {
@@ -88,6 +97,8 @@ public class ClassUtils {
             return resolveClass(((TypeVariable<?>) type).getBounds()[0]);
         } else if (type instanceof ResolvedType) {
             return Some(((ResolvedType)type).getRawClass());
+        } else if (type instanceof Builder.MapType) {
+            return Some(Map.class);
         } else {
             return None();
         }

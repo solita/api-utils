@@ -18,6 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Ordering;
 
+import fi.solita.utils.api.DynamicMember;
 import fi.solita.utils.api.functions.FunctionCallMember;
 import fi.solita.utils.api.functions.FunctionCallMember_;
 import fi.solita.utils.api.functions.FunctionProvider;
@@ -47,48 +48,68 @@ public class MemberUtil {
         }
     }
     
-    public static Class<?> memberTypeUnwrappingOption(AccessibleObject member) {
-        return memberTypeUnwrappingOption(ClassUtils.getGenericType(member));
+    public static Class<?> memberClassUnwrappingOption(AccessibleObject member) {
+        return memberClassUnwrappingOption(ClassUtils.getGenericType(member));
     }
     
-    public static Class<?> memberTypeUnwrappingOptionAndEither(AccessibleObject member) {
-        return memberTypeUnwrappingOptionAndEither(ClassUtils.getGenericType(member));
+    public static Class<?> memberClassUnwrappingOptionAndEither(AccessibleObject member) {
+        return memberClassUnwrappingOptionAndEither(ClassUtils.getGenericType(member));
     }
     
-    public static Class<?> memberTypeUnwrappingOptionAndEitherAndIterables(AccessibleObject member) {
+    public static Class<?> memberClassUnwrappingOptionAndEitherAndIterables(AccessibleObject member) {
+        return memberClassUnwrappingOptionAndEitherAndIterables(ClassUtils.getGenericType(member));
+    }
+    
+    public static Type memberTypeUnwrappingOptionAndEitherAndIterables(AccessibleObject member) {
         return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getGenericType(member));
     }
     
-    public static <T> Class<?> actualTypeUnwrappingOptionAndEither(final MetaNamedMember<T, ?> member) {
-        return memberTypeUnwrappingOptionAndEither(member.getMember());
+    public static <T> Class<?> actualClassUnwrappingOptionAndEither(final MetaNamedMember<T, ?> member) {
+        return memberClassUnwrappingOptionAndEither(member.getMember());
     }
 
-    public static <T> Class<?> actualTypeUnwrappingOptionAndEitherAndIterables(final MetaNamedMember<T, ?> member) {
+    public static <T> Class<?> actualClassUnwrappingOptionAndEitherAndIterables(final MetaNamedMember<T, ?> member) {
+        return memberClassUnwrappingOptionAndEitherAndIterables(member.getMember());
+    }
+    
+    public static <T> Type actualTypeUnwrappingOptionAndEitherAndIterables(final MetaNamedMember<T, ?> member) {
         return memberTypeUnwrappingOptionAndEitherAndIterables(member.getMember());
     }
     
-    public static Class<?> memberTypeUnwrappingOption(Type type) {
+    public static Class<?> memberClassUnwrappingOption(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
         if (Option.class.isAssignableFrom(c)) {
-            return memberTypeUnwrappingOption(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+            return memberClassUnwrappingOption(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
         }
         return c;
     }
     
-    public static Class<?> memberTypeUnwrappingOptionAndEither(Type type) {
+    public static Class<?> memberClassUnwrappingOptionAndEither(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
         if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c)) {
-            return memberTypeUnwrappingOptionAndEither(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+            return memberClassUnwrappingOptionAndEither(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
         }
         return c;
     }
     
-    public static Class<?> memberTypeUnwrappingOptionAndEitherAndIterables(Type type) {
+    public static Class<?> memberClassUnwrappingOptionAndEitherAndIterables(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
         if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
-            return memberTypeUnwrappingOptionAndEitherAndIterables(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+            for (Type argument: ClassUtils.getFirstTypeArgument(type)) {
+                return memberClassUnwrappingOptionAndEitherAndIterables(argument);
+            }
         }
         return c;
+    }
+    
+    public static Type memberTypeUnwrappingOptionAndEitherAndIterables(Type type) {
+        Class<?> c = ClassUtils.typeClass(type);
+        if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
+            for (Type argument: ClassUtils.getFirstTypeArgument(type)) {
+                return memberTypeUnwrappingOptionAndEitherAndIterables(argument);
+            }
+        }
+        return type;
     }
     
     static PropertyName propertyNameFromMember(MetaNamedMember<?,?> member) {
@@ -124,20 +145,31 @@ public class MemberUtil {
 
     @SuppressWarnings("unchecked")
     public static <T> Class<T> memberClass(MetaNamedMember<?, T> member) {
-        return (Class<T>)(member.getMember() instanceof Field ? ((Field)member.getMember()).getType() : ((Method)member.getMember()).getReturnType());
+        return (Class<T>)(member.getMember() instanceof Field
+                ? ((Field)member.getMember()).getType()
+                : member.getMember() instanceof Method
+                ? ((Method)member.getMember()).getReturnType()
+                : member.getMember() instanceof DynamicMember.DynamicAccessibleObject
+                ? ((DynamicMember.DynamicAccessibleObject)member.getMember()).type
+                : null);
     }
 
     public static String ownerType(MetaNamedMember<?, ?> member) {
-        return member.getMember() instanceof Field ? ((Field)member.getMember()).getDeclaringClass().getName() : ((Method)member.getMember()).getDeclaringClass().getName();
+        return member.getMember() instanceof Field
+            ? ((Field)member.getMember()).getDeclaringClass().getName()
+            : member.getMember() instanceof Method
+            ? ((Method)member.getMember()).getDeclaringClass().getName()
+            : null;
     }
     
     @SuppressWarnings("unchecked")
-    public static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Class<T> clazz) {
-        if (clazz.isPrimitive() || clazz.getName().startsWith("java.")) {
+    public static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Type type) {
+        Option<Class<?>> clazz = ClassUtils.resolveClass(type);
+        if (clazz.isDefined() && (clazz.get().isPrimitive() || clazz.get().getName().startsWith("java.lang.") || clazz.get().getName().startsWith("java.math."))) {
             return None();
         }
         for (Builder<?> b: builders) {
-            if (b.resultType().equals(clazz)) {
+            if (b.resultType().equals(type)) {
                 return Some((Builder<T>)b);
             }
         }

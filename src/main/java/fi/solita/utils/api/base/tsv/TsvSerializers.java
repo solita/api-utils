@@ -159,7 +159,7 @@ public class TsvSerializers {
                         }
                         
                         @SuppressWarnings("unchecked")
-                        Class<Object> type = (Class<Object>) MemberUtil.memberTypeUnwrappingOptionAndEither(f);
+                        Class<Object> type = (Class<Object>) MemberUtil.memberClassUnwrappingOptionAndEither(f);
                         String[] arr = newArray(String.class, repeat("", module.columns(type).size()));
                         Cells newCells = val == null || val instanceof Option && !((Option<?>)val).isDefined() ? module.serialize(Tuple.of((Object[])arr)) : module.serialize(val, type);
                         cells.addAll(newCells.cells);
@@ -199,7 +199,7 @@ public class TsvSerializers {
     }
     
     static List<String> fieldColumn(TsvModule module, Field field) {
-        List<String> ret = module.columns(MemberUtil.memberTypeUnwrappingOptionAndEither(field));
+        List<String> ret = module.columns(MemberUtil.memberClassUnwrappingOptionAndEither(field));
         return ret.isEmpty() || ret.equals(newList("")) ? newList(field.getName()) : ret;
     }
     

@@ -193,7 +193,7 @@ public class TsvConversionService {
             // oma dummy-otsikko
             return module.serialize(member.apply(obj));
         } else {
-            return module.serialize(member.apply(obj), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member));
+            return module.serialize(member.apply(obj), MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(member));
         }
     }
 }

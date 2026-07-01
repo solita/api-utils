@@ -164,7 +164,7 @@ public class ExcelSerializers {
                         }
                         
                         @SuppressWarnings("unchecked")
-                        Class<Object> type = (Class<Object>) MemberUtil.memberTypeUnwrappingOptionAndEither(f);
+                        Class<Object> type = (Class<Object>) MemberUtil.memberClassUnwrappingOptionAndEither(f);
                         String[] arr = newArray(String.class, repeat("", module.columns(type).size()));
                         Cells newCells = val == null || val instanceof Option && !((Option<?>)val).isDefined() ? module.serialize(row, columnIndex, Tuple.of((Object[])arr)) : module.serialize(row, columnIndex, val, type);
                         cells.addAll(newCells.cells);
@@ -207,7 +207,7 @@ public class ExcelSerializers {
     }
     
     static List<String> fieldColumn(ExcelModule module, Field field) {
-        List<String> ret = module.columns(MemberUtil.memberTypeUnwrappingOptionAndEither(field));
+        List<String> ret = module.columns(MemberUtil.memberClassUnwrappingOptionAndEither(field));
         return ret.isEmpty() || ret.equals(newList("")) ? newList(field.getName()) : ret;
     }
     

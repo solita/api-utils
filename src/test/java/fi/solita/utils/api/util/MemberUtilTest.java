@@ -73,7 +73,7 @@ public class MemberUtilTest {
     @Test
     public void actualTypeUnwrappingOptionAndEitherAndIterables() {
         List<MetaNamedMember<MemberUtilTest.FooDto,?>> members = (List<MetaNamedMember<FooDto, ?>>) MemberUtil.toMembers(externalProvider, new FunctionProvider(), false, FooDto.FIELDS, PropertyName.of("baz"));
-        Class<?> ret = MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(head(members));
+        Class<?> ret = MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(head(members));
         assertEquals(String.class, ret);
     }
 }

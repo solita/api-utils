@@ -642,6 +642,63 @@ public abstract class StdSerialization<BOUNDS> {
         return response;
     }
     
+    public <KEY,DTO> Pair<byte[],Map<String,String>> stdMapSingle(
+            Request req,
+            SerializationFormat format,
+            Includes<DTO> includes,
+            ApplyZero<Map<KEY, DTO>> data,
+            Apply<DTO,DTO> dataTransformer,
+            HtmlTitle title) {
+        Pair<byte[],Map<String,String>> response;
+        switch (format) {
+        case JSON:
+            response = Pair.of(json.serialize(mapValue(dataTransformer, data.get())), emptyMap());
+            break;
+        case GEOJSON:
+            Map<KEY,DTO> d = data.get();
+            Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
+            response = Pair.of(geoJson.serialize(new FeatureCollection(
+                    concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, map(
+                            Function.constant(Option.<GeometryObject>None()), 
+                            Function.id(),
+                            Function.constant(Option.<Crs>None()),
+                            mapValue(dataTransformer, d).values())), resolvables),
+                    Option.<Crs>None())), emptyMap());
+            break;
+        case JSONL:
+            response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), emptyMap());
+            break;
+        case HTML:
+            response = Pair.of(html.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
+            break;
+        case CSV:
+            response = csv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case TSV:
+            response = tsv.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case XLSX:
+            response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
+            break;
+        case COUNT:
+            response = Pair.of(count.serialize(data.get()), emptyMap());
+            break;
+        case CHART:
+            response = Pair.of(chart.serializeSingle(req, title, mapValue(dataTransformer, data.get()), includes), emptyMap());
+            break;
+        case PDF:
+        case PNG:
+        case GML:
+        case XML:
+        case MVT:
+        case DWG:
+            throw new UnavailableContentTypeException();
+        default:
+            throw new IllegalStateException();
+        }
+        return response;
+    }
+    
     public <KEY,DTO> Pair<byte[],Map<String,String>> stdMap(
             Request req,
             SerializationFormat format,

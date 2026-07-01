@@ -346,7 +346,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 AnnotatedElement ae = definition.get();
                 if (ae instanceof AccessibleObject) {
                     String name = ((Member)ae).getName();
-                    Class<?> clazz = MemberUtil.memberTypeUnwrappingOption((AccessibleObject)ae);
+                    Class<?> clazz = MemberUtil.memberClassUnwrappingOption((AccessibleObject)ae);
                     
                     ModelPropertyBuilder builder = context.getBuilder();
                     if (Option.class.isAssignableFrom(clazz)) {

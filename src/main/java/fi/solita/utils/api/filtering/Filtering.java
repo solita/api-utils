@@ -340,9 +340,9 @@ public class Filtering {
 
     private <T> Class<?> resolveTargetType(Filter filter, MetaNamedMember<? super T, ?> member) {
         if (filter.property.isFunctionCall()) {
-            return fp.changesResultType(filter.property.getValue()).getOrElse(MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member));
+            return fp.changesResultType(filter.property.getValue()).getOrElse(MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(member));
         } else {
-            return MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member);
+            return MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(member);
         }
     }
     

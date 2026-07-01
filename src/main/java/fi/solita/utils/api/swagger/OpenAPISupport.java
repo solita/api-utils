@@ -167,7 +167,7 @@ public abstract class OpenAPISupport {
      * @return A new schema to be used to completely replace the original one.
      */
     protected Option<Parameter> customize(boolean ignoreRevision, Parameter parameter, java.lang.reflect.Parameter methodParameter) {
-        Class<?> unwrappedType = MemberUtil.memberTypeUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
+        Class<?> unwrappedType = MemberUtil.memberClassUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
         if (Revision.class.isAssignableFrom(unwrappedType)) {
             if (ignoreRevision) {
                 return None();
@@ -210,7 +210,7 @@ public abstract class OpenAPISupport {
         } else if (parameter.getName().equals("versio")) {
             parameter
                 .description("- Objektin versionumero\n- Object version number");
-        } else if (Collection.class.isAssignableFrom(MemberUtil.memberTypeUnwrappingOptionAndEither(methodParameter.getParameterizedType()))) {
+        } else if (Collection.class.isAssignableFrom(MemberUtil.memberClassUnwrappingOptionAndEither(methodParameter.getParameterizedType()))) {
             parameter.explode(false);
         }
         
@@ -351,7 +351,7 @@ public abstract class OpenAPISupport {
          * Customize schema defined by ModelConverter
          */
         protected Option<Schema<?>> customize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
-            for (Class<?> clazz: Some(MemberUtil.memberTypeUnwrappingOption(type.getType()))) {
+            for (Class<?> clazz: Some(MemberUtil.memberClassUnwrappingOption(type.getType()))) {
                 if (clazz.equals(DateTime.class)) {
                     schema.get().description(DESCRIPTION_DateTime)
                           .example(RequestUtil.instant2string(SOME_DATETIME));
@@ -404,7 +404,7 @@ public abstract class OpenAPISupport {
                     schema.get().description(langsToList(s));
                 }
             }
-            for (Class<?> clazz: Some(MemberUtil.memberTypeUnwrappingOption(type.getType()))) {
+            for (Class<?> clazz: Some(MemberUtil.memberClassUnwrappingOption(type.getType()))) {
                 for (String title: getSchemaTitle(clazz)) {
                     schema.get().title(title);
                 }
