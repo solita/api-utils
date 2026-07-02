@@ -654,6 +654,7 @@ public abstract class HtmlConversionService {
         + "body           { margin: 0; display: flex; flex-direction: column; padding: 0 0.5em; min-height: 100%; height: 100%; overflow-x: hidden; }"
         
         + "header, footer { display: flex; padding: 0.5em; }"
+        + "@media (min-height: 500px) { body { height: 100vh; } }"
         + "h1             { flex: 1; }"
         + ".hidden        { display: none; }"
         + ".title > *     { padding: 0.5em; }"
