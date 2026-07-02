@@ -173,6 +173,14 @@ public class MemberUtil {
                 return Some((Builder<T>)b);
             }
         }
+        // No exact Type correspondence found, try with a raw class instead
+        for (Class<?> c: clazz) {
+            for (Builder<?> b: builders) {
+                if (b.resultType().equals(c)) {
+                    return Some((Builder<T>)b);
+                }
+            }
+        }
         return None();
     }
     
