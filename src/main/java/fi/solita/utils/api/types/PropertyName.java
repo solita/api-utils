@@ -158,6 +158,10 @@ public abstract class PropertyName implements Comparable<PropertyName> {
     
     public abstract boolean isFunctionCall();
     
+    public boolean isWildcard() {
+        return value.equals("*");
+    }
+    
     public abstract PropertyName omitExclusion();
     
     public abstract PropertyName stripPrefix(FunctionProvider fp, final String prefix);
