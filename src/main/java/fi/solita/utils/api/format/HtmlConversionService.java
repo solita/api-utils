@@ -402,8 +402,10 @@ public abstract class HtmlConversionService {
                 .head()
                   .render(pageHead(title))
                 ._head()
-                .body(class_(rows == 1 ? "singleton" : ""))
+                .body()
                   .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
+                  .input(id("singleton").type("checkbox").value(Integer.toString(rows)).hidden("hidden"))
+                  .label(class_("singleton").for_("singleton").title("Toggle vertical layout"))._label()
                   .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
                   .section(id("content"))
                       .table(id("table").class_("tafs hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
@@ -663,9 +665,11 @@ public abstract class HtmlConversionService {
         + ".title .t-rec  { color: #bbb; }"
         + ".lang-selector { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
         
-        + "footer *       { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
-        + ".timestamps    { text-align: left; }"
-        + ".copyright     { text-align: right; }"
+        + "body > .singleton { width: 1.5rem; height: 1.5rem; opacity: 0; position: absolute; top: 0; left: 0; z-index: 999; display: none; }"
+        + "body > #singleton[value=\"1\"] ~ .singleton { display: revert; }"
+        + "footer *          { color: #ccc; font-size: small; font-style: italic; flex: 1; }"
+        + ".timestamps       { text-align: left; }"
+        + ".copyright        { text-align: right; }"
         
         + "section        { flex: 1; overflow-y: auto; }"
         + "table          { border-collapse: collapse; counter-reset: rowNumber; }"
@@ -756,7 +760,8 @@ public abstract class HtmlConversionService {
             + "  .load-more     { display: none; }"
             + "  .parameters    { display: none; }"
             + "  .properties    { display: none; }"),
-         newList(HtmlConversionService_.prefixed.ap(".singleton").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
+         newList(HtmlConversionService_.prefixed.ap("#singleton[value=\"1\"] ~ *").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
+                 HtmlConversionService_.prefixed.ap("#singleton:checked ~ *"),
                  HtmlConversionService_.prefixed.ap(".nested") )))
                 
         + extraStyle();
