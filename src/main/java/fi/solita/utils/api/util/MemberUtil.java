@@ -156,7 +156,7 @@ public class MemberUtil {
                 : member.getMember() instanceof Method
                 ? ((Method)member.getMember()).getReturnType()
                 : member.getMember() instanceof DynamicMember.DynamicAccessibleObject
-                ? ((DynamicMember.DynamicAccessibleObject)member.getMember()).type
+                ? ((DynamicMember.DynamicAccessibleObject)member.getMember()).type.getClass()
                 : null);
     }
 

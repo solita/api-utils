@@ -94,7 +94,7 @@ public class DynamicMember<V> implements MetaNamedMember<Map<String,V>,V> {
 
                     @Override
                     public AccessibleObject getMember() {
-                        return new DynamicAccessibleObject(k, m.get(k) != null ? m.get(k).getClass() : Object.class);
+                        return new DynamicAccessibleObject(k, m.get(k) != null ? resolveType(m.get(k)) : Object.class);
                     }
 
                     @Override
