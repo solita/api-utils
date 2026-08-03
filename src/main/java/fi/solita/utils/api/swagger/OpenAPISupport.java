@@ -214,11 +214,9 @@ public abstract class OpenAPISupport {
             parameter.explode(false);
         }
         
-        if (parameter.getDescription() == null) {
-            Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), None());
-            if (d.left().isDefined() || d.right().isDefined()) {
-                parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
-            }
+        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), None());
+        if (d.left().isDefined() || d.right().isDefined()) {
+            parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
         }
         
         return Some(parameter);
