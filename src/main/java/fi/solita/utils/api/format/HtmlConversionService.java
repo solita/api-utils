@@ -420,7 +420,7 @@ public abstract class HtmlConversionService {
                       ._table()
                       .render(initHtmx())
                       .div(class_("lds-dual-ring"))._div()
-                      .div(class_("load-more"))
+                          .div(id("load-more"))
                           .if_(sseEnabled)
                               .a(href("").id("sse").class_("sse").hidden("hidden"))
                                   .span(lang("fi")).write("Päivitä taulukkoa automaattisesti...")._span()
@@ -717,8 +717,8 @@ public abstract class HtmlConversionService {
         + ".color-blue     { color: blue; }"
         + ".color-yellow   { color: yellow; }"
         
-        + ".load-more         { padding-top: 1em; }"
-        + ".load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
+        + "#load-more         { padding-top: 1em; }"
+        + "#load-more > * > * { white-space: nowrap; padding: 0 1em; font-style: italic; font-size: 0.75em; }"
         
         + ".formats:not([hidden]) { display: flex; flex-direction: column; }"
         + ".formats a             { padding: 0 1em; font-size: 0.75em; }"
@@ -889,7 +889,7 @@ public abstract class HtmlConversionService {
              + "        sse.addEventListener('click', function(ev) {"
              + "            sse.setAttribute('hidden', 'hidden');"
              + "            document.querySelector('.lds-dual-ring').style.display = 'block';"
-             + "            document.querySelectorAll('.load-more > *').forEach(function(child) {"
+             + "              document.querySelectorAll('#load-more > *').forEach(function(child) {"
              + "                if (child.classList.contains('sse-loading')) {"
              + "                    child.removeAttribute('hidden');"
              + "                } else {"
