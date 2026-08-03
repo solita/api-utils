@@ -196,13 +196,14 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected Renderable pageHead(final HtmlTitle title) {
+    protected Renderable pageHead(final HtmlTitle title, int rows) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 String contextPath = ((HttpServletCanvas<?>)html).getContextPath();
                 
                 html
+                    .meta(charset("UTF-8"))
                     .meta(http_equiv("Content-Type").content("text/html;charset=UTF-8"))
                     .meta(http_equiv("Content-Security-Policy").content("default-src 'self';frame-src *; style-src 'self' '"
                         + UI.calculateHash(styles()) +"' 'sha256-/jDKvbQ8cdux+c5epDIqkjHbXDaIY8RucT1PmAe8FG4=';script-src 'self' 'unsafe-eval' '"
@@ -213,19 +214,34 @@ public abstract class HtmlConversionService {
                         + UI.calculateHash(initSortable()) + "' '"
                         + UI.calculateHash(initTableFilter(contextPath)) + "'"))
                     .meta(name("htmx-config").content("{ \"includeIndicatorStyles\": false }"))
+                    
                     .title().write(title.plainTextTitle)._title()
+                    
                     .style()
                         .write(styles(), false)
                     ._style()
+                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.6.0.css"))
+                    
                     .script(type("text/javascript"))
                         .write(additionalHeadScript(), false)
                     ._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.6.0.min.js"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/Sortable.min.js").defer("defer"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/tafs-1.6.0.min.js").defer("defer"))._script()
+                    .render(initHtmx())
                     .script(type("text/javascript"))
                         .write(scripts(), false)
                     ._script()
-                    .link(rel("stylesheet").href(contextPath + "/r/css/lib/tafs-1.6.0.css"));
+                    .if_(rows >= 2)
+                        .script(type("text/javascript"))
+                            .write(initTableFilter(contextPath), false)
+                        ._script()
+                    ._if()
+                    .script(type("text/javascript"))
+                        .write(scripts3(), false)
+                    ._script()
+                    .script(type("text/javascript"))
+                        .write(initSortable(), false)
+                    ._script();
             }
         };
     }
@@ -234,8 +250,7 @@ public abstract class HtmlConversionService {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
-                html.render(UI.langSelectorInput)
-                    .header(add("hx-ext", "persist-fields,refresh-href,target-top", ESCAPE_CHARS))
+                html.header(add("hx-ext", "persist-fields,refresh-href,target-top", ESCAPE_CHARS))
                         .h1(class_("title"))
                           .render(title)
                         ._h1()
@@ -394,75 +409,65 @@ public abstract class HtmlConversionService {
         HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
         
         Option<String> queryString = (((HttpServletCanvas<?>)html).getRequestQueryString());
-        String contextPath = (((HttpServletCanvas<?>)html).getContextPath());
         
         try {
             html.render(DocType.HTML5)
                 .html()
                 .head()
-                  .render(pageHead(title))
+                  .render(pageHead(title, rows))
                 ._head()
                 .body()
                   .input(type("checkbox").id("connection").hidden("hidden").checked("checked").value(""))
                   .input(id("singleton").type("checkbox").value(Integer.toString(rows)).hidden("hidden"))
                   .label(class_("singleton").for_("singleton").title("Toggle vertical layout"))._label()
-                  .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
-                  .section(id("content"))
-                      .table(id("table").class_("tafs hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
-                        .thead()
-                          .tr()
-                            .render(tableHeader)
-                          ._tr()
-                        ._thead()
-                        .tbody()
-                          .render(tableBody)
-                        ._tbody()
-                      ._table()
-                      .render(initHtmx())
-                      .div(class_("lds-dual-ring"))._div()
+                  .render(UI.langSelectorInput)
+                  .main()
+                      .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
+                      .section(id("content"))
+                          .table(id("table").class_("tafs hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
+                            .thead()
+                              .tr()
+                                .render(tableHeader)
+                              ._tr()
+                            ._thead()
+                            .tbody()
+                              .render(tableBody)
+                            ._tbody()
+                          ._table()
+                          .div(class_("lds-dual-ring"))._div()
                           .div(id("load-more"))
-                          .if_(sseEnabled)
-                              .a(href("").id("sse").class_("sse").hidden("hidden"))
-                                  .span(lang("fi")).write("Päivitä taulukkoa automaattisesti...")._span()
-                                  .span(lang("en")).write("Refresh table automatically...")._span()
-                              ._a()
-                              .span(class_("sse-loading").hidden("hidden"))
-                                  .span(lang("fi")).write("Taulukko päivittymässä automaattisesti SSE:llä")._span()
-                                  .span(lang("en")).write("Table is refreshing automatically via SSE")._span()
-                              ._span()
-                          ._if()
-                          .if_(rows > 0 && COUNT.matcher(queryString.getOrElse("")).matches())
-                              .span(class_(null)
-                                  .add("hx-push-url", "false")
-                                  .add("hx-boost", "true")
-                                  .add("hx-target", "#content > table > tbody")
-                                  .add("hx-swap", "beforeend")
-                                  .add("hx-indicator", ".lds-dual-ring")
-                                  .add("hx-select", "#content > table > tbody > tr"))
-                                  .a(href(uriWithIncrementedStartIndex(html, false)))
-                                      .span(lang("fi")).write("Lataa lisää rivejä...")._span()
-                                      .span(lang("en")).write("Load more rows...")._span()
+                              .if_(sseEnabled)
+                                  .a(href("").id("sse").class_("sse").hidden("hidden"))
+                                      .span(lang("fi")).write("Päivitä taulukkoa automaattisesti...")._span()
+                                      .span(lang("en")).write("Refresh table automatically...")._span()
                                   ._a()
-                                  .a(href(uriWithIncrementedStartIndex(html, true)))
-                                      .span(lang("fi")).write("Lataa loput rivit...")._span()
-                                      .span(lang("en")).write("Load rest of the rows...")._span()
-                                  ._a()
-                              ._span()
-                          ._if()
-                      ._div()
-                  ._section()
-                  .render(pageFooter())
-                  .if_(rows >= 2)
-                      .script(type("text/javascript"))
-                          .write(initTableFilter(contextPath), false)
-                      ._script()
-                  ._if()
-                  .script(type("text/javascript"))
-                      .write(scripts3(), false)
-                  ._script()
-                  .script(type("text/javascript"))
-                      .write(initSortable(), false)
-                  ._script()
+                                  .span(class_("sse-loading").hidden("hidden"))
+                                      .span(lang("fi")).write("Taulukko päivittymässä automaattisesti SSE:llä")._span()
+                                      .span(lang("en")).write("Table is refreshing automatically via SSE")._span()
+                                  ._span()
+                              ._if()
+                              .if_(rows > 0 && COUNT.matcher(queryString.getOrElse("")).matches())
+                                  .span(class_(null)
+                                      .add("hx-push-url", "false")
+                                      .add("hx-boost", "true")
+                                      .add("hx-target", "#content > table > tbody")
+                                      .add("hx-swap", "beforeend")
+                                      .add("hx-indicator", ".lds-dual-ring")
+                                      .add("hx-select", "#content > table > tbody > tr"))
+                                      .a(href(uriWithIncrementedStartIndex(html, false)))
+                                          .span(lang("fi")).write("Lataa lisää rivejä...")._span()
+                                          .span(lang("en")).write("Load more rows...")._span()
+                                      ._a()
+                                      .a(href(uriWithIncrementedStartIndex(html, true)))
+                                          .span(lang("fi")).write("Lataa loput rivit...")._span()
+                                          .span(lang("en")).write("Load rest of the rows...")._span()
+                                      ._a()
+                                  ._span()
+                              ._if()
+                          ._div()
+                      ._section()
+                      .render(pageFooter())
+                  ._main()
                 ._body()
               ._html();
 
@@ -480,11 +485,11 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 String contextPath = (((HttpServletCanvas<?>)html).getContextPath());
                 
-                html.script(type("text/javascript").src(contextPath + "/r/js/lib/htmx.min.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-sse.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-persist-fields.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-refresh-href.js"))._script()
-                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-target-top.js"))._script()
+                html.script(type("text/javascript").src(contextPath + "/r/js/lib/htmx.min.js").defer("defer"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-sse.js").defer("defer"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-persist-fields.js").defer("defer"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-refresh-href.js").defer("defer"))._script()
+                    .script(type("text/javascript").src(contextPath + "/r/js/lib/htmx-ext-target-top.js").defer("defer"))._script()
                     .script(type("text/javascript"))
                         .write(scripts2(), false)
                     ._script();
@@ -664,7 +669,6 @@ public abstract class HtmlConversionService {
         + ".title .page   { font-size: small; }"
         + ".title .t-i, .title .t-dt, .title .t-oid, .title .t-rec { font-size: small; font-style: italic; }"
         + ".title .t-rec  { color: #bbb; }"
-        + ".lang-selector { display: inline; padding: 0 1em; border-width: 0 0 0 1px; border-style: dotted; cursor: pointer; }"
         
         + "body > .singleton { width: 1.5rem; height: 1.5rem; opacity: 0; position: absolute; top: 0; left: 0; z-index: 999; display: none; }"
         + "body > #singleton[value=\"1\"] ~ .singleton { display: revert; }"
@@ -758,7 +762,7 @@ public abstract class HtmlConversionService {
             + "  table table td { display: table-cell; }"
             + "  table li       { display: inline-block; border-left: 1px solid #eee; padding: 0 3px; }"
             + "  table li:first-child { border-left: none; }"
-            + "  .load-more     { display: none; }"
+            + "  #load-more     { display: none; }"
             + "  .parameters    { display: none; }"
             + "  .properties    { display: none; }"),
          newList(HtmlConversionService_.prefixed.ap("#singleton[value=\"1\"] ~ main").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
@@ -792,29 +796,29 @@ public abstract class HtmlConversionService {
     private final String scripts() {
         return
               "window.iframeLoad = function(ev) {"
-            + "var anchor = ev.target;"
-            + "if (anchor.tagName.toUpperCase() == 'A' && anchor.parentElement.classList.contains('t-oid') && anchor.getElementsByTagName('iframe').length == 0) {"
-            + "  var iframe = document.createElement('iframe');"
-            + "  iframe.style.display = 'none';"
-            + "  anchor.appendChild(iframe);"
-            + "  setTimeout(function() {"
-            + "    if (window.getComputedStyle(iframe).visibility == 'visible') {"
-            + "      iframe.setAttribute('src', anchor.attributes.href.value);"
-            + "      iframe.style.display = 'block';"
-            + "    } else {"
-            + "      anchor.removeChild(iframe);"
-            + "    }"
-            + "  }, 1000);"
-            + "}"
+            + "  var anchor = ev.target;"
+            + "  if (anchor.tagName.toUpperCase() == 'A' && anchor.parentElement.classList.contains('t-oid') && anchor.getElementsByTagName('iframe').length == 0) {"
+            + "    var iframe = document.createElement('iframe');"
+            + "    iframe.style.display = 'none';"
+            + "    anchor.appendChild(iframe);"
+            + "    setTimeout(function() {"
+            + "      if (window.getComputedStyle(iframe).visibility == 'visible') {"
+            + "        iframe.setAttribute('src', anchor.attributes.href.value);"
+            + "        iframe.style.display = 'block';"
+            + "      } else {"
+            + "        anchor.removeChild(iframe);"
+            + "      }"
+            + "    }, 1000);"
+            + "  }"
             + "};"
             + ""
             + "window.addEventListener('load', function() { "
-            + "    let m = window.location.pathname.match(/^(?:\\/[^0-9/]+)?\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+\\//) || window.location.pathname.match(/^(?:\\/[^0-9/]+)?\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+$/);"
-            + "    if (m) {"
-            + "        document.body.setAttribute('data-revision', m[1]);"
-            + "        window.history.replaceState(undefined, undefined, window.location.pathname.replace(/^((?:\\/[^0-9/]+)?\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x) + window.location.search + window.location.hash);"
-            + "    }"
-            + "    document.body.addEventListener('mouseover', window.iframeLoad);"
+            + "  let m = window.location.pathname.match(/^(?:\\/[^0-9/]+)?\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+\\//) || window.location.pathname.match(/^(?:\\/[^0-9/]+)?\\/[v0-9.]+\\/([0-9]+)\\/[a-zA-Z.]+$/);"
+            + "  if (m) {"
+            + "      document.body.setAttribute('data-revision', m[1]);"
+            + "      window.history.replaceState(undefined, undefined, window.location.pathname.replace(/^((?:\\/[^0-9/]+)?\\/[0-9.]+\\/)[0-9]+\\//,(_,x) => x) + window.location.search + window.location.hash);"
+            + "  }"
+            + "  document.body.addEventListener('mouseover', window.iframeLoad);"
             + "});"
             + ""
             + "window.loadContent = function(url, parent) {"
@@ -847,71 +851,78 @@ public abstract class HtmlConversionService {
     }
     
     public static final String scripts2() {
-        return
-             "if (window.htmx) {"
-           + "  htmx.on('htmx:afterOnLoad', function(evt) {"
-           + "    let m = evt.detail.xhr.responseURL.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
-           + "    if (m) {"
-           + "        let newRevision = m[1];"
-           + "        let oldRevision = document.body.getAttribute('data-revision');"
-           + "        if (newRevision != oldRevision) {"
+        return "document.addEventListener('DOMContentLoaded', () => {"
+           + "  if (window.htmx) {"
+           + "    htmx.on('htmx:afterOnLoad', function(evt) {"
+           + "      let m = evt.detail.xhr.responseURL.match(/\\/[0-9.]+\\/([0-9]+)\\//);"
+           + "      if (m) {"
+           + "          let newRevision = m[1];"
+           + "          let oldRevision = document.body.getAttribute('data-revision');"
+           + "          if (newRevision != oldRevision) {"
            // revision has changed, rows may not align properly anymore -> reload the page to not display invalid content.
-           + "            window.location.reload();"
-           + "        }"
-           + "    }"
-           + "  });"
-           + "}";
+           + "              window.location.reload();"
+           + "          }"
+           + "      }"
+           + "    });"
+           + "  }"
+           + "});";
     }
     
     public static final String initTableFilter(String contextPath) {
-        return "if (tafs) {"
-             + "  const tab = document.getElementById('table');"
-             + "  if (tab && tab.classList.contains('tafs') && !tab.closest('.t-re')) {"
-             + "    tab.addEventListener('htmx:afterSwap', function() { tafs.filter(tab); tafs.sort(tab); });"
+        return "document.addEventListener('DOMContentLoaded', () => {"
+             + "  if (tafs) {"
+             + "    const tab = document.getElementById('table');"
+             + "    if (tab && tab.classList.contains('tafs') && !tab.closest('.t-re')) {"
+             + "      tab.addEventListener('htmx:afterSwap', function() { tafs.filter(tab); tafs.sort(tab); });"
+             + "    }"
              + "  }"
-             + "}";
+             + "});";
     }
     
     public static final String initSortable() {
-        return "if (window.Sortable) {"
-             + "    const srt = document.getElementById('sortable');"
-             + "    if (srt) {"
-             + "        new Sortable(srt, { animation: 150 });"
-             + "    }"
-             + "}";
+        return "document.addEventListener('DOMContentLoaded', () => {"
+             + "  if (window.Sortable) {"
+             + "      const srt = document.getElementById('sortable');"
+             + "      if (srt) {"
+             + "          new Sortable(srt, { animation: 150 });"
+             + "      }"
+             + "  }"
+             + " });";
     }
     
     public static final String scripts3() {
-        return "if (!document.head.classList.contains('sse-done')) {"
-             + "    document.head.classList.add('sse-done');"
-             + "    const sse = document.getElementById('sse');"
-             + "    if (sse) {"
-             + "        sse.addEventListener('click', function(ev) {"
-             + "            sse.setAttribute('hidden', 'hidden');"
-             + "            document.querySelector('.lds-dual-ring').style.display = 'block';"
+        return "document.addEventListener('DOMContentLoaded', () => {"
+             + "  if (!document.head.classList.contains('sse-done')) {"
+             + "      document.head.classList.add('sse-done');"
+             + "      const sse = document.getElementById('sse');"
+             + "      if (sse) {"
+             + "          sse.addEventListener('click', function(ev) {"
+             + "              sse.setAttribute('hidden', 'hidden');"
+             + "              document.querySelector('.lds-dual-ring').style.display = 'block';"
              + "              document.querySelectorAll('#load-more > *').forEach(function(child) {"
-             + "                if (child.classList.contains('sse-loading')) {"
-             + "                    child.removeAttribute('hidden');"
-             + "                } else {"
-             + "                    child.setAttribute('hidden', 'hidden');"
-             + "                }"
-             + "            });"
-             + "            const tab = document.getElementById('table');"
-             + "            if (tafs && tab && tab.classList.contains('tafs')) {"
-             + "                tab.addEventListener('htmx:sseMessage', function() { tafs.filter(tab); tafs.sort(tab); });"
-             + "            }"
-             + "            tab.setAttribute('sse-connect', window.location.href);"
-             + "            htmx.process(tab);"
-             + "            ev.preventDefault();"
-             + "            return false;"
-             + "        });"
-             + "        sse.removeAttribute('hidden');"
-             + "    }"
-             + "}"
-             + "const tab = document.getElementById('table');"
-             + "if (tab) {"
-             + "    tab.classList.remove('hidden');" // show table when it's completely done, to prevent reflows.
-             + "}";
+             + "                  if (child.classList.contains('sse-loading')) {"
+             + "                      child.removeAttribute('hidden');"
+             + "                  } else {"
+             + "                      child.setAttribute('hidden', 'hidden');"
+             + "                  }"
+             + "              });"
+             + "              const tab = document.getElementById('table');"
+             + "              if (tafs && tab && tab.classList.contains('tafs')) {"
+             + "                  tab.addEventListener('htmx:sseMessage', function() { tafs.filter(tab); tafs.sort(tab); });"
+             + "              }"
+             + "              tab.setAttribute('sse-connect', window.location.href);"
+             + "              htmx.process(tab);"
+             + "              ev.preventDefault();"
+             + "              return false;"
+             + "          });"
+             + "          sse.removeAttribute('hidden');"
+             + "      }"
+             + "  }"
+             + "  const tab = document.getElementById('table');"
+             + "  if (tab) {"
+             + "      tab.classList.remove('hidden');" // show table when it's completely done, to prevent reflows.
+             + "  }"
+             + "});";
     }
     
     public String additionalHeadScript() {
