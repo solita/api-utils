@@ -108,11 +108,11 @@ public abstract class UI {
     };
     
     public static final String langSelectorCSS = ""
-        + "#lang-selector                                   { display: none; }"
-        + "label[for='lang-selector']                       { margin-left: 1em; }"
+        + "#lang-selector                                      { display: none; }"
+        + "label[for='lang-selector']                          { margin-left: 1em; }"
         + "[lang]:not(:lang(fi)),"
-        + "#lang-selector:checked ~ * :lang(fi)             { display: none !important; }"
-        + "#lang-selector:checked ~ * [lang]:not(:lang(fi)) { display: revert !important; }";
+        + "#lang-selector:checked ~ main :lang(fi)             { display: none !important; }"
+        + "#lang-selector:checked ~ main [lang]:not(:lang(fi)) { display: revert !important; }";
     
     public static final String calculateHash(final String content) {
         try {

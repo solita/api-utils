@@ -653,7 +653,8 @@ public abstract class HtmlConversionService {
     private final String styles() {
         return
           "html,h1,table  { font-family: sans-serif; font-weight: lighter; }"
-        + "body           { margin: 0; display: flex; flex-direction: column; padding: 0 0.5em; min-height: 100%; height: 100%; overflow-x: hidden; }"
+        + "body           { margin: 0; padding: 0 0.5em; min-height: 100%; height: 100%; overflow-x: hidden; }"
+        + "main           { display: flex; flex-direction: column; height: 100%; }"
         
         + "header, footer { display: flex; padding: 0.5em; }"
         + "@media (min-height: 500px) { body { height: 100vh; } }"
@@ -760,8 +761,8 @@ public abstract class HtmlConversionService {
             + "  .load-more     { display: none; }"
             + "  .parameters    { display: none; }"
             + "  .properties    { display: none; }"),
-         newList(HtmlConversionService_.prefixed.ap("#singleton[value=\"1\"] ~ *").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
-                 HtmlConversionService_.prefixed.ap("#singleton:checked ~ *"),
+         newList(HtmlConversionService_.prefixed.ap("#singleton[value=\"1\"] ~ main").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
+                 HtmlConversionService_.prefixed.ap("#singleton:checked ~ main"),
                  HtmlConversionService_.prefixed.ap(".nested") )))
                 
         + extraStyle();
