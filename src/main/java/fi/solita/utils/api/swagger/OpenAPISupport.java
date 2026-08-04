@@ -123,6 +123,22 @@ public abstract class OpenAPISupport {
     
     private static final Iterable<SerializationFormat> VISIBLE_FORMATS = subtract(SerializationFormat.values(), /*not implemented yet:*/ newList(SerializationFormat.XML, SerializationFormat.GML, SerializationFormat.MVT, SerializationFormat.PDF));
     
+    private static final String X_ALREADY_DEFINED = "x-livi-already-defined-ref";
+
+    private static boolean isAlreadyDefinedRef(Schema<?> s) {
+        return s != null && s.get$ref() != null
+            && s.getExtensions() != null && s.getExtensions().containsKey(X_ALREADY_DEFINED);
+    }
+    
+    protected static Schema<?> defineNamedRef(ModelConverterContext context, String name, Type type, Schema<?> builtSchema) {
+        if (context.getDefinedModels().get(name) == null) {
+            context.defineModel(name, builtSchema, type, null);
+        }
+        Schema<?> ref = new Schema<>().$ref("#/components/schemas/" + name);
+        ref.addExtension(X_ALREADY_DEFINED, true);
+        return ref;
+    }
+    
     static {
         io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true;
     }
@@ -302,6 +318,9 @@ public abstract class OpenAPISupport {
                         if (modified[0] == null) {
                             modified[0] = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
                         }
+                        if (isAlreadyDefinedRef(modified[0])) {
+                            return modified[0]; // leave the $ref exactly as returned - do not dereference/clone
+                        }
                         if (modified[0].get$ref() != null) {
                             Schema<?> definedSchema = getRef(context, modified[0]);
                             if (definedSchema != null) {
@@ -331,6 +350,13 @@ public abstract class OpenAPISupport {
                         postCustomize(type, context, schemaProvider);
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to post-customize schema for type " + type.getType(), e);
+                    }
+                    
+                    if (isAlreadyDefinedRef(modified[0])) {
+                        modified[0].getExtensions().remove(X_ALREADY_DEFINED);
+                        if (modified[0].getExtensions().isEmpty()) {
+                            modified[0].setExtensions(null);
+                        }
                     }
                 }
                 
