@@ -188,7 +188,7 @@ public abstract class OpenAPISupport {
             if (ignoreRevision) {
                 return None();
             } else {
-                parameter.schema(new IntegerSchema());
+                parameter.schema(new IntegerSchema().format("int64"));
             }
         }
         
