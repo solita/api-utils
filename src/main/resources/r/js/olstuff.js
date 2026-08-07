@@ -362,10 +362,14 @@ var olstuff = function(constants, util, includeCredentials, headers) {
         },
         
         newVectorLayer: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
-            return ret.newVectorLayerImpl(true, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter);
+            return ret.newVectorLayerImpl(ret.tileGrid, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter);
         },
         
-        newVectorLayerImpl: function(tiling, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
+        newVectorLayerCustomTile: function(tileGrid, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
+            return ret.newVectorLayerImpl(tileGrid, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter);
+        },
+        
+        newVectorLayerImpl: function(tileGrid, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
             var u1 = url + (url.indexOf('?') < 0 ? '?' : '');
             u1 = u1.indexOf('.geojson') < 0 && !u1.startsWith('http:') && !u1.includes('mml/') ? u1.replace('?', '.geojson?') : u1;
             var instant = new URLSearchParams(window.location.search).get('time');
@@ -382,9 +386,9 @@ var olstuff = function(constants, util, includeCredentials, headers) {
             var source = new ol.source.Vector({
                 format: ret.format,
                 projection: ret.projection,
-                strategy: tiling ? ol.loadingstrategy.tile(ret.tileGrid) : ol.loadingstrategy.all,
+                strategy: tileGrid ? ol.loadingstrategy.tile(tileGrid) : ol.loadingstrategy.all,
                 loader: function(extent, resolution, projection) {
-                    if (tiling && (extent[0] < constants.dataExtent[0] ||
+                    if (tileGrid && (extent[0] < constants.dataExtent[0] ||
                                    extent[1] < constants.dataExtent[1] ||
                                    extent[2] > constants.dataExtent[2] ||
                                    extent[3] > constants.dataExtent[3])) {
@@ -392,7 +396,7 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                     }
                     var kaavio = document.getElementById('kaavio');
                     layer.dispatchEvent("loadStart");
-                    fetch((u1 + (tiling ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal, credentials: includeCredentials ? 'include' : 'same-origin', headers: headers})
+                    fetch((u1 + (tileGrid ? '&bbox=' + extent.join(',') : '') + (kaavio && kaavio.checked ? '&presentation=diagram' : '') + u2).replace('?&','?'), {signal: aborter.signal, credentials: includeCredentials ? 'include' : 'same-origin', headers: headers})
                         .then(function(response) { if (response.ok) { return response.json(); } else { throw new Error(response.status + ": " + response.statusText); } })
                         .then(function(response) {
                           layer.dispatchEvent("loadSuccess");
@@ -698,7 +702,7 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                 renderer: renderer || 'canvas',
                 view: new ol.View({
                     center: [342900, 6820390],
-                    resolution: 2048,
+                    resolution: constants.resolutions[0],
                     resolutions: constants.resolutions,
                     projection: ret.projection
                 }),
