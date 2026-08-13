@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fi.solita.utils</groupId>
     <artifactId>api-utils</artifactId>
-    <version>0.21.24</version>
+    <version>0.21.25</version>
     <build>
         <resources>
             <resource>
@@ -114,12 +114,12 @@
         <dependency>
             <groupId>fi.solita.utils</groupId>
             <artifactId>meta-utils</artifactId>
-            <version>0.12.40</version>
+            <version>0.12.43</version>
         </dependency>
         <dependency>
             <groupId>fi.solita.utils</groupId>
             <artifactId>functional-utils</artifactId>
-            <version>0.12.85</version>
+            <version>0.12.87</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
