@@ -113,8 +113,8 @@ public class Filtering {
                     MetaNamedMember<T,Object> member = (MetaNamedMember<T, Object>) m;
                     if (!spatialFilters.contains(filter.pattern)) {
                         // leave spatial filters out from constraints for now
-                        lst.add(Pair.of(member, newList(FilterType.PATTERN_TYPES.contains(filter.pattern)
-                                                    ? flatMap(Literal_.getValue.andThen(Transformers.eitherLeft()), filter.literals) // don't convert LIKE-pattern strings
+                        lst.add(Pair.of(member, Collections.<Object>newList(FilterType.PATTERN_TYPES.contains(filter.pattern)
+                                                    ? flatMap(Literal_.getValue.andThen(Transformers.<String>eitherLeft()), filter.literals) // don't convert LIKE-pattern strings
                                                     : map(Filtering_.convert().ap(this, resolveTargetType(filter, member)), filter.literals))));
                     }
                 }

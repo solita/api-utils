@@ -1,5 +1,6 @@
 package fi.solita.utils.api.format;
 
+import fi.solita.utils.functional.Collections;
 import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
@@ -28,7 +29,6 @@ import static fi.solita.utils.functional.Functional.zipWithIndex;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
-import static fi.solita.utils.functional.FunctionalM.with;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 import static fi.solita.utils.functional.Predicates.isNull;
@@ -82,7 +82,8 @@ import fi.solita.utils.functional.Monoids;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
-import fi.solita.utils.functional.Transformer;
+import fi.solita.utils.functional.Functional;
+import fi.solita.utils.functional.FunctionalM;
 import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -130,7 +131,7 @@ public class ChartConversionService {
     
     @SuppressWarnings("unchecked")
     public <T> byte[] serialize(Request request, HtmlTitle title, final Iterable<T> obj) {
-        return serialize(request, title, newList(filter(not(isNull()), obj)), new Includes<T>(newList((MetaNamedMember<T,T>)DUMMY_MEMBER), emptyList(), emptyList(), true, emptyList()));
+        return serialize(request, title, newList(filter(not(isNull()), obj)), new Includes<T>(newList((MetaNamedMember<T,T>)DUMMY_MEMBER), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T,?>>emptyList(), true, Collections.<MetaNamedMember<? super T,?>>emptyList()));
     }
     
     public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Includes<T> members) {
@@ -160,12 +161,12 @@ public class ChartConversionService {
         return newList(o);
     }
     
-    final <T> Apply<Apply<T, Object>, Map<String, Long>> categoryValues(List<T> categoryObjects) {
+    final <T> Apply<Apply<T, Object>, Map<String, Long>> categoryValues(final List<T> categoryObjects) {
         return new Apply<Apply<T,Object>,Map<String,Long>>() {
               @SuppressWarnings("unchecked")
               @Override
               public Map<String, Long> apply(Apply<T,Object> m) {
-                 return mapValue((Transformer<List<Object>, Long>)(Object)Transformers.size, groupBy(ChartConversionService_.toKey.ap(ChartConversionService.this), flatMap(Function.of(m).andThen(ChartConversionService_.handleCollections), categoryObjects)));
+                 return mapValue((Apply<List<Object>, Long>)(Object)Transformers.size, groupBy(ChartConversionService_.toKey.ap(ChartConversionService.this), flatMap(Function.of(m).andThen(ChartConversionService_.handleCollections), categoryObjects)));
               }};
     }
     
@@ -175,7 +176,7 @@ public class ChartConversionService {
         } else {
             String serialized = new String(json.serialize(value), StandardCharsets.UTF_8);
             try {
-                return Some(Double.parseDouble(serialized));
+                return Some((Object)Double.parseDouble(serialized));
             } catch (NumberFormatException e) {
                 return None();
             }
@@ -236,14 +237,14 @@ public class ChartConversionService {
         };
     }
 
-    private <T> Apply<Pair<MetaNamedMember<T, Object>, Object>, Iterable<Pair<String, Object>>> mkDataRows(Map<Object, Object> values) {
+    private <T> Apply<Pair<MetaNamedMember<T, Object>, Object>, Iterable<Pair<String, Object>>> mkDataRows(final Map<Object, Object> values) {
         return new Apply<Pair<MetaNamedMember<T,Object>,Object>,Iterable<Pair<String,Object>>>() {
              @Override
              public Iterable<Pair<String,Object>> apply(Pair<MetaNamedMember<T, Object>,Object> p) {
                  Object value = p.right();
                  Option<Object> num = toNumeric(value);
-                 return newList(Pair.of(MemberUtil.memberName(p.left()), toKey(value)),
-                                Pair.of("_" + MemberUtil.memberName(p.left()), num.isDefined() ? num.get() : values.computeIfAbsent(value, new java.util.function.Function<Object,Object>() {
+                 return newList(Pair.<String,Object>of(MemberUtil.memberName(p.left()), toKey(value)),
+                                Pair.<String,Object>of("_" + MemberUtil.memberName(p.left()), num.isDefined() ? num.get() : values.computeIfAbsent(value, new java.util.function.Function<Object,Object>() {
                                              @Override
                                              public Object apply(Object t) {
                                                  return values.size() + 1;
@@ -362,7 +363,7 @@ public class ChartConversionService {
                     }
     
                     for (Map.Entry<Range<DateTime>, List<T>> entry: m.asMapOfRanges().entrySet()) {
-                        data.add(newMap(Pair.of("c", entry.getKey().lowerEndpoint().getMillis()),
+                        data.add(newMap(Pair.<Object,Object>of("c", entry.getKey().lowerEndpoint().getMillis()),
                                         internedCountPair(entry.getValue().size())));
                     }
                 } else {
@@ -387,12 +388,12 @@ public class ChartConversionService {
                         }
                     }
                     for (Map.Entry<Object, Integer> entry: m.entrySet()) {
-                        data.add(newMap(Pair.of("c", entry.getKey()),
+                        data.add(newMap(Pair.<Object,Object>of("c", entry.getKey()),
                                         internedCountPair(entry.getValue())));
                     }
                 }
             } else {
-                Iterable<T> objs_ = objs;
+                final Iterable<T> objs_ = objs;
                 yNames = newList(sort(flatMap(new Apply<MetaNamedMember<T,Object>,Iterable<String>>() {
                     @Override
                     public Iterable<String> apply(MetaNamedMember<T, Object> m) {
@@ -419,8 +420,8 @@ public class ChartConversionService {
                     }
                     
                     for (Map.Entry<Range<DateTime>, List<T>> entry: m.asMapOfRanges().entrySet()) {
-                        data.add(with(SemiGroups.failUnequal(), "c", entry.getKey().lowerEndpoint().getMillis(),
-                                     reduce(Monoids.mapCombine(SemiGroups.longSum),
+                        data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", entry.getKey().lowerEndpoint().getMillis(),
+                                     Functional.<Map<String,Long>>reduce(Monoids.<String,Long>mapCombine(SemiGroups.longSum),
                                          map(categoryValues(entry.getValue()), tail(members)))));
                     }
                 } else if (xIsLinear && !xIsInstant) {
@@ -435,16 +436,16 @@ public class ChartConversionService {
                         Iterable<Iterable<Object>> allRows = map(ChartConversionService_.handleCollections, sequence(Assert.singleton(objs), members));
                         for (Iterable<Object> category: transpose(allRows)) {
                             Iterable<Object> categoryObjects = tail(category);
-                            data.add(with(SemiGroups.failUnequal(), "c", toNumeric(head(category)),
+                            data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", toNumeric(head(category)),
                                     newMap(SemiGroups.failUnequal(),
-                                         flatMap(mkDataRows(values), zip(tail(members), categoryObjects)))));
+                                         flatMap(this.<T>mkDataRows(values), zip(tail(members), categoryObjects)))));
                         }
                     } else {
                         for (T t: newList(sort(Compare.by(xx), objs))) {
                             Iterable<Object> categoryObjects = sequence(t, tail(members));
-                            data.add(with(SemiGroups.failUnequal(), "c", x.apply(t),
+                            data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", x.apply(t),
                                     newMap(SemiGroups.failUnequal(),
-                                        flatMap(mkDataRows(values), zip(tail(members), categoryObjects)))));
+                                        flatMap(this.<T>mkDataRows(values), zip(tail(members), categoryObjects)))));
                         }
                     }
                 } else {
@@ -455,16 +456,16 @@ public class ChartConversionService {
                         for (Iterable<Object> cat: transpose(allRows)) {
                             Iterable<Object> category = newList(cat);
                             List<Object> categoryObjects = newList(tail(category));
-                            data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)head(category)).getMillis() : head(category),
-                                         reduce(Monoids.mapCombine(SemiGroups.longSum),
+                            data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)head(category)).getMillis() : head(category),
+                                         reduce(Monoids.<String,Long>mapCombine(SemiGroups.longSum),
                                              map(categoryValues(categoryObjects), tailMembers))));
                         }
                     } else {
                         Map<Object, List<T>> byCat = groupBy(x, objs);
                         for (Object category: xValues) {
-                            List<T> categoryObjects = find(category, byCat).getOrElse(emptyList());
-                            data.add(with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)category).getMillis() : category,
-                                         reduce(Monoids.mapCombine(SemiGroups.longSum),
+                            List<T> categoryObjects = find(category, byCat).getOrElse(Collections.<T>emptyList());
+                            data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)category).getMillis() : category,
+                                         reduce(Monoids.<String,Long>mapCombine(SemiGroups.longSum),
                                              map(categoryValues(categoryObjects), tail(members)))));
                         }
                     }
@@ -484,7 +485,7 @@ public class ChartConversionService {
         return key;
     }
 
-    protected Renderable pageHead(String titleText, String titleHtml, final String jsonData, final Collection<String> yNames, boolean isTemporal, boolean isStacked, boolean isGrouped, boolean isLinear, boolean isInterval) {
+    protected Renderable pageHead(final String titleText, final String titleHtml, final String jsonData, final Collection<String> yNames, final boolean isTemporal, final boolean isStacked, final boolean isGrouped, final boolean isLinear, final boolean isInterval) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -512,7 +513,7 @@ public class ChartConversionService {
         return "";
     }
 
-    private final String scripts(String titleHtml, String jsonData, final Collection<String> yNames, boolean xIsTemporal, boolean isStacked, boolean isGrouped, boolean xIsLinear, boolean xIsInterval) {
+    private final String scripts(String titleHtml, String jsonData, final Collection<String> yNames, final boolean xIsTemporal, final boolean isStacked, final boolean isGrouped, final boolean xIsLinear, final boolean xIsInterval) {
         return  "let dat = " + jsonData + ";\n"
               + "let allKeys = [...new Set(dat.map(x => Object.keys(x)).flat())];\n"
               + "let toFill = allKeys.length === 0 ? {} : Object.assign(...allKeys.map(k => ({[k]: 0})));\n"

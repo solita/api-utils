@@ -79,7 +79,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     
     @SuppressWarnings("unchecked")
     public <U> NestedMember<S,T> modifyParent(Apply<U,U> modifier) {
-        return new NestedMember<S,T>(parent, child, parentModifier.andThen((Apply<? super Object, ? extends U>) modifier), flatten);
+        return new NestedMember<S,T>(parent, child, parentModifier.andThen((Apply<Object,Object>) modifier), flatten);
     }
 
     @Override

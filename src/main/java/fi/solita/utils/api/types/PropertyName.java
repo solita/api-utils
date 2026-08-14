@@ -124,7 +124,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
         }
         
         public boolean startsWith(FunctionProvider fp, String prefix) {
-            String pre = prefix + ".";
+            final String pre = prefix + ".";
             return fp.argumentMatches(value, new Predicate<String>() {
                 @Override
                 public boolean accept(String candidate) {

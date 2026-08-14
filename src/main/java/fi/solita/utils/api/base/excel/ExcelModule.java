@@ -1,6 +1,5 @@
 package fi.solita.utils.api.base.excel;
 
-import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.FunctionalM.find;
@@ -20,6 +19,7 @@ import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.functional.Option;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Tuple;
 
 public class ExcelModule {
@@ -128,6 +128,6 @@ public class ExcelModule {
     @SuppressWarnings("unchecked")
     public List<String> columns(Class<?> type) {
         Option<ExcelSerializer<Object>> serializer = resolveSerializer(type);
-        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : emptyList();
+        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : Collections.<String>emptyList();
     }
 }

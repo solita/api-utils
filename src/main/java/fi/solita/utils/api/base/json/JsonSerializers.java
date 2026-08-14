@@ -366,7 +366,7 @@ public class JsonSerializers {
     
     
     
-    public Map<Class<?>,JsonSerializer<?>> serializers() { return newMap(
+    public Map<Class<?>,JsonSerializer<?>> serializers() { return Collections.<Class<?>, JsonSerializer<?>>newMap(
         Pair.of(ResolvedMember.class, resolvedMember),
         Pair.of(Option.class, option),
         Pair.of(Either.class, either),
@@ -380,11 +380,11 @@ public class JsonSerializers {
         Pair.of(Duration.class, stringSerializer(Duration.class, Serializers_.ser5.ap(s))),
         Pair.of(Period.class, stringSerializer(Period.class, Serializers_.ser6.ap(s))),
         Pair.of(DateTimeZone.class, stringSerializer(DateTimeZone.class, Serializers_.ser7.ap(s))),
-        Pair.of(BigDecimal.class, bigDecimalSerializer(BigDecimal.class, Function.id()))
+        Pair.of(BigDecimal.class, bigDecimalSerializer(BigDecimal.class, Function.<BigDecimal>id()))
     );
     }
     
-    public Map<Class<?>,JsonSerializer<?>> keySerializers() { return newMap(
+    public Map<Class<?>,JsonSerializer<?>> keySerializers() { return Collections.<Class<?>, JsonSerializer<?>>newMap(
         Pair.of(Option.class, optionKey),
         Pair.of(Either.class, eitherKey),
         Pair.of(URI.class, keySerializer(URI.class, Serializers_.ser.ap(s))),
@@ -400,8 +400,8 @@ public class JsonSerializers {
     );
     }
     
-    public Map<Class<?>,JsonDeserializer<?>> deserializers() { return newMap(
-            Pair.<Class<?>,JsonDeserializer<?>>of(BigDecimal.class, bigDecimalDeserializer(BigDecimal.class, Function.id())),
+    public Map<Class<?>,JsonDeserializer<?>> deserializers() { return Collections.<Class<?>, JsonDeserializer<?>>newMap(
+            Pair.<Class<?>,JsonDeserializer<?>>of(BigDecimal.class, bigDecimalDeserializer(BigDecimal.class, Function.<BigDecimal>id())),
             Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s))),
             Pair.<Class<?>,JsonDeserializer<?>>of(Interval.class, stringDeserializer(Interval.class, Serializers_.deserInterval.ap(s))),
             Pair.<Class<?>,JsonDeserializer<?>>of(LocalDate.class, stringDeserializer(LocalDate.class, Serializers_.deserLocalDate.ap(s))),

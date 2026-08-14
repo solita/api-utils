@@ -36,7 +36,7 @@ public class JsonObjectMapperTest {
 
     @Test
     public void optionNoneFieldIsOmitted() {
-        String serialized = new String(json().serialize(new TestDto(Option.None())));
+        String serialized = new String(json().serialize(new TestDto(Option.<String>None())));
 
         assertEquals("{}", serialized);
     }

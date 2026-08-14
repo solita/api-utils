@@ -17,7 +17,7 @@ public final class HttpModule extends FormattingConversionService {
         addConverter(new StringToCollectionConverter(this));
         addConverter(new StringToOptionConverter(this));
         addConverter(new StringToBeanDeserializableEnumConverter());
-        for (Map.Entry<Class<?>, Apply<String, ?>> e: converters.entrySet()) {
+        for (final Map.Entry<Class<?>, Apply<String, ?>> e: converters.entrySet()) {
             addConverter(String.class, (Class<Object>)e.getKey(), new Converter<String,Object>() {
                 @Override
                 public Object convert(String source) {

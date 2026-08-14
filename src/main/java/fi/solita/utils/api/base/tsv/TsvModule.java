@@ -1,11 +1,11 @@
 package fi.solita.utils.api.base.tsv;
 
-import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
+import fi.solita.utils.functional.Collections;
 
 import java.lang.reflect.Array;
 import java.util.List;
@@ -118,6 +118,6 @@ public class TsvModule {
     @SuppressWarnings("unchecked")
     public List<String> columns(Class<?> type) {
         Option<TsvSerializer<Object>> serializer = resolveSerializer(type);
-        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : emptyList();
+        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : Collections.<String>emptyList();
     }
 }

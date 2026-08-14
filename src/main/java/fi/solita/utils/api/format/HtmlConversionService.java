@@ -62,8 +62,10 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
+import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -151,7 +153,7 @@ public abstract class HtmlConversionService {
             public String getName() {
                 return "";
             }
-        }), emptyList(), emptyList(), true, emptyList()));
+        }), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), true, Collections.<MetaNamedMember<? super T, ?>>emptyList()));
     }
     
     public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Includes<T> members) {
@@ -187,7 +189,7 @@ public abstract class HtmlConversionService {
     
     @SuppressWarnings("unchecked")
     public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members, final MetaNamedMember<? super V,?> key) {
-        members = new Includes<V>(newList(filter(not(equalTo((MetaNamedMember<V,Object>)key)), members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        members = new Includes<V>(newList(Functional.<MetaNamedMember<V, ?>>filter((Apply<? super MetaNamedMember<V, ?>, Boolean>)not(equalTo((MetaNamedMember<V,?>)key)), members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
         Includes<V> headers = new Includes<V>(newList(cons((MetaNamedMember<V,Object>)key, members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
         return serialize(title, tableHeader(headers), mapBody(obj, members), request, obj.size(), members);
     }
@@ -196,7 +198,7 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected Renderable pageHead(final HtmlTitle title, int rows) {
+    protected Renderable pageHead(final HtmlTitle title, final int rows) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -246,7 +248,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, Option<Pair<Includes<T>, Apply<MetaNamedMember<T, ?>,Renderable>>> properties, Pair<Renderable,Set<String>> additionalQueryParameters) {
+    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, final Option<Pair<Includes<T>, Function1<MetaNamedMember<T, ?>,Renderable>>> properties, final Pair<Renderable,Set<String>> additionalQueryParameters) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -313,7 +315,7 @@ public abstract class HtmlConversionService {
                                     @SuppressWarnings("unchecked")
                                     @Override
                                     public void renderOn(HtmlCanvas html) throws IOException {
-                                        Pair<Includes<T>, Apply<MetaNamedMember<T, ?>,Renderable>> p = properties.get();
+                                        Pair<Includes<T>, Function1<MetaNamedMember<T, ?>,Renderable>> p = properties.get();
                                         for (MetaNamedMember<T, ?> member: (List<MetaNamedMember<T, ?>>)(Object)Includes.withNestedMembers(p.left().allRootMembers, Include.All, p.left().builders)) {
                                             Set<String> ancestors = ancestors(member.getName());
                                             String js = "document.querySelectorAll(\".properties input[data-ancestors~='\" + event.target.value + \"']\").forEach(y => { y.disabled = event.target.checked; htmx.trigger(y, 'change'); })";
@@ -346,16 +348,18 @@ public abstract class HtmlConversionService {
         }
     }
     
+    public static final Renderable NoopRenderable = new Renderable() {
+        @Override
+        public void renderOn(HtmlCanvas html) throws IOException {
+            // no-op
+        }
+    };
+    
     /**
      * @param includes 
      */
     protected <T> Pair<Renderable,Set<String>> additionalQueryParameters(Includes<T> includes) {
-        return Pair.of(new Renderable() {
-            @Override
-            public void renderOn(HtmlCanvas html) throws IOException {
-                // no-op
-            }
-        }, Collections.<String>emptySet());
+        return Pair.of(NoopRenderable, Collections.<String>emptySet());
     }
 
     private static Renderable linksForDifferentFormats() {
@@ -559,7 +563,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    <T> Renderable header(MetaNamedMember<T, ?> member) {
+    <T> Renderable header(final MetaNamedMember<T, ?> member) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
