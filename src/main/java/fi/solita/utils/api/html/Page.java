@@ -9,11 +9,14 @@ import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 import org.rendersnake.RenderableWrapper;
 
-import static fi.solita.utils.functional.Option.None;
 import fi.solita.utils.api.format.HtmlConversionService;
 import fi.solita.utils.api.format.HtmlConversionService.HtmlTitle;
 import fi.solita.utils.functional.Collections;
+import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.Option;
+import fi.solita.utils.api.Includes;
+import fi.solita.utils.meta.MetaNamedMember;
 
 public class Page extends RenderableWrapper {
 
@@ -48,12 +51,7 @@ public class Page extends RenderableWrapper {
                     html.span(lang("fi")).write(title_fi)._span()
                         .span(lang("en")).write(title_en)._span();
                 }
-            }, ((HttpServletCanvas<?>)html).getRequest(), false, None(), Pair.of(new Renderable() {
-                @Override
-                public void renderOn(HtmlCanvas html) throws IOException {
-                    // no-op
-                }
-            }, Collections.<String>emptySet())))
+            }, ((HttpServletCanvas<?>)html).getRequest(), false, Option.<Pair<Includes<Object>, Function1<MetaNamedMember<Object, ?>, Renderable>>>None(), Pair.of(HtmlConversionService.NoopRenderable, Collections.<String>emptySet())))
               .render(component)
               .footer()
                   .span(lang("fi").class_("copyright"))

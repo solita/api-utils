@@ -9,7 +9,7 @@ import fi.solita.utils.api.util.ServletRequestUtil.Request;
 
 public abstract class JakartaRequest {
 
-    public static Request of(HttpServletRequest req) {
+    public static Request of(final HttpServletRequest req) {
         return new Request() {
             @Override
             public Object getHttpServletRequest() {

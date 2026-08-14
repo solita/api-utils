@@ -72,12 +72,12 @@ public abstract class SpreadsheetConversionServiceTestBase {
     
     @JsonSerializeAsBean
     public static class CollectionPairDto {
-        public final Collection<Pair<?,?>> collectionTuples = newList(Pair.of(1,2), Pair.of(3,4));
+        public final Collection<Pair<Integer,Integer>> collectionTuples = newList(Pair.of(1,2), Pair.of(3,4));
     }
     
     @JsonSerializeAsBean
     public static class CollectionTupleDto {
-        public final Collection<Tuple3<?,?,?>> collectionTuples = newList(Tuple.of(1,2,3), Tuple.of(4,5,6));
+        public final Collection<Tuple3<Integer,Integer,Integer>> collectionTuples = newList(Tuple.of(1,2,3), Tuple.of(4,5,6));
     }
     
     @JsonSerializeAsBean

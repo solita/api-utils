@@ -220,7 +220,7 @@ public class PngConversionService {
         return Some(Pair.of(p.getName().getLocalPart(), p.getValue()));
     }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> requestedBoundsWithBuffer, boolean isTile, double bufferRatioX, double bufferRatioY, String layerName, Option<String> apikey) throws IOException {
+    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> requestedBoundsWithBuffer, boolean isTile, double bufferRatioX, double bufferRatioY, final String layerName, Option<String> apikey) throws IOException {
         Style layerStyle = find(layerName, defaultStyles).orElse(new ApplyZero<Style>() {
             @Override
             public Style get() {

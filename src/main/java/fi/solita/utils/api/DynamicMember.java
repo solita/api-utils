@@ -72,11 +72,11 @@ public class DynamicMember<V> implements MetaNamedMember<Map<String,V>,V> {
                 ret.put(((Map<String,V>)o).keySet(), builder((Map<String,V>)o));
             }
             for (Map.Entry<String, V> e: ((Map<String,V>)o).entrySet()) {
-                ret.putAll(allBuilders(e.getValue()));
+                ret.putAll((Map<? extends Set<String>, ? extends Builder<Map<String,V>>>)DynamicMember.<V>allBuilders(e.getValue()));
             }
         } else if (o instanceof Iterable) {
             for (Object v: (Iterable<?>)o) {
-                ret.putAll(allBuilders(v));
+                ret.putAll((Map<? extends Set<String>, ? extends Builder<Map<String,V>>>)DynamicMember.<V>allBuilders(v));
             }
         }
         return ret;

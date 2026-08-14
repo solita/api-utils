@@ -1,6 +1,5 @@
 package fi.solita.utils.api.base;
 
-import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.concat;
@@ -44,10 +43,10 @@ import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.ModificationUtils;
+import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Transformer;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -136,18 +135,18 @@ public abstract class VersionBase<REQ> {
     }
     
     public <K,T> Map<K,T> filterColumnsSingle(final Includes<T> includes, Map<K,T> ts) {
-        return includes.includesEverything ? ts : mapValue(new Transformer<T,T>() {
+        return includes.includesEverything ? ts : mapValue(new Apply<T,T>() {
             @Override
-            public T transform(T source) {
+            public T apply(T source) {
                 return ModificationUtils.withPropertiesF(includes, functionProvider(Option.<REQ>None())).apply(source);
             }
         }, ts);
     }
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(new Transformer<Iterable<T>,Iterable<T>>() {
+        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(new Apply<Iterable<T>,Iterable<T>>() {
             @Override
-            public Iterable<T> transform(Iterable<T> source) {
+            public Iterable<T> apply(Iterable<T> source) {
                 return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Option.<REQ>None())), source);
             }
         }, (Map<K,Iterable<T>>)ts);
@@ -206,7 +205,7 @@ public abstract class VersionBase<REQ> {
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters) {
-        return resolveIncludes(format, propertyNames, members, builders, filters, emptyList());
+        return resolveIncludes(format, propertyNames, members, builders, filters, Collections.<MetaNamedMember<? super T, ?>>emptyList());
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry) {

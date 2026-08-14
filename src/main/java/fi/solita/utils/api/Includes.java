@@ -78,7 +78,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     }
 
     public static final <T> Includes<T> none() {
-        return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false, emptyList());
+        return new Includes<T>(Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false, Collections.<MetaNamedMember<? super T, ?>>emptyList());
     }
     
     public static final <T> Includes<T> all(Collection<? extends MetaNamedMember<? super T,?>> includes, Builder<?>[] builders) {

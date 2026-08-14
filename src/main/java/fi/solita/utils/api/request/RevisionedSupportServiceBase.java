@@ -1,8 +1,6 @@
 package fi.solita.utils.api.request;
 
 import static fi.solita.utils.api.util.ResponseUtil.redirectToRevision;
-import static fi.solita.utils.functional.Collections.emptyMap;
-import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
 
@@ -40,7 +38,7 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
     }
     
     public void redirectToCurrentRevision(Request req, Response res) {
-        redirectToCurrentRevision(req, res, emptyMap(), emptySet());
+        redirectToCurrentRevision(req, res, Collections.<String,String>emptyMap(), Collections.<String>emptySet());
     }
     
     public void redirectToCurrentRevision(Request req, Response res, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {

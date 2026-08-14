@@ -25,10 +25,10 @@ import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 
 import fi.solita.utils.api.DynamicMember;
+import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Transformer;
 import fi.solita.utils.functional.lens.Builder;
 
 public class ClassUtils {
@@ -56,7 +56,7 @@ public class ClassUtils {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
             return headOption(newList(args));
         } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 0) {
-            return Some(((SimpleType)type).containedType(0));
+            return Option.<Type>Some(((SimpleType)type).containedType(0));
         }
         return None();
     }
@@ -66,7 +66,7 @@ public class ClassUtils {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
             return headOption(tail(newList(args)));
         } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 1) {
-            return Some(((SimpleType)type).containedType(1));
+            return Option.<Type>Some(((SimpleType)type).containedType(1));
         }
         return None();
     }
@@ -92,13 +92,13 @@ public class ClassUtils {
         if (type instanceof ParameterizedType) {
             return resolveClass(((ParameterizedType)type).getRawType());
         } else if (type instanceof Class) {
-            return Some((Class<?>) type);
+            return Option.<Class<?>>Some((Class<?>) type);
         } else if (type instanceof TypeVariable<?>) {
             return resolveClass(((TypeVariable<?>) type).getBounds()[0]);
         } else if (type instanceof ResolvedType) {
-            return Some(((ResolvedType)type).getRawClass());
+            return Option.<Class<?>>Some(((ResolvedType)type).getRawClass());
         } else if (type instanceof Builder.MapType) {
-            return Some(Map.class);
+            return Option.<Class<?>>Some(Map.class);
         } else {
             return None();
         }
@@ -127,17 +127,17 @@ public class ClassUtils {
         return primitiveClass;
     }
     
-    public static final Transformer<Class<?>, Iterable<Class<?>>> AllExtendedClasses = new Transformer<Class<?>, Iterable<Class<?>>>() {
+    public static final Apply<Class<?>, Iterable<Class<?>>> AllExtendedClasses = new Apply<Class<?>, Iterable<Class<?>>>() {
         @SuppressWarnings("unchecked")
         @Override
-        public Iterable<Class<?>> transform(Class<?> source) {
+        public Iterable<Class<?>> apply(Class<?> source) {
             return source.getSuperclass() == null ? Collections.<Class<?>>emptyList() : (Iterable<Class<?>>)(Object)(cons(source.getSuperclass(), flatMap(this, Option.of(source.getSuperclass()))));
         }
     };
     
-    public static final Transformer<Class<?>, Iterable<Field>> AllDeclaredApplicationFields = new Transformer<Class<?>, Iterable<Field>>() {
+    public static final Apply<Class<?>, Iterable<Field>> AllDeclaredApplicationFields = new Apply<Class<?>, Iterable<Field>>() {
         @Override
-        public Iterable<Field> transform(Class<?> source) {
+        public Iterable<Field> apply(Class<?> source) {
             if ( !source.getPackage().getName().startsWith("java") ) {
                 return concat(source.getDeclaredFields(), flatMap(this, Option.of(source.getSuperclass())));
             }

@@ -164,7 +164,7 @@ public class ChartConversionServiceTest {
         // +------+-------+
         Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
                 rowWithOptionalCategory(Some("blue")),
-                rowWithOptionalCategory(None()),
+                rowWithOptionalCategory(Option.<String>None()),
                 rowWithOptionalCategory(Some("red")),
                 rowWithOptionalCategory(Some("blue"))), members(optionalCategory));
 
@@ -224,7 +224,7 @@ public class ChartConversionServiceTest {
         MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(children, childOptionalValue));
 
         Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
-                rowWithChildren(child(Some("blue")), child(None()), child(Some("red"))),
+                rowWithChildren(child(Some("blue")), child(Option.<String>None()), child(Some("red"))),
                 rowWithChildren(child(Some("blue")))), members(nestedOptionalValues));
 
         assertEquals(Arrays.asList("count"), result.right());
@@ -481,7 +481,7 @@ public class ChartConversionServiceTest {
                     @Override
                     public Row row(int index) {
                         int bucket = index % 10;
-                        return rowWithOptionalCategory(bucket == 9 ? None() : Some(value(index)));
+                        return rowWithOptionalCategory(bucket == 9 ? Option.<String>None() : Some(value(index)));
                     }
                 }), members(optionalCategory));
         assertCountRows(optionResult, 9, size / 10L);
@@ -525,7 +525,7 @@ public class ChartConversionServiceTest {
                     @Override
                     public Row row(int index) {
                         int bucket = index % 10;
-                        return rowWithChildren(child(bucket == 9 ? None() : Some(value(index))));
+                        return rowWithChildren(child(bucket == 9 ? Option.<String>None() : Some(value(index))));
                     }
                 }), members(nestedOptionalValues));
         assertCountRows(nestedOptionResult, 9, size / 10L);
@@ -835,7 +835,7 @@ public class ChartConversionServiceTest {
     }
 
     private static Child child(List<String> values) {
-        return new Child(values, None());
+        return new Child(values, Option.<String>None());
     }
 
     private static Child child(Option<String> optionalValue) {
