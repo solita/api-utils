@@ -192,9 +192,9 @@ public class MemberUtil {
     
     public static <VALUES extends Tuple,T> Apply<VALUES,T> builderConstructor(final VALUES members) {
         @SuppressWarnings("unchecked")
-        List<MetaProperty<T,?>> ms = (List<MetaProperty<T,?>>)(Object)newList(members.toArray());
+        final List<MetaProperty<T,?>> ms = (List<MetaProperty<T,?>>)(Object)newList(members.toArray());
         
-        Class<T> targetClass = Assert.singleton(newSet(map(new Apply<MetaProperty<T,?>, Class<T>>() {
+        final Class<T> targetClass = Assert.singleton(newSet(map(new Apply<MetaProperty<T,?>, Class<T>>() {
             @SuppressWarnings("unchecked")
             @Override
             public Class<T> apply(MetaProperty<T,?> x) {

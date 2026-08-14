@@ -1,7 +1,5 @@
 package fi.solita.utils.api.util;
 
-import static fi.solita.utils.functional.Collections.emptyMap;
-import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.map;
@@ -182,7 +180,7 @@ public abstract class ResponseUtil {
     }
     
     public static void redirectToRevision(long revision, Request req, Response res) {
-        redirectToRevision(revision, req, res, emptyMap(), emptySet());
+        redirectToRevision(revision, req, res, Collections.<String,String>emptyMap(), Collections.<String>emptySet());
     }
     
     public static void redirectToRevisionAndDateTime(Request req, Response res, long revision, DateTime dateTime, Set<String> queryParamsToExclude) {

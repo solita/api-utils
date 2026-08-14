@@ -1,8 +1,6 @@
 package fi.solita.utils.api.swagger;
 
-import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.exists;
@@ -230,7 +228,7 @@ public abstract class OpenAPISupport {
             parameter.explode(false);
         }
         
-        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), None());
+        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), Option.<Class<?>>None());
         if (d.left().isDefined() || d.right().isDefined()) {
             parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
         }
@@ -282,7 +280,7 @@ public abstract class OpenAPISupport {
         }
         
         @Override
-        public final Schema<?> resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
+        public final Schema<?> resolve(final AnnotatedType type, final ModelConverterContext context, final Iterator<ModelConverter> chain) {
             Option<Class<?>> clazz_ = ClassUtils.resolveClass(type.getType());
             Schema<?> ret = null;
             if (!clazz_.isDefined()) {
@@ -300,18 +298,18 @@ public abstract class OpenAPISupport {
                     Type right = ClassUtils.getSecondTypeArgument(type.getType()).get();
                     Schema<?> schemaLeft = context.resolve(new AnnotatedType(left).resolveAsRef(true));
                     Schema<?> schemaRight = context.resolve(new AnnotatedType(right).resolveAsRef(true));
-                    ret = new Schema<Object>().oneOf(newList(schemaLeft, schemaRight));
+                    ret = new Schema<Object>().oneOf(Collections.<Schema>newList(schemaLeft, schemaRight));
                 } else if (Tuple.class.isAssignableFrom(clazz)) {
-                    ret = new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema<?>>() {
+                    ret = new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema>() {
                         @Override
-                        public Schema<?> apply(Integer i) {
+                        public Schema apply(Integer i) {
                             return context.resolve(new AnnotatedType(((SimpleType)type.getType()).containedType(i)).resolveAsRef(true));
                         }
                     }, init(range(0, ((SimpleType)type.getType()).containedTypeCount()))))));
                 }
                 
                 // Need to ensure all modifications are made to a clone, since springdoc reuses the same schema instances.
-                Schema<?>[] modified = new Schema<?>[] {ret};
+                final Schema<?>[] modified = new Schema<?>[] {ret};
                 ApplyZero<Schema<?>> schemaProvider = Function.memoize(new ApplyZero<Schema<?>>() {
                     @Override
                     public Schema<?> get() {
@@ -383,46 +381,46 @@ public abstract class OpenAPISupport {
                     schema.get().description(DESCRIPTION_Character)
                           .example("c");
                 } else if (clazz.equals(Interval.class)) {
-                    return Some(new StringSchema().format("interval")
+                    return Option.<Schema<?>>Some(new StringSchema().format("interval")
                                                   .description(DESCRIPTION_Interval)
                                                   .example(RequestUtil.interval2stringRestrictedToInfinity(new Interval(SOME_DATETIME, SOME_DATETIME.plusHours(1)))));
                 } else if (clazz.equals(LocalDate.class)) {
-                    return Some(new StringSchema().description(DESCRIPTION_LocalDate)
+                    return Option.<Schema<?>>Some(new StringSchema().description(DESCRIPTION_LocalDate)
                                                   .format("date")
                                                   .example("1982-01-22"));
                 } else if (clazz.equals(UUID.class)) {
-                    return Some(new StringSchema().format("uuid"));
+                    return Option.<Schema<?>>Some(new StringSchema().format("uuid"));
                 } else if (clazz.equals(URI.class)) {
                     schema.get().format("uri")
                           .description(DESCRIPTION_URI)
                           .example("https://www.liikennevirasto.fi");
                 } else if (clazz.equals(LocalTime.class)) {
-                    return Some(new StringSchema().format("localtime")
+                    return Option.<Schema<?>>Some(new StringSchema().format("localtime")
                                                   .description(DESCRIPTION_LocalTime)
                                                   .pattern("[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}")
                                                   .example("13:20:45"));
                 } else if (clazz.equals(Duration.class)) {
-                    return Some(new StringSchema().format("duration")
+                    return Option.<Schema<?>>Some(new StringSchema().format("duration")
                                                   .description(DESCRIPTION_Duration)
                                                   .example("PT67S"));
                 } else if (clazz.equals(Period.class)) {
-                    return Some(new StringSchema().format("iso8601")
+                    return Option.<Schema<?>>Some(new StringSchema().format("iso8601")
                                                   .description(DESCRIPTION_Period)
                                                   .example("P2Y4M6W5DT12H35M30S"));
                 } else if (clazz.equals(DateTimeZone.class)) {
-                    return Some(new StringSchema().format("datetimezone")
+                    return Option.<Schema<?>>Some(new StringSchema().format("datetimezone")
                                                   .description(DESCRIPTION_TimeZone)
                                                   .example("Europe/Helsinki"));
                 } else if (clazz.equals(PropertyName.class)) {
-                    return Some(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
+                    return Option.<Schema<?>>Some(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
                 }
             }
-            return None();
+            return Option.<Schema<?>>None();
         }
         
         protected void postCustomize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
             Annotation[] annotations = Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]);
-            Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, None());
+            Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, Option.<Class<?>>None());
             for (String s: d.right()) {
                 if (schema.get().getDescription() == null) {
                     schema.get().description(langsToList(s));
@@ -492,11 +490,11 @@ public abstract class OpenAPISupport {
         }
 
         @Override
-        public Operation customize(Operation operation, HandlerMethod handlerMethod) {
-            Pair<Option<String>, Option<String>> d = doc(Some(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), None());
+        public Operation customize(Operation operation, final HandlerMethod handlerMethod) {
+            Pair<Option<String>, Option<String>> d = doc(Some(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), Option.<Class<?>>None());
             operation.setTags(newList(mkString(" - ", concat(d.left(), d.right()))));
             
-            Pair<Option<String>, Option<String>> dd = doc(Some(handlerMethod.getMethod().getName()), handlerMethod.getMethod().getReturnType(), handlerMethod.getMethod().getAnnotations(), Some(handlerMethod.getBeanType()));
+            Pair<Option<String>, Option<String>> dd = doc(Some(handlerMethod.getMethod().getName()), handlerMethod.getMethod().getReturnType(), handlerMethod.getMethod().getAnnotations(), Option.<Class<?>>Some(handlerMethod.getBeanType()));
             for (String s: dd.left()) {
                 operation.setSummary(s);
             }
@@ -510,9 +508,9 @@ public abstract class OpenAPISupport {
                 operation.setDeprecated(false); // Don't mark as deprecated if not explicitly annotated as such (Springdoc considers also inherited class annotations)
             }
             
-            if (includeFormatParameter && !exists(OpenAPISupport_.parameterIsFormat, Option.of(operation.getParameters()).getOrElse(emptyList()))) {
+            if (includeFormatParameter && !exists(OpenAPISupport_.parameterIsFormat, Option.of(operation.getParameters()).getOrElse(Collections.<Parameter>emptyList()))) {
                 if (operation.getParameters() == null) {
-                    operation.setParameters(newMutableList());
+                    operation.setParameters(Collections.<Parameter>newMutableList());
                 }
                 for (String value: find(new Predicate<String>() {
                     @Override
@@ -543,8 +541,8 @@ public abstract class OpenAPISupport {
                     if (parameter.getName().equals("format")) {
                         return Some(parameter);
                     } else {
-                        String paramName = parameter.getName();
-                        String paramIn = parameter.getIn();
+                        final String paramName = parameter.getName();
+                        final String paramIn = parameter.getIn();
                         for (java.lang.reflect.Parameter methodParameter: find(new Predicate<java.lang.reflect.Parameter>() {
                             @Override
                             public boolean accept(java.lang.reflect.Parameter candidate) {
@@ -580,10 +578,10 @@ public abstract class OpenAPISupport {
     protected Pair<Option<String>,Option<String>> doc(Option<String> name, Type genericType, Annotation[] annotations, Option<Class<?>> declaringClass) {
         for (Documentation doc: (Iterable<Documentation>)(Object)concat(find(OpenAPISupport_.equalsDocumentation, annotations),
                                                                         find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations()))) {
-            return Pair.of(doc.name().isEmpty() && doc.name_en().isEmpty()               ? None() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
-                           doc.description().isEmpty() && doc.description_en().isEmpty() ? None() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
+            return Pair.<Option<String>,Option<String>>of(doc.name().isEmpty() && doc.name_en().isEmpty() ? Option.<String>None() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
+                           doc.description().isEmpty() && doc.description_en().isEmpty() ? Option.<String>None() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
         }
-        return Pair.of(None(), None());
+        return Pair.of(Option.<String>None(), Option.<String>None());
     }
 
     public GroupedOpenApi.Builder createGroupedOpenApi(VersionBase<?> version, final boolean ignoreRevision, boolean includeFormatParameter, String title, String description) {
@@ -664,6 +662,6 @@ public abstract class OpenAPISupport {
     }
     
     static Option<String> str2option(String s) {
-        return s.isEmpty() ? None() : Option.Some(s);
+        return s.isEmpty() ? Option.<String>None() : Option.<String>Some(s);
     }
 }

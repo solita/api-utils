@@ -10,7 +10,7 @@ import fi.solita.utils.api.util.ResponseUtil.Response;
 
 public abstract class JavaxResponse {
 
-    public static Response of(HttpServletResponse resp) {
+    public static Response of(final HttpServletResponse resp) {
         return new Response() {
             @Override
             public void setStatus(int sc) {

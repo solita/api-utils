@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.http.HttpModule;
@@ -78,7 +80,7 @@ public class FilteringTest {
     }
     public static final Data data = new Data();
 
-    private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), new JsonModule(emptyMap(),emptyMap(),emptyMap(),emptyMap()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);
+    private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), new JsonModule(Collections.<Class<?>,JsonSerializer<?>>emptyMap(),Collections.<Class<?>,JsonSerializer<?>>emptyMap(),Collections.<Class<?>,JsonDeserializer<?>>emptyMap(),Collections.<Class<?>,Class<?>>emptyMap()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);
     
     
     
