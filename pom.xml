@@ -72,7 +72,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <compilerArguments>-source 1.7 -target 1.7</compilerArguments>
+                    <compilerArguments>-source 8 -target 8</compilerArguments>
                     <encoding>UTF-8</encoding>
                     <processors>
                         <processor>fi.solita.utils.meta.CommonMetadataProcessor</processor>
