@@ -8,7 +8,6 @@ import static fi.solita.utils.functional.Collections.newMutableSortedMap;
 import static fi.solita.utils.functional.Collections.newMutableSortedSet;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -104,7 +103,7 @@ public class ModificationUtils {
                     Object value = member.apply(t);
                     logger.debug("Got value: {}", value);
                     if (value != null) {
-                        List<PropertyName> subProps = newList(filter(not(PropertyName_.isEmpty.apply(Function.__, fp)), Functional.map(PropertyName_.stripPrefix.apply(Function.__, fp, memberName), subs)));
+                        List<PropertyName> subProps = newList(filter(x -> !x.isEmpty(fp), Functional.map(PropertyName_.stripPrefix.apply(Function.__, fp, memberName), subs)));
                         logger.debug("Relevant properties for nested: {}", subProps);
                         
                         Object nested;

@@ -5,7 +5,6 @@ import static fi.solita.utils.functional.Collections.newSortedSet;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.fold;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
 import java.util.LinkedHashSet;
@@ -15,7 +14,6 @@ import java.util.SortedSet;
 
 import fi.solita.utils.api.resolving.ResolvableMemberProvider.Type;
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Ordering;
@@ -47,10 +45,10 @@ public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
             return this;
         }
         
-        if (isAllData() && exists(not(PropertyName_.isExclusion), other.resolvablePropertyNames)) {
+        if (isAllData() && exists(x -> !x.isExclusion(), other.resolvablePropertyNames)) {
             throw new RedundantPropertiesException(other.resolvablePropertyNames);
         }
-        if (other.isAllData() && exists(not(PropertyName_.isExclusion), resolvablePropertyNames)) {
+        if (other.isAllData() && exists(x -> !x.isExclusion(), resolvablePropertyNames)) {
             throw new RedundantPropertiesException(resolvablePropertyNames);
         }
         

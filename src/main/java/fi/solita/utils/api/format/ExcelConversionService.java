@@ -14,10 +14,6 @@ import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Functional.zipWithIndex;
 import static fi.solita.utils.functional.FunctionalA.max;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
-import static fi.solita.utils.functional.Transformers.append;
-import static fi.solita.utils.functional.Transformers.prepend;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -119,7 +115,7 @@ public class ExcelConversionService {
     @SuppressWarnings("unchecked")
     public <K,V> Pair<byte[],Map<String,String>> serializeWithKey(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
-        members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
+        members = filter(x -> !x.equals(key), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
         return serialize(filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
@@ -190,7 +186,7 @@ public class ExcelConversionService {
         int column = 0;
         for (Cells cells: row) {
             CharSequence currentFieldName = fieldNames.next();
-            String unit = cells.unit.map(prepend(" (").andThen(append(")"))).getOrElse("");
+            String unit = cells.unit.map(x -> " (" + x + ")").getOrElse("");
             if (cells.headers.isEmpty()) {
                 for (@SuppressWarnings("unused") Cell h: cells.cells) {
                     Cell headerCell = header.createCell(column);
@@ -209,7 +205,7 @@ public class ExcelConversionService {
                 }
             } else {
                 Assert.equal(cells.cells.size(), cells.headers.size());
-                for (String h: map(prepend(currentFieldName + " ").andThen(append(cells.headers.size() == 1 ? unit : "")), cells.headers)) {
+                for (String h: map(x -> currentFieldName + " " + x + (cells.headers.size() == 1 ? unit : ""), cells.headers)) {
                     Cell headerCell = header.createCell(column);
                     headerCell.setCellValue(h);
                     headerCell.setCellStyle(headerStyle);

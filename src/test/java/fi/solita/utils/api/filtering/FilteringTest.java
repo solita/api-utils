@@ -1,7 +1,6 @@
 package fi.solita.utils.api.filtering;
 
 import static fi.solita.utils.functional.Collections.emptyList;
-import static fi.solita.utils.functional.Collections.emptyMap;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Option.None;

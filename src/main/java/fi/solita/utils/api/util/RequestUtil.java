@@ -22,8 +22,6 @@ import static fi.solita.utils.functional.FunctionalC.takeWhile;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +37,6 @@ import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.functional.ApplyBi;
-import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -138,7 +135,7 @@ public abstract class RequestUtil {
             throw new RequestUtil.QueryParametersMustNotBeDuplicatedException();
         }
         
-        if (size(filter(not(Function.<Boolean>id()), map((ApplyBi<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
+        if (size(filter(x -> !x, map((ApplyBi<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
             throw new RequestUtil.QueryParametersMustBeInAlphabeticalOrderException();
         }
         
@@ -200,18 +197,18 @@ public abstract class RequestUtil {
     }
 
     public static final String getAPIVersionRelativePath(String contextRelativePath) {
-        return dropWhile(not(equalTo('/')), tail(contextRelativePath));
+        return dropWhile(x -> !x.equals('/'), tail(contextRelativePath));
     }
     
     private static final Pattern DIGITS = Pattern.compile("[0-9]+");
     
     public static final String getAPIVersionRelativePathWithoutRevision(String versionRelativePath) {
-        String candidate = takeWhile(not(equalTo('/')), drop(1, versionRelativePath));
-        return DIGITS.matcher(candidate).matches() ? dropWhile(not(equalTo('/')), drop(1, versionRelativePath)) : versionRelativePath;
+        String candidate = takeWhile(x -> !x.equals('/'), drop(1, versionRelativePath));
+        return DIGITS.matcher(candidate).matches() ? dropWhile(x -> !x.equals('/'), drop(1, versionRelativePath)) : versionRelativePath;
     }
     
     public static final String getApiVersionBasePath(String contextPath, String contextRelativePath) {
-        return contextPath + "/" + takeWhile(not(equalTo('/')), tail(contextRelativePath)) + "/";
+        return contextPath + "/" + takeWhile(x -> !x.equals('/'), tail(contextRelativePath)) + "/";
     }
 
     public static final Option<String> resolveExtension(String path) {
@@ -220,7 +217,7 @@ public abstract class RequestUtil {
         if (!lastPathPart.contains(".")) {
             return None();
         }
-        return Some(reverse(takeWhile(not(equalTo('.')), reverse(lastPathPart))));
+        return Some(reverse(takeWhile(x -> !x.equals('.'), reverse(lastPathPart))));
     }
 
     @SuppressWarnings("unchecked")

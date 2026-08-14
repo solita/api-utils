@@ -8,8 +8,6 @@ import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.FunctionalA.filter;
 import static fi.solita.utils.functional.FunctionalC.drop;
 import static fi.solita.utils.functional.FunctionalC.span;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,7 +27,6 @@ import fi.solita.utils.api.util.RequestUtil.ETags;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Transformers;
 
 public abstract class ResponseUtil {
     
@@ -172,7 +169,7 @@ public abstract class ResponseUtil {
     }
     
     public static void redirectToRevision(long revision, Request req, Response res, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(req)));
+        Pair<String,String> path = span(x -> !x.equals('/'), drop(1, ServletRequestUtil.getContextRelativePath(req)));
         // path == <Whole API path>
         // path.left == <API version>
         // path.right == <remaining API path, if any?>
@@ -192,8 +189,8 @@ public abstract class ResponseUtil {
     }
     
     public static void redirectToAnotherRevision(long revision, Request request, Response response) {
-        Pair<String,String> path = span(not(equalTo('/')), drop(1, ServletRequestUtil.getContextRelativePath(request)));
-        Pair<String, String> revisionAndRemainingPath = span(not(equalTo('/')), drop(1, path.right()));
+        Pair<String,String> path = span(x -> !x.equals('/'), drop(1, ServletRequestUtil.getContextRelativePath(request)));
+        Pair<String, String> revisionAndRemainingPath = span(x -> !x.equals('/'), drop(1, path.right()));
         // path == <Whole API path>
         // path.left == <API version>
         // path.right == 
@@ -213,7 +210,7 @@ public abstract class ResponseUtil {
     public static void redirect307(String contextRelativePath, Request request, Response response, Map<String,String> additionalUnescapedQueryParams, Set<String> queryParamsToExclude) {
         String path = ServletRequestUtil.getContextPath(request) +
                       (contextRelativePath.startsWith("/") ? contextRelativePath : "/" + contextRelativePath);
-        Iterable<String> params = map(Transformers.join("=").andThen(ResponseUtil_.encodeUrlQueryString), additionalUnescapedQueryParams.entrySet());
+        Iterable<String> params = map(x -> encodeUrlQueryString(x.getKey() + "=" + x.getValue()), additionalUnescapedQueryParams.entrySet());
         if (request.getQueryString() != null && !request.getQueryString().isEmpty()) {
             params = sort(concat(filter(ResponseUtil_.acceptParam.ap(queryParamsToExclude), request.getQueryString().split("&")), params));
         }

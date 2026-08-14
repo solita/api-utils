@@ -23,9 +23,6 @@ import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.greaterThan;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -47,10 +44,8 @@ import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -126,7 +121,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         boolean includesEverything = false;
         
         if (propertyNames.isDefined() && newList(propertyNames.get()).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())).size()) {
-            throw new RedundantPropertiesException(newSortedSet(flatten(filter(Transformers.size.andThen(greaterThan(1l)), group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())))))));
+            throw new RedundantPropertiesException(newSortedSet(flatten(filter(x -> size(x) > 1, group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())))))));
         }
         
         if (propertyNames.isDefined() && (Functional.isEmpty(propertyNames.get()) ||
@@ -166,7 +161,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 includesEverything = true;
             }
         } else {
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(not(PropertyName_.isExclusion), ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList()))));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(x -> !x.isExclusion(), ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList()))));
         }
         
         // Include geometries for png/geojson/gml/mvt even if not explicitly requested
@@ -176,7 +171,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
             case GML:
             case MVT:
                 for (MetaNamedMember<? super T,?> geometry: geometries) {
-                    if (!exists(MemberUtil_.memberName.andThen(equalTo((CharSequence)geometry.getName())), ret)) {
+                    if (!exists(x -> MemberUtil.memberName(x).equals((CharSequence)geometry.getName()), ret)) {
                         ret = newList(cons(geometry, ret));
                     }
                 }
@@ -252,7 +247,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     NestedMember<? super T,?> mem = NestedMember.unchecked(member, nestedMember, flatten);
                     if (Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(ClassUtils.typeClass(ClassUtils.getFirstTypeArgument(actualType).getOrElse(void.class)))) {
                         // parent returns iterable of iterable -> flatten
-                        mem = mem.modifyParent((Function1<Object,Object>)(Object)Transformers.flatten());
+                        mem = mem.modifyParent(x -> flatten((Iterable<Iterable<Object>>)x));
                     }
                     ret.add(mem);
                     if (include == Includes.Include.OnlyLeaf) {

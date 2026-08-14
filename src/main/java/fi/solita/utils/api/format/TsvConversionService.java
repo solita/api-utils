@@ -11,10 +11,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.tail;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
-import static fi.solita.utils.functional.Transformers.append;
-import static fi.solita.utils.functional.Transformers.prepend;
 
 import java.lang.reflect.AccessibleObject;
 import java.nio.charset.Charset;
@@ -32,7 +28,6 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class TsvConversionService {
@@ -106,7 +101,7 @@ public class TsvConversionService {
     @SuppressWarnings("unchecked")
     public <K,V> Pair<byte[],Map<String,String>> serializeWithKey(String filename, final Map<K,? extends Iterable<V>> obj, Iterable<? extends MetaNamedMember<V, ?>> members, final MetaNamedMember<? super V,?> key) {
         Iterable<? extends MetaNamedMember<V,Object>> headers = (Iterable<MetaNamedMember<V,Object>>)members;
-        members = filter(not(equalTo((MetaNamedMember<V,Object>)key)), (Iterable<MetaNamedMember<V,Object>>)members);
+        members = filter(x -> !x.equals(key), (Iterable<MetaNamedMember<V,Object>>)members);
         headers = cons((MetaNamedMember<V,Object>)key, (Iterable<MetaNamedMember<V,Object>>)members);
         return serialize(filename, header(headers), mapBody(obj, (Iterable<MetaNamedMember<V,Object>>)members));
     }
@@ -123,7 +118,7 @@ public class TsvConversionService {
             body.add(bodyRow);
         }
         
-        return Pair.of(mkString("\r\n", map(Transformers.map(TsvConversionService_.escape).andThen(TsvConversionService_.joinCells), cons(header, body))).getBytes(Charset.forName("UTF-8")),
+        return Pair.of(mkString("\r\n", map(x -> joinCells(map(TsvConversionService::escape, x)), cons(header, body))).getBytes(Charset.forName("UTF-8")),
                        newMap(Pair.of("Content-Disposition", "attachment; filename=" + filename + ".tsv")));
     }
 
@@ -132,7 +127,7 @@ public class TsvConversionService {
         Iterator<String> fieldNames = tableHeader.iterator();
         for (Cells cells: row) {
             CharSequence currentFieldName = fieldNames.next();
-            String unit = cells.unit.map(prepend(" (").andThen(append(")"))).getOrElse("");
+            String unit = cells.unit.map(x -> " (" + x + ")").getOrElse("");
             if (cells.headers.isEmpty()) {
                 header.addAll(newList(repeat("", cells.cells.size())));
             } else if (cells.headers.equals(newList(""))) {
@@ -142,7 +137,7 @@ public class TsvConversionService {
                 }
             } else {
                 Assert.equal(cells.cells.size(), cells.headers.size());
-                header.addAll(newList(map(prepend(currentFieldName + " ").andThen(append(cells.headers.size() == 1 ? unit : "")), cells.headers)));
+                header.addAll(newList(map(x -> currentFieldName + " " + x + (cells.headers.size() == 1 ? unit : ""), cells.headers)));
             }
         }
         return header;

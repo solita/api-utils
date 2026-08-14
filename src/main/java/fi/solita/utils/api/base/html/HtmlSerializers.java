@@ -4,7 +4,6 @@ import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.zipWithIndex;
-import static fi.solita.utils.functional.Predicates.not;
 import static org.rendersnake.HtmlAttributesFactory.*;
 import static org.rendersnake.HtmlAttributesFactory.src;
 
@@ -210,7 +209,7 @@ public abstract class HtmlSerializers {
                         .render(new Renderable() {
                           @Override
                           public void renderOn(HtmlCanvas html) throws IOException {
-                            for (Field f: filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass()))) {
+                            for (Field f: filter(Predicate.of(ClassUtils.PublicMembers).and(x -> !ClassUtils.StaticMembers.apply(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass()))) {
                                 Object val;
                                 try {
                                     val = f.get(value);

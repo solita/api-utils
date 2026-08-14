@@ -4,8 +4,6 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.util.List;
 
@@ -15,7 +13,6 @@ import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Predicates;
 
 public final class Filters {
     public static final List<String> SUPPORTED_OPERATIONS = newList("=", "<>", "<", ">", "<=", ">=", "_ [NOT] BETWEEN _ AND _", "_ [NOT] LIKE '%'", "_ [NOT] ILIKE '%'", "_ [NOT] IN (_,_)", "_ IS [NOT] NULL", "INTERSECTS(_,_)");
@@ -32,14 +29,14 @@ public final class Filters {
         for (List<Filter> and: or) {
             Assert.False(and.isEmpty());
         }
-        this.or = newList(filter(not(Predicates.<Filter,List<Filter>>empty()), or));
+        this.or = newList(filter(x -> !x.isEmpty(), or));
     }
     
     public List<List<Filter>> spatialFilters() {
         return newList(map(new Apply<List<Filter>,List<Filter>>() {
             @Override
             public List<Filter> apply(List<Filter> and) {
-                return newList(filter(Filter_.pattern.andThen(equalTo(FilterType.INTERSECTS)), and));
+                return newList(filter(x -> x.pattern.equals(FilterType.INTERSECTS), and));
             }
         }, or));
     }

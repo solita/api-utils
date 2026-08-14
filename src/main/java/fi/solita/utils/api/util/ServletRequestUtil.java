@@ -2,7 +2,6 @@ package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Transformers.prepend;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -66,7 +65,7 @@ public abstract class ServletRequestUtil {
         for (String prefix: forwardedPrefix) {
             url = url.replaceFirst("^[^:/]+://[^/]+", "$0" + prefix);
         }
-        return URI.create(url + qs.map(prepend("?")).getOrElse(""));
+        return URI.create(url + qs.map(x -> "?" + x).getOrElse(""));
     }
     
     public static final String getContextRelativePath(Request req) {

@@ -8,12 +8,11 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.foreach;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Predicates.isNull;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.Callable;
@@ -151,7 +150,7 @@ public abstract class ResolvableMemberProvider<REQ> {
                         };
                     }
                     // might be null in some edge-cases due to propertyName-filtering
-                }, filter(not(isNull()), unwrapResolvable(((ResolvableMember<T>)member).original, t)))), getTimeout().getMillis(), TimeUnit.MILLISECONDS);
+                }, filter(Objects::nonNull, unwrapResolvable(((ResolvableMember<T>)member).original, t)))), getTimeout().getMillis(), TimeUnit.MILLISECONDS);
                 foreach(new Apply<Future<Void>, Void>() {
                     @Override
                     public Void apply(Future<Void> t) {

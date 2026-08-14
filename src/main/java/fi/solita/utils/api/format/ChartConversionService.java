@@ -31,8 +31,6 @@ import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Predicates.isNull;
-import static fi.solita.utils.functional.Predicates.not;
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
 import static org.rendersnake.HtmlAttributesFactory.id;
 import static org.rendersnake.HtmlAttributesFactory.type;
@@ -50,6 +48,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
@@ -84,7 +83,6 @@ import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.FunctionalM;
-import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -131,7 +129,7 @@ public class ChartConversionService {
     
     @SuppressWarnings("unchecked")
     public <T> byte[] serialize(Request request, HtmlTitle title, final Iterable<T> obj) {
-        return serialize(request, title, newList(filter(not(isNull()), obj)), new Includes<T>(newList((MetaNamedMember<T,T>)DUMMY_MEMBER), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T,?>>emptyList(), true, Collections.<MetaNamedMember<? super T,?>>emptyList()));
+        return serialize(request, title, newList(filter(Objects::nonNull, obj)), new Includes<T>(newList((MetaNamedMember<T,T>)DUMMY_MEMBER), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T,?>>emptyList(), true, Collections.<MetaNamedMember<? super T,?>>emptyList()));
     }
     
     public <T> byte[] serialize(Request request, HtmlTitle title, final Collection<T> obj, final Includes<T> members) {
@@ -163,11 +161,10 @@ public class ChartConversionService {
     
     final <T> Apply<Apply<T, Object>, Map<String, Long>> categoryValues(final List<T> categoryObjects) {
         return new Apply<Apply<T,Object>,Map<String,Long>>() {
-              @SuppressWarnings("unchecked")
-              @Override
-              public Map<String, Long> apply(Apply<T,Object> m) {
-                 return mapValue((Apply<List<Object>, Long>)(Object)Transformers.size, groupBy(ChartConversionService_.toKey.ap(ChartConversionService.this), flatMap(Function.of(m).andThen(ChartConversionService_.handleCollections), categoryObjects)));
-              }};
+          @Override
+          public Map<String, Long> apply(Apply<T,Object> m) {
+             return mapValue(x -> Long.valueOf(x.size()), groupBy(ChartConversionService_.toKey.ap(ChartConversionService.this), flatMap(Function.of(m).andThen(ChartConversionService_.handleCollections), categoryObjects)));
+          }};
     }
     
     protected Option<Object> toNumeric(Object value) {

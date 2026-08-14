@@ -3,7 +3,6 @@ package fi.solita.utils.api;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
-import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,7 +14,6 @@ import org.geotools.referencing.CRS;
 
 import fi.solita.utils.api.filtering.Filter;
 import fi.solita.utils.api.filtering.FilterType;
-import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.filtering.Literal;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.SRSName;
@@ -34,7 +32,7 @@ public class Transform {
             List<Filter> spatialFilters = newList(flatten(allSpatialFilters));
             Assert.lessThanOrEqual(spatialFilters.size(), 1);                // multiple spatial constraints not supported.
             Assert.True(spatialFilters.isEmpty() || filters.or.size() <= 1); // OR queries with spatial constraints not supported.
-            for (Filter intersect: filter(Filter_.pattern.andThen(equalTo(FilterType.INTERSECTS)), spatialFilters)) {
+            for (Filter intersect: filter(x -> x.pattern.equals(FilterType.INTERSECTS), spatialFilters)) {
                 Assert.Null(bbox, "BBOX cannot be given together with spatial filtering");
                 Literal wkt = Assert.singleton(intersect.literals);
                 return fromWKT.apply(wkt.getValue().left.get());

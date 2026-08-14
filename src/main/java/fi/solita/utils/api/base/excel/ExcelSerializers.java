@@ -11,9 +11,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.sort;
-import static fi.solita.utils.functional.Predicates.not;
-import static fi.solita.utils.functional.Transformers.append;
-import static fi.solita.utils.functional.Transformers.prepend;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -155,7 +152,7 @@ public class ExcelSerializers {
                     List<Cell> cells = newMutableList();
                     List<String> headers = newMutableList();
                     StringBuilder sb = new StringBuilder();
-                    for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                    for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(x -> !ClassUtils.StaticMembers.apply(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                         Object val;
                         try {
                             val = f.get(value);
@@ -170,7 +167,7 @@ public class ExcelSerializers {
                         cells.addAll(newCells.cells);
                         
                         List<String> newHeaders = newCells.headers.isEmpty() ? module.columns(type) : newCells.headers;
-                        newHeaders = newList(map(prepend(f.getName() + " ").andThen(ExcelSerializers_.trim), newHeaders));
+                        newHeaders = newList(map(x -> trim(f.getName() + " " + x), newHeaders));
                         headers.addAll(newHeaders);
                         
                         columnIndex += newCells.cells.size();
@@ -191,7 +188,7 @@ public class ExcelSerializers {
                 if (ClassUtils.getEnumType(type).isDefined()) {
                     return newList("");
                 } else {
-                    Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(not(ClassUtils.StaticMembers)), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.apply(x) && !ClassUtils.StaticMembers.apply(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
                     return newList(flatMap(ExcelSerializers_.fieldColumn.ap(module), fields));
                 }
             }
@@ -235,7 +232,7 @@ public class ExcelSerializers {
     }
     
     protected static Cells merge(ExcelModule module, Row row, int columnIndex, Pair<?, ?> pair, String separator) {
-        return merge(module, row, columnIndex, pair, append(separator));
+        return merge(module, row, columnIndex, pair, x -> x + separator);
     }
     
     protected static Cells merge(ExcelModule module, Row row, int columnIndex, Pair<?, ?> pair, Apply<? super String,String> mapFirst) {

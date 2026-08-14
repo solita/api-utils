@@ -2,60 +2,57 @@ package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.Objects;
+import java.util.function.Function;
 
 import fi.solita.utils.api.NestedMember;
 import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.Option;
-import fi.solita.utils.functional.Predicates;
-import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     public final MetaNamedMember<S,?> parent;
     public final MetaNamedMember<?,T> child;
-    private final Function1<Object,Object> parentModifier;
+    private final Function<Object,Object> parentModifier;
     private final boolean flatten;
     private final String name;
 
     public static final <S,U,T> NestedMember<S,T> of(MetaNamedMember<S, U> parent, MetaNamedMember<? super U,T> child) {
-        return new NestedMember<S,T>(parent, child, Function.id(), false);
+        return new NestedMember<S,T>(parent, child, Function.identity(), false);
     }
     
     @SuppressWarnings("unchecked")
     public static final <S,U,T> NestedMember<S,Option<T>> ofOption(MetaNamedMember<S, Option<U>> parent, MetaNamedMember<? super U,T> child) {
-        return new NestedMember<S,Option<T>>(parent, (MetaNamedMember<?, Option<T>>) child, Function.id(), false);
+        return new NestedMember<S,Option<T>>(parent, (MetaNamedMember<?, Option<T>>) child, Function.identity(), false);
     }
 
     @SuppressWarnings("unchecked")
     public static final <S,U,T> NestedMember<S,Iterable<T>> ofItFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
-        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, Function.id(), true);
+        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, Function.identity(), true);
     }
     
     public static final <S,U,T> NestedMember<S,Option<T>> ofOptionFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,Option<T>> child) {
-        return new NestedMember<S,Option<T>>(parent, child, Function.id(), true);
+        return new NestedMember<S,Option<T>>(parent, child, Function.identity(), true);
     }
 
     @SuppressWarnings("unchecked")
     public static final <S,U,T> NestedMember<S,Iterable<T>> ofIt(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,T> child) {
-        return (NestedMember<S, Iterable<T>>) new NestedMember<S,T>(parent, child, Function.id(), false);
+        return (NestedMember<S, Iterable<T>>) new NestedMember<S,T>(parent, child, Function.identity(), false);
     }
 
     public static final <S,T> NestedMember<S,T> unchecked(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child, boolean flatten) {
-        return new NestedMember<S,T>(parent, child, Function.id(), flatten);
+        return new NestedMember<S,T>(parent, child, Function.identity(), flatten);
     }
     
     @SuppressWarnings("unchecked")
     public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionItFlatType(MetaNamedMember<S, ? extends Option<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
-        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, (Function1<Object,Object>)(Object)Transformers.flatten(), true);
+        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, x -> Functional.flatten((Iterable<Iterable<?>>)x), true);
     }
 
-    private NestedMember(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child, Function1<Object,Object> parentModifier, boolean flatten) {
+    private NestedMember(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child, Function<Object,Object> parentModifier, boolean flatten) {
         this.parent = parent;
         this.child = child;
         this.parentModifier = parentModifier;
@@ -71,7 +68,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
             return null;
         } else if (u instanceof Iterable) {
             Iterable<T> xs = map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u);
-            return (T) filter(not(Predicates.isNull()), flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs);
+            return (T) filter(Objects::nonNull, flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs);
         } else {
             return ((MetaNamedMember<Object,T>)child).apply(u);
         }

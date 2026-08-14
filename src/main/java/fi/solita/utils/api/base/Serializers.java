@@ -1,8 +1,6 @@
 package fi.solita.utils.api.base;
 
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.net.URI;
 import java.util.UUID;
@@ -72,7 +70,7 @@ public class Serializers {
     }
     
     public String serZoned(DateTime value) {
-        return takeWhile(not(equalTo('+')), value.toString(ISODateTimeFormat.dateTimeNoMillis().withZone(APP_ZONE))).replace('T', ' ');
+        return takeWhile(x -> !x.equals('+'), value.toString(ISODateTimeFormat.dateTimeNoMillis().withZone(APP_ZONE))).replace('T', ' ');
     }
     
     public Pair<DateTime,DateTime> ser(Interval v) {

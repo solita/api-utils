@@ -30,10 +30,8 @@ import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -127,11 +125,10 @@ public class MemberUtil {
     }
 
     public static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider<?> resolvableMemberProvider, FunctionProvider fp, boolean onlyExact, Iterable<? extends MetaNamedMember<? super T,?>> fields, PropertyName propertyName) throws UnknownPropertyNameException {
-        Apply<String,Boolean> matchAll = Function.constant(propertyName.isWildcard());
         List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberName.andThen(
               onlyExact
             ? PropertyName_.isEqualTo.ap(propertyName, fp)
-            : Predicate.of(PropertyName_.isPrefixOf.ap(propertyName, fp)).or(matchAll)), fields));
+            : x -> propertyName.isPrefixOf(fp, x) || propertyName.isWildcard()), fields));
         if (ret.isEmpty()) {
             // Exactly the requested property was not found. Check if the property was resolvable, for example a reference to an external API
             Iterable<? extends MetaNamedMember<? super T, ?>> allResolvableMembers = filter(ResolvableMemberProvider_.isResolvable.ap(resolvableMemberProvider), fields);

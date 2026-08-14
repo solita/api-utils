@@ -74,7 +74,6 @@ import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
-import fi.solita.utils.functional.Transformers;
 import it.geosolutions.imageio.plugins.png.PNGWriter;
 
 public class PngConversionService {
@@ -179,11 +178,11 @@ public class PngConversionService {
                 p.expandBy(buffer(originalWidth), buffer(originalHeight));
                 Matcher matcher = BBOX_INT.matcher(pngRequestURI);
                 if (matcher.find()) {
-                    String bbox = "bbox=" + mkString(",", map(PngConversionService_.toInt.andThen(Transformers.toString), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                    String bbox = "bbox=" + mkString(",", map(x -> Integer.toString(toInt(x)), newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
                     pngRequestURI = matcher.replaceAll(bbox);
                 } else {
                     matcher = BBOX_DEC.matcher(pngRequestURI);
-                    String bbox = "bbox=" + mkString(",", map(Transformers.toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
+                    String bbox = "bbox=" + mkString(",", map(Object::toString, newList(p.getMinX(), p.getMinY(), p.getMaxX(), p.getMaxY())));
                     pngRequestURI = matcher.replaceAll(bbox);
                 }
                 if (originalWidth != 0) {

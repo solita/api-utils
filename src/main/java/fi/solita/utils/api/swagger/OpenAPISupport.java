@@ -16,7 +16,6 @@ import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalS.range;
 import static fi.solita.utils.functional.Option.None;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Predicates.matches;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -526,7 +525,7 @@ public abstract class OpenAPISupport {
                     } else {
                         Pattern pat = Pattern.compile(tail(pattern)); // strip leading ':'
                         schema.setEnum(newList(pattern.isEmpty() ? visibleFormats
-                                                                 : filter(matches(pat), map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), SerializationFormat.values()))));
+                                                                 : filter(x -> pat.matcher(x).matches(), map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), SerializationFormat.values()))));
                     }
                     operation.getParameters().add(0, new Parameter().name("format")
                                                                     .description(DESCRIPTION_Format)

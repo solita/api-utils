@@ -6,8 +6,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalA.flatten;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
 
 import java.lang.annotation.Annotation;
 
@@ -20,7 +18,7 @@ public abstract class SpringRequestUtil {
 
     public static final String resolvePath(Class<?> latestVersion) {
         String[] paths = latestVersion.getAnnotation(RequestMapping.class).value();
-        return takeWhile(not(equalTo('/')), tail(paths[0]));
+        return takeWhile(x -> !x.equals('/'), tail(paths[0]));
     }
 
     static boolean isRequestParam(Annotation a) {

@@ -2,7 +2,6 @@ package fi.solita.utils.api.base;
 
 import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.util.Collections;
 import java.util.Set;
@@ -33,7 +32,7 @@ public class StringToBeanDeserializableEnumConverter implements ConditionalGener
         if (source == null) {
             return null;
         }
-        return find(equalTo(((String)source).toLowerCase()), map(new Apply<Object,String>() {
+        return find(x -> ((String)source).toLowerCase().equals(x), map(new Apply<Object,String>() {
             @Override
             public String apply(Object t) {
                 return ((Enum)t).name().toLowerCase();

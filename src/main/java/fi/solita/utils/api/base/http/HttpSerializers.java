@@ -5,7 +5,6 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Functional.find;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Predicates.equalTo;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -260,7 +259,7 @@ public class HttpSerializers {
         @Override
         public SRSName apply(String source) throws InvalidValueException {
             try {
-                Option<SRSName> found = find(SRSName_.value.andThen(equalTo(source)), SRSName.validValues);
+                Option<SRSName> found = find(x -> x.value.equals(source), SRSName.validValues);
                 Assert.defined(found);
                 return found.get();
             } catch (RuntimeException e) {

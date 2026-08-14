@@ -1,10 +1,8 @@
 package fi.solita.utils.api.format;
 
-import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.emptySet;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Function.__;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatten;
@@ -14,12 +12,9 @@ import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sequence;
 import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.Option.Some;
-import static fi.solita.utils.functional.Predicates.equalTo;
-import static fi.solita.utils.functional.Predicates.not;
-import static fi.solita.utils.functional.Transformers.append;
-import static fi.solita.utils.functional.Transformers.prepend;
-import static org.rendersnake.HtmlAttributesFactory.*;
+import static org.rendersnake.HtmlAttributesFactory.ESCAPE_CHARS;
 import static org.rendersnake.HtmlAttributesFactory.add;
+import static org.rendersnake.HtmlAttributesFactory.charset;
 import static org.rendersnake.HtmlAttributesFactory.class_;
 import static org.rendersnake.HtmlAttributesFactory.href;
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
@@ -55,18 +50,14 @@ import fi.solita.utils.api.base.html.HtmlModule;
 import fi.solita.utils.api.html.HttpServletCanvas;
 import fi.solita.utils.api.html.UI;
 import fi.solita.utils.api.types.Count;
-import fi.solita.utils.api.types.Count_;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Transformers;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class HtmlConversionService {
@@ -101,7 +92,7 @@ public abstract class HtmlConversionService {
                 
                 if (startIndex.isDefined() && !startIndex.get().equals(StartIndex.DEFAULT) && count.isDefined() && !count.get().equals(Count.DEFAULT)) {
                     html.span(class_("page"))
-                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(Count_.value.andThen(HtmlConversionService_.plus.ap(startIndex.get().value-1).andThen(Transformers.toString))).getOrElse("") + ")")
+                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(x -> Integer.toString(x.value + startIndex.get().value - 1)).getOrElse("") + ")")
                         ._span();
                 } else {
                     for (StartIndex si: startIndex) {
@@ -189,7 +180,7 @@ public abstract class HtmlConversionService {
     
     @SuppressWarnings("unchecked")
     public <K,V> byte[] serializeWithKey(Request request, HtmlTitle title, final Map<K,? extends Iterable<V>> obj, Includes<V> members, final MetaNamedMember<? super V,?> key) {
-        members = new Includes<V>(newList(Functional.<MetaNamedMember<V, ?>>filter((Apply<? super MetaNamedMember<V, ?>, Boolean>)not(equalTo((MetaNamedMember<V,?>)key)), members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
+        members = new Includes<V>(newList(filter(x -> !x.equals(key), members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
         Includes<V> headers = new Includes<V>(newList(cons((MetaNamedMember<V,Object>)key, members.includesFromColumnFiltering)), members.includesFromRowFiltering, members.geometryMembers, members.includesEverything, members.allRootMembers);
         return serialize(title, tableHeader(headers), mapBody(obj, members), request, obj.size(), members);
     }
@@ -367,7 +358,7 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 final String path = ((HttpServletCanvas<?>)html).getRequestPath();
-                final String queryString = ((HttpServletCanvas<?>)html).getRequestQueryString().map(Transformers.prepend("?")).getOrElse("");
+                final String queryString = ((HttpServletCanvas<?>)html).getRequestQueryString().map(x -> "?" + x).getOrElse("");
                 
                 for (String format: newList("html","json","jsonl","geojson","csv","xlsx")) {
                     html.a(href(path.replace(".html", "." + format) + queryString).add("hx-get", path.replace(".html", "." + format))
@@ -512,7 +503,7 @@ public abstract class HtmlConversionService {
         if (cm.find()) {
             int count = Integer.parseInt(cm.group(1));
             
-            String uri = path + queryString .map(Transformers.prepend("?")).getOrElse("");
+            String uri = path + queryString .map(x -> "?" + x).getOrElse("");
             StringBuffer sb = new StringBuffer();
             Matcher m = START_INDEX.matcher(uri);
             if (m.find()) {
@@ -658,7 +649,6 @@ public abstract class HtmlConversionService {
           };
     }
     
-    @SuppressWarnings("unchecked")
     private final String styles() {
         return
           "html,h1,table  { font-family: sans-serif; font-weight: lighter; }"
@@ -769,7 +759,7 @@ public abstract class HtmlConversionService {
             + "  #load-more     { display: none; }"
             + "  .parameters    { display: none; }"
             + "  .properties    { display: none; }"),
-         newList(HtmlConversionService_.prefixed.ap("#singleton[value=\"1\"] ~ main").andThen((Apply<String,String>)(Object)prepend("@media only screen and (max-width: 800px) {")).andThen(append("}")),
+         newList(HtmlConversionService_.prefixed.ap("#singleton[value=\"1\"] ~ main").andThen(x -> "@media only screen and (max-width: 800px) {" + x + "}"),
                  HtmlConversionService_.prefixed.ap("#singleton:checked ~ main"),
                  HtmlConversionService_.prefixed.ap(".nested") )))
                 
@@ -794,7 +784,7 @@ public abstract class HtmlConversionService {
     }
     
     static String prefixed(String prefix, String rules) {
-        return join(" ", map(prepend(prefix + " ").andThen(HtmlConversionService_.replaceAll.apply(__, ",", ", " + prefix + " ")).andThen(append("}")), toList(rules.split("}"))));
+        return join(" ", map(x -> replaceAll(prefix + " " + x, ",", ", " + prefix + " ") + "}", toList(rules.split("}"))));
     }
 
     private final String scripts() {
