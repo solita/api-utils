@@ -6,7 +6,7 @@ import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.FunctionalC.mkString;
 
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class Assert {
     private Assert() {
@@ -132,12 +132,12 @@ public abstract class Assert {
         return head(iterable);
     }
 
-    public static <T> Option<T> defined(Option<T> option) {
+    public static <T> Optional<T> defined(Optional<T> option) {
         return defined(option, "Value should have been defined");
     }
 
-    public static <T> Option<T> defined(Option<T> option, CharSequence message) {
-        if ( !option.isDefined() ) {
+    public static <T> Optional<T> defined(Optional<T> option, CharSequence message) {
+        if ( !option.isPresent() ) {
             throw new IllegalArgumentException(message.toString());
         }
         return option;

@@ -1,5 +1,6 @@
 package fi.solita.utils.api.base.html;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.FunctionalM.find;
 
 import java.lang.reflect.Array;
@@ -32,14 +33,14 @@ public class HtmlModule {
         
         // try direct interface implementations
         for (Class<?> e: obj.getClass().getInterfaces()) {
-            for (HtmlSerializer<?> htmlSerializer: find(e, renderables)) {
+            for (HtmlSerializer<?> htmlSerializer: it(find(e, renderables))) {
                 return ((HtmlSerializer<T>)htmlSerializer).toRenderable(this, obj);
             }
         }
         
         // no exact match, try based on class hierarchy
         for (Class<?> e: ClassUtils.AllExtendedClasses.apply(obj.getClass())) {
-            for (HtmlSerializer<?> htmlSerializer: find(e, renderables)) {
+            for (HtmlSerializer<?> htmlSerializer: it(find(e, renderables))) {
                 return ((HtmlSerializer<T>)htmlSerializer).toRenderable(this, obj);
             }
         }

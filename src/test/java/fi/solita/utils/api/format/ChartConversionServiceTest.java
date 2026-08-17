@@ -1,11 +1,12 @@
 package fi.solita.utils.api.format;
 
+import static fi.solita.utils.functional.Collections.newList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -26,27 +27,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.NestedMember;
-import fi.solita.utils.functional.Option;
+import fi.solita.utils.api.format.ChartConversionServiceTest_.Child_;
+import fi.solita.utils.api.format.ChartConversionServiceTest_.Row_;
+
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class ChartConversionServiceTest {
 
     private static final ChartConversionService service = new ChartConversionService(new JsonConversionService(false));
-
-    private static final MetaNamedMember<Row, Object> category = member("category");
-    private static final MetaNamedMember<Row, Object> kind = member("kind");
-    private static final MetaNamedMember<Row, Object> amount = member("amount");
-    private static final MetaNamedMember<Row, Object> number = member("number");
-    private static final MetaNamedMember<Row, Object> tags = member("tags");
-    private static final MetaNamedMember<Row, Object> optionalCategory = member("optionalCategory");
-    private static final MetaNamedMember<Row, Object> instant = member("instant");
-    private static final MetaNamedMember<Row, Object> interval = member("interval");
-    private static final MetaNamedMember<Row, Object> map = member("map");
-    private static final MetaNamedMember<Row, Object> bean = member("bean");
-    private static final MetaNamedMember<Row, List<Child>> children = member(Row.class, "children");
-    private static final MetaNamedMember<Child, List<String>> childValues = member(Child.class, "values");
-    private static final MetaNamedMember<Child, Option<String>> childOptionalValue = member(Child.class, "optionalValue");
 
     @Test
     public void emptyMembersProduceNoChartRowsOrSeriesNames() {
@@ -56,7 +46,7 @@ public class ChartConversionServiceTest {
         // | 1       | a        | <none>               | <no chart rows>   |
         // +---------+----------+----------------------+-------------------+
         // Expected series names: <none>
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(row("a")), Collections.<MetaNamedMember<Row, Object>>emptyList());
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(row("a")), Collections.<MetaNamedMember<Row, Object>>emptyList());
 
         assertTrue(result.left().isEmpty());
         assertTrue(result.right().isEmpty());
@@ -79,7 +69,7 @@ public class ChartConversionServiceTest {
         // | a   | 1     |
         // | b   | 2     |
         // +-----+-------+
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(row("b"), row("a"), row("b")), members(category));
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(row("b"), row("a"), row("b")), newList(Row_.category));
 
         assertEquals(Arrays.asList("count"), result.right());
         assertEquals(2, result.left().size());
@@ -105,7 +95,7 @@ public class ChartConversionServiceTest {
         // +-------+-------+
         Row row = rowWithTags(Arrays.asList("blue", "red", "blue", "green"));
 
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(row), members(tags));
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(row), newList(Row_.tags));
 
         assertEquals(Arrays.asList("count"), result.right());
         assertEquals(3, result.left().size());
@@ -132,10 +122,10 @@ public class ChartConversionServiceTest {
         // | green | 1     |
         // | red   | 1     |
         // +-------+-------+
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
                 rowWithTags(Arrays.asList("blue", "red")),
                 rowWithTags(Arrays.asList("blue", "green")),
-                rowWithTags(Collections.<String>emptyList())), members(tags));
+                rowWithTags(Collections.<String>emptyList())), newList(Row_.tags));
 
         assertEquals(Arrays.asList("count"), result.right());
         assertEquals(3, result.left().size());
@@ -150,10 +140,10 @@ public class ChartConversionServiceTest {
         // +---------+------------------+------------------+
         // | row #   | optionalCategory | selected member  |
         // +---------+------------------+------------------+
-        // | 1       | Some(blue)       | optionalCategory |
-        // | 2       | None             | optionalCategory |
-        // | 3       | Some(red)        | optionalCategory |
-        // | 4       | Some(blue)       | optionalCategory |
+        // | 1       | Optional.of(blue)       | optionalCategory |
+        // | 2       | None                    | optionalCategory |
+        // | 3       | Optional.of(red)        | optionalCategory |
+        // | 4       | Optional.of(blue)       | optionalCategory |
         // +---------+------------------+------------------+
         // Produced chart rows after flattening Option values. None contributes no value:
         // +------+-------+
@@ -162,11 +152,11 @@ public class ChartConversionServiceTest {
         // | blue | 2     |
         // | red  | 1     |
         // +------+-------+
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
-                rowWithOptionalCategory(Some("blue")),
-                rowWithOptionalCategory(Option.<String>None()),
-                rowWithOptionalCategory(Some("red")),
-                rowWithOptionalCategory(Some("blue"))), members(optionalCategory));
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
+                rowWithOptionalCategory(Optional.of("blue")),
+                rowWithOptionalCategory(Optional.empty()),
+                rowWithOptionalCategory(Optional.of("red")),
+                rowWithOptionalCategory(Optional.of("blue"))), newList(Row_.optionalCategory));
 
         assertEquals(Arrays.asList("count"), result.right());
         assertEquals(2, result.left().size());
@@ -191,9 +181,9 @@ public class ChartConversionServiceTest {
         // | green | 1     |
         // | red   | 1     |
         // +-------+-------+
-        MetaNamedMember<Row, Object> nestedValues = asObjectMember(NestedMember.ofItFlatType(children, childValues));
+        MetaNamedMember<Row, Object> nestedValues = asObjectMember(NestedMember.ofItFlatType(Row_.children, Child_.values));
 
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
                 rowWithChildren(child(Arrays.asList("blue", "red")), child(Arrays.asList("blue"))),
                 rowWithChildren(child(Arrays.asList("green")), child(Collections.<String>emptyList()))), members(nestedValues));
 
@@ -210,7 +200,7 @@ public class ChartConversionServiceTest {
         // +---------+---------------------------------------------+------------------------+
         // | row #   | children.optionalValue                      | selected member        |
         // +---------+---------------------------------------------+------------------------+
-        // | 1       | [Some(blue), None, Some(red)]               | children.optionalValue |
+        // | 1       | [Some(blue), None, Optional.of(red)]               | children.optionalValue |
         // | 2       | [Some(blue)]                               | children.optionalValue |
         // +---------+---------------------------------------------+------------------------+
         // NestedMember.ofOptionFlatType(children, childOptionalValue) flattens the
@@ -221,11 +211,11 @@ public class ChartConversionServiceTest {
         // | blue | 2     |
         // | red  | 1     |
         // +------+-------+
-        MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(children, childOptionalValue));
+        MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(Row_.children, Child_.optionalValue));
 
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
-                rowWithChildren(child(Some("blue")), child(Option.<String>None()), child(Some("red"))),
-                rowWithChildren(child(Some("blue")))), members(nestedOptionalValues));
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
+                rowWithChildren(child(Optional.of("blue")), child(Optional.empty()), child(Optional.of("red"))),
+                rowWithChildren(child(Optional.of("blue")))), members(nestedOptionalValues));
 
         assertEquals(Arrays.asList("count"), result.right());
         assertEquals(2, result.left().size());
@@ -252,12 +242,12 @@ public class ChartConversionServiceTest {
         // | a   | 1    | 1  |
         // | b   | 2    | 1  |
         // +-----+------+----+
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
                 row("b", "late"),
                 row("a", "ok"),
                 row("a", "late"),
                 row("b", "late"),
-                row("b", "ok")), members(category, kind));
+                row("b", "ok")), newList(Row_.category, Row_.kind));
 
         assertEquals(Arrays.asList("late", "ok"), result.right());
         assertEquals(2, result.left().size());
@@ -288,10 +278,10 @@ public class ChartConversionServiceTest {
         // +---+--------+---------+
         ChartConversionService plainJsonService = new ChartConversionService(new JsonConversionService(new ObjectMapper()));
 
-        Pair<List<Map<Object, Object>>, List<String>> result = plainJsonService.calculateChartData(rows(
+        Pair<List<Map<Object, Object>>, List<String>> result = plainJsonService.calculateChartData(newList(
                 row(2, 20L),
                 row(1, 10L),
-                row(3, 30L)), members(number, amount), false, false, false, true);
+                row(3, 30L)), (List<MetaNamedMember<Row,Object>>)(Object)newList(Row_.number, Row_.amount), false, false, false, true);
 
         assertEquals(Arrays.asList("amount"), result.right());
         assertEquals(3, result.left().size());
@@ -326,10 +316,10 @@ public class ChartConversionServiceTest {
         DateTime first = new DateTime(2026, 1, 1, 12, 0);
         DateTime second = first.plusHours(1);
 
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
                 rowAt(first),
                 rowAt(first),
-                rowAt(second)), members(instant));
+                rowAt(second)), newList(Row_.instant));
 
         assertEquals(Arrays.asList("count"), result.right());
         assertEquals(2, result.left().size());
@@ -356,9 +346,9 @@ public class ChartConversionServiceTest {
         // +--------------------------+--------+---------+
         DateTime start = new DateTime(2026, 1, 1, 12, 0);
 
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows(
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
                 rowDuring(start, start.plusHours(2), "planned"),
-                rowDuring(start.plusHours(1), start.plusHours(3), "active")), members(interval, kind));
+                rowDuring(start.plusHours(1), start.plusHours(3), "active")), newList(Row_.interval, Row_.kind));
 
         assertEquals(Arrays.asList("active", "planned"), result.right());
         assertEquals(3, result.left().size());
@@ -385,7 +375,7 @@ public class ChartConversionServiceTest {
         // | 1       | {key=value}    | map              | reject "map"    |
         // +---------+----------------+------------------+-----------------+
         try {
-            calculate(rows(rowWithMap()), members(map));
+            calculate(newList(rowWithMap()), newList(Row_.map));
             fail("Expected structure members to be rejected");
         } catch (ChartConversionService.CannotChartByStructureException e) {
             assertEquals("map", e.name);
@@ -401,7 +391,7 @@ public class ChartConversionServiceTest {
         // | 1       | Bean(value)   | bean             | reject "bean"    |
         // +---------+---------------+------------------+------------------+
         try {
-            calculate(rows(rowWithBean()), members(bean));
+            calculate(newList(rowWithBean()), newList(Row_.bean));
             fail("Expected bean members to be rejected");
         } catch (ChartConversionService.CannotChartByStructureException e) {
             assertEquals("bean", e.name);
@@ -431,7 +421,7 @@ public class ChartConversionServiceTest {
         }
 
         long started = System.nanoTime();
-        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows, members(number));
+        Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows, newList(Row_.number));
         long elapsedNanos = System.nanoTime() - started;
 
         System.out.println("ChartConversionService.calculateChartData " + size + " rows elapsed "
@@ -461,7 +451,7 @@ public class ChartConversionServiceTest {
                     public Row row(int index) {
                         return rowWithTags(Arrays.asList(value(index)));
                     }
-                }), members(tags));
+                }), newList(Row_.tags));
         assertCountRows(iterableResult, 10, size / 10L);
     }
 
@@ -469,11 +459,11 @@ public class ChartConversionServiceTest {
     public void calculatesMillionRowsForOptionSelectedValuesAndPrintsElapsedTime() {
         final int size = 1000000;
 
-        // Selected value is Option<String> on every row.
+        // Selected value is Optional<String> on every row.
         // +----------------------+-------------------------------+------------------+-----------------------+
         // | row range            | optionalCategory              | selected member  | expected rows         |
         // +----------------------+-------------------------------+------------------+-----------------------+
-        // | bucket 0 .. 8        | Some(value-bucket)            | optionalCategory | value-0 .. value-8    |
+        // | bucket 0 .. 8        | Optional.of(value-bucket)            | optionalCategory | value-0 .. value-8    |
         // | bucket 9             | None                          | optionalCategory | no produced row       |
         // +----------------------+-------------------------------+------------------+-----------------------+
         Pair<List<Map<Object, Object>>, List<String>> optionResult = calculateAndPrintElapsed("option selected values", size,
@@ -481,9 +471,9 @@ public class ChartConversionServiceTest {
                     @Override
                     public Row row(int index) {
                         int bucket = index % 10;
-                        return rowWithOptionalCategory(bucket == 9 ? Option.<String>None() : Some(value(index)));
+                        return rowWithOptionalCategory(bucket == 9 ? Optional.empty() : Optional.of(value(index)));
                     }
-                }), members(optionalCategory));
+                }), newList(Row_.optionalCategory));
         assertCountRows(optionResult, 9, size / 10L);
     }
 
@@ -497,7 +487,7 @@ public class ChartConversionServiceTest {
         // +----------------------+-------------------------------+-----------------+----------------+
         // | 0 .. size - 1        | [[value-(rowIndex % 10)]]     | children.values | value-0 .. -9  |
         // +----------------------+-------------------------------+-----------------+----------------+
-        final MetaNamedMember<Row, Object> nestedValues = asObjectMember(NestedMember.ofItFlatType(children, childValues));
+        final MetaNamedMember<Row, Object> nestedValues = asObjectMember(NestedMember.ofItFlatType(Row_.children, Child_.values));
         Pair<List<Map<Object, Object>>, List<String>> nestedIterableResult = calculateAndPrintElapsed("nested iterable selected values", size,
                 millionRows(size, new RowFactory() {
                     @Override
@@ -512,20 +502,20 @@ public class ChartConversionServiceTest {
     public void calculatesMillionRowsForNestedOptionSelectedValuesAndPrintsElapsedTime() {
         final int size = 1000000;
 
-        // Selected value is Option<String> nested under Iterable<Child>.
+        // Selected value is Optional<String> nested under Iterable<Child>.
         // +----------------------+-------------------------------+------------------------+-----------------------+
         // | row range            | children.optionalValue        | selected member        | expected rows         |
         // +----------------------+-------------------------------+------------------------+-----------------------+
         // | bucket 0 .. 8        | [Some(value-bucket)]          | children.optionalValue | value-0 .. value-8    |
         // | bucket 9             | [None]                        | children.optionalValue | no produced row       |
         // +----------------------+-------------------------------+------------------------+-----------------------+
-        final MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(children, childOptionalValue));
+        final MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(Row_.children, Child_.optionalValue));
         Pair<List<Map<Object, Object>>, List<String>> nestedOptionResult = calculateAndPrintElapsed("nested option selected values", size,
                 millionRows(size, new RowFactory() {
                     @Override
                     public Row row(int index) {
                         int bucket = index % 10;
-                        return rowWithChildren(child(bucket == 9 ? Option.<String>None() : Some(value(index))));
+                        return rowWithChildren(child(bucket == 9 ? Optional.empty() : Optional.of(value(index))));
                     }
                 }), members(nestedOptionalValues));
         assertCountRows(nestedOptionResult, 9, size / 10L);
@@ -548,7 +538,7 @@ public class ChartConversionServiceTest {
                     public Row row(int index) {
                         return ChartConversionServiceTest.row(value(index), "kind-" + ((index / 10) % 2));
                     }
-                }), members(category, kind));
+                }), newList(Row_.category, Row_.kind));
 
         assertEquals(Arrays.asList("kind-0", "kind-1"), multiMemberResult.right());
         assertEquals(10, multiMemberResult.left().size());
@@ -575,7 +565,7 @@ public class ChartConversionServiceTest {
                     public Row row(int index) {
                         return rowAt(start.plusMinutes(index % 10));
                     }
-                }), members(instant));
+                }), newList(Row_.instant));
 
         assertTemporalCountRows(result, start, size / 10L);
     }
@@ -600,7 +590,7 @@ public class ChartConversionServiceTest {
                         DateTime bucketStart = start.plusMinutes(bucket * 2);
                         return rowDuring(bucketStart, bucketStart.plusMinutes(1), null);
                     }
-                }), members(interval));
+                }), newList(Row_.interval));
 
         assertTemporalCountRows(result, start, 2, size / 10L);
     }
@@ -622,7 +612,7 @@ public class ChartConversionServiceTest {
                     public Row row(int index) {
                         return rowAt(start.plusMinutes(index % 10), "kind-" + ((index / 10) % 2));
                     }
-                }), members(instant, kind));
+                }), newList(Row_.instant, Row_.kind));
 
         assertTemporalCategoricalRows(result, start, 1, size / 20L);
     }
@@ -647,7 +637,7 @@ public class ChartConversionServiceTest {
                         DateTime bucketStart = start.plusMinutes(bucket * 2);
                         return rowDuring(bucketStart, bucketStart.plusMinutes(1), "kind-" + ((index / 10) % 2));
                     }
-                }), members(interval, kind));
+                }), newList(Row_.interval, Row_.kind));
 
         assertTemporalCategoricalRows(result, start, 2, size / 20L);
     }
@@ -671,7 +661,7 @@ public class ChartConversionServiceTest {
                     public Row row(int index) {
                         return ChartConversionServiceTest.row(index, Long.valueOf(index % 10));
                     }
-                }), members(number, amount), false, false, false, true);
+                }), (List<MetaNamedMember<Row,Object>>)(Object)newList(Row_.number, Row_.amount), false, false, false, true);
         long elapsedNanos = System.nanoTime() - started;
 
         System.out.println("ChartConversionService.calculateChartData " + size + " rows (numeric linear selected values) elapsed "
@@ -685,17 +675,12 @@ public class ChartConversionServiceTest {
         assertTrue("Elapsed time should have been measured", elapsedNanos > 0);
     }
 
-    private static Pair<List<Map<Object, Object>>, List<String>> calculate(Iterable<Row> rows, List<MetaNamedMember<Row, Object>> members) {
+    private static Pair<List<Map<Object, Object>>, List<String>> calculate(Iterable<Row> rows, List<? extends MetaNamedMember<Row, ? extends Object>> members) {
         boolean xIsInstant = !members.isEmpty() && DateTime.class.isAssignableFrom(ChartConversionService.resolveType(members.get(0)));
         boolean xIsInterval = !members.isEmpty() && Interval.class.isAssignableFrom(ChartConversionService.resolveType(members.get(0)));
         boolean xIsTemporal = xIsInstant || xIsInterval;
         boolean xIsLinear = !members.isEmpty() && service.isLinear(members.get(0));
-        return service.calculateChartData(rows, members, xIsInstant, xIsInterval, xIsTemporal, xIsLinear);
-    }
-
-    @SafeVarargs
-    private static List<Row> rows(Row... rows) {
-        return Arrays.asList(rows);
+        return service.calculateChartData(rows, (List<MetaNamedMember<Row,Object>>)(Object)members, xIsInstant, xIsInterval, xIsTemporal, xIsLinear);
     }
 
     @SafeVarargs
@@ -745,7 +730,7 @@ public class ChartConversionServiceTest {
     }
 
     private static Pair<List<Map<Object, Object>>, List<String>> calculateAndPrintElapsed(String scenario, int size,
-            Iterable<Row> rows, List<MetaNamedMember<Row, Object>> members) {
+            Iterable<Row> rows, List<? extends MetaNamedMember<Row, ? extends Object>> members) {
         long started = System.nanoTime();
         Pair<List<Map<Object, Object>>, List<String>> result = calculate(rows, members);
         long elapsedNanos = System.nanoTime() - started;
@@ -806,7 +791,7 @@ public class ChartConversionServiceTest {
         return new Row(null, null, null, null, tags, null, null, null, null, null, null);
     }
 
-    private static Row rowWithOptionalCategory(Option<String> optionalCategory) {
+    private static Row rowWithOptionalCategory(Optional<String> optionalCategory) {
         return new Row(null, null, null, null, null, optionalCategory, null, null, null, null, null);
     }
 
@@ -835,10 +820,10 @@ public class ChartConversionServiceTest {
     }
 
     private static Child child(List<String> values) {
-        return new Child(values, Option.<String>None());
+        return new Child(values, Optional.empty());
     }
 
-    private static Child child(Option<String> optionalValue) {
+    private static Child child(Optional<String> optionalValue) {
         return new Child(Collections.<String>emptyList(), optionalValue);
     }
 
@@ -901,7 +886,7 @@ public class ChartConversionServiceTest {
         public final Long amount;
         public final Integer number;
         public final List<String> tags;
-        public final Option<String> optionalCategory;
+        public final Optional<String> optionalCategory;
         public final DateTime instant;
         public final Interval interval;
         public final Map<String, String> map;
@@ -913,7 +898,7 @@ public class ChartConversionServiceTest {
             this(category, kind, amount, number, tags, null, instant, interval, map, bean, null);
         }
 
-        public Row(String category, String kind, Long amount, Integer number, List<String> tags, Option<String> optionalCategory,
+        public Row(String category, String kind, Long amount, Integer number, List<String> tags, Optional<String> optionalCategory,
                 DateTime instant, Interval interval, Map<String, String> map, Bean bean, List<Child> children) {
             this.category = category;
             this.kind = kind;
@@ -931,9 +916,9 @@ public class ChartConversionServiceTest {
 
     public static final class Child {
         public final List<String> values;
-        public final Option<String> optionalValue;
+        public final Optional<String> optionalValue;
 
-        public Child(List<String> values, Option<String> optionalValue) {
+        public Child(List<String> values, Optional<String> optionalValue) {
             this.values = values;
             this.optionalValue = optionalValue;
         }

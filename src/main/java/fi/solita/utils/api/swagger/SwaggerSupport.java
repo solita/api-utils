@@ -7,8 +7,8 @@ import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.FunctionalA.subtract;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 import static springfox.documentation.schema.Collections.collectionElementType;
 import static springfox.documentation.schema.Collections.containerType;
 import static springfox.documentation.schema.Collections.isContainerType;
@@ -67,7 +67,7 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import io.swagger.annotations.ApiParam;
 import io.swagger.models.properties.Property;
@@ -248,7 +248,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             if (definition.isPresent()) {
                 AnnotatedElement ae = definition.get();
                 if (ae instanceof Field) {
-                    if (Option.class.isAssignableFrom(((Field) ae).getType())) {
+                    if (Optional.class.isAssignableFrom(((Field) ae).getType())) {
                        context.getBuilder().required(false);
                        return;
                     }
@@ -277,11 +277,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                    .example(head(vals));
         }
         
-        protected Option<String> doc(AnnotatedElement ae) {
-            for (Documentation doc: Option.of(ae.getAnnotation(Documentation.class))) {
-                return Some(doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
-            }
-            return None();
+        protected Optional<String> doc(AnnotatedElement ae) {
+            return Optional.ofNullable(ae.getAnnotation(Documentation.class)).map(doc -> doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
         }
         
         protected void apply(String name, Class<?> clazz, AnnotatedElement ae, ModelPropertyBuilder builder) {
@@ -299,16 +296,16 @@ public abstract class SwaggerSupport extends ApiResourceController {
                 builder.description(DESCRIPTION_LocalDate)
                        .example("1982-01-22");
             } else if (clazz.equals(Count.class)) {
-                builder.description(doc(Count.class).getOrElse(""))
+                builder.description(doc(Count.class).orElse(""))
                         .example(1);
             } else if (clazz.equals(StartIndex.class)) {
-                builder.description(doc(StartIndex.class).getOrElse(""))
+                builder.description(doc(StartIndex.class).orElse(""))
                        .example(1);
             } else if (clazz.equals(Filters.class)) {
                 builder.description(DESCRIPTION_Filters)
                        .example("tunniste<>1.2.246.578.2.3.4");
             } else if (clazz.equals(PropertyName.class)) {
-                builder.description(doc(PropertyName.class).getOrElse(""))
+                builder.description(doc(PropertyName.class).orElse(""))
                        .example("tunniste,voimassa");
             } else if (clazz.equals(SRSName.class)) {
                 builder.example(SRSName.EPSG3067.value);
@@ -349,17 +346,17 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     Class<?> clazz = MemberUtil.memberClassUnwrappingOption((AccessibleObject)ae);
                     
                     ModelPropertyBuilder builder = context.getBuilder();
-                    if (Option.class.isAssignableFrom(clazz)) {
+                    if (Optional.class.isAssignableFrom(clazz)) {
                         clazz = ClassUtils.typeClass(ae instanceof Field ? ((Field)ae).getGenericType() : ((Method)ae).getGenericReturnType());
                     }
                     apply(name, clazz, ae, builder);
                     
                     if (builder.build().getDescription() == null) {
-                        for (String s: doc(ae)) {
+                        doc(ae).ifPresent(s -> {
                             if (!s.isEmpty()) {
                                 builder.description(s);
                             }
-                        }
+                        });
                     }
                 }
             }
@@ -371,8 +368,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
         }
     }
     
-    public static Option<String> str2option(String s) {
-        return s.isEmpty() ? Option.<String>None() : Option.Some(s);
+    public static Optional<String> str2option(String s) {
+        return s.isEmpty() ? Optional.empty() : Optional.of(s);
     }
     
     /**
@@ -393,17 +390,14 @@ public abstract class SwaggerSupport extends ApiResourceController {
             return rp.value();
         }
         
-        protected Option<String> doc(Class<?> clazz) {
-            for (Documentation doc: Option.of(clazz.getAnnotation(Documentation.class))) {
-                return Some(doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
-            }
-            return None();
+        protected Optional<String> doc(Class<?> clazz) {
+            return Optional.ofNullable(clazz.getAnnotation(Documentation.class)).map(doc -> doc.name_en() + ": " + doc.description() + " / " + doc.description_en());
         }
         
         @Override
         public final void apply(ParameterContext parameterContext) {
             Class<?> type = parameterContext.resolvedMethodParameter().getParameterType().getErasedType();
-            if (Option.class.equals(type)) {
+            if (Optional.class.equals(type)) {
                 ResolvedType resolvedActual = head(parameterContext.resolvedMethodParameter().getParameterType().getTypeParameters());
                 type = resolvedActual.getErasedType();
                 String typeName = typeNameFor(resolvedActual.getErasedType());
@@ -426,8 +420,8 @@ public abstract class SwaggerSupport extends ApiResourceController {
                                                    .modelRef(new ModelRef(typeName, itemModel));
             }
             
-            Option<String> pathVariableName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orElse(null)).map(CustomTypeParameterBuilder_.pathVariableName);
-            Option<String> requestParamName = Option.of(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orElse(null)).map(CustomTypeParameterBuilder_.requestParamName);
+            Optional<String> pathVariableName = Optional.ofNullable(parameterContext.resolvedMethodParameter().findAnnotation(PathVariable.class).orElse(null)).map(CustomTypeParameterBuilder_.pathVariableName);
+            Optional<String> requestParamName = Optional.ofNullable(parameterContext.resolvedMethodParameter().findAnnotation(RequestParam.class).orElse(null)).map(CustomTypeParameterBuilder_.requestParamName);
             apply(parameterContext, type, pathVariableName, requestParamName);
             Optional<ApiParam> apiparam = parameterContext.resolvedMethodParameter().findAnnotation(ApiParam.class);
             if (apiparam.isPresent() && !apiparam.get().value().trim().isEmpty()) {
@@ -441,7 +435,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             }
         }
         
-        protected void apply(ParameterContext parameterContext, Class<?> type, Option<String> pathVariableName, Option<String> requestParamName) {
+        protected void apply(ParameterContext parameterContext, Class<?> type, Optional<String> pathVariableName, Optional<String> requestParamName) {
             if (DateTime.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .description(DESCRIPTION_DateTime);
@@ -456,30 +450,30 @@ public abstract class SwaggerSupport extends ApiResourceController {
                     .description(DESCRIPTION_LocalDate);
             } else if (Count.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .description(doc(Count.class).getOrElse(""))
+                    .description(doc(Count.class).orElse(""))
                     .defaultValue("1")
                     .allowableValues(new AllowableListValues(newList(map(SwaggerSupport_.int2string, Count.validValues)), "int"));
             } else if (StartIndex.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .description(doc(StartIndex.class).getOrElse(""))
+                    .description(doc(StartIndex.class).orElse(""))
                     .allowableValues(new AllowableRangeValues("1", null));
             } else if (Filters.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
                     .defaultValue("")
                     .description(DESCRIPTION_Filters);
-            } else if (requestParamName.getOrElse("").equals("propertyName")) {
+            } else if (requestParamName.orElse("").equals("propertyName")) {
                 parameterContext.parameterBuilder()
                     .collectionFormat("csv")
-                    .description(doc(PropertyName.class).getOrElse(""));
+                    .description(doc(PropertyName.class).orElse(""));
             } else if (SRSName.class.isAssignableFrom(type)) {
                 parameterContext.parameterBuilder()
-                    .description(doc(SRSName.class).getOrElse(""))
+                    .description(doc(SRSName.class).orElse(""))
                     .allowableValues(new AllowableListValues(newList(map(SRSName_.value, SRSName.validValues)), "string"));
-            } else if (requestParamName.getOrElse("").equals("typeNames")) {
+            } else if (requestParamName.orElse("").equals("typeNames")) {
                 parameterContext.parameterBuilder()
                     .collectionFormat("csv")
                     .description("Palautettavat alityypit aakkosjärjestyksessä. Oletuksena kaikki. / Subtypes to return, in alphabetic order. All subtypes by default.");
-            } else if (pathVariableName.getOrElse("").equals("versio")) {
+            } else if (pathVariableName.orElse("").equals("versio")) {
                 parameterContext.parameterBuilder()
                     .description("Objektin versionumero / Object version number");
             } else if (Collection.class.isAssignableFrom(type)) {
@@ -577,7 +571,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             })
             .securitySchemes(newList(new ApiKey(RequestUtil.API_KEY, RequestUtil.API_KEY, ApiKeyVehicle.HEADER.getValue())))
             .useDefaultResponseMessages(false)
-            .genericModelSubstitutes(Option.class)
+            .genericModelSubstitutes(Optional.class)
             
             // Http-parametreissa käytetyt tyypit, jotka eivät välttämättä satu tulemaan JsonModulen kautta
             .directModelSubstitute(Count.class, int.class)
@@ -609,7 +603,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
             // Pitää asettaa explisiittisesti collectionien sisällä olevat asiat,
             // sprinfox ei osaa mäpätä collectionien sisälle automaattisesti directModelSubstitutes perusteella.
             docket.alternateTypeRules(AlternateTypeRules.newRule(
-                typeResolver.resolve(Option.class, dms.getKey()),
+                typeResolver.resolve(Optional.class, dms.getKey()),
                 typeResolver.resolve(dms.getValue()), Ordered.HIGHEST_PRECEDENCE));
             docket.alternateTypeRules(AlternateTypeRules.newRule(
                 typeResolver.resolve(SortedSet.class, dms.getKey()),

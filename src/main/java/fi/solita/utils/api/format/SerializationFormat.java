@@ -1,9 +1,9 @@
 package fi.solita.utils.api.format;
 
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
 
-import fi.solita.utils.functional.Option;
+
+
+import java.util.Optional;
 
 public enum SerializationFormat {
     JSON("application/json"),
@@ -28,36 +28,36 @@ public enum SerializationFormat {
         this.mediaType = mediaType;
     }
     
-    public static Option<SerializationFormat> valueOfExtension(String extension) {
+    public static Optional<SerializationFormat> valueOfExtension(String extension) {
         if (extension.equals("json")) {
-            return Some(SerializationFormat.JSON);
+            return Optional.of(SerializationFormat.JSON);
         } else if (extension.equals("geojson")) {
-            return Some(SerializationFormat.GEOJSON);
+            return Optional.of(SerializationFormat.GEOJSON);
         } else if (extension.equals("jsonl")) {
-            return Some(SerializationFormat.JSONL);
+            return Optional.of(SerializationFormat.JSONL);
         } else if (extension.equals("html")) {
-            return Some(SerializationFormat.HTML);
+            return Optional.of(SerializationFormat.HTML);
         } else if (extension.equals("csv")) {
-            return Some(SerializationFormat.CSV);
+            return Optional.of(SerializationFormat.CSV);
         } else if (extension.equals("tsv")) {
-            return Some(SerializationFormat.TSV);
+            return Optional.of(SerializationFormat.TSV);
         } else if (extension.equals("xlsx")) {
-            return Some(SerializationFormat.XLSX);
+            return Optional.of(SerializationFormat.XLSX);
         } else if (extension.equals("png")) {
-            return Some(SerializationFormat.PNG);
+            return Optional.of(SerializationFormat.PNG);
         } else if (extension.equals("xml")) {
-            return Some(SerializationFormat.XML);
+            return Optional.of(SerializationFormat.XML);
         } else if (extension.equals("gml")) {
-            return Some(SerializationFormat.GML);
+            return Optional.of(SerializationFormat.GML);
         } else if (extension.equals("count")) {
-            return Some(SerializationFormat.COUNT);
+            return Optional.of(SerializationFormat.COUNT);
         } else if (extension.equals("mvt")) {
-            return Some(SerializationFormat.MVT);
+            return Optional.of(SerializationFormat.MVT);
         } else if (extension.equals("chart")) {
-            return Some(SerializationFormat.CHART);
+            return Optional.of(SerializationFormat.CHART);
         } else if (extension.equals("pdf")) {
-            return Some(SerializationFormat.PDF);
+            return Optional.of(SerializationFormat.PDF);
         }
-        return None();
+        return Optional.empty();
     }
 }

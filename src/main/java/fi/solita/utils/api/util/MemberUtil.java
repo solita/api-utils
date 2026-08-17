@@ -1,5 +1,6 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Collections.newSortedSet;
@@ -7,8 +8,8 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.FunctionalA.zip;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -30,7 +31,7 @@ import fi.solita.utils.api.types.PropertyName_;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
@@ -78,24 +79,24 @@ public class MemberUtil {
     
     public static Class<?> memberClassUnwrappingOption(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
-        if (Option.class.isAssignableFrom(c)) {
-            return memberClassUnwrappingOption(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+        if (Optional.class.isAssignableFrom(c)) {
+            return memberClassUnwrappingOption(ClassUtils.getFirstTypeArgument(type).orElse(type));
         }
         return c;
     }
     
     public static Class<?> memberClassUnwrappingOptionAndEither(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
-        if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c)) {
-            return memberClassUnwrappingOptionAndEither(ClassUtils.getFirstTypeArgument(type).getOrElse(type));
+        if (Optional.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c)) {
+            return memberClassUnwrappingOptionAndEither(ClassUtils.getFirstTypeArgument(type).orElse(type));
         }
         return c;
     }
     
     public static Class<?> memberClassUnwrappingOptionAndEitherAndIterables(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
-        if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
-            for (Type argument: ClassUtils.getFirstTypeArgument(type)) {
+        if (Optional.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
+            for (Type argument: it(ClassUtils.getFirstTypeArgument(type))) {
                 return memberClassUnwrappingOptionAndEitherAndIterables(argument);
             }
         }
@@ -104,8 +105,8 @@ public class MemberUtil {
     
     public static Type memberTypeUnwrappingOptionAndEitherAndIterables(Type type) {
         Class<?> c = ClassUtils.typeClass(type);
-        if (Option.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
-            for (Type argument: ClassUtils.getFirstTypeArgument(type)) {
+        if (Optional.class.isAssignableFrom(c) || Either.class.isAssignableFrom(c) || Iterable.class.isAssignableFrom(c)) {
+            for (Type argument: it(ClassUtils.getFirstTypeArgument(type))) {
                 return memberTypeUnwrappingOptionAndEitherAndIterables(argument);
             }
         }
@@ -166,25 +167,25 @@ public class MemberUtil {
     }
     
     @SuppressWarnings("unchecked")
-    public static <T> Option<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Type type) {
-        Option<Class<?>> clazz = ClassUtils.resolveClass(type);
-        if (clazz.isDefined() && (clazz.get().isPrimitive() || clazz.get().getName().startsWith("java.lang.") || clazz.get().getName().startsWith("java.math."))) {
-            return None();
+    public static <T> Optional<Builder<T>> findBuilderFor(Iterable<Builder<?>> builders, Type type) {
+        Optional<Class<?>> clazz = ClassUtils.resolveClass(type);
+        if (clazz.isPresent() && (clazz.get().isPrimitive() || clazz.get().getName().startsWith("java.lang.") || clazz.get().getName().startsWith("java.math."))) {
+            return Optional.empty();
         }
         for (Builder<?> b: builders) {
             if (b.resultType().equals(type)) {
-                return Some((Builder<T>)b);
+                return Optional.of((Builder<T>)b);
             }
         }
         // No exact Type correspondence found, try with a raw class instead
-        for (Class<?> c: clazz) {
+        for (Class<?> c: it(clazz)) {
             for (Builder<?> b: builders) {
                 if (b.resultType().equals(c)) {
-                    return Some((Builder<T>)b);
+                    return Optional.of((Builder<T>)b);
                 }
             }
         }
-        return None();
+        return Optional.empty();
     }
     
     public static <VALUES extends Tuple,T> Apply<VALUES,T> builderConstructor(final VALUES members) {

@@ -1,6 +1,6 @@
 package fi.solita.utils.api.html;
 
-import static fi.solita.utils.functional.Option.Some;
+
 import static org.rendersnake.HtmlAttributesFactory.for_;
 import static org.rendersnake.HtmlAttributesFactory.href;
 import static org.rendersnake.HtmlAttributesFactory.id;
@@ -16,7 +16,7 @@ import org.rendersnake.HtmlAttributes;
 import org.rendersnake.HtmlCanvas;
 import org.rendersnake.Renderable;
 
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class UI {
     
@@ -61,7 +61,7 @@ public abstract class UI {
     }
     
     public static Renderable definition_fi(final String dt, final Renderable dd) throws IOException {
-        return definition(Some("fi"), dt, dd);
+        return definition(Optional.of("fi"), dt, dd);
     }
     
     public static Renderable definition_en(final String dt, final String dd) throws IOException {
@@ -69,22 +69,22 @@ public abstract class UI {
     }
     
     public static Renderable definition_en(final String dt, final Renderable dd) throws IOException {
-        return definition(Some("en"), dt, dd);
+        return definition(Optional.of("en"), dt, dd);
     }
     
-    public static Renderable definition(final Option<String> lang, final String dt, final String dd) throws IOException {
+    public static Renderable definition(final Optional<String> lang, final String dt, final String dd) throws IOException {
         return definition(lang, dt, text(dd));
     }
     
-    public static Renderable definition(final Option<String> lang, final String dt, final Renderable dd) throws IOException {
+    public static Renderable definition(final Optional<String> lang, final String dt, final Renderable dd) throws IOException {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 html
-                .dt(lang(lang.getOrElse(null)))
+                .dt(lang(lang.orElse(null)))
                     .write(dt)
                 ._dt()
-                .dd(lang(lang.getOrElse(null)))
+                .dd(lang(lang.orElse(null)))
                     .render(dd)
                 ._dd();
             }

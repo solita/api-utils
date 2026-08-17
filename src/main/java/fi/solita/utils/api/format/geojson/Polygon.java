@@ -1,13 +1,13 @@
 package fi.solita.utils.api.format.geojson;
 import fi.solita.utils.api.JsonSerializeAsBean;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 @JsonSerializeAsBean
 public final class Polygon extends GeometryObject {
     public final Object coordinates;
     
     public Polygon(Object polygoni) {
-        super("Polygon", Option.<Crs>None());
+        super("Polygon", Optional.empty());
         this.coordinates = polygoni;
     }
     

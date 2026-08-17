@@ -2,14 +2,14 @@ package fi.solita.utils.api.format.geojson;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 @JsonSerializeAsBean
 public final class MultiPoint extends GeometryObject {
     public final Iterable<?> coordinates;
     
     public MultiPoint(Iterable<?> koordinaatit) {
-        super("MultiPoint", Option.<Crs>None());
+        super("MultiPoint", Optional.empty());
         this.coordinates = koordinaatit;
     }
     

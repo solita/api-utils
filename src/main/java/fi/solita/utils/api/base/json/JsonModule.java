@@ -1,6 +1,6 @@
 package fi.solita.utils.api.base.json;
 
-import static fi.solita.utils.functional.Option.None;
+
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import fi.solita.utils.api.format.JsonObjectMapper.SerializingDeserializingProhibitedException;
 import fi.solita.utils.api.util.ClassUtils;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public class JsonModule extends SimpleModule {
 
@@ -70,21 +70,21 @@ public class JsonModule extends SimpleModule {
     private static class DeserializersBase extends Deserializers.Base {
         @Override
         public JsonDeserializer<?> findBeanDeserializer(final JavaType type, DeserializationConfig config, BeanDescription beanDesc) throws JsonMappingException {
-            if (type.getRawClass() == Option.class) {
-                return new StdDeserializer<Option<?>>(type) {
+            if (type.getRawClass() == Optional.class) {
+                return new StdDeserializer<Optional<?>>(type) {
                     @Override
-                    public Option<?> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+                    public Optional<?> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
                         JsonDeserializer<?> valueDeser = findDeserializer(ctxt, type.containedType(0), null);
                         if (jp.getCurrentToken() == JsonToken.VALUE_NULL) {
-                            return None();
+                            return Optional.empty();
                         }
 
-                        return Option.of(valueDeser.deserialize(jp, ctxt));
+                        return Optional.ofNullable(valueDeser.deserialize(jp, ctxt));
                     }
 
                     @Override
-                    public Option<?> getNullValue() {
-                        return None();
+                    public Optional<?> getNullValue() {
+                        return Optional.empty();
                     }
                 };
             }
@@ -109,9 +109,9 @@ public class JsonModule extends SimpleModule {
                 try {
                     f.setAccessible(true);
                     if (f.get(ret) == null) {
-                        if (Option.class.isAssignableFrom(f.getType())) {
-                            // set missing Option:s to None()
-                            f.set(ret, Option.None());
+                        if (Optional.class.isAssignableFrom(f.getType())) {
+                            // set missing Option:s to Optional.empty()
+                            f.set(ret, Optional.empty());
                         } else {
                             throw new CannotDeserializeDueToMissingFieldException(f.getName());
                         }

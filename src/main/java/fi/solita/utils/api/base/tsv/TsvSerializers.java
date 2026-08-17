@@ -41,7 +41,7 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
@@ -141,7 +141,7 @@ public class TsvSerializers {
         return new TsvSerializer<T>() {
             @Override
             public Cells render(TsvModule module, Object value) {
-                if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
+                if (ClassUtils.getEnumType(value.getClass()).isPresent()) {
                     return module.serialize(((Enum<?>)value).name());
                 } else {
                     StringBuilder sb = new StringBuilder();
@@ -158,14 +158,14 @@ public class TsvSerializers {
                         @SuppressWarnings("unchecked")
                         Class<Object> type = (Class<Object>) MemberUtil.memberClassUnwrappingOptionAndEither(f);
                         String[] arr = newArray(String.class, repeat("", module.columns(type).size()));
-                        Cells newCells = val == null || val instanceof Option && !((Option<?>)val).isDefined() ? module.serialize(Tuple.of((Object[])arr)) : module.serialize(val, type);
+                        Cells newCells = val == null || val instanceof Optional && !((Optional<?>)val).isPresent() ? module.serialize(Tuple.of((Object[])arr)) : module.serialize(val, type);
                         cells.addAll(newCells.cells);
     
                         List<String> newHeaders = newCells.headers.isEmpty() ? module.columns(type) : newCells.headers;
                         newHeaders = newList(map(x -> trim(f.getName() + " " + x), newHeaders));
                         headers.addAll(newHeaders);
                         
-                        if (val != null && (!(val instanceof Option) || ((Option<?>)val).isDefined())) {
+                        if (val != null && (!(val instanceof Optional) || ((Optional<?>)val).isPresent())) {
                             if (sb.length() > 0) {
                                 sb.append(", ");
                             }
@@ -177,7 +177,7 @@ public class TsvSerializers {
             }
             @Override
             public List<String> columns(TsvModule module, Class<T> type) {
-                if (ClassUtils.getEnumType(type).isDefined()) {
+                if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
                     Iterable<Field> fields = sort(Compare.by(TsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.apply(x) && !ClassUtils.StaticMembers.apply(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
@@ -209,7 +209,7 @@ public class TsvSerializers {
      */
     
     public static String cells2str(Cells cells) {
-        if (cells.stringRepresentation.isDefined()) {
+        if (cells.stringRepresentation.isPresent()) {
             return cells.stringRepresentation.get().toString();
         } else {
             return mkString(" ", cells.cells);
@@ -317,10 +317,10 @@ public class TsvSerializers {
         }
     };
     
-    private final TsvSerializer<Option<?>> option = new TsvSerializer<Option<?>>() {
+    private final TsvSerializer<Optional<?>> option = new TsvSerializer<Optional<?>>() {
         @Override
-        public Cells render(TsvModule module, Option<?> value) {
-            if (value.isDefined()) {
+        public Cells render(TsvModule module, Optional<?> value) {
+            if (value.isPresent()) {
                 return module.serialize(value.get());
             } else {
                 return new Cells("");
@@ -328,7 +328,7 @@ public class TsvSerializers {
         }
         
         @Override
-        public List<String> columns(TsvModule module, Class<Option<?>> type) {
+        public List<String> columns(TsvModule module, Class<Optional<?>> type) {
             throw new UnsupportedOperationException();
         }
     };
@@ -358,7 +358,7 @@ public class TsvSerializers {
     
     public Map<Class<?>, TsvSerializer<?>> serializers() { return newMap(
         Pair.of(ResolvedMember.class, resolvedMember),
-        Pair.of(Option.class, option),
+        Pair.of(Optional.class, option),
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, stringSerializer(Serializers_.ser.ap(s))),

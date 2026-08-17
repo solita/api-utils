@@ -29,7 +29,7 @@ import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -172,11 +172,11 @@ public abstract class ResolvableMemberProvider<REQ> {
     public static Iterable<Object> unwrapResolvable(MetaNamedMember<?,?> member, Object resolvable) {
         if (member instanceof NestedMember) {
             Object res = ((NestedMember<Object,?>) member).parent.apply(resolvable);
-            return flatMap(ResolvableMemberProvider_.unwrapResolvable.ap(((NestedMember<?,?>) member).child), Collection.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) || Option.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) ? (Iterable<Object>)res : newList(res));
+            return flatMap(ResolvableMemberProvider_.unwrapResolvable.ap(((NestedMember<?,?>) member).child), Collection.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) || Optional.class.isAssignableFrom(MemberUtil.memberClass(((NestedMember<?,?>) member).parent)) ? (Iterable<Object>)res : newList(res));
         }
         Object ret = ((MetaNamedMember<Object,Object>)member).apply(resolvable);
         Class<?> memberClass = MemberUtil.memberClass(member);
-        return (Iterable<Object>) (Collection.class.isAssignableFrom(memberClass) || Option.class.isAssignableFrom(memberClass) ? map(ResolvableMemberProvider_.hackTuple, (Iterable<Object>)ret) : newList(hackTuple(ret)));
+        return (Iterable<Object>) (Collection.class.isAssignableFrom(memberClass) || Optional.class.isAssignableFrom(memberClass) ? map(ResolvableMemberProvider_.hackTuple, (Iterable<Object>)ret) : newList(hackTuple(ret)));
     }
     
     // if a tuple, assume the first element is the resolvable one. Sigh...

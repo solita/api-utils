@@ -16,7 +16,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
 import fi.solita.utils.api.base.Serializers;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 
 public class XmlSerializers {
@@ -30,7 +30,7 @@ public class XmlSerializers {
     @SuppressWarnings("unchecked")
     public Map<Class<?>, XmlAdapter<?,?>> adapters() { return
             (Map<Class<?>, XmlAdapter<?,?>>)(Object)newMap(
-                    Pair.of(Option.class, new OptionAdapter<Object>().with(s)),
+                    Pair.of(Optional.class, new OptionAdapter<Object>().with(s)),
                     // LongId and StringId must be specified for each id individually,
                     Pair.of(LocalDate.class, new LocalDateAdapter().with(s)),
                     Pair.of(LocalTime.class, new LocalTimeAdapter().with(s)),
@@ -41,14 +41,14 @@ public class XmlSerializers {
                 );
     }
     
-    public static final class OptionAdapter<T> extends XmlAdapterBase<Serializers,T,Option<T>> {
+    public static final class OptionAdapter<T> extends XmlAdapterBase<Serializers,T,Optional<T>> {
         @Override
-        public T marshal(Option<T> v) throws Exception {
-            return v.getOrElse(null);
+        public T marshal(Optional<T> v) throws Exception {
+            return v.orElse(null);
         }
 
         @Override
-        public Option<T> unmarshal(T v) throws Exception {
+        public Optional<T> unmarshal(T v) throws Exception {
             throw new UnsupportedOperationException("Not implemented");
         }
     }

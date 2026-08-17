@@ -1,16 +1,21 @@
 package fi.solita.utils.api;
 
+import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.it;
+import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
+import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
 import fi.solita.utils.api.NestedMember;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class NestedMember<S,T> implements MetaNamedMember<S,T> {
@@ -25,8 +30,8 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     }
     
     @SuppressWarnings("unchecked")
-    public static final <S,U,T> NestedMember<S,Option<T>> ofOption(MetaNamedMember<S, Option<U>> parent, MetaNamedMember<? super U,T> child) {
-        return new NestedMember<S,Option<T>>(parent, (MetaNamedMember<?, Option<T>>) child, Function.identity(), false);
+    public static final <S,U,T> NestedMember<S,Optional<T>> ofOption(MetaNamedMember<S, Optional<U>> parent, MetaNamedMember<? super U,T> child) {
+        return new NestedMember<S,Optional<T>>(parent, (MetaNamedMember<?, Optional<T>>) child, Function.identity(), false);
     }
 
     @SuppressWarnings("unchecked")
@@ -34,8 +39,8 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, Function.identity(), true);
     }
     
-    public static final <S,U,T> NestedMember<S,Option<T>> ofOptionFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,Option<T>> child) {
-        return new NestedMember<S,Option<T>>(parent, child, Function.identity(), true);
+    public static final <S,U,T> NestedMember<S,Optional<T>> ofOptionFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,Optional<T>> child) {
+        return new NestedMember<S,Optional<T>>(parent, child, Function.identity(), true);
     }
 
     @SuppressWarnings("unchecked")
@@ -48,7 +53,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     }
     
     @SuppressWarnings("unchecked")
-    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionItFlatType(MetaNamedMember<S, ? extends Option<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
+    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionItFlatType(MetaNamedMember<S, Optional<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
         return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, x -> Functional.flatten((Iterable<Iterable<?>>)x), true);
     }
 
@@ -68,10 +73,29 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
             return null;
         } else if (u instanceof Iterable) {
             Iterable<T> xs = map((MetaNamedMember<Object,T>)child, (Iterable<Object>)u);
-            return (T) filter(Objects::nonNull, flatten ? Functional.flatten((Iterable<? extends Iterable<? extends T>>) xs) : xs);
+            return (T) filter(Objects::nonNull, flatten ? recursivelyFlatten(xs) : xs);
+        } else if (u instanceof Optional) {
+            Iterable<T> xs = map((MetaNamedMember<Object,T>)child, it((Optional<Object>)u));
+            return (T) filter(Objects::nonNull, flatten ? recursivelyFlatten(xs) : xs);
         } else {
             return ((MetaNamedMember<Object,T>)child).apply(u);
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static final Iterable<Object> recursivelyFlatten(Object o) {
+        if (o instanceof Iterable) {
+            List<Iterable<Object>> foo = newList(map(NestedMember::recursivelyFlatten, (Iterable<Object>) o));
+            return flatten(foo);
+        }
+        if (o instanceof Optional) {
+            if (((Optional<?>)o).isPresent()) {
+                return recursivelyFlatten(((Optional<Object>) o).get());
+            } else {
+                return emptyList();
+            }
+        }
+        return newList(o);
     }
     
     @SuppressWarnings("unchecked")

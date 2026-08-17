@@ -1,10 +1,11 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.emptyMap;
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
-import static fi.solita.utils.functional.Functional.headOption;
+import static fi.solita.utils.functional.Functional.headOptional;
 import static fi.solita.utils.functional.Functional.map;
 
 import java.lang.annotation.Annotation;
@@ -15,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import fi.solita.utils.functional.Apply;
@@ -78,6 +80,10 @@ public class DynamicMember<V> implements MetaNamedMember<Map<String,V>,V> {
             for (Object v: (Iterable<?>)o) {
                 ret.putAll((Map<? extends Set<String>, ? extends Builder<Map<String,V>>>)DynamicMember.<V>allBuilders(v));
             }
+        } else if (o instanceof Optional) {
+            for (Object v: it((Optional<?>)o)) {
+                ret.putAll((Map<? extends Set<String>, ? extends Builder<Map<String,V>>>)DynamicMember.<V>allBuilders(v));
+            }
         }
         return ret;
     }
@@ -116,7 +122,9 @@ public class DynamicMember<V> implements MetaNamedMember<Map<String,V>,V> {
         return object instanceof Map
             ? new Builder.MapType<Object>(((Map<Object,Object>)object).keySet())
             : object instanceof Iterable
-            ? resolveType(headOption((Iterable<Object>)object).getOrElse(object.getClass()))
+            ? resolveType(headOptional((Iterable<Object>)object).orElse(object.getClass()))
+            : object instanceof Optional
+            ? resolveType(((Optional<Object>)object).orElse(object.getClass()))
             : object.getClass();
     }
 

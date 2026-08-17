@@ -1,5 +1,6 @@
 package fi.solita.utils.api.filtering;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
@@ -11,13 +12,13 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.forall;
-import static fi.solita.utils.functional.Functional.headOption;
+import static fi.solita.utils.functional.Functional.headOptional;
 import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 import static fi.solita.utils.functional.Predicates.greaterThan;
 import static fi.solita.utils.functional.Predicates.greaterThanOrEqualTo;
 import static fi.solita.utils.functional.Predicates.lessThan;
@@ -54,7 +55,7 @@ import fi.solita.utils.api.util.MemberUtil.UnknownPropertyNameException;
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Match;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Pred;
 import fi.solita.utils.functional.Predicates;
@@ -77,8 +78,8 @@ public class Filtering {
         this.fp = fp;
     }
     
-    public <T> Constraints<T> with(Option<Filters> filters, Includes<T> includes) {
-        return with(filters.getOrElse(Filters.EMPTY), includes);
+    public <T> Constraints<T> with(Optional<Filters> filters, Includes<T> includes) {
+        return with(filters.orElse(Filters.EMPTY), includes);
     }
     
     public <T> Constraints<T> with(Filters filters, Includes<T> includes) {
@@ -109,7 +110,7 @@ public class Filtering {
                     if (!spatialFilters.contains(filter.pattern)) {
                         // leave spatial filters out from constraints for now
                         lst.add(Pair.of(member, Collections.<Object>newList(FilterType.PATTERN_TYPES.contains(filter.pattern)
-                                                    ? flatMap(x -> x.getValue().left, filter.literals) // don't convert LIKE-pattern strings
+                                                    ? flatMap(x -> it(x.getValue().left), filter.literals) // don't convert LIKE-pattern strings
                                                     : map(Filtering_.convert().ap(this, resolveTargetType(filter, member)), filter.literals))));
                     }
                 }
@@ -139,7 +140,7 @@ public class Filtering {
         } else if (value != null && value.getValue().isRight()) {
             Tuple3<Literal, Character, Literal> val = value.getValue().right.get();
             return (T) fp.applyFunction(Character.toString(val._2),
-                                        Option.<String>None(),
+                                        Optional.empty(),
                                         Pair.of(convert(adjustTargetType(val._1, targetType), val._1),
                                                 convert(adjustTargetType(val._3, targetType), val._3)));
         }
@@ -200,7 +201,7 @@ public class Filtering {
         }
         Map<K, T> ret = newMutableLinkedMap();
         for (Map.Entry<K,T> e: ts.entrySet()) {
-            if (!isEmpty(filterData(includes, geometryMembers, filters, e.getValue()))) {
+            if (filterData(includes, geometryMembers, filters, e.getValue()).isPresent()) {
                 ret.put(e.getKey(), e.getValue());
             }
         }
@@ -235,13 +236,13 @@ public class Filtering {
         return ret;
     }
     
-    public <T> Option<T> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, T t) {
-        return headOption(filterData(includes, geometryMembers, filters, newList(t)));
+    public <T> Optional<T> filterData(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters, T t) {
+        return headOptional(filterData(includes, geometryMembers, filters, newList(t)));
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public final <T> Option<Predicate<T>> buildPredicate(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters) {
-        Option<Predicate<T>> predicate = None();
+    public final <T> Optional<Predicate<T>> buildPredicate(Iterable<MetaNamedMember<T, ?>> includes, Iterable<? extends MetaNamedMember<T, ?>> geometryMembers, Filters filters) {
+        Optional<Predicate<T>> predicate = Optional.empty();
         for (List<Filter> and: filters.or) {
           Predicate<T> pred = x -> true;
           for (Filter filter: and) {
@@ -316,10 +317,10 @@ public class Filtering {
                 }
             }
           }
-          if (predicate.isDefined()) {
-              predicate = Some(predicate.get().or(pred));
+          if (predicate.isPresent()) {
+              predicate = Optional.of(predicate.get().or(pred));
           } else {
-              predicate = Some(pred);
+              predicate = Optional.of(pred);
           }
         }
         return predicate;
@@ -330,12 +331,12 @@ public class Filtering {
             return ts;
         }
         
-        return filter(buildPredicate(includes, geometryMembers, filters).getOrElse(x -> true)::test, ts);
+        return filter(buildPredicate(includes, geometryMembers, filters).orElse(x -> true)::test, ts);
     }
 
     private <T> Class<?> resolveTargetType(Filter filter, MetaNamedMember<? super T, ?> member) {
         if (filter.property.isFunctionCall()) {
-            return fp.changesResultType(filter.property.getValue()).getOrElse(MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(member));
+            return fp.changesResultType(filter.property.getValue()).orElse(MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(member));
         } else {
             return MemberUtil.actualClassUnwrappingOptionAndEitherAndIterables(member);
         }
@@ -343,7 +344,7 @@ public class Filtering {
     
     @SuppressWarnings("unchecked")
     static <T> T unwrapOption(T t) {
-        return t instanceof Option ? unwrapOption(((Option<T>)t).getOrElse(null)) : t;
+        return t instanceof Optional ? unwrapOption(((Optional<T>)t).orElse(null)) : t;
     }
     
     public enum MatchAction {
@@ -498,12 +499,12 @@ public class Filtering {
         if (x == null) {
             return true;
         }
-        if (x instanceof Option<?> && !((Option<?>)x).isDefined()) {
+        if (x instanceof Optional<?> && !((Optional<?>)x).isPresent()) {
             return true;
         }
         if (x instanceof Iterable<?>) {
-            Option<?> first = headOption((Iterable<?>)x);
-            if (!first.isDefined()) {
+            Optional<?> first = headOptional((Iterable<?>)x);
+            if (!first.isPresent()) {
                 return true;
             } else {
                 if (first.get() instanceof Iterable) {

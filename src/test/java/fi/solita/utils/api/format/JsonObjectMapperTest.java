@@ -8,15 +8,15 @@ import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.Serializers;
 import fi.solita.utils.api.base.json.JsonModule;
 import fi.solita.utils.api.base.json.JsonSerializers;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public class JsonObjectMapperTest {
 
     @JsonSerializeAsBean
     public static final class TestDto {
-        public final Option<String> optional;
+        public final Optional<String> optional;
 
-        public TestDto(Option<String> optional) {
+        public TestDto(Optional<String> optional) {
             this.optional = optional;
         }
     }
@@ -36,14 +36,14 @@ public class JsonObjectMapperTest {
 
     @Test
     public void optionNoneFieldIsOmitted() {
-        String serialized = new String(json().serialize(new TestDto(Option.<String>None())));
+        String serialized = new String(json().serialize(new TestDto(Optional.empty())));
 
         assertEquals("{}", serialized);
     }
 
     @Test
     public void optionSomeFieldIsSerializedNormally() {
-        String serialized = new String(json().serialize(new TestDto(Option.Some("value"))));
+        String serialized = new String(json().serialize(new TestDto(Optional.of("value"))));
 
         assertEquals("{\"optional\":\"value\"}", serialized);
     }

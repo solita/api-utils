@@ -1,6 +1,7 @@
 package fi.solita.utils.api.format;
 
 import static fi.solita.utils.functional.Collections.emptySet;
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.cons;
@@ -11,7 +12,7 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.sequence;
 import static fi.solita.utils.functional.Functional.tail;
-import static fi.solita.utils.functional.Option.Some;
+
 import static org.rendersnake.HtmlAttributesFactory.ESCAPE_CHARS;
 import static org.rendersnake.HtmlAttributesFactory.add;
 import static org.rendersnake.HtmlAttributesFactory.charset;
@@ -56,7 +57,7 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -79,10 +80,10 @@ public abstract class HtmlConversionService {
     }
 
     public HtmlTitle title(final String title) {
-        return title(title, Option.<Count>None(), Option.<StartIndex>None());
+        return title(title, Optional.empty(), Optional.empty());
     }
     
-    public HtmlTitle title(final String title, final Option<Count> count, final Option<StartIndex> startIndex) {
+    public HtmlTitle title(final String title, final Optional<Count> count, final Optional<StartIndex> startIndex) {
         return new HtmlTitle(title) {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -90,20 +91,20 @@ public abstract class HtmlConversionService {
                         .write(title)
                     ._span();
                 
-                if (startIndex.isDefined() && !startIndex.get().equals(StartIndex.DEFAULT) && count.isDefined() && !count.get().equals(Count.DEFAULT)) {
+                if (startIndex.isPresent() && !startIndex.get().equals(StartIndex.DEFAULT) && count.isPresent() && !count.get().equals(Count.DEFAULT)) {
                     html.span(class_("page"))
-                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(x -> Integer.toString(x.value + startIndex.get().value - 1)).getOrElse("") + ")")
+                            .write("(" + Integer.toString(startIndex.get().value) + "-" + count.map(x -> Integer.toString(x.value + startIndex.get().value - 1)).orElse("") + ")")
                         ._span();
                 } else {
-                    for (StartIndex si: startIndex) {
+                    for (StartIndex si: it(startIndex)) {
                         if (!si.equals(StartIndex.DEFAULT)) {
                             html.span(class_("page"))
                                     .write("(" + Integer.toString(si.value) + "- )")
                                 ._span();
                         }
                     }
-                    if (!startIndex.isDefined()) {
-                        for (Count c: count) {
+                    if (!startIndex.isPresent()) {
+                        for (Count c: it(count)) {
                             if (!c.equals(Count.DEFAULT)) {
                                 html.span(class_("page"))
                                         .write("(1-" + Integer.toString(c.value) + ")")
@@ -239,7 +240,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, final Option<Pair<Includes<T>, Function1<MetaNamedMember<T, ?>,Renderable>>> properties, final Pair<Renderable,Set<String>> additionalQueryParameters) {
+    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, final Optional<Pair<Includes<T>, Function1<MetaNamedMember<T, ?>,Renderable>>> properties, final Pair<Renderable,Set<String>> additionalQueryParameters) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -252,7 +253,7 @@ public abstract class HtmlConversionService {
                                 .render(linksForDifferentFormats())
                             ._div()
                         ._if()
-                        .if_(properties.isDefined())
+                        .if_(properties.isPresent())
                             .div(class_("parameters").add("persist-fields-query", ""))
                                 .input(type("hidden").class_("dummy")) // dummy included field to prevent htmx not complaining about nothing to include
                                 .select(name("count"))
@@ -268,7 +269,7 @@ public abstract class HtmlConversionService {
                                 ._select()
                                 .input(name("cql_filter").type("hidden").value(""))
                                 .render(additionalQueryParameters.left())
-                                .if_(properties.isDefined() && !properties.get().left().geometryMembers.isEmpty())
+                                .if_(properties.isPresent() && !properties.get().left().geometryMembers.isEmpty())
                                     .select(name("srsName"))
                                         .render(new Renderable() {
                                             @Override
@@ -358,7 +359,7 @@ public abstract class HtmlConversionService {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
                 final String path = ((HttpServletCanvas<?>)html).getRequestPath();
-                final String queryString = ((HttpServletCanvas<?>)html).getRequestQueryString().map(x -> "?" + x).getOrElse("");
+                final String queryString = ((HttpServletCanvas<?>)html).getRequestQueryString().map(x -> "?" + x).orElse("");
                 
                 for (String format: newList("html","json","jsonl","geojson","csv","xlsx")) {
                     html.a(href(path.replace(".html", "." + format) + queryString).add("hx-get", path.replace(".html", "." + format))
@@ -403,7 +404,7 @@ public abstract class HtmlConversionService {
         OutputStreamWriter ow = new OutputStreamWriter(os, Charset.forName("UTF-8"));
         HtmlCanvas html = HttpServletCanvas.of(request.getHttpServletRequest(), ow);
         
-        Option<String> queryString = (((HttpServletCanvas<?>)html).getRequestQueryString());
+        Optional<String> queryString = (((HttpServletCanvas<?>)html).getRequestQueryString());
         
         try {
             html.render(DocType.HTML5)
@@ -417,7 +418,7 @@ public abstract class HtmlConversionService {
                   .label(class_("singleton").for_("singleton").title("Toggle vertical layout"))._label()
                   .render(UI.langSelectorInput)
                   .main()
-                      .render(pageHeader(title, request, true, Some(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
+                      .render(pageHeader(title, request, true, Optional.of(Pair.of(includes, HtmlConversionService_.<T>header().ap(this))), additionalQueryParameters(includes)))
                       .section(id("content"))
                           .table(id("table").class_("tafs hidden").add("hx-ext", "sse").add("sse-swap", "message").add("hx-select", "tbody").add("hx-target", "find tbody").add("hx-swap", "outerHTML ignoreTitle:true"))
                             .thead()
@@ -441,7 +442,7 @@ public abstract class HtmlConversionService {
                                       .span(lang("en")).write("Table is refreshing automatically via SSE")._span()
                                   ._span()
                               ._if()
-                              .if_(rows > 0 && COUNT.matcher(queryString.getOrElse("")).matches())
+                              .if_(rows > 0 && COUNT.matcher(queryString.orElse("")).matches())
                                   .span(class_(null)
                                       .add("hx-push-url", "false")
                                       .add("hx-boost", "true")
@@ -497,13 +498,13 @@ public abstract class HtmlConversionService {
     
     static String uriWithIncrementedStartIndex(HtmlCanvas html, boolean loadRest) {
         String path = (((HttpServletCanvas<?>)html).getRequestPath());
-        Option<String> queryString = (((HttpServletCanvas<?>)html).getRequestQueryString());
+        Optional<String> queryString = (((HttpServletCanvas<?>)html).getRequestQueryString());
         
-        Matcher cm = COUNT.matcher(queryString.getOrElse(""));
+        Matcher cm = COUNT.matcher(queryString.orElse(""));
         if (cm.find()) {
             int count = Integer.parseInt(cm.group(1));
             
-            String uri = path + queryString .map(x -> "?" + x).getOrElse("");
+            String uri = path + queryString .map(x -> "?" + x).orElse("");
             StringBuffer sb = new StringBuffer();
             Matcher m = START_INDEX.matcher(uri);
             if (m.find()) {
@@ -560,11 +561,11 @@ public abstract class HtmlConversionService {
             public void renderOn(HtmlCanvas html) throws IOException {
                 boolean pseudo = member.getName().isEmpty();
                 String extraClasses = pseudo ? "" : extraClasses(member.getMember());
-                html.span(lang("fi").class_(extraClasses).title(pseudo ? null : docDescription(member).getOrElse(null)))
-                        .write(pseudo ? member.getName() : docName(member).getOrElse(member.getName()))
+                html.span(lang("fi").class_(extraClasses).title(pseudo ? null : docDescription(member).orElse(null)))
+                        .write(pseudo ? member.getName() : docName(member).orElse(member.getName()))
                     ._span()
-                    .span(lang("en").class_(extraClasses).title(pseudo ? null : docDescription_en(member).getOrElse(null)))
-                        .write(pseudo ? member.getName() : docName_en(member).getOrElse(member.getName()))
+                    .span(lang("en").class_(extraClasses).title(pseudo ? null : docDescription_en(member).orElse(null)))
+                        .write(pseudo ? member.getName() : docName_en(member).orElse(member.getName()))
                     ._span();
             }
         };
@@ -589,13 +590,13 @@ public abstract class HtmlConversionService {
         return "";
     }
     
-    protected abstract Option<String> docName(MetaNamedMember<?, ?> member);
+    protected abstract Optional<String> docName(MetaNamedMember<?, ?> member);
     
-    protected abstract Option<String> docName_en(MetaNamedMember<?, ?> member);
+    protected abstract Optional<String> docName_en(MetaNamedMember<?, ?> member);
 
-    protected abstract Option<String> docDescription(MetaNamedMember<?, ?> member);
+    protected abstract Optional<String> docDescription(MetaNamedMember<?, ?> member);
     
-    protected abstract Option<String> docDescription_en(MetaNamedMember<?, ?> member);
+    protected abstract Optional<String> docDescription_en(MetaNamedMember<?, ?> member);
 
     private final <T> Renderable regularBody(final Iterable<T> obj, final Iterable<? extends MetaNamedMember<T, ?>> members) {
         return new Renderable() {

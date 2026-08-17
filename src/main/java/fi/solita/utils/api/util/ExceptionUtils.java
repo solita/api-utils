@@ -1,9 +1,9 @@
 package fi.solita.utils.api.util;
 
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
 
-import fi.solita.utils.functional.Option;
+
+
+import java.util.Optional;
 
 public class ExceptionUtils {
 
@@ -11,13 +11,13 @@ public class ExceptionUtils {
      * @return Recursively first cause of <i>t</i> which is instance of <i>cause</i>
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Throwable> Option<T> findCauseFromHierarchy(Throwable t, Class<T> cause) {
+    public static <T extends Throwable> Optional<T> findCauseFromHierarchy(Throwable t, Class<T> cause) {
         if (cause.isInstance(t)) {
-            return Some((T) t);
+            return Optional.of((T) t);
         } else if (t.getCause() != null) {
             return findCauseFromHierarchy(t.getCause(), cause);
         }
-        return None();
+        return Optional.empty();
     }
 
 }

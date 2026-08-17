@@ -1,5 +1,6 @@
 package fi.solita.utils.api.format;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
@@ -8,8 +9,8 @@ import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.FunctionalM.find;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -63,15 +64,13 @@ import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ar.com.hjg.pngj.FilterType;
 import fi.solita.utils.api.filtering.Filtering;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.RequestUtil;
-import fi.solita.utils.functional.ApplyZero;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
 import it.geosolutions.imageio.plugins.png.PNGWriter;
@@ -144,32 +143,32 @@ public class PngConversionService {
         return 5*x/Math.pow(10, numberOfDigits-2);
     }
     
-    protected InputStream fetchGeojson(URI uri, Option<String> apikey) throws IOException {
+    protected InputStream fetchGeojson(URI uri, Optional<String> apikey) throws IOException {
         URLConnection connection = uri.toURL().openConnection();
-        for (String key: apikey) {
+        for (String key: it(apikey)) {
             connection.setRequestProperty(RequestUtil.API_KEY, key);
         }
         connection.setRequestProperty("Accept-Encoding", "gzip");
         
-        Option<String> contentEncoding = Option.of(connection.getContentEncoding());
+        Optional<String> contentEncoding = Optional.ofNullable(connection.getContentEncoding());
         InputStream in = connection.getInputStream();
-        if (contentEncoding.isDefined() && contentEncoding.get().equals("gzip")) {
+        if (contentEncoding.isPresent() && contentEncoding.get().equals("gzip")) {
             in = new GZIPInputStream(in);
         }
         
         return in;
     }
     
-    private static boolean isTile(Option<ReferencedEnvelope> bounds) {
-        return bounds.isDefined() && bounds.get().getWidth() == bounds.get().getHeight();
+    private static boolean isTile(Optional<ReferencedEnvelope> bounds) {
+        return bounds.isPresent() && bounds.get().getWidth() == bounds.get().getHeight();
     }
     
-    public byte[] render(String pngRequestURI, Option<String> apikey, Option<ReferencedEnvelope> requestedBounds, String layerName) {
+    public byte[] render(String pngRequestURI, Optional<String> apikey, Optional<ReferencedEnvelope> requestedBounds, String layerName) {
         double bufferRatioX = 1;
         double bufferRatioY = 1;
         boolean isTile = isTile(requestedBounds);
         if (isTile) {
-            for (ReferencedEnvelope p: requestedBounds) {
+            for (ReferencedEnvelope p: it(requestedBounds)) {
                 // add some buffer to the bbox, so that we retrieve features slightly
                 // larger area than we are going to render. This way we get to render images
                 // whose geometry point is in another tile, but whose graphic extends to this one.
@@ -211,20 +210,16 @@ public class PngConversionService {
         }
     }
     
-    static Option<Pair<String,Object>> toEntry(Property p) throws JsonProcessingException {
+    static Optional<Pair<String,Object>> toEntry(Property p) {
         if (p.getName().getLocalPart().isEmpty() || p.getValue() instanceof Geometry) {
-            return None();
+            return Optional.empty();
         }
         
-        return Some(Pair.of(p.getName().getLocalPart(), p.getValue()));
+        return Optional.of(Pair.of(p.getName().getLocalPart(), p.getValue()));
     }
 
-    public byte[] render(int imageWidth, int imageHeight, URI uri, Option<ReferencedEnvelope> requestedBoundsWithBuffer, boolean isTile, double bufferRatioX, double bufferRatioY, final String layerName, Option<String> apikey) throws IOException {
-        Style layerStyle = find(layerName, defaultStyles).orElse(new ApplyZero<Style>() {
-            @Override
-            public Style get() {
-                throw new RuntimeException("Couldn't find layer with name: " + layerName);
-            } });
+    public byte[] render(int imageWidth, int imageHeight, URI uri, Optional<ReferencedEnvelope> requestedBoundsWithBuffer, boolean isTile, double bufferRatioX, double bufferRatioY, final String layerName, Optional<String> apikey) throws IOException {
+        Style layerStyle = find(layerName, defaultStyles).orElseThrow(() -> new RuntimeException("Couldn't find layer with name: " + layerName));
         logger.debug("Fetching geojson...");
         BufferedReader bf = new BufferedReader(new InputStreamReader(fetchGeojson(uri, apikey), StandardCharsets.UTF_8));
         String geojson;
@@ -272,14 +267,14 @@ public class PngConversionService {
             SimpleFeature feature = f.next();
             fb.init(feature);
             // put all fields into custom "json" attribute so that it can be access from SLD using jsonPointer without property-not-found-errors...
-            fb.set("json", DEFAULT_OM.writeValueAsString(newMap(SemiGroups.failUnequal(), flatMap(PngConversionService_.toEntry, feature.getProperties()))));
+            fb.set("json", DEFAULT_OM.writeValueAsString(newMap(SemiGroups.failUnequal(), flatMap(x -> it(toEntry(x)), feature.getProperties()))));
             feats.add(SimpleFeatureBuilder.retype(fb.buildFeature(null), ft));
             fb.reset();
         }
         featureCollection = new ListFeatureCollection(ft, feats);
         
         ReferencedEnvelope boundsWithBuffer = featureCollection.getBounds();
-        if (!requestedBoundsWithBuffer.isDefined()) {
+        if (!requestedBoundsWithBuffer.isPresent()) {
             // no explicit bounds given, so add some buffer around points
             if (boundsWithBuffer.getWidth() == 0) {
                 boundsWithBuffer.expandBy(BUFFER_AROUND_POINTS, 0);
@@ -288,7 +283,7 @@ public class PngConversionService {
                 boundsWithBuffer.expandBy(0, BUFFER_AROUND_POINTS);
             }
         }
-        boundsWithBuffer = requestedBoundsWithBuffer.getOrElse(boundsWithBuffer);
+        boundsWithBuffer = requestedBoundsWithBuffer.orElse(boundsWithBuffer);
         
         long started = System.nanoTime();
 

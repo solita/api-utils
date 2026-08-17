@@ -27,11 +27,11 @@ import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Dynamic;
 import fi.solita.utils.api.JsonDeserializeAsBean;
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.util.ClassUtils;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 import java.io.IOException;
 
-import static fi.solita.utils.functional.Option.None;
+
 
 public class JsonObjectMapper extends ObjectMapper {
 
@@ -70,21 +70,21 @@ public class JsonObjectMapper extends ObjectMapper {
         
         @Override
         protected JsonDeserializer<?> findStdDeserializer(DeserializationContext ctxt, final JavaType type, BeanDescription beanDesc) throws JsonMappingException {
-            if (type.getRawClass() == Option.class) {
-                return new StdDeserializer<Option<?>>(type) {
+            if (type.getRawClass() == Optional.class) {
+                return new StdDeserializer<Optional<?>>(type) {
                     @Override
-                    public Option<?> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+                    public Optional<?> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
                         JsonDeserializer<?> valueDeser = findDeserializer(ctxt, type.containedType(0), null);
                         if (jp.getCurrentToken() == JsonToken.VALUE_NULL) {
-                            return None();
+                            return Optional.empty();
                         }
 
-                        return Option.of(valueDeser.deserialize(jp, ctxt));
+                        return Optional.ofNullable(valueDeser.deserialize(jp, ctxt));
                     }
 
                     @Override
-                    public Option<?> getNullValue() {
-                        return None();
+                    public Optional<?> getNullValue() {
+                        return Optional.empty();
                     }
                 };
             }
@@ -189,7 +189,7 @@ public class JsonObjectMapper extends ObjectMapper {
         // leave nulls out. This way we can restrict the serialized properties while using the same Dto.
         setSerializationInclusion(Include.NON_ABSENT);
         // cannot set earlier line to Include.NON_EMPTY because it would leave out a lot of objects (like empty collections and strings), so let's just set Option.None to be left out:
-        configOverride(Option.class).setInclude(JsonInclude.Value.construct(Include.NON_EMPTY, Include.NON_EMPTY));
+        configOverride(Optional.class).setInclude(JsonInclude.Value.construct(Include.NON_EMPTY, Include.NON_EMPTY));
 
         configure(MapperFeature.AUTO_DETECT_GETTERS, false);
         configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false);

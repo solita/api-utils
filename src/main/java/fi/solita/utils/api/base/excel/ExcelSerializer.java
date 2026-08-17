@@ -8,7 +8,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class ExcelSerializer<T> {
     public static final class Cells extends fi.solita.utils.api.base.Cells<Cell> {
@@ -24,11 +24,11 @@ public abstract class ExcelSerializer<T> {
             super(cells, stringRepresentation);
         }
         
-        public Cells(List<Cell> cells, Option<CharSequence> stringRepresentation, Option<String> unit, List<String> headers) {
+        public Cells(List<Cell> cells, Optional<CharSequence> stringRepresentation, Optional<String> unit, List<String> headers) {
             super(cells, stringRepresentation, unit, headers);
         }
         
-        public final Cells withUnit(Option<String> unit) {
+        public final Cells withUnit(Optional<String> unit) {
             return new Cells(cells, stringRepresentation, unit, headers);
         }
 
@@ -48,7 +48,7 @@ public abstract class ExcelSerializer<T> {
         return newList("");
     }
     
-    public ExcelSerializer<T> withUnit(final Option<String> unit) {
+    public ExcelSerializer<T> withUnit(final Optional<String> unit) {
         final ExcelSerializer<T> self = this;
         return new ExcelSerializer<T>() {
             @Override

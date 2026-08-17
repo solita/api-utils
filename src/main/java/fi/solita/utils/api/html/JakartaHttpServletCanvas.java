@@ -8,7 +8,7 @@ import fi.solita.utils.api.util.Headers;
 import fi.solita.utils.api.util.JakartaRequest;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import jakarta.servlet.http.HttpServletRequest;
 
 public class JakartaHttpServletCanvas extends HttpServletCanvas<HttpServletRequest> {
@@ -23,12 +23,12 @@ public class JakartaHttpServletCanvas extends HttpServletCanvas<HttpServletReque
     }
 
     public String getContextPath() {
-        return RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader(Headers.X_FORWARDED_PREFIX)));
+        return RequestUtil.getContextPath(request.getContextPath(), Optional.ofNullable(request.getHeader(Headers.X_FORWARDED_PREFIX)));
     }
 
     public String getRequestPath() {
-        String contextPath = RequestUtil.getContextPath(request.getContextPath(), Option.of(request.getHeader(Headers.X_FORWARDED_PREFIX)));
-        String contextRelativePath = RequestUtil.getContextRelativePath(request.getServletPath(), Option.of(request.getPathInfo()));
+        String contextPath = RequestUtil.getContextPath(request.getContextPath(), Optional.ofNullable(request.getHeader(Headers.X_FORWARDED_PREFIX)));
+        String contextRelativePath = RequestUtil.getContextRelativePath(request.getServletPath(), Optional.ofNullable(request.getPathInfo()));
         
         String apiVersionBasePath = RequestUtil.getApiVersionBasePath(contextPath, contextRelativePath);
         String apiVersionRelativePath = RequestUtil.getAPIVersionRelativePath(contextRelativePath);
@@ -36,7 +36,7 @@ public class JakartaHttpServletCanvas extends HttpServletCanvas<HttpServletReque
         return apiVersionBasePath + drop(1, apiVersionRelativePathWithoutRevision);
     }
 
-    public Option<String> getRequestQueryString() {
-        return Option.of(((HttpServletRequest) request).getQueryString());
+    public Optional<String> getRequestQueryString() {
+        return Optional.ofNullable(((HttpServletRequest) request).getQueryString());
     }
 }

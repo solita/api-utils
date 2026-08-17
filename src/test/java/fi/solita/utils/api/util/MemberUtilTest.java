@@ -16,7 +16,7 @@ import fi.solita.utils.api.resolving.ResolvableMember;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.MemberUtilTest_.FooDto_;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -46,9 +46,9 @@ public class MemberUtilTest {
         
         public String bar;
         
-        public Option<Set<String>> baz;
+        public Optional<Set<String>> baz;
         
-        public FooDto(String bar, Option<Set<String>> baz) {
+        public FooDto(String bar, Optional<Set<String>> baz) {
             this.bar = bar;
             this.baz = baz;
         }

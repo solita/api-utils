@@ -1,6 +1,7 @@
 package fi.solita.utils.api.util;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.distinct;
@@ -20,8 +21,8 @@ import static fi.solita.utils.functional.FunctionalC.init;
 import static fi.solita.utils.functional.FunctionalC.reverse;
 import static fi.solita.utils.functional.FunctionalC.takeWhile;
 import static fi.solita.utils.functional.FunctionalM.find;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.functional.ApplyBi;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -93,10 +94,10 @@ public abstract class RequestUtil {
     }
     
     public static class ETags {
-        public final Option<List<String>> ifMatch;
-        public final Option<List<String>> ifNoneMatch;
+        public final Optional<List<String>> ifMatch;
+        public final Optional<List<String>> ifNoneMatch;
 
-        public ETags(Option<List<String>> ifMatch, Option<List<String>> ifNoneMatch) {
+        public ETags(Optional<List<String>> ifMatch, Optional<List<String>> ifNoneMatch) {
             this.ifMatch = ifMatch;
             this.ifNoneMatch = ifNoneMatch;
         }
@@ -106,11 +107,11 @@ public abstract class RequestUtil {
         return s.trim();
     }
     
-    static final Option<List<String>> parseETags(Option<String> etags) {
-        for (String s: etags) {
-            return Some(newList(map(RequestUtil_.trim, s.split(","))));
+    static final Optional<List<String>> parseETags(Optional<String> etags) {
+        for (String s: it(etags)) {
+            return Optional.of(newList(map(RequestUtil_.trim, s.split(","))));
         }
-        return None();
+        return Optional.empty();
     }
     
     static void assertAcceptHeader(List<String> accepts) {
@@ -143,7 +144,7 @@ public abstract class RequestUtil {
             throw new RequestUtil.FilteringNotSupportedWithPaginationException();
         }
         
-        for (String[] cql_filters: find("cql_filter", parameters)) {
+        for (String[] cql_filters: it(find("cql_filter", parameters))) {
             if (parameterNames.contains("bbox")) {
                 for (String cql_filter: cql_filters) {
                     if (cql_filter.contains("INTERSECTS") ||
@@ -160,7 +161,7 @@ public abstract class RequestUtil {
             }
         }
         
-        for (String[] propertyNames: find("propertyName", parameters)) {
+        for (String[] propertyNames: it(find("propertyName", parameters))) {
             for (String propertyName: propertyNames) {
                 for (String pn: propertyName.split(",")) {
                     String[] parts = pn.split("[.]");
@@ -185,15 +186,15 @@ public abstract class RequestUtil {
         return newList(s.split(regex));
     }
 
-    public static final String getContextPath(String reqContextPath, Option<String> xForwardedPrefix) {
-        for (String forwardedPrefix: xForwardedPrefix) {
+    public static final String getContextPath(String reqContextPath, Optional<String> xForwardedPrefix) {
+        for (String forwardedPrefix: it(xForwardedPrefix)) {
             return (forwardedPrefix.endsWith("/") ? init(forwardedPrefix) : forwardedPrefix) + reqContextPath;
         }
         return reqContextPath;
     }
     
-    public static final String getContextRelativePath(String servletPath, Option<String> pathInfo) {
-        return servletPath + pathInfo.getOrElse("");
+    public static final String getContextRelativePath(String servletPath, Optional<String> pathInfo) {
+        return servletPath + pathInfo.orElse("");
     }
 
     public static final String getAPIVersionRelativePath(String contextRelativePath) {
@@ -211,13 +212,13 @@ public abstract class RequestUtil {
         return contextPath + "/" + takeWhile(x -> !x.equals('/'), tail(contextRelativePath)) + "/";
     }
 
-    public static final Option<String> resolveExtension(String path) {
+    public static final Optional<String> resolveExtension(String path) {
         String[] paths = path.split("/");
         String lastPathPart = last(paths);
         if (!lastPathPart.contains(".")) {
-            return None();
+            return Optional.empty();
         }
-        return Some(reverse(takeWhile(x -> !x.equals('.'), reverse(lastPathPart))));
+        return Optional.of(reverse(takeWhile(x -> !x.equals('.'), reverse(lastPathPart))));
     }
 
     @SuppressWarnings("unchecked")

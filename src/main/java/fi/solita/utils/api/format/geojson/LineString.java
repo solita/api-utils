@@ -1,13 +1,13 @@
 package fi.solita.utils.api.format.geojson;
 import fi.solita.utils.api.JsonSerializeAsBean;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 @JsonSerializeAsBean
 public final class LineString extends GeometryObject {
     public final Object coordinates;
     
     public LineString(Object murtoviiva) {
-        super("LineString", Option.<Crs>None());
+        super("LineString", Optional.empty());
         this.coordinates = murtoviiva;
     }
     

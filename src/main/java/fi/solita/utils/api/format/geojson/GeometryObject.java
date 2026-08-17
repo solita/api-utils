@@ -1,11 +1,11 @@
 package fi.solita.utils.api.format.geojson;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 @JsonSerializeAsBean
 public abstract class GeometryObject extends GeoJSONObject {
-    public GeometryObject(String type, Option<Crs> crs) {
+    public GeometryObject(String type, Optional<Crs> crs) {
         super(type, crs);
     }   
     

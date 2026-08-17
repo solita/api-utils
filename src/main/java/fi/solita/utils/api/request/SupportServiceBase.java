@@ -1,5 +1,6 @@
 package fi.solita.utils.api.request;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
@@ -7,8 +8,8 @@ import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.concat;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.FunctionalC.tail;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.util.List;
 import java.util.Set;
@@ -30,7 +31,7 @@ import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function4;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple3;
 
@@ -81,10 +82,10 @@ public class SupportServiceBase {
         if (parts.length == 1) {
             // create an interval either starting from or ending to current time.
             Tuple3<Either<Duration, Period>, Boolean, Boolean> dp = parse(parts[0]);
-            for (Duration d: dp._1.left) {
+            for (Duration d: it(dp._1.left)) {
                 f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), d, dp._2)), newSet("duration"));
             }
-            for (Period p: dp._1.right) {
+            for (Period p: it(dp._1.right)) {
                 f.apply(req, res, adjustTime(intervalForRedirect(DateTime.now().withZone(DateTimeZone.UTC), p, dp._2, dp._3)), newSet("duration"));
             }
         } else if (parts.length == 2) {
@@ -148,13 +149,13 @@ public class SupportServiceBase {
         ResponseUtil.redirect307(ServletRequestUtil.getContextRelativePath(req), req, res, newMap(Pair.of("time", RequestUtil.interval2stringRestrictedToInfinity(interval))), queryParamsToExclude);
     }
 
-    protected Option<RequestData> resolveFormat(Request request, Response response) {
-        Either<Option<String>, SerializationFormat> format = ServletRequestUtil.resolveFormat(request);
-        for (SerializationFormat f: format.right) {
+    protected Optional<RequestData> resolveFormat(Request request, Response response) {
+        Either<Optional<String>, SerializationFormat> format = ServletRequestUtil.resolveFormat(request);
+        for (SerializationFormat f: it(format.right)) {
             response.setContentType(f.mediaType);
-            return Some(new RequestData(f, ServletRequestUtil.getETags(request)));
+            return Optional.of(new RequestData(f, ServletRequestUtil.getETags(request)));
         }
-        return None();
+        return Optional.empty();
     }
     
     private static final Set<String> defaultCaseIgnoredParams = newSet("propertyName", "cql_filter", "time");
@@ -171,9 +172,9 @@ public class SupportServiceBase {
     /**
      * @throws NotFoundException for unidentified format
      */
-    protected Option<RequestData> checkUrlAndResolveFormat(Request request, Response response, String... acceptedParams) throws NotFoundException {
+    protected Optional<RequestData> checkUrlAndResolveFormat(Request request, Response response, String... acceptedParams) throws NotFoundException {
         checkUrl(request, acceptedParams);
-        Option<RequestData> ret = resolveFormat(request, response);
+        Optional<RequestData> ret = resolveFormat(request, response);
         NotFoundException.assertFound(ret);
         return ret;
     }

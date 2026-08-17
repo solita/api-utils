@@ -1,7 +1,7 @@
 package fi.solita.utils.api.format.geojson;
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 @JsonSerializeAsBean
 public class MultiLineString extends GeometryObject {
@@ -12,7 +12,7 @@ public class MultiLineString extends GeometryObject {
     }
     
     public MultiLineString(Iterable<?> murtoviivat) {
-        super("MultiLineString", Option.<Crs>None());
+        super("MultiLineString", Optional.empty());
         this.coordinates = murtoviivat;
     }
     

@@ -1,5 +1,6 @@
 package fi.solita.utils.api.swagger;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newSet;
 import static fi.solita.utils.functional.Functional.concat;
@@ -14,8 +15,8 @@ import static fi.solita.utils.functional.FunctionalA.find;
 import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalS.range;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -84,7 +85,7 @@ import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
@@ -179,11 +180,11 @@ public abstract class OpenAPISupport {
      * Customize parameter defined by OperationCustomizer.
      * @return A new schema to be used to completely replace the original one.
      */
-    protected Option<Parameter> customize(boolean ignoreRevision, Parameter parameter, java.lang.reflect.Parameter methodParameter) {
+    protected Optional<Parameter> customize(boolean ignoreRevision, Parameter parameter, java.lang.reflect.Parameter methodParameter) {
         Class<?> unwrappedType = MemberUtil.memberClassUnwrappingOptionAndEitherAndIterables(methodParameter.getParameterizedType());
         if (Revision.class.isAssignableFrom(unwrappedType)) {
             if (ignoreRevision) {
-                return None();
+                return Optional.empty();
             } else {
                 parameter.schema(new IntegerSchema().format("int64"));
             }
@@ -227,12 +228,12 @@ public abstract class OpenAPISupport {
             parameter.explode(false);
         }
         
-        Pair<Option<String>,Option<String>> d = doc(Option.of(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), Option.<Class<?>>None());
-        if (d.left().isDefined() || d.right().isDefined()) {
-            parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
+        Pair<Optional<String>,Optional<String>> d = doc(Optional.ofNullable(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), Optional.empty());
+        if (d.left().isPresent() || d.right().isPresent()) {
+            parameter.description(mkString("\n", concat(it(d.left()), it(d.right().map(OpenAPISupport_.langsToList)))));
         }
         
-        return Some(parameter);
+        return Optional.of(parameter);
     }
     
     /** Make this a spring-bean to enable. */
@@ -259,7 +260,7 @@ public abstract class OpenAPISupport {
             Double[].class,
             Date.class,
             Either.class,
-            Option.class
+            Optional.class
         );
 
         protected void checkType(Schema<?> ret, Type type) {
@@ -280,16 +281,16 @@ public abstract class OpenAPISupport {
         
         @Override
         public final Schema<?> resolve(final AnnotatedType type, final ModelConverterContext context, final Iterator<ModelConverter> chain) {
-            Option<Class<?>> clazz_ = ClassUtils.resolveClass(type.getType());
+            Optional<Class<?>> clazz_ = ClassUtils.resolveClass(type.getType());
             Schema<?> ret = null;
-            if (!clazz_.isDefined()) {
+            if (!clazz_.isPresent()) {
                 ret = chain.hasNext() ? chain.next().resolve(type, context, chain) : null;
             } else {
                 final Type[] effectiveType = new Type[] { type.getType() };
                 Class<?> clazz = clazz_.get();
                 
-                if (Option.class.isAssignableFrom(clazz)) {
-                    Type nested = ClassUtils.getFirstTypeArgument(type.getType()).getOrElse(Object.class);
+                if (Optional.class.isAssignableFrom(clazz)) {
+                    Type nested = ClassUtils.getFirstTypeArgument(type.getType()).orElse(Object.class);
                     ret = context.resolve(new AnnotatedType(nested).resolveAsRef(true));
                     effectiveType[0] = nested;
                 } else if (Either.class.isAssignableFrom(clazz)) {
@@ -330,7 +331,7 @@ public abstract class OpenAPISupport {
                 });
                 
                 try {
-                    for (Schema<?> replacement: customize(type, context, schemaProvider)) {
+                    for (Schema<?> replacement: it(customize(type, context, schemaProvider))) {
                         modified[0] = Assert.notNull(replacement);
                     }
                 } catch (Exception e) {
@@ -371,8 +372,8 @@ public abstract class OpenAPISupport {
         /**
          * Customize schema defined by ModelConverter
          */
-        protected Option<Schema<?>> customize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
-            for (Class<?> clazz: Some(MemberUtil.memberClassUnwrappingOption(type.getType()))) {
+        protected Optional<Schema<?>> customize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
+            for (Class<?> clazz: it(Optional.of(MemberUtil.memberClassUnwrappingOption(type.getType())))) {
                 if (clazz.equals(DateTime.class)) {
                     schema.get().description(DESCRIPTION_DateTime)
                           .example(RequestUtil.instant2string(SOME_DATETIME));
@@ -380,53 +381,53 @@ public abstract class OpenAPISupport {
                     schema.get().description(DESCRIPTION_Character)
                           .example("c");
                 } else if (clazz.equals(Interval.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().format("interval")
+                    return Optional.of(new StringSchema().format("interval")
                                                   .description(DESCRIPTION_Interval)
                                                   .example(RequestUtil.interval2stringRestrictedToInfinity(new Interval(SOME_DATETIME, SOME_DATETIME.plusHours(1)))));
                 } else if (clazz.equals(LocalDate.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().description(DESCRIPTION_LocalDate)
+                    return Optional.of(new StringSchema().description(DESCRIPTION_LocalDate)
                                                   .format("date")
                                                   .example("1982-01-22"));
                 } else if (clazz.equals(UUID.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().format("uuid"));
+                    return Optional.of(new StringSchema().format("uuid"));
                 } else if (clazz.equals(URI.class)) {
                     schema.get().format("uri")
                           .description(DESCRIPTION_URI)
                           .example("https://www.liikennevirasto.fi");
                 } else if (clazz.equals(LocalTime.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().format("localtime")
+                    return Optional.of(new StringSchema().format("localtime")
                                                   .description(DESCRIPTION_LocalTime)
                                                   .pattern("[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}")
                                                   .example("13:20:45"));
                 } else if (clazz.equals(Duration.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().format("duration")
+                    return Optional.of(new StringSchema().format("duration")
                                                   .description(DESCRIPTION_Duration)
                                                   .example("PT67S"));
                 } else if (clazz.equals(Period.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().format("iso8601")
+                    return Optional.of(new StringSchema().format("iso8601")
                                                   .description(DESCRIPTION_Period)
                                                   .example("P2Y4M6W5DT12H35M30S"));
                 } else if (clazz.equals(DateTimeZone.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().format("datetimezone")
+                    return Optional.of(new StringSchema().format("datetimezone")
                                                   .description(DESCRIPTION_TimeZone)
                                                   .example("Europe/Helsinki"));
                 } else if (clazz.equals(PropertyName.class)) {
-                    return Option.<Schema<?>>Some(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
+                    return Optional.of(new StringSchema().pattern("-?[a-zA-Z0-9_][.a-zA-Z0-9_]*[.*]?"));
                 }
             }
-            return Option.<Schema<?>>None();
+            return Optional.empty();
         }
         
         protected void postCustomize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
-            Annotation[] annotations = Option.of(type.getCtxAnnotations()).getOrElse(new Annotation[0]);
-            Pair<Option<String>, Option<String>> d = doc(Option.of(type.getPropertyName()), type.getType(), annotations, Option.<Class<?>>None());
-            for (String s: d.right()) {
+            Annotation[] annotations = Optional.ofNullable(type.getCtxAnnotations()).orElse(new Annotation[0]);
+            Pair<Optional<String>, Optional<String>> d = doc(Optional.ofNullable(type.getPropertyName()), type.getType(), annotations, Optional.empty());
+            for (String s: it(d.right())) {
                 if (schema.get().getDescription() == null) {
                     schema.get().description(langsToList(s));
                 }
             }
-            for (Class<?> clazz: Some(MemberUtil.memberClassUnwrappingOption(type.getType()))) {
-                for (String title: getSchemaTitle(clazz)) {
+            for (Class<?> clazz: it(Optional.of(MemberUtil.memberClassUnwrappingOption(type.getType())))) {
+                for (String title: it(getSchemaTitle(clazz))) {
                     schema.get().title(title);
                 }
             }
@@ -434,13 +435,13 @@ public abstract class OpenAPISupport {
         }
     }
     
-    protected Option<String> getSchemaTitle(Class<?> clazz) {
-        for (Documentation doc: Option.of(clazz.getAnnotation(Documentation.class))) {
+    protected Optional<String> getSchemaTitle(Class<?> clazz) {
+        for (Documentation doc: it(Optional.ofNullable(clazz.getAnnotation(Documentation.class)))) {
             if (!doc.name().isEmpty()) {
-                return Some(doc.name());
+                return Optional.of(doc.name());
             }
         }
-        return None();
+        return Optional.empty();
     }
     
     private static Schema<?> getRef(ModelConverterContext context, Schema<?> refSchema) {
@@ -472,7 +473,7 @@ public abstract class OpenAPISupport {
 
         for (BeanPropertyDefinition property: beanDescription.findProperties()) {
             AnnotatedMember member = property.getPrimaryMember();
-            if (member != null && !Option.class.isAssignableFrom(member.getRawType()) && resolvedSchema.getProperties().containsKey(property.getName()) &&
+            if (member != null && !Optional.class.isAssignableFrom(member.getRawType()) && resolvedSchema.getProperties().containsKey(property.getName()) &&
                     (resolvedSchema.getRequired() == null || !resolvedSchema.getRequired().contains(property.getName()))) {
                 resolvedSchema.addRequiredItem(property.getName());
             }
@@ -490,14 +491,14 @@ public abstract class OpenAPISupport {
 
         @Override
         public Operation customize(Operation operation, final HandlerMethod handlerMethod) {
-            Pair<Option<String>, Option<String>> d = doc(Some(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), Option.<Class<?>>None());
-            operation.setTags(newList(mkString(" - ", concat(d.left(), d.right()))));
+            Pair<Optional<String>, Optional<String>> d = doc(Optional.of(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), Optional.empty());
+            operation.setTags(newList(mkString(" - ", concat(it(d.left()), it(d.right())))));
             
-            Pair<Option<String>, Option<String>> dd = doc(Some(handlerMethod.getMethod().getName()), handlerMethod.getMethod().getReturnType(), handlerMethod.getMethod().getAnnotations(), Option.<Class<?>>Some(handlerMethod.getBeanType()));
-            for (String s: dd.left()) {
+            Pair<Optional<String>, Optional<String>> dd = doc(Optional.of(handlerMethod.getMethod().getName()), handlerMethod.getMethod().getReturnType(), handlerMethod.getMethod().getAnnotations(), Optional.of(handlerMethod.getBeanType()));
+            for (String s: it(dd.left())) {
                 operation.setSummary(s);
             }
-            for (String s: dd.right()) {
+            for (String s: it(dd.right())) {
                 operation.setDescription(langsToList(s));
             }
             
@@ -507,16 +508,11 @@ public abstract class OpenAPISupport {
                 operation.setDeprecated(false); // Don't mark as deprecated if not explicitly annotated as such (Springdoc considers also inherited class annotations)
             }
             
-            if (includeFormatParameter && !exists(OpenAPISupport_.parameterIsFormat, Option.of(operation.getParameters()).getOrElse(Collections.<Parameter>emptyList()))) {
+            if (includeFormatParameter && !exists(OpenAPISupport_.parameterIsFormat, Optional.ofNullable(operation.getParameters()).orElse(Collections.<Parameter>emptyList()))) {
                 if (operation.getParameters() == null) {
                     operation.setParameters(Collections.<Parameter>newMutableList());
                 }
-                for (String value: find(new Predicate<String>() {
-                    @Override
-                    public boolean accept(String candidate) {
-                        return candidate.contains("{format}") || candidate.contains("{format:");
-                    }
-                }, handlerMethod.getMethodAnnotation(RequestMapping.class).value())) {
+                for (String value: it(find(candidate -> candidate.contains("{format}") || candidate.contains("{format:"), handlerMethod.getMethodAnnotation(RequestMapping.class).value()))) {
                     Iterable<String> visibleFormats = map(OpenAPISupport_.enumName.andThen(OpenAPISupport_.toLowerCase), VISIBLE_FORMATS);
                     String pattern = value.replaceFirst(".*[{]format([^}]*)[}].*", "$1");
                     StringSchema schema = new StringSchema();
@@ -534,38 +530,32 @@ public abstract class OpenAPISupport {
                 }
             }
             
-            operation.setParameters(new ArrayList<Parameter>(newList(flatMap(new Apply<Parameter,Option<Parameter>>() {
-                @Override
-                public Option<Parameter> apply(Parameter parameter) {
-                    if (parameter.getName().equals("format")) {
-                        return Some(parameter);
-                    } else {
-                        final String paramName = parameter.getName();
-                        final String paramIn = parameter.getIn();
-                        for (java.lang.reflect.Parameter methodParameter: find(new Predicate<java.lang.reflect.Parameter>() {
-                            @Override
-                            public boolean accept(java.lang.reflect.Parameter candidate) {
-                                return "query".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(RequestParam.class)
-                                     ? candidate.getAnnotation(RequestParam.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestParam.class).name().equalsIgnoreCase(paramName)
-                                     : "path".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(PathVariable.class)
-                                     ? candidate.getAnnotation(PathVariable.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(PathVariable.class).name().equalsIgnoreCase(paramName)
-                                     : "path".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(MatrixVariable.class)
-                                     ? candidate.getAnnotation(MatrixVariable.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(MatrixVariable.class).name().equalsIgnoreCase(paramName)
-                                     : "header".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(RequestHeader.class)
-                                     ? candidate.getAnnotation(RequestHeader.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestHeader.class).name().equalsIgnoreCase(paramName)
-                                     : "cookie".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(CookieValue.class)
-                                     ? candidate.getAnnotation(CookieValue.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(CookieValue.class).name().equalsIgnoreCase(paramName)
-                                     : paramIn == null && candidate.isAnnotationPresent(RequestPart.class)
-                                     ? candidate.getAnnotation(RequestPart.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestPart.class).name().equalsIgnoreCase(paramName)
-                                     : paramIn == null && candidate.isAnnotationPresent(RequestAttribute.class)
-                                     ? candidate.getAnnotation(RequestAttribute.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestAttribute.class).name().equalsIgnoreCase(paramName)
-                                     : candidate.getName().equalsIgnoreCase(paramName);
-                            }
-                        }, handlerMethod.getMethod().getParameters())) {
-                            return OpenAPISupport.this.customize(ignoreRevision, parameter, methodParameter);
-                        }
-                        return Some(parameter);
+            operation.setParameters(new ArrayList<Parameter>(newList(flatMap(parameter -> {
+                if (parameter.getName().equals("format")) {
+                    return newList(parameter);
+                } else {
+                    final String paramName = parameter.getName();
+                    final String paramIn = parameter.getIn();
+                    for (java.lang.reflect.Parameter methodParameter: it(find(candidate -> {
+                            return "query".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(RequestParam.class)
+                                 ? candidate.getAnnotation(RequestParam.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestParam.class).name().equalsIgnoreCase(paramName)
+                                 : "path".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(PathVariable.class)
+                                 ? candidate.getAnnotation(PathVariable.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(PathVariable.class).name().equalsIgnoreCase(paramName)
+                                 : "path".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(MatrixVariable.class)
+                                 ? candidate.getAnnotation(MatrixVariable.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(MatrixVariable.class).name().equalsIgnoreCase(paramName)
+                                 : "header".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(RequestHeader.class)
+                                 ? candidate.getAnnotation(RequestHeader.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestHeader.class).name().equalsIgnoreCase(paramName)
+                                 : "cookie".equalsIgnoreCase(paramIn) && candidate.isAnnotationPresent(CookieValue.class)
+                                 ? candidate.getAnnotation(CookieValue.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(CookieValue.class).name().equalsIgnoreCase(paramName)
+                                 : paramIn == null && candidate.isAnnotationPresent(RequestPart.class)
+                                 ? candidate.getAnnotation(RequestPart.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestPart.class).name().equalsIgnoreCase(paramName)
+                                 : paramIn == null && candidate.isAnnotationPresent(RequestAttribute.class)
+                                 ? candidate.getAnnotation(RequestAttribute.class).value().equalsIgnoreCase(paramName) || candidate.getAnnotation(RequestAttribute.class).name().equalsIgnoreCase(paramName)
+                                 : candidate.getName().equalsIgnoreCase(paramName);
+                    }, handlerMethod.getMethod().getParameters()))) {
+                        return newList(OpenAPISupport.this.customize(ignoreRevision, parameter, methodParameter));
                     }
+                    return newList(parameter);
                 }
             }, operation.getParameters()))));
             
@@ -574,13 +564,13 @@ public abstract class OpenAPISupport {
     }
     
     @SuppressWarnings("unchecked")
-    protected Pair<Option<String>,Option<String>> doc(Option<String> name, Type genericType, Annotation[] annotations, Option<Class<?>> declaringClass) {
-        for (Documentation doc: (Iterable<Documentation>)(Object)concat(find(OpenAPISupport_.equalsDocumentation, annotations),
-                                                                        find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations()))) {
-            return Pair.<Option<String>,Option<String>>of(doc.name().isEmpty() && doc.name_en().isEmpty() ? Option.<String>None() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
-                           doc.description().isEmpty() && doc.description_en().isEmpty() ? Option.<String>None() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
+    protected Pair<Optional<String>,Optional<String>> doc(Optional<String> name, Type genericType, Annotation[] annotations, Optional<Class<?>> declaringClass) {
+        for (Documentation doc: (Iterable<Documentation>)(Object)concat(it(find(OpenAPISupport_.equalsDocumentation, annotations)),
+                                                                        it(find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations())))) {
+            return Pair.<Optional<String>,Optional<String>>of(doc.name().isEmpty() && doc.name_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(it(str2option(doc.name())), it(str2option(doc.name_en()))))),
+                           doc.description().isEmpty() && doc.description_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(it(str2option(doc.description())), it(str2option(doc.description_en()))))));
         }
-        return Pair.of(Option.<String>None(), Option.<String>None());
+        return Pair.of(Optional.empty(), Optional.empty());
     }
 
     public GroupedOpenApi.Builder createGroupedOpenApi(VersionBase<?> version, final boolean ignoreRevision, boolean includeFormatParameter, String title, String description) {
@@ -660,7 +650,7 @@ public abstract class OpenAPISupport {
         return description.contains(" / ") ? "- " + description.replace(" / ", "\n- ") : description;
     }
     
-    static Option<String> str2option(String s) {
-        return s.isEmpty() ? Option.<String>None() : Option.<String>Some(s);
+    static Optional<String> str2option(String s) {
+        return s.isEmpty() ? Optional.empty() : Optional.of(s);
     }
 }

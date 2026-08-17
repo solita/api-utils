@@ -37,7 +37,7 @@ import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 
 public class HttpSerializers {
@@ -259,7 +259,7 @@ public class HttpSerializers {
         @Override
         public SRSName apply(String source) throws InvalidValueException {
             try {
-                Option<SRSName> found = find(x -> x.value.equals(source), SRSName.validValues);
+                Optional<SRSName> found = find(x -> x.value.equals(source), SRSName.validValues);
                 Assert.defined(found);
                 return found.get();
             } catch (RuntimeException e) {

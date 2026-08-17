@@ -1,8 +1,7 @@
 package fi.solita.utils.api.request;
 
 import static fi.solita.utils.api.util.ResponseUtil.redirectToRevision;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+import static fi.solita.utils.functional.Collections.it;
 
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +17,7 @@ import fi.solita.utils.api.util.ResponseUtil;
 import fi.solita.utils.api.util.ResponseUtil.Response;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class RevisionedSupportServiceBase extends SupportServiceBase implements RevisionProvider {
     protected final Duration revisionsRedirectCached;
@@ -72,36 +71,36 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         redirectToCurrentInterval(RevisionedSupportServiceBase_.redirectToCurrentRevisionAndInterval.ap(this), req, res, durationOrPeriod);
     }
     
-    protected Option<Void> checkRevisions(Revision currentRevision, Revision revision, Request request, Response response) {
+    protected Optional<Void> checkRevisions(Revision currentRevision, Revision revision, Request request, Response response) {
         if (!withinTolerance(currentRevision, revision)) {
             ResponseUtil.redirectToAnotherRevision(currentRevision.revision, request, response);
-            return None();
+            return Optional.empty();
         }
-        return Some(null);
+        return Optional.of(null);
     }
     
-    protected Option<Void> checkRevision(Revision revision, Request request, Response response) {
+    protected Optional<Void> checkRevision(Revision revision, Request request, Response response) {
         Revision currentRevision = getCurrentRevision();
         return checkRevisions(currentRevision, revision, request, response);
     }
     
-    protected Option<Void> checkRevisionAndUrl(Revision revision, Request request, Response response, String... acceptedParams) {
-        for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
+    protected Optional<Void> checkRevisionAndUrl(Revision revision, Request request, Response response, String... acceptedParams) {
+        for (@SuppressWarnings("unused") Void v: it(checkRevision(revision, request, response))) {
             checkUrl(request, acceptedParams);
-            return Some(null);
+            return Optional.of(null);
         }
-        return None();
+        return Optional.empty();
     }
     
     /**
      * @throws NotFoundException for unidentified format
      */
-    protected Option<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, Request request, Response response, String... acceptedParams) throws NotFoundException {
-        for (@SuppressWarnings("unused") Void v: checkRevision(revision, request, response)) {
+    protected Optional<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, Request request, Response response, String... acceptedParams) throws NotFoundException {
+        for (@SuppressWarnings("unused") Void v: it(checkRevision(revision, request, response))) {
             checkUrl(request, acceptedParams);
             RequestData data = NotFoundException.assertFound(resolveFormat(request, response));
-            return Some(new RevisionedRequestData(data.format, data.etags, revision));
+            return Optional.of(new RevisionedRequestData(data.format, data.etags, revision));
         }
-        return None();
+        return Optional.empty();
     }
 }

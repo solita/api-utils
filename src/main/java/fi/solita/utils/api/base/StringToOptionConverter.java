@@ -1,7 +1,7 @@
 package fi.solita.utils.api.base;
 
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.util.Collections;
 import java.util.Set;
@@ -10,7 +10,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public class StringToOptionConverter implements ConditionalGenericConverter {
 
@@ -22,7 +22,7 @@ public class StringToOptionConverter implements ConditionalGenericConverter {
 
     @Override
     public Set<ConvertiblePair> getConvertibleTypes() {
-        return Collections.singleton(new ConvertiblePair(String.class, Option.class));
+        return Collections.singleton(new ConvertiblePair(String.class, Optional.class));
     }
 
     /**
@@ -35,7 +35,7 @@ public class StringToOptionConverter implements ConditionalGenericConverter {
 
     @Override
     public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
-        if (targetType.getType().equals(Option.class)) {
+        if (targetType.getType().equals(Optional.class)) {
             return this.conversionService.canConvert(sourceType, target(targetType));
         } else {
             return false;
@@ -45,8 +45,8 @@ public class StringToOptionConverter implements ConditionalGenericConverter {
     @Override
     public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
         if (source == null) {
-            return None();
+            return Optional.empty();
         }
-        return Some(this.conversionService.convert(source, sourceType, target(targetType)));
+        return Optional.of(this.conversionService.convert(source, sourceType, target(targetType)));
     }
 }

@@ -2,6 +2,7 @@ package fi.solita.utils.api.format;
 
 import fi.solita.utils.functional.Collections;
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableLinkedMapOfSize;
@@ -29,8 +30,8 @@ import static fi.solita.utils.functional.Functional.zipWithIndex;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
 import static org.rendersnake.HtmlAttributesFactory.id;
 import static org.rendersnake.HtmlAttributesFactory.type;
@@ -78,7 +79,7 @@ import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Monoids;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Functional;
@@ -148,13 +149,23 @@ public class ChartConversionService {
     static final Iterable<Object> handleCollections(Object s) {
         return s instanceof Iterable
                    ? (Iterable<Object>) s :
+               s instanceof Optional
+                   ? it((Optional<Object>)s) :
                      newList(s);
     }
     
     @SuppressWarnings("unchecked")
     static final Iterable<Object> recursivelyFlatten(Object o) {
         if (o instanceof Iterable) {
-            return flatMap(ChartConversionService_.recursivelyFlatten, (Iterable<Object>) o);
+            List<Iterable<Object>> foo = newList(map(ChartConversionService::recursivelyFlatten, (Iterable<Object>) o));
+            return flatten(foo);
+        }
+        if (o instanceof Optional) {
+            if (((Optional<?>)o).isPresent()) {
+                return recursivelyFlatten(((Optional<Object>) o).get());
+            } else {
+                return emptyList();
+            }
         }
         return newList(o);
     }
@@ -167,15 +178,15 @@ public class ChartConversionService {
           }};
     }
     
-    protected Option<Object> toNumeric(Object value) {
+    protected Optional<Object> toNumeric(Object value) {
         if (value instanceof Number) {
-            return Some(value);
+            return Optional.of(value);
         } else {
             String serialized = new String(json.serialize(value), StandardCharsets.UTF_8);
             try {
-                return Some((Object)Double.parseDouble(serialized));
+                return Optional.of((Object)Double.parseDouble(serialized));
             } catch (NumberFormatException e) {
-                return None();
+                return Optional.empty();
             }
         }
     }
@@ -205,7 +216,7 @@ public class ChartConversionService {
     private static final Pattern P1 = Pattern.compile("^\\s*\\{\\s*\"([^\"]*)\"\\s*:\\s*0\\s*\\}\\s*$");
     
     String jsonSerializeKey(Object key) {
-        if (key == null || key == None()) {
+        if (key == null || key == Optional.empty()) {
             return "-";
         }
         String serialized = new String(json.serialize(newMap(Pair.of(key, 0))), StandardCharsets.UTF_8);
@@ -239,9 +250,9 @@ public class ChartConversionService {
              @Override
              public Iterable<Pair<String,Object>> apply(Pair<MetaNamedMember<T, Object>,Object> p) {
                  Object value = p.right();
-                 Option<Object> num = toNumeric(value);
+                 Optional<Object> num = toNumeric(value);
                  return newList(Pair.<String,Object>of(MemberUtil.memberName(p.left()), toKey(value)),
-                                Pair.<String,Object>of("_" + MemberUtil.memberName(p.left()), num.isDefined() ? num.get() : values.computeIfAbsent(value, new java.util.function.Function<Object,Object>() {
+                                Pair.<String,Object>of("_" + MemberUtil.memberName(p.left()), num.isPresent() ? num.get() : values.computeIfAbsent(value, new java.util.function.Function<Object,Object>() {
                                              @Override
                                              public Object apply(Object t) {
                                                  return values.size() + 1;
@@ -253,6 +264,12 @@ public class ChartConversionService {
     String toKey(Object o) {
         if (o instanceof Iterable) {
             if (isEmpty((Iterable<?>) o)) {
+                return "-";
+            }
+            return mkString(",", map(ChartConversionService_.jsonSerializeKey.ap(ChartConversionService.this), recursivelyFlatten(o)));
+        }
+        if (o instanceof Optional) {
+            if (!((Optional<?>)o).isPresent()) {
                 return "-";
             }
             return mkString(",", map(ChartConversionService_.jsonSerializeKey.ap(ChartConversionService.this), recursivelyFlatten(o)));
@@ -399,6 +416,8 @@ public class ChartConversionService {
                             Object val = m.apply(t);
                             if (val instanceof Iterable) {
                                 ret.addAll(newList(map(ChartConversionService_.jsonSerializeKey.ap(ChartConversionService.this), recursivelyFlatten(val))));
+                            } else if (val instanceof Optional) {
+                                ret.addAll(newList(map(ChartConversionService_.jsonSerializeKey.ap(ChartConversionService.this), recursivelyFlatten(val))));
                             } else {
                                 ret.add(jsonSerializeKey(val));
                             }
@@ -460,7 +479,7 @@ public class ChartConversionService {
                     } else {
                         Map<Object, List<T>> byCat = groupBy(x, objs);
                         for (Object category: xValues) {
-                            List<T> categoryObjects = find(category, byCat).getOrElse(Collections.<T>emptyList());
+                            List<T> categoryObjects = find(category, byCat).orElse(Collections.<T>emptyList());
                             data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", xIsInstant ? ((DateTime)category).getMillis() : category,
                                          reduce(Monoids.<String,Long>mapCombine(SemiGroups.longSum),
                                              map(categoryValues(categoryObjects), tail(members)))));

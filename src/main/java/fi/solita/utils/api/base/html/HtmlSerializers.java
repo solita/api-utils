@@ -37,7 +37,7 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.ApplyBiVoid;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
@@ -179,11 +179,11 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
-                html.span(lang("fi").class_(("t-" + typeClassSuffix).intern()).title(docDescription(value).getOrElse(null)))
+                html.span(lang("fi").class_(("t-" + typeClassSuffix).intern()).title(docDescription(value).orElse(null)))
                         .write(valueProducer.apply(value))
                     ._span()
-                    .span(lang("en").class_(("t-" + typeClassSuffix).intern()).title(docDescription_en(value).getOrElse(null)))
-                        .write(useValueAlsoForEnglish ? valueProducer.apply(value) : docName_en(value).getOrElse(valueProducer.apply(value)))
+                    .span(lang("en").class_(("t-" + typeClassSuffix).intern()).title(docDescription_en(value).orElse(null)))
+                        .write(useValueAlsoForEnglish ? valueProducer.apply(value) : docName_en(value).orElse(valueProducer.apply(value)))
                     ._span();
             }
         };
@@ -197,11 +197,11 @@ public abstract class HtmlSerializers {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(final Object value, HtmlCanvas html, final HtmlModule module) throws IOException {
-                if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
-                    html.span(lang("fi").title(docDescription((Enum<?>)value).getOrElse(((Enum<?>)value).name())))
+                if (ClassUtils.getEnumType(value.getClass()).isPresent()) {
+                    html.span(lang("fi").title(docDescription((Enum<?>)value).orElse(((Enum<?>)value).name())))
                             .write(((Enum<?>)value).name())
                         ._span()
-                        .span(lang("en").title(docName_en((Enum<?>)value).getOrElse(docDescription_en((Enum<?>)value).getOrElse(null))))
+                        .span(lang("en").title(docName_en((Enum<?>)value).orElse(docDescription_en((Enum<?>)value).orElse(null))))
                             .write(((Enum<?>)value).name())
                         ._span();
                 } else {
@@ -235,11 +235,11 @@ public abstract class HtmlSerializers {
         };
     }
     
-    protected abstract <T extends Enum<?>> Option<String> docName_en(T member);
+    protected abstract <T extends Enum<?>> Optional<String> docName_en(T member);
 
-    protected abstract <T extends Enum<?>> Option<String> docDescription_en(T member);
+    protected abstract <T extends Enum<?>> Optional<String> docDescription_en(T member);
 
-    protected abstract <T extends Enum<?>> Option<String> docDescription(T member);
+    protected abstract <T extends Enum<?>> Optional<String> docDescription(T member);
     
     
     
@@ -345,10 +345,10 @@ public abstract class HtmlSerializers {
         }
     };
     
-    private final HtmlSerializer<Option<?>> option = new HtmlSerializer<Option<?>>() {
+    private final HtmlSerializer<Optional<?>> option = new HtmlSerializer<Optional<?>>() {
         @Override
-        public void renderOn(Option<?> value, HtmlCanvas html, HtmlModule module) throws IOException {
-            if (value.isDefined()) {
+        public void renderOn(Optional<?> value, HtmlCanvas html, HtmlModule module) throws IOException {
+            if (value.isPresent()) {
                 html.render(module.toRenderable(value.get()));
             } else {
                 html.span(class_("missing-value"))
@@ -433,7 +433,7 @@ public abstract class HtmlSerializers {
     
     public Map<Class<?>, HtmlSerializer<?>> serializers() { return newMap(
         Pair.of(ResolvedMember.class, resolvedMember),
-        Pair.of(Option.class, option),
+        Pair.of(Optional.class, option),
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, uri),

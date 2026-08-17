@@ -5,7 +5,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import java.util.List;
 
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class TsvSerializer<T> {
     public static final class Cells extends fi.solita.utils.api.base.Cells<CharSequence> {
@@ -22,11 +22,11 @@ public abstract class TsvSerializer<T> {
             super((Iterable<CharSequence>) cells, stringRepresentation);
         }
         
-        private Cells(List<CharSequence> cells, Option<CharSequence> stringRepresentation, Option<String> unit, List<String> headers) {
+        private Cells(List<CharSequence> cells, Optional<CharSequence> stringRepresentation, Optional<String> unit, List<String> headers) {
             super(cells, stringRepresentation, unit, headers);
         }
         
-        public final Cells withUnit(Option<String> unit) {
+        public final Cells withUnit(Optional<String> unit) {
             return new Cells(cells, stringRepresentation, unit, headers);
         }
 
@@ -46,7 +46,7 @@ public abstract class TsvSerializer<T> {
         return newList("");
     }
     
-    public TsvSerializer<T> withUnit(final Option<String> unit) {
+    public TsvSerializer<T> withUnit(final Optional<String> unit) {
         final TsvSerializer<T> self = this;
         return new TsvSerializer<T>() {
             @Override

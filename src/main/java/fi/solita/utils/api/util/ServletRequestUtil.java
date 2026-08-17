@@ -1,7 +1,8 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Option.Some;
+
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,7 +20,7 @@ import fi.solita.utils.api.util.RequestUtil.IllegalQueryParametersException;
 import fi.solita.utils.api.util.RequestUtil.QueryParametersMustBeInAlphabeticalOrderException;
 import fi.solita.utils.api.util.RequestUtil.QueryParametersMustNotBeDuplicatedException;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class ServletRequestUtil {
     public static interface Request {
@@ -36,8 +37,8 @@ public abstract class ServletRequestUtil {
     }
     
     public static final ETags getETags(Request request) {
-        return new ETags(RequestUtil.parseETags(Option.of(request.getHeader(Headers.IF_MATCH))),
-                RequestUtil.parseETags(Option.of(request.getHeader(Headers.IF_NONE_MATCH))));
+        return new ETags(RequestUtil.parseETags(Optional.ofNullable(request.getHeader(Headers.IF_MATCH))),
+                RequestUtil.parseETags(Optional.ofNullable(request.getHeader(Headers.IF_NONE_MATCH))));
     }
     
     
@@ -47,29 +48,29 @@ public abstract class ServletRequestUtil {
     }
     
     public static final String getContextPath(Request req) {
-        return RequestUtil.getContextPath(req.getContextPath(), Option.of(req.getHeader(Headers.X_FORWARDED_PREFIX)));
+        return RequestUtil.getContextPath(req.getContextPath(), Optional.ofNullable(req.getHeader(Headers.X_FORWARDED_PREFIX)));
     }
     
     public static final URI getRequestURI(Request req) {
-        Option<String> qs = req.getQueryString() == null || req.getQueryString().trim().length() == 0 ? Option.<String>None() : Some(req.getQueryString());
-        Option<String> forwardedProto = Option.of(req.getHeader(Headers.X_FORWARDED_PROTO));
-        Option<String> forwardedHost = Option.of(req.getHeader(Headers.X_FORWARDED_HOST));
-        Option<String> forwardedPrefix = Option.of(req.getHeader(Headers.X_FORWARDED_PREFIX));
+        Optional<String> qs = req.getQueryString() == null || req.getQueryString().trim().length() == 0 ? Optional.empty() : Optional.of(req.getQueryString());
+        Optional<String> forwardedProto = Optional.ofNullable(req.getHeader(Headers.X_FORWARDED_PROTO));
+        Optional<String> forwardedHost = Optional.ofNullable(req.getHeader(Headers.X_FORWARDED_HOST));
+        Optional<String> forwardedPrefix = Optional.ofNullable(req.getHeader(Headers.X_FORWARDED_PREFIX));
         String url = req.getRequestURL().toString();
-        for (String proto: forwardedProto) {
+        for (String proto: it(forwardedProto)) {
             url = url.replaceFirst("[^:]+://", proto + "://");
         }
-        for (String host: forwardedHost) {
+        for (String host: it(forwardedHost)) {
             url = url.replaceFirst("://[^:/]*", "://" + host);
         }
-        for (String prefix: forwardedPrefix) {
+        for (String prefix: it(forwardedPrefix)) {
             url = url.replaceFirst("^[^:/]+://[^/]+", "$0" + prefix);
         }
-        return URI.create(url + qs.map(x -> "?" + x).getOrElse(""));
+        return URI.create(url + qs.map(x -> "?" + x).orElse(""));
     }
     
     public static final String getContextRelativePath(Request req) {
-        return RequestUtil.getContextRelativePath(req.getServletPath(), Option.of(req.getPathInfo()));
+        return RequestUtil.getContextRelativePath(req.getServletPath(), Optional.ofNullable(req.getPathInfo()));
     }
     
     public static final String getAPIVersionRelativePath(Request req) {
@@ -84,18 +85,18 @@ public abstract class ServletRequestUtil {
         return RequestUtil.getApiVersionBasePath(getContextPath(req), getContextRelativePath(req));
     }
     
-    public static final Either<Option<String>,SerializationFormat> resolveFormat(Request request) throws NotFoundException {
-        for (String extension: RequestUtil.resolveExtension(getContextRelativePath(request))) {
-            for (SerializationFormat ext: SerializationFormat.valueOfExtension(extension)) {
+    public static final Either<Optional<String>,SerializationFormat> resolveFormat(Request request) throws NotFoundException {
+        for (String extension: it(RequestUtil.resolveExtension(getContextRelativePath(request)))) {
+            for (SerializationFormat ext: it(SerializationFormat.valueOfExtension(extension))) {
                 return Either.right(ext);
             }
-            return Either.left(Some(extension));
+            return Either.left(Optional.of(extension));
         }
-        return Either.left(Option.<String>None());
+        return Either.left(Optional.empty());
     }
     
     public static final byte[] uncompressIfNeeded(Request req, byte[] data) throws IOException {
-        if (Option.of(req.getHeader(Headers.CONTENT_ENCODING)).getOrElse("").contains("gzip")) {
+        if (Optional.ofNullable(req.getHeader(Headers.CONTENT_ENCODING)).orElse("").contains("gzip")) {
             GZIPInputStream is = new GZIPInputStream(new ByteArrayInputStream(data));
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             int nRead;

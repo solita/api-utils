@@ -127,7 +127,7 @@ public class TsvConversionService {
         Iterator<String> fieldNames = tableHeader.iterator();
         for (Cells cells: row) {
             CharSequence currentFieldName = fieldNames.next();
-            String unit = cells.unit.map(x -> " (" + x + ")").getOrElse("");
+            String unit = cells.unit.map(x -> " (" + x + ")").orElse("");
             if (cells.headers.isEmpty()) {
                 header.addAll(newList(repeat("", cells.cells.size())));
             } else if (cells.headers.equals(newList(""))) {

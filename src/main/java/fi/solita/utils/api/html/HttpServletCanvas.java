@@ -1,5 +1,7 @@
 package fi.solita.utils.api.html;
 
+import static fi.solita.utils.functional.Collections.it;
+
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
@@ -7,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.rendersnake.HtmlCanvas;
 
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 public abstract class HttpServletCanvas<REQ> extends HtmlCanvas {
     
@@ -28,7 +30,7 @@ public abstract class HttpServletCanvas<REQ> extends HtmlCanvas {
     public abstract String getContextPath();
 
     public abstract String getRequestPath();
-    public abstract Option<String> getRequestQueryString();
+    public abstract Optional<String> getRequestQueryString();
     
     public static <REQ> HtmlCanvas of(REQ req, OutputStreamWriter ow) {
         try {
@@ -54,7 +56,7 @@ public abstract class HttpServletCanvas<REQ> extends HtmlCanvas {
                 return true;
             }
         }
-        for (Class<?> sup: Option.of(source.getSuperclass())) {
+        for (Class<?> sup: it(Optional.ofNullable(source.getSuperclass()))) {
             if (classImplements(interf, sup)) {
                 return true;
             }

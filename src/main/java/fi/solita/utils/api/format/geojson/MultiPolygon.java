@@ -1,14 +1,14 @@
 package fi.solita.utils.api.format.geojson;
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 
 @JsonSerializeAsBean
 public final class MultiPolygon extends GeometryObject {
     public final Iterable<?> coordinates;
     
     public MultiPolygon(Iterable<?> polygonit) {
-        super("MultiPolygon", Option.<Crs>None());
+        super("MultiPolygon", Optional.empty());
         this.coordinates = polygonit;
     }
 

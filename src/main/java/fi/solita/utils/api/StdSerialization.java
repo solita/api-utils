@@ -8,7 +8,7 @@ import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
 import static fi.solita.utils.functional.FunctionalM.mapValues;
-import static fi.solita.utils.functional.Option.Some;
+
 
 import java.util.Collection;
 import java.util.Map;
@@ -44,7 +44,7 @@ import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Lens;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -103,11 +103,11 @@ public abstract class StdSerialization<BOUNDS> {
     
     public abstract ReferencedEnvelope bounds2envelope(BOUNDS place);
     
-    public static <DTO, SPATIAL> Function1<DTO, Option<GeometryObject>> geojsonFromDto(Apply<DTO, SPATIAL> geometryGetter, final Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
-        return Function.of(geometryGetter).andThen(new Apply<SPATIAL, Option<GeometryObject>>() {
+    public static <DTO, SPATIAL> Function1<DTO, Optional<GeometryObject>> geojsonFromDto(Apply<DTO, SPATIAL> geometryGetter, final Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
+        return Function.of(geometryGetter).andThen(new Apply<SPATIAL, Optional<GeometryObject>>() {
             @Override
-            public Option<GeometryObject> apply(SPATIAL t) {
-                return t == null ? Option.<GeometryObject>None() : toGeojson.apply(t);
+            public Optional<GeometryObject> apply(SPATIAL t) {
+                return t == null ? Optional.empty() : toGeojson.apply(t);
             }
         });
     }
@@ -123,7 +123,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialBoundedMap(req, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
@@ -138,7 +138,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
@@ -151,9 +151,9 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
-                    Some(Crs.of(srsName)))), Collections.<String,String>emptyMap());
+                    Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -171,7 +171,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.of(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -193,7 +193,7 @@ public abstract class StdSerialization<BOUNDS> {
     
     protected abstract String getRequestUri(Request req);
     
-    protected abstract Option<String> getRequestApiKey(Request req);
+    protected abstract Optional<String> getRequestApiKey(Request req);
 
     public <DTO, KEY, SPATIAL> Pair<byte[],Map<String,String>> stdSpatialBoundedMap(
             Request req,
@@ -207,7 +207,7 @@ public abstract class StdSerialization<BOUNDS> {
             MetaNamedMember<? super DTO, KEY> key,
             Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
@@ -220,9 +220,9 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
-                    Some(Crs.of(srsName)))), Collections.<String,String>emptyMap());
+                    Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -240,7 +240,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serializeWithKey(title2fileName(title), mapValues(dataTransformer, data.get()), includes.includesFromColumnFiltering, key);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.of(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -271,7 +271,7 @@ public abstract class StdSerialization<BOUNDS> {
         HtmlTitle title,
         Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
         Apply<? super DTO, ? extends SPATIAL> toGeojson,
-        Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+        Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
     Pair<byte[],Map<String,String>> response;
     switch (format) {
     case JSON:
@@ -284,9 +284,9 @@ public abstract class StdSerialization<BOUNDS> {
                 concat(map(toFeature, map(
                         toGeojson,
                         geojsonPropertyTransformer,
-                        Function.constant(Option.<Crs>None()),
+                        Function.constant(Optional.empty()),
                         mapValue(dataTransformer, d).values())), resolvables),
-                Some(Crs.of(srsName)))), Collections.<String,String>emptyMap());
+                Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
         break;
     case JSONL:
         response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -304,7 +304,7 @@ public abstract class StdSerialization<BOUNDS> {
         response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
         break;
     case PNG:
-        response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+        response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.of(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
         break;
     case COUNT:
         response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -334,7 +334,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
@@ -347,9 +347,9 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             mapValue(dataTransformer, d).values())), resolvables),
-                    Some(Crs.of(srsName)))), Collections.<String,String>emptyMap());
+                    Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -367,7 +367,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serializeSingle(title2fileName(title), mapValue(dataTransformer, data.get()), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Option.<ReferencedEnvelope>None(), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.empty(), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -397,7 +397,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialBoundedCollection(req, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
@@ -412,7 +412,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
         case JSON:
@@ -425,9 +425,9 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             map(dataTransformer, d))), resolvables),
-                    Some(Crs.of(srsName)))), Collections.<String,String>emptyMap());
+                    Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -445,7 +445,7 @@ public abstract class StdSerialization<BOUNDS> {
             response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
             break;
         case PNG:
-            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Some(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+            response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.of(bounds2envelope(bbox)), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
             break;
         case COUNT:
             response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -474,7 +474,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialCollection(req, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
 
@@ -488,7 +488,7 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
@@ -501,9 +501,9 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             map(dataTransformer, d))), resolvables),
-                    Some(Crs.of(srsName)))), Collections.<String,String>emptyMap());
+                    Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -521,7 +521,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(title2fileName(title), newList(map(dataTransformer, data.get())), includes.includesFromColumnFiltering);
                 break;
             case PNG:
-                response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Option.<ReferencedEnvelope>None(), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+                response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.empty(), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
                 break;
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -550,7 +550,7 @@ public abstract class StdSerialization<BOUNDS> {
             Apply<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Option<GeometryObject>> toGeojson) {
+            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
@@ -564,14 +564,14 @@ public abstract class StdSerialization<BOUNDS> {
             HtmlTitle title,
             final Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
             final Apply<? super DTO, ? extends SPATIAL> toGeojson,
-            final Apply3<SPATIAL, Object, Option<Crs>, Feature> toFeature) {
+            final Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, new Apply<DTO, FeatureObject>() {
             @Override
             public FeatureObject apply(DTO d) {
                 return toFeature.apply(
                         toGeojson.apply(d),
                         geojsonPropertyTransformer.apply(d),
-                    Some(Crs.of(srsName)));
+                    Optional.of(Crs.of(srsName)));
             }
         });
     }
@@ -592,15 +592,15 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case GEOJSON:
                 DTO d = data.get();
-                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(Some(d), includes);
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(newList(d), includes);
                 DTO d2 = dataTransformer.apply(d);
                 FeatureObject feature = toFeatures.apply(d2);
                 
                 if (!resolvables.isEmpty()) {
                     if (feature instanceof FeatureCollection) {
-                        feature = new FeatureCollection(concat(((FeatureCollection)feature).features, resolvables), Some(Crs.of(srsName)));
+                        feature = new FeatureCollection(concat(((FeatureCollection)feature).features, resolvables), Optional.of(Crs.of(srsName)));
                     } else {
-                        feature = new FeatureCollection(cons(feature, resolvables), Some(Crs.of(srsName)));
+                        feature = new FeatureCollection(cons(feature, resolvables), Optional.of(Crs.of(srsName)));
                     }
                 }
                 response = Pair.of(geoJson.serialize(feature), Collections.<String,String>emptyMap());
@@ -621,7 +621,7 @@ public abstract class StdSerialization<BOUNDS> {
                 response = excel.serialize(title2fileName(title), dataTransformer.apply(data.get()), includes.includesFromColumnFiltering);
                 break;
             case PNG:
-                response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Option.<ReferencedEnvelope>None(), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
+                response = Pair.of(png.render(getRequestUri(req), getRequestApiKey(req), Optional.empty(), title2layerName(title.plainTextTitle)), Collections.<String,String>emptyMap());
                 break;
             case COUNT:
                 response = Pair.of(count.serialize(data.get()), Collections.<String,String>emptyMap());
@@ -657,12 +657,12 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY,DTO> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Option<? extends GeometryObject>, Object, Option<Crs>>map(
-                            Function.constant(Option.<GeometryObject>None()), 
+                    concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
+                            Function.constant(Optional.empty()), 
                             Function.id(),
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             mapValue(dataTransformer, d).values())), resolvables),
-                    Option.<Crs>None())), Collections.<String,String>emptyMap());
+                    Optional.empty())), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(mapValue(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -714,12 +714,12 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY,Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                        concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Option<? extends GeometryObject>, Object, Option<Crs>>map(
-                                Function.constant(Option.<GeometryObject>None()), 
+                        concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
+                                Function.constant(Optional.empty()), 
                                 Function.id(),
-                                Function.constant(Option.<Crs>None()),
+                                Function.constant(Optional.empty()),
                                 flatten(mapValues(dataTransformer, d).values()))), resolvables),
-                        Option.<Crs>None())), Collections.<String,String>emptyMap());
+                        Optional.empty())), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -772,12 +772,12 @@ public abstract class StdSerialization<BOUNDS> {
             Map<KEY,Iterable<DTO>> d = data.get();
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
-                        concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Option<? extends GeometryObject>, Object, Option<Crs>>map(
-                                Function.constant(Option.<GeometryObject>None()), 
+                        concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
+                                Function.constant(Optional.empty()), 
                                 Function.id(),
-                                Function.constant(Option.<Crs>None()),
+                                Function.constant(Optional.empty()),
                                 flatten(mapValues(dataTransformer, d).values()))), resolvables),
-                        Option.<Crs>None())), Collections.<String,String>emptyMap());
+                        Optional.empty())), Collections.<String,String>emptyMap());
             break;
         case JSONL:
             response = Pair.of(jsonlines.serialize(mapValues(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -829,12 +829,12 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Option<? extends GeometryObject>, Object, Option<Crs>>map(
-                            Function.constant(Option.<GeometryObject>None()),
+                    concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
+                            Function.constant(Optional.empty()),
                             Function.id(),
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             map(dataTransformer, d))), resolvables),
-                    Option.<Crs>None())), Collections.<String,String>emptyMap());
+                    Optional.empty())), Collections.<String,String>emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -884,12 +884,12 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case GEOJSON:
                 DTO d = data.get();
-                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(Some(d), includes);
+                Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(newList(d), includes);
                 Feature feature = new Feature(
-                        Option.<GeometryObject>None(),
+                        Optional.empty(),
                         dataTransformer.apply(d),
-                        Option.<Crs>None());
-                response = Pair.of(geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Option.<Crs>None())), Collections.<String,String>emptyMap());
+                        Optional.empty());
+                response = Pair.of(geoJson.serialize(resolvables.isEmpty() ? feature : new FeatureCollection(cons(feature, resolvables), Optional.empty())), Collections.<String,String>emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(newList(dataTransformer.apply(data.get()))), Collections.<String,String>emptyMap());
@@ -941,7 +941,7 @@ public abstract class StdSerialization<BOUNDS> {
                             Function.constant("typeName"),
                             Function.id(),
                             data)),
-                    Option.<Crs>None())), Collections.<String,String>emptyMap());
+                    Optional.empty())), Collections.<String,String>emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(data), Collections.<String,String>emptyMap());
@@ -993,12 +993,12 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = data.get();
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    concat(Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Option<? extends GeometryObject>, Object, Option<Crs>>map(
-                            Function.constant(Option.<GeometryObject>None()),
+                    concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
+                            Function.constant(Optional.empty()),
                             Function.id(),
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             map(dataTransformer, d))), resolvables),
-                    Option.<Crs>None())), Collections.<String,String>emptyMap());
+                    Optional.empty())), Collections.<String,String>emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), Collections.<String,String>emptyMap());
@@ -1048,12 +1048,12 @@ public abstract class StdSerialization<BOUNDS> {
             case GEOJSON:
                 Iterable<DTO> d = map(dataTransformer, data.get());
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    Functional.<Option<? extends GeometryObject>, Object, Option<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Option<? extends GeometryObject>, Object, Option<Crs>>map(
-                            Function.constant(Option.<GeometryObject>None()),
+                    Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
+                            Function.constant(Optional.empty()),
                             Function.id(),
-                            Function.constant(Option.<Crs>None()),
+                            Function.constant(Optional.empty()),
                             d)),
-                    Option.<Crs>None())), Collections.<String,String>emptyMap());
+                    Optional.empty())), Collections.<String,String>emptyMap());
                 break;
             case JSONL:
                 response = Pair.of(jsonlines.serialize(map(dataTransformer, data.get())), Collections.<String,String>emptyMap());

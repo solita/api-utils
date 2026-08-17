@@ -42,7 +42,7 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Tuple;
@@ -277,15 +277,15 @@ public class JsonSerializers {
     };
     
     @SuppressWarnings("rawtypes")
-    private final JsonSerializer<Option> option = new StdSerializer<Option>(Option.class) {
+    private final JsonSerializer<Optional> option = new StdSerializer<Optional>(Optional.class) {
         @Override
-        public boolean isEmpty(SerializerProvider provider, Option value) {
-            return value == null || !value.isDefined();
+        public boolean isEmpty(SerializerProvider provider, Optional value) {
+            return value == null || !value.isPresent();
         }
 
         @Override
-        public void serialize(Option value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
-            if (value.isDefined()) {
+        public void serialize(Optional value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            if (value.isPresent()) {
                 jgen.writeObject(value.get());
             } else {
                 jgen.writeNull();
@@ -325,10 +325,10 @@ public class JsonSerializers {
     };
     
     @SuppressWarnings("rawtypes")
-    private final JsonSerializer<Option> optionKey = new StdSerializer<Option>(Option.class) {
+    private final JsonSerializer<Optional> optionKey = new StdSerializer<Optional>(Optional.class) {
         @Override
-        public void serialize(Option value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
-            if (value.isDefined()) {
+        public void serialize(Optional value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+            if (value.isPresent()) {
                 provider.findKeySerializer(value.get().getClass(), null).serialize(value.get(), jgen, provider);
             } else {
                 jgen.writeFieldName("");
@@ -368,7 +368,7 @@ public class JsonSerializers {
     
     public Map<Class<?>,JsonSerializer<?>> serializers() { return Collections.<Class<?>, JsonSerializer<?>>newMap(
         Pair.of(ResolvedMember.class, resolvedMember),
-        Pair.of(Option.class, option),
+        Pair.of(Optional.class, option),
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, stringSerializer(URI.class, Serializers_.ser.ap(s))),
@@ -385,7 +385,7 @@ public class JsonSerializers {
     }
     
     public Map<Class<?>,JsonSerializer<?>> keySerializers() { return Collections.<Class<?>, JsonSerializer<?>>newMap(
-        Pair.of(Option.class, optionKey),
+        Pair.of(Optional.class, optionKey),
         Pair.of(Either.class, eitherKey),
         Pair.of(URI.class, keySerializer(URI.class, Serializers_.ser.ap(s))),
         Pair.of(UUID.class, keySerializer(UUID.class, Serializers_.ser9.ap(s))),

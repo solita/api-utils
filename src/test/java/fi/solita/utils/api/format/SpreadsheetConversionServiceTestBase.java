@@ -3,8 +3,8 @@ package fi.solita.utils.api.format;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.Cells;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple3;
@@ -27,32 +27,32 @@ public abstract class SpreadsheetConversionServiceTestBase {
     
     @JsonSerializeAsBean
     public static class SomeDto {
-        public final Option<Interval> optionInterval = Some(new Interval(DateTime.now(), DateTime.now()));
+        public final Optional<Interval> optionInterval = Optional.of(new Interval(DateTime.now(), DateTime.now()));
     }
     
     @JsonSerializeAsBean
     public static class NoneDto {
-        public final Option<Interval> optionInterval = None();
+        public final Optional<Interval> optionInterval = Optional.empty();
     }
     
     @JsonSerializeAsBean
     public static class NullDto {
-        public final Option<Interval> nullInterval = null;
+        public final Optional<Interval> nullInterval = null;
     }
     
     @JsonSerializeAsBean
     public static class NestedSomeDto {
-        public final Option<SomeDto> nested = Some(new SomeDto());
+        public final Optional<SomeDto> nested = Optional.of(new SomeDto());
     }
     
     @JsonSerializeAsBean
     public static class NestedNoneDto {
-        public final Option<NoneDto> nested = Some(new NoneDto());
+        public final Optional<NoneDto> nested = Optional.of(new NoneDto());
     }
     
     @JsonSerializeAsBean
     public static class NestedNullDto {
-        public final Option<NullDto> nested = Some(new NullDto());
+        public final Optional<NullDto> nested = Optional.of(new NullDto());
     }
     
     @JsonSerializeAsBean
@@ -82,12 +82,12 @@ public abstract class SpreadsheetConversionServiceTestBase {
     
     @JsonSerializeAsBean
     public static class CollectionSomeMulticolumnDto {
-        public final Collection<Option<Interval>> collectionSomeIntervals = newList(Some(new Interval(DateTime.now(), DateTime.now())), Some(new Interval(DateTime.now(), DateTime.now())));
+        public final Collection<Optional<Interval>> collectionSomeIntervals = newList(Optional.of(new Interval(DateTime.now(), DateTime.now())), Optional.of(new Interval(DateTime.now(), DateTime.now())));
     }
     
     @JsonSerializeAsBean
     public static class CollectionNoneMulticolumnDto {
-        public final Collection<Option<Interval>> collectionNoneIntervals = newList(Option.<Interval>None(), Option.<Interval>None());
+        public final Collection<Optional<Interval>> collectionNoneIntervals = newList(Optional.empty(), Optional.empty());
     }
     
     @JsonSerializeAsBean

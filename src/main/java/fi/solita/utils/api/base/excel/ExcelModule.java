@@ -1,11 +1,12 @@
 package fi.solita.utils.api.base.excel;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalS.range;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.lang.reflect.Array;
 import java.util.List;
@@ -18,7 +19,7 @@ import fi.solita.utils.api.JsonSerializeAsBean;
 import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.ClassUtils;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Tuple;
 
@@ -33,11 +34,11 @@ public class ExcelModule {
     @SuppressWarnings("unchecked")
     public <T> Cells serialize(Row row, int columnIndex, T obj) {
         Assert.notNull(obj);
-        return serialize(row, columnIndex, obj, obj instanceof Option && ((Option<?>)obj).isDefined() ? ((Option<?>)obj).get().getClass() : (Class<T>)obj.getClass());
+        return serialize(row, columnIndex, obj, obj instanceof Optional && ((Optional<?>)obj).isPresent() ? ((Optional<?>)obj).get().getClass() : (Class<T>)obj.getClass());
     }
 
     public <T> Cells serialize(Row row, int columnIndex, T obj, Class<?> type) {
-        if (obj == null || !Option.class.isAssignableFrom(type) && obj instanceof Option && !((Option<?>)obj).isDefined()) {
+        if (obj == null || !Optional.class.isAssignableFrom(type) && obj instanceof Optional && !((Optional<?>)obj).isPresent()) {
             List<Cell> cells = newMutableList();
             List<String> cols = columns(type);
             for (int index: range(0, cols.size()-1)) {
@@ -48,14 +49,14 @@ public class ExcelModule {
             return new Cells(cells, "").withHeaders(cols);
         }
         
-        if (!Option.class.isAssignableFrom(type) && obj instanceof Option && ((Option<?>)obj).isDefined()) {
-            return serialize(row, columnIndex, ((Option<?>)obj).get(), type);
+        if (!Optional.class.isAssignableFrom(type) && obj instanceof Optional && ((Optional<?>)obj).isPresent()) {
+            return serialize(row, columnIndex, ((Optional<?>)obj).get(), type);
         }
         
-        for (ExcelSerializer<Object> ser: resolveSerializer(obj.getClass())) {
+        for (ExcelSerializer<Object> ser: it(resolveSerializer(obj.getClass()))) {
             Cells ret = ser.render(this, row, columnIndex, obj);
-            if (obj instanceof Option) {
-                if (Option.class.isAssignableFrom(type)) {
+            if (obj instanceof Optional) {
+                if (Optional.class.isAssignableFrom(type)) {
                     return ret.withHeaders(ret.headers.isEmpty() ? newList("") : ret.headers);
                 } else {
                     List<String> cols = ret.headers.isEmpty() ? columns(type) : ret.headers;
@@ -78,56 +79,56 @@ public class ExcelModule {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Option<ExcelSerializer<T>> resolveSerializer(Class<?> type) {
+    private <T> Optional<ExcelSerializer<T>> resolveSerializer(Class<?> type) {
         ExcelSerializer<?> ret = serializers.get(type);
         if (ret != null) {
-            return Some((ExcelSerializer<T>)ret);
+            return Optional.of((ExcelSerializer<T>)ret);
         }
         
         // try direct interface implementations
         for (Class<?> e: type.getInterfaces()) {
-            for (ExcelSerializer<?> excelSerializer: find(e, serializers)) {
-                return Some((ExcelSerializer<T>)excelSerializer);
+            for (ExcelSerializer<?> excelSerializer: it(find(e, serializers))) {
+                return Optional.of((ExcelSerializer<T>)excelSerializer);
             }
         }
         
         // no exact match, try based on class hierarchy
         for (Class<?> e: ClassUtils.AllExtendedClasses.apply(type)) {
-            for (ExcelSerializer<?> ExcelSerializer: find(e, serializers)) {
-                return Some((ExcelSerializer<T>)ExcelSerializer);
+            for (ExcelSerializer<?> ExcelSerializer: it(find(e, serializers))) {
+                return Optional.of((ExcelSerializer<T>)ExcelSerializer);
             }
         }
         
         // no match, try based on inheritance
         for (Map.Entry<? extends Class<?>, ExcelSerializer<?>> e: serializers.entrySet()) {
             if (e.getKey().isAssignableFrom(type)) {
-                return Some((ExcelSerializer<T>)e.getValue());
+                return Optional.of((ExcelSerializer<T>)e.getValue());
             }
         }
         
         // for primitives, try corresponding object serializer
         if (type.isPrimitive()) {
-            for (ExcelSerializer<?> csvSerializer: find(ClassUtils.toObjectClass(type), serializers)) {
-                return Some((ExcelSerializer<T>)csvSerializer);
+            for (ExcelSerializer<?> csvSerializer: it(find(ClassUtils.toObjectClass(type), serializers))) {
+                return Optional.of((ExcelSerializer<T>)csvSerializer);
             }
         }
         
         // try an array
         if (type.isArray()) {
-            return Some((ExcelSerializer<T>)serializers.get(Array.class));
+            return Optional.of((ExcelSerializer<T>)serializers.get(Array.class));
         }
         
         // try a class explicitly marked to be serialized as a bean
         if (type.isAnnotationPresent(JsonSerializeAsBean.class)) {
-            return Some((ExcelSerializer<T>)serializers.get(JsonSerializeAsBean.class));
+            return Optional.of((ExcelSerializer<T>)serializers.get(JsonSerializeAsBean.class));
         }
         
-        return None();
+        return Optional.empty();
     }
     
     @SuppressWarnings("unchecked")
     public List<String> columns(Class<?> type) {
-        Option<ExcelSerializer<Object>> serializer = resolveSerializer(type);
-        return serializer.isDefined() ? serializer.get().columns(this, (Class<Object>) type) : Collections.<String>emptyList();
+        Optional<ExcelSerializer<Object>> serializer = resolveSerializer(type);
+        return serializer.isPresent() ? serializer.get().columns(this, (Class<Object>) type) : Collections.<String>emptyList();
     }
 }

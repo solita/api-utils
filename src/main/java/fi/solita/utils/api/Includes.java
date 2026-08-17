@@ -1,6 +1,7 @@
 package fi.solita.utils.api;
 
 import static fi.solita.utils.functional.Collections.emptyList;
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newArray;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
@@ -45,7 +46,7 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -105,7 +106,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     
     @Deprecated
     public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider<?> provider, FunctionProvider fp, SerializationFormat format, Iterable<PropertyName> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
-        return resolveIncludes(provider, fp, format, Option.of(propertyNames), members, builders, geometries, onlyExact);
+        return resolveIncludes(provider, fp, format, Optional.ofNullable(propertyNames), members, builders, geometries, onlyExact);
     }
 
     /**
@@ -116,19 +117,19 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
      * @param geometries Geometry members. Subset of <i>members</i>.
      */
     @SuppressWarnings("unchecked")
-    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider<?> provider, FunctionProvider fp, SerializationFormat format, Option<? extends Iterable<PropertyName>> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
+    public static final <T> Includes<T> resolveIncludes(ResolvableMemberProvider<?> provider, FunctionProvider fp, SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, final Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Iterable<? extends MetaNamedMember<? super T,?>> geometries, boolean onlyExact) {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         
-        if (propertyNames.isDefined() && newList(propertyNames.get()).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())).size()) {
+        if (propertyNames.isPresent() && newList(propertyNames.get()).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())).size()) {
             throw new RedundantPropertiesException(newSortedSet(flatten(filter(x -> size(x) > 1, group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())))))));
         }
         
-        if (propertyNames.isDefined() && (Functional.isEmpty(propertyNames.get()) ||
+        if (propertyNames.isPresent() && (Functional.isEmpty(propertyNames.get()) ||
                                           size(propertyNames.get()) == 1 && head(propertyNames.get()).isEmpty(fp))) {
             // propertyNames is empty or contains only the empty string
             ret = emptyList();
-        } else if (!propertyNames.isDefined() || forall(PropertyName_.isExclusion, propertyNames.get())) {
+        } else if (!propertyNames.isPresent() || forall(PropertyName_.isExclusion, propertyNames.get())) {
             // if no propertyNames given, or given but contains only exclusions:
             
             // For PNG exclude everything (geometry included back in the end)
@@ -157,11 +158,11 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     ret = Includes.withNestedMembers(members, Includes.Include.All, builders);
                     break;
             }
-            if (!propertyNames.isDefined()) {
+            if (!propertyNames.isPresent()) {
                 includesEverything = true;
             }
         } else {
-            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(x -> !x.isExclusion(), ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList()))));
+            ret = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, onlyExact, Includes.withNestedMembers(members, Includes.Include.All, builders)), filter(x -> !x.isExclusion(), ((Optional<Iterable<PropertyName>>)propertyNames).orElse(Collections.<PropertyName>emptyList()))));
         }
         
         // Include geometries for png/geojson/gml/mvt even if not explicitly requested
@@ -190,7 +191,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         }
         
         // Exclusions. Also excludes geometries if explicitly excluded.
-        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, false, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, ((Option<Iterable<PropertyName>>)propertyNames).getOrElse(Collections.<PropertyName>emptyList())))));
+        List<MetaNamedMember<? super T, ?>> toRemove = newList(flatMap(MemberUtil_.<T>toMembers().ap(provider, fp, false, Includes.withNestedMembers(members, Includes.Include.All, builders)), map(PropertyName_.omitExclusion, filter(PropertyName_.isExclusion, ((Optional<Iterable<PropertyName>>)propertyNames).orElse(Collections.<PropertyName>emptyList())))));
         ret = newList(subtract(ret, toRemove));
         if (toRemove != null) {
             for (MetaNamedMember<?,?> m: toRemove) {
@@ -205,8 +206,8 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         ret = newList(distinct(map(new Apply<MetaNamedMember<? super T,?>, MetaNamedMember<? super T,?>>() {
             @Override
             public MetaNamedMember<? super T, ?> apply(MetaNamedMember<? super T, ?> t) {
-                Option<List<MetaNamedMember<? super T, ?>>> x = find(t.getName(), resolvable);
-                if (x.isDefined()) {
+                Optional<List<MetaNamedMember<? super T, ?>>> x = find(t.getName(), resolvable);
+                if (x.isPresent()) {
                     return ResolvableMember.combineAll(x.get());
                 } else {
                     return t;
@@ -237,7 +238,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         for (MetaNamedMember<? super T, ?> member: members) {
             Type actualType = ClassUtils.getGenericType(member.getMember());
             ret.add(member);
-            for (Builder<?> builder: MemberUtil.findBuilderFor(newList(builders), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member))) {
+            for (Builder<?> builder: it(MemberUtil.findBuilderFor(newList(builders), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member)))) {
                 if (include == Includes.Include.NoBuildable) {
                     ret.remove(member);
                 }
@@ -245,7 +246,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                     Class<?> actualNestedType = MemberUtil.memberClass(nestedMember);
                     boolean flatten = Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(actualNestedType);
                     NestedMember<? super T,?> mem = NestedMember.unchecked(member, nestedMember, flatten);
-                    if (Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(ClassUtils.typeClass(ClassUtils.getFirstTypeArgument(actualType).getOrElse(void.class)))) {
+                    if (Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(ClassUtils.typeClass(ClassUtils.getFirstTypeArgument(actualType).orElse(void.class)))) {
                         // parent returns iterable of iterable -> flatten
                         mem = mem.modifyParent(x -> flatten((Iterable<Iterable<Object>>)x));
                     }

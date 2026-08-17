@@ -11,6 +11,7 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.sort;
+import static fi.solita.utils.functional.FunctionalA.concat;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -20,6 +21,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -41,7 +43,6 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Option;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple3;
@@ -140,7 +141,7 @@ public class CsvSerializers {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, Object value) {
-                if (ClassUtils.getEnumType(value.getClass()).isDefined()) {
+                if (ClassUtils.getEnumType(value.getClass()).isPresent()) {
                     return module.serialize(((Enum<?>)value).name());
                 } else {
                     StringBuilder sb = new StringBuilder();
@@ -157,14 +158,14 @@ public class CsvSerializers {
                         @SuppressWarnings("unchecked")
                         Class<Object> type = (Class<Object>) MemberUtil.memberClassUnwrappingOptionAndEither(f);
                         String[] arr = newArray(String.class, repeat("", module.columns(type).size()));
-                        Cells newCells = val == null || val instanceof Option && !((Option<?>)val).isDefined() ? module.serialize(Tuple.of((Object[])arr)) : module.serialize(val, type);
+                        Cells newCells = val == null || val instanceof Optional && !((Optional<?>)val).isPresent() ? module.serialize(Tuple.of((Object[])arr)) : module.serialize(val, type);
                         cells.addAll(newCells.cells);
     
                         List<String> newHeaders = newCells.headers.isEmpty() ? module.columns(type) : newCells.headers;
                         newHeaders = newList(map(x -> trim(f.getName() + " " + x), newHeaders));
                         headers.addAll(newHeaders);
                         
-                        if (val != null && (!(val instanceof Option) || ((Option<?>)val).isDefined())) {
+                        if (val != null && (!(val instanceof Optional) || ((Optional<?>)val).isPresent())) {
                             if (sb.length() > 0) {
                                 sb.append(", ");
                             }
@@ -176,7 +177,7 @@ public class CsvSerializers {
             }
             @Override
             public List<String> columns(CsvModule module, Class<T> type) {
-                if (ClassUtils.getEnumType(type).isDefined()) {
+                if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
                     Iterable<Field> fields = sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.apply(x) && !ClassUtils.StaticMembers.apply(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
@@ -208,7 +209,7 @@ public class CsvSerializers {
      */
     
     public static String cells2str(Cells cells) {
-        if (cells.stringRepresentation.isDefined()) {
+        if (cells.stringRepresentation.isPresent()) {
             return cells.stringRepresentation.get().toString();
         } else {
             return mkString(" ", cells.cells);
@@ -316,10 +317,10 @@ public class CsvSerializers {
         }
     };
     
-    private final CsvSerializer<Option<?>> option = new CsvSerializer<Option<?>>() {
+    private final CsvSerializer<Optional<?>> option = new CsvSerializer<Optional<?>>() {
         @Override
-        public Cells render(CsvModule module, Option<?> value) {
-            if (value.isDefined()) {
+        public Cells render(CsvModule module, Optional<?> value) {
+            if (value.isPresent()) {
                 return module.serialize(value.get());
             } else {
                 return new Cells("");
@@ -327,7 +328,7 @@ public class CsvSerializers {
         }
         
         @Override
-        public List<String> columns(CsvModule module, Class<Option<?>> type) {
+        public List<String> columns(CsvModule module, Class<Optional<?>> type) {
             throw new UnsupportedOperationException();
         }
     };
@@ -357,7 +358,7 @@ public class CsvSerializers {
     
     public Map<Class<?>, CsvSerializer<?>> serializers() { return newMap(
         Pair.of(ResolvedMember.class, resolvedMember),
-        Pair.of(Option.class, option),
+        Pair.of(Optional.class, option),
         Pair.of(Either.class, either),
         Pair.of(Tuple.class, tuple),
         Pair.of(URI.class, stringSerializer(Serializers_.ser.ap(s))),

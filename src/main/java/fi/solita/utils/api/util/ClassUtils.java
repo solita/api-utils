@@ -1,14 +1,15 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.flatMap;
-import static fi.solita.utils.functional.Functional.headOption;
+import static fi.solita.utils.functional.Functional.headOptional;
 import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.FunctionalA.concat;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -28,7 +29,7 @@ import fi.solita.utils.api.DynamicMember;
 import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Function1;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
 
 public class ClassUtils {
@@ -41,34 +42,34 @@ public class ClassUtils {
      * This is because enums with class bodies seem to differ from other enums...
      */
     @SuppressWarnings("unchecked")
-    public static <T> Option<Class<T>> getEnumType(Class<T> type) {
+    public static <T> Optional<Class<T>> getEnumType(Class<T> type) {
         if (type.isEnum()) {
-            return Some((Class<T>) type);
+            return Optional.of((Class<T>) type);
         }
         if (type.getEnclosingClass() != null && type.getEnclosingClass().isEnum()) {
-            return Some((Class<T>) type.getEnclosingClass());
+            return Optional.of((Class<T>) type.getEnclosingClass());
         }
-        return None();
+        return Optional.empty();
     }
     
-    public static Option<Type> getFirstTypeArgument(Type type) {
+    public static Optional<Type> getFirstTypeArgument(Type type) {
         if (type instanceof ParameterizedType) {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
-            return headOption(newList(args));
+            return headOptional(newList(args));
         } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 0) {
-            return Option.<Type>Some(((SimpleType)type).containedType(0));
+            return Optional.of(((SimpleType)type).containedType(0));
         }
-        return None();
+        return Optional.empty();
     }
     
-    public static Option<Type> getSecondTypeArgument(Type type) {
+    public static Optional<Type> getSecondTypeArgument(Type type) {
         if (type instanceof ParameterizedType) {
             Type[] args = ((ParameterizedType)type).getActualTypeArguments();
-            return headOption(tail(newList(args)));
+            return headOptional(tail(newList(args)));
         } else if (type instanceof SimpleType && ((SimpleType)type).containedTypeCount() > 1) {
-            return Option.<Type>Some(((SimpleType)type).containedType(1));
+            return Optional.of(((SimpleType)type).containedType(1));
         }
-        return None();
+        return Optional.empty();
     }
     
     public static Type getGenericType(AccessibleObject member) {
@@ -82,25 +83,25 @@ public class ClassUtils {
     }
 
     public static Class<?> typeClass(Type type) {
-        for (Class<?> ret: resolveClass(type)) {
+        for (Class<?> ret: it(resolveClass(type))) {
             return ret;
         }
         throw new IllegalArgumentException("Could not handle Type: " + type.getClass());
     }
     
-    public static Option<Class<?>> resolveClass(Type type) {
+    public static Optional<Class<?>> resolveClass(Type type) {
         if (type instanceof ParameterizedType) {
             return resolveClass(((ParameterizedType)type).getRawType());
         } else if (type instanceof Class) {
-            return Option.<Class<?>>Some((Class<?>) type);
+            return Optional.of((Class<?>) type);
         } else if (type instanceof TypeVariable<?>) {
             return resolveClass(((TypeVariable<?>) type).getBounds()[0]);
         } else if (type instanceof ResolvedType) {
-            return Option.<Class<?>>Some(((ResolvedType)type).getRawClass());
+            return Optional.of(((ResolvedType)type).getRawClass());
         } else if (type instanceof Builder.MapType) {
-            return Option.<Class<?>>Some(Map.class);
+            return Optional.of(Map.class);
         } else {
-            return None();
+            return Optional.empty();
         }
     }
     
@@ -131,7 +132,7 @@ public class ClassUtils {
         @SuppressWarnings("unchecked")
         @Override
         public Iterable<Class<?>> apply(Class<?> source) {
-            return source.getSuperclass() == null ? Collections.<Class<?>>emptyList() : (Iterable<Class<?>>)(Object)(cons(source.getSuperclass(), flatMap(this, Option.of(source.getSuperclass()))));
+            return source.getSuperclass() == null ? Collections.<Class<?>>emptyList() : (Iterable<Class<?>>)(Object)(cons(source.getSuperclass(), flatMap(this, it(Optional.ofNullable(source.getSuperclass())))));
         }
     };
     
@@ -139,7 +140,7 @@ public class ClassUtils {
         @Override
         public Iterable<Field> apply(Class<?> source) {
             if ( !source.getPackage().getName().startsWith("java") ) {
-                return concat(source.getDeclaredFields(), flatMap(this, Option.of(source.getSuperclass())));
+                return concat(source.getDeclaredFields(), flatMap(this, it(Optional.ofNullable(source.getSuperclass()))));
             }
             return newMutableList();
         }

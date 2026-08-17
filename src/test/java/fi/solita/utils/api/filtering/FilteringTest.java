@@ -3,8 +3,8 @@ package fi.solita.utils.api.filtering;
 import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Functional.filter;
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -21,15 +21,15 @@ import fi.solita.utils.api.base.json.JsonModule;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class FilteringTest {
     
     public static class Data {
         String required = "1";
-        Option<String> defined = Some("1");
-        Option<String> undefined = None();
+        Optional<String> defined = Optional.of("1");
+        Optional<String> undefined = Optional.empty();
         List<String> nonemptylist = newList("1");
         List<String> emptylist = emptyList();
         List<List<String>> listofnonemptylist = Arrays.asList(newList("1"));

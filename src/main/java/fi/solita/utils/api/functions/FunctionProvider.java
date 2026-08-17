@@ -1,7 +1,7 @@
 package fi.solita.utils.api.functions;
 
-import static fi.solita.utils.functional.Option.None;
-import static fi.solita.utils.functional.Option.Some;
+
+
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -19,7 +19,7 @@ import fi.solita.utils.api.filtering.FilterParser;
 import fi.solita.utils.api.filtering.Literal;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 
 public class FunctionProvider {
@@ -35,9 +35,9 @@ public class FunctionProvider {
     
     public static class UnsupportedFunctionForPropertyException extends RuntimeException {
         public final String functionName;
-        public final Option<String> propertyName;
+        public final Optional<String> propertyName;
         
-        public UnsupportedFunctionForPropertyException(String functionName, Option<String> propertyName) {
+        public UnsupportedFunctionForPropertyException(String functionName, Optional<String> propertyName) {
             super("Funktiota " + functionName + " ei voi käyttää parametrille " + propertyName);
             this.functionName = functionName;
             this.propertyName = propertyName;
@@ -66,7 +66,7 @@ public class FunctionProvider {
     }
     
     private static String getFunctionName(Matcher m) {
-        return Option.of(m.group(1)).getOrElse(m.group(4));
+        return Optional.ofNullable(m.group(1)).orElse(m.group(4));
     }
     
     public String mapArgument(String str, Apply<? super String,String> f) {
@@ -131,31 +131,31 @@ public class FunctionProvider {
     }
     
     @SuppressWarnings("unchecked")
-    public Option<Class<?>> changesResultType(String str) {
+    public Optional<Class<?>> changesResultType(String str) {
         Matcher m = FunctionProvider.PATTERN.matcher(str);
         if (m.matches()) {
             String functionName = getFunctionName(m);
             if ("start".equals(functionName)) {
-                return (Option<Class<?>>)(Object)Some(DateTime.class);
+                return (Optional<Class<?>>)(Object)Optional.of(DateTime.class);
             } else if ("end".equals(functionName)) {
-                return (Option<Class<?>>)(Object)Some(DateTime.class);
+                return (Optional<Class<?>>)(Object)Optional.of(DateTime.class);
             } else if ("duration".equals(functionName)) {
-                return (Option<Class<?>>)(Object)Some(Duration.class);
+                return (Optional<Class<?>>)(Object)Optional.of(Duration.class);
             }
         }
-        return None(); 
+        return Optional.empty(); 
     }
     
     public Object apply(String str, Object value) {
         Matcher m = FunctionProvider.PATTERN.matcher(str);
         if (m.matches()) {
-            return applyFunction(getFunctionName(m), Option.of(m.group(2)), value);
+            return applyFunction(getFunctionName(m), Optional.ofNullable(m.group(2)), value);
         } else {
             return value;
         }
     }
     
-    public Object applyFunction(String functionName, Option<String> propertyName, Object value) {
+    public Object applyFunction(String functionName, Optional<String> propertyName, Object value) {
         if ("round".equals(functionName)) {
             if (value instanceof Float) {
                 return Float.valueOf(((Float) value).longValue());

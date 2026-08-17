@@ -77,10 +77,10 @@ public abstract class ResponseUtil {
     private static void respond(Response response, byte[] data, ETags etags, int status, boolean cacheOKForInfinity) {
         try {
             String etag = calculateETag(data);
-            if (etags.ifMatch.isDefined() && !etags.ifMatch.get().contains(etag)) {
+            if (etags.ifMatch.isPresent() && !etags.ifMatch.get().contains(etag)) {
                 // "14.24 If-Match: If none of the entity tags match ... MUST return a 412"
                 respondError(response, 412, "Precondition Failed");
-            } else if (etags.ifNoneMatch.isDefined() && (etags.ifNoneMatch.get().contains("*") || etags.ifNoneMatch.get().contains(etag))) {
+            } else if (etags.ifNoneMatch.isPresent() && (etags.ifNoneMatch.get().contains("*") || etags.ifNoneMatch.get().contains(etag))) {
                 // "14.26 If-None-Match: If any of the entity tags match ... or if "*" is given and any current entity exists for that resource ... the server SHOULD respond with a 304"
                 respondError(response, 304, "Not Modified", Pair.of(Headers.ETAG, etag));
             } else {

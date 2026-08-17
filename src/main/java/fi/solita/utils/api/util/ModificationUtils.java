@@ -1,5 +1,6 @@
 package fi.solita.utils.api.util;
 
+import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMutableListOfSize;
 import static fi.solita.utils.functional.Collections.newMutableMapOfSize;
@@ -31,7 +32,7 @@ import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
-import fi.solita.utils.functional.Option;
+import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.functional.lens.Setter;
 import fi.solita.utils.meta.MetaField;
@@ -78,7 +79,7 @@ public class ModificationUtils {
         if (t == null) {
             return t;
         }
-        if (!MemberUtil.findBuilderFor(builders, builderType(t)).isDefined()) {
+        if (!MemberUtil.findBuilderFor(builders, builderType(t)).isPresent()) {
             throw new IllegalArgumentException("No Builder found for the type of the root object: " + builderType(t) + ". You have a bug?");
         }
         return ModificationUtils.withProperties(propertyNames, builders, fp, t);
@@ -92,7 +93,7 @@ public class ModificationUtils {
     @SuppressWarnings("unchecked")
     static final <T> T withProperties(Collection<PropertyName> propertyNames, Iterable<Builder<?>> builders, FunctionProvider fp, T t) {
         logger.debug("Including properties {} in {}", propertyNames, t);
-        for (Builder<T> builder: MemberUtil.<T>findBuilderFor(builders, builderType(t))) {
+        for (Builder<T> builder: it(MemberUtil.<T>findBuilderFor(builders, builderType(t)))) {
             logger.debug("Found Builder for {}", t.getClass());
             for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);
@@ -168,9 +169,9 @@ public class ModificationUtils {
                 throw new IllegalStateException("Something wrong");
             }
             return (T) ret;
-        } else if (t instanceof Option) {
+        } else if (t instanceof Optional) {
             logger.debug("Object is an Option: {}", t.getClass());
-            return (T)((Option<T>) t).map(ModificationUtils_.withProperties().ap(propertyNames, builders, fp));
+            return (T)((Optional<T>) t).map(ModificationUtils_.withProperties().ap(propertyNames, builders, fp));
         }
         
         logger.debug("No builder found for {}", t.getClass());
