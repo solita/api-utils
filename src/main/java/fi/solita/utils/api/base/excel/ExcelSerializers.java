@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -150,7 +151,7 @@ public class ExcelSerializers {
                     List<Cell> cells = newMutableList();
                     List<String> headers = newMutableList();
                     StringBuilder sb = new StringBuilder();
-                    for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(ClassUtils.PublicMembers.and(x -> !ClassUtils.StaticMembers.test(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                    for (Field f: sort(Comparator.comparing(ExcelSerializers_.fieldName), filter(ClassUtils.PublicMembers.and(x -> !ClassUtils.StaticMembers.test(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                         Object val;
                         try {
                             val = f.get(value);
@@ -186,7 +187,7 @@ public class ExcelSerializers {
                 if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
-                    Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    Iterable<Field> fields = sort(Comparator.comparing(ExcelSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
                     return newList(flatMap(ExcelSerializers_.fieldColumn.ap(module), fields));
                 }
             }

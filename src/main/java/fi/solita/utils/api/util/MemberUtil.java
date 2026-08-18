@@ -13,6 +13,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -130,8 +131,8 @@ public class MemberUtil {
             // Exactly the requested property was not found. Check if the property was resolvable, for example a reference to an external API
             Iterable<? extends MetaNamedMember<? super T, ?>> allResolvableMembers = filter(resolvableMemberProvider::isResolvable, fields);
             Iterable<? extends MetaNamedMember<? super T, ?>> potentialPrefixes = filter(x -> propertyName.startsWith(fp, MemberUtil.memberName(x)), allResolvableMembers);
-            for (MetaNamedMember<? super T, ?> prefix: sort(Compare.by(MemberUtil_.memberName.andThen(MemberUtil_.stringLength)), potentialPrefixes)) {
-                return newList(new ResolvableMember<T>(prefix, newSortedSet(Ordering.<PropertyName>natural(), newList(propertyName.stripPrefix(fp, memberName(prefix)))), resolvableMemberProvider.resolveType(prefix)));
+            for (MetaNamedMember<? super T, ?> prefix: sort(Comparator.comparing(MemberUtil_.memberName.andThen(MemberUtil_.stringLength)), potentialPrefixes)) {
+                return newList(new ResolvableMember<T>(prefix, newSortedSet(Comparator.naturalOrder(), newList(propertyName.stripPrefix(fp, memberName(prefix)))), resolvableMemberProvider.resolveType(prefix)));
             }
             throw new MemberUtil.UnknownPropertyNameException(propertyName);
         }

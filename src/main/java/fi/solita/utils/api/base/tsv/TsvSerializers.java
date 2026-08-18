@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,7 +39,6 @@ import fi.solita.utils.api.base.tsv.TsvSerializer.Cells;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
-import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
@@ -145,7 +145,7 @@ public class TsvSerializers {
                     StringBuilder sb = new StringBuilder();
                     List<CharSequence> cells = newMutableList();
                     List<String> headers = newMutableList();
-                    for (Field f: sort(Compare.by(TsvSerializers_.fieldName), filter(ClassUtils.PublicMembers.and(x -> !ClassUtils.StaticMembers.test(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                    for (Field f: sort(Comparator.comparing(TsvSerializers_.fieldName), filter(ClassUtils.PublicMembers.and(x -> !ClassUtils.StaticMembers.test(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                         Object val;
                         try {
                             val = f.get(value);
@@ -178,7 +178,7 @@ public class TsvSerializers {
                 if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
-                    Iterable<Field> fields = sort(Compare.by(TsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    Iterable<Field> fields = sort(Comparator.comparing(TsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
                     return newList(flatMap(TsvSerializers_.fieldColumn.ap(module), fields));
                 }
             }

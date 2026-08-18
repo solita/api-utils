@@ -226,7 +226,7 @@ public abstract class OpenAPISupport {
         
         Pair<Optional<String>,Optional<String>> d = doc(Optional.ofNullable(methodParameter.getName()), unwrappedType, methodParameter.getAnnotations(), Optional.empty());
         if (d.left().isPresent() || d.right().isPresent()) {
-            parameter.description(mkString("\n", concat(it(d.left()), it(d.right().map(OpenAPISupport_.langsToList)))));
+            parameter.description(mkString("\n", concat(d.left(), d.right().map(OpenAPISupport_.langsToList))));
         }
         
         return Optional.of(parameter);
@@ -488,7 +488,7 @@ public abstract class OpenAPISupport {
         @Override
         public Operation customize(Operation operation, final HandlerMethod handlerMethod) {
             Pair<Optional<String>, Optional<String>> d = doc(Optional.of(handlerMethod.getBeanType().getName()), handlerMethod.getBeanType(), handlerMethod.getBeanType().getAnnotations(), Optional.empty());
-            operation.setTags(newList(mkString(" - ", concat(it(d.left()), it(d.right())))));
+            operation.setTags(newList(mkString(" - ", concat(d.left(), d.right()))));
             
             Pair<Optional<String>, Optional<String>> dd = doc(Optional.of(handlerMethod.getMethod().getName()), handlerMethod.getMethod().getReturnType(), handlerMethod.getMethod().getAnnotations(), Optional.of(handlerMethod.getBeanType()));
             for (String s: it(dd.left())) {
@@ -561,10 +561,10 @@ public abstract class OpenAPISupport {
     
     @SuppressWarnings("unchecked")
     protected Pair<Optional<String>,Optional<String>> doc(Optional<String> name, Type genericType, Annotation[] annotations, Optional<Class<?>> declaringClass) {
-        for (Documentation doc: (Iterable<Documentation>)(Object)concat(it(find(OpenAPISupport_.equalsDocumentation, annotations)),
-                                                                        it(find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations())))) {
-            return Pair.<Optional<String>,Optional<String>>of(doc.name().isEmpty() && doc.name_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(it(str2option(doc.name())), it(str2option(doc.name_en()))))),
-                           doc.description().isEmpty() && doc.description_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(it(str2option(doc.description())), it(str2option(doc.description_en()))))));
+        for (Documentation doc: (Iterable<Documentation>)(Object)concat(find(OpenAPISupport_.equalsDocumentation, annotations),
+                                                                        find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations()))) {
+            return Pair.<Optional<String>,Optional<String>>of(doc.name().isEmpty() && doc.name_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
+                           doc.description().isEmpty() && doc.description_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
         }
         return Pair.of(Optional.empty(), Optional.empty());
     }

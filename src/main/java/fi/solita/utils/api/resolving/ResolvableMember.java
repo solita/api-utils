@@ -7,6 +7,7 @@ import static fi.solita.utils.functional.Functional.exists;
 import static fi.solita.utils.functional.Functional.fold;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,11 +17,10 @@ import fi.solita.utils.api.resolving.ResolvableMemberProvider.Type;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.RedundantPropertiesException;
-import fi.solita.utils.functional.Ordering;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public final class ResolvableMember<T> implements MetaNamedMember<T,Object> {
-    public static final SortedSet<PropertyName> ALL_DATA = newSortedSet(Ordering.Natural(), newList(PropertyName.of("")));
+    public static final SortedSet<PropertyName> ALL_DATA = newSortedSet(Comparator.naturalOrder(), newList(PropertyName.of("")));
     
     public final MetaNamedMember<? super T,?> original;
     private final Set<PropertyName> resolvablePropertyNames;

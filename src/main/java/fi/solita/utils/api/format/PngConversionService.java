@@ -5,6 +5,7 @@ import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newMutableList;
 import static fi.solita.utils.functional.Collections.newMutableMap;
+import static fi.solita.utils.functional.Functional.concatMap;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
@@ -267,7 +268,7 @@ public class PngConversionService {
             SimpleFeature feature = f.next();
             fb.init(feature);
             // put all fields into custom "json" attribute so that it can be access from SLD using jsonPointer without property-not-found-errors...
-            fb.set("json", DEFAULT_OM.writeValueAsString(newMap(SemiGroups.failUnequal(), flatMap(x -> it(toEntry(x)), feature.getProperties()))));
+            fb.set("json", DEFAULT_OM.writeValueAsString(newMap(SemiGroups.failUnequal(), concatMap(PngConversionService::toEntry, feature.getProperties()))));
             feats.add(SimpleFeatureBuilder.retype(fb.buildFeature(null), ft));
             fb.reset();
         }

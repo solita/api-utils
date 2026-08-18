@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +40,6 @@ import fi.solita.utils.api.base.csv.CsvSerializer.Cells;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
-import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
@@ -145,7 +145,7 @@ public class CsvSerializers {
                     StringBuilder sb = new StringBuilder();
                     List<CharSequence> cells = newMutableList();
                     List<String> headers = newMutableList();
-                    for (Field f: sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                    for (Field f: sort(Comparator.comparing(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                         Object val;
                         try {
                             val = f.get(value);
@@ -178,7 +178,7 @@ public class CsvSerializers {
                 if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
-                    Iterable<Field> fields = sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    Iterable<Field> fields = sort(Comparator.comparing(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
                     return newList(flatMap(CsvSerializers_.fieldColumn.ap(module), fields));
                 }
             }

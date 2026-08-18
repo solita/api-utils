@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -442,7 +443,7 @@ public class ChartConversionService {
                     
                     Map<Object,Object> values = newMutableMap();
                     @SuppressWarnings("unchecked")
-                    Function<T,Comparable<T>> xx = (Function<T,Comparable<T>>)(Object)x;
+                    Function<T,Comparable<Object>> xx = (Function<T,Comparable<Object>>)(Object)x;
                     
                     if (xIsListOfValuesFromASingleRow) {
                         Iterable<Iterable<Object>> allRows = map(ChartConversionService_.handleCollections, sequence(Assert.singleton(objs), members));
@@ -453,7 +454,7 @@ public class ChartConversionService {
                                          flatMap(this.<T>mkDataRows(values), zip(tail(members), categoryObjects)))));
                         }
                     } else {
-                        for (T t: newList(sort(Compare.by(xx), objs))) {
+                        for (T t: newList(sort(Comparator.comparing(xx), objs))) {
                             Iterable<Object> categoryObjects = sequence(t, tail(members));
                             data.add(FunctionalM.<Object,Object>with(SemiGroups.failUnequal(), "c", x.apply(t),
                                     newMap(SemiGroups.failUnequal(),
