@@ -16,8 +16,6 @@ import static fi.solita.utils.functional.FunctionalA.subtract;
 import static fi.solita.utils.functional.FunctionalC.tail;
 import static fi.solita.utils.functional.FunctionalS.range;
 
-
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -31,8 +29,11 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
@@ -80,14 +81,9 @@ import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RequestUtil;
-import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function;
-import java.util.Optional;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
@@ -170,7 +166,7 @@ public abstract class OpenAPISupport {
     }
     
     @SuppressWarnings("unchecked")
-    protected static <T extends Enum<T>> void enumValue(ApplyZero<Schema<?>> schema, Apply<T,String> f, Class<T> clazz) {
+    protected static <T extends Enum<T>> void enumValue(Supplier<Schema<?>> schema, Function<T,String> f, Class<T> clazz) {
         List<String> vals = newList(map(f, ClassUtils.getEnumType(clazz).get().getEnumConstants()));
         ((Schema<String>)schema.get()).setEnum(vals);
         schema.get().example(head(vals));
@@ -300,7 +296,7 @@ public abstract class OpenAPISupport {
                     Schema<?> schemaRight = context.resolve(new AnnotatedType(right).resolveAsRef(true));
                     ret = new Schema<Object>().oneOf(Collections.<Schema>newList(schemaLeft, schemaRight));
                 } else if (Tuple.class.isAssignableFrom(clazz)) {
-                    ret = new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Apply<Integer, Schema>() {
+                    ret = new ArraySchema().items(new Schema<Object>().oneOf(newList(map(new Function<Integer, Schema>() {
                         @Override
                         public Schema apply(Integer i) {
                             return context.resolve(new AnnotatedType(((SimpleType)type.getType()).containedType(i)).resolveAsRef(true));
@@ -310,7 +306,7 @@ public abstract class OpenAPISupport {
                 
                 // Need to ensure all modifications are made to a clone, since springdoc reuses the same schema instances.
                 final Schema<?>[] modified = new Schema<?>[] {ret};
-                ApplyZero<Schema<?>> schemaProvider = Function.memoize(new ApplyZero<Schema<?>>() {
+                Supplier<Schema<?>> schemaProvider = fi.solita.utils.functional.Function.memoize(new Supplier<Schema<?>>() {
                     @Override
                     public Schema<?> get() {
                         if (modified[0] == null) {
@@ -372,7 +368,7 @@ public abstract class OpenAPISupport {
         /**
          * Customize schema defined by ModelConverter
          */
-        protected Optional<Schema<?>> customize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
+        protected Optional<Schema<?>> customize(AnnotatedType type, ModelConverterContext context, Supplier<Schema<?>> schema) {
             for (Class<?> clazz: it(Optional.of(MemberUtil.memberClassUnwrappingOption(type.getType())))) {
                 if (clazz.equals(DateTime.class)) {
                     schema.get().description(DESCRIPTION_DateTime)
@@ -418,7 +414,7 @@ public abstract class OpenAPISupport {
             return Optional.empty();
         }
         
-        protected void postCustomize(AnnotatedType type, ModelConverterContext context, ApplyZero<Schema<?>> schema) {
+        protected void postCustomize(AnnotatedType type, ModelConverterContext context, Supplier<Schema<?>> schema) {
             Annotation[] annotations = Optional.ofNullable(type.getCtxAnnotations()).orElse(new Annotation[0]);
             Pair<Optional<String>, Optional<String>> d = doc(Optional.ofNullable(type.getPropertyName()), type.getType(), annotations, Optional.empty());
             for (String s: it(d.right())) {

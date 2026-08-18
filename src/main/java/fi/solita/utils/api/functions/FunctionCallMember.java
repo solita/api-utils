@@ -1,9 +1,9 @@
 package fi.solita.utils.api.functions;
 
 import java.lang.reflect.AccessibleObject;
+import java.util.function.Function;
 
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class FunctionCallMember<T> implements MetaNamedMember<T,Object> {
@@ -30,7 +30,7 @@ public class FunctionCallMember<T> implements MetaNamedMember<T,Object> {
         return original.getName();
     }
     
-    public FunctionCallMember<T> applied(Apply<?,?> f) {
+    public FunctionCallMember<T> applied(Function<?,?> f) {
         return new AppliedFunctionCallMember<T>(propertyName, original, f);
     }
 
@@ -69,12 +69,12 @@ public class FunctionCallMember<T> implements MetaNamedMember<T,Object> {
 }
 
 class AppliedFunctionCallMember<T> extends FunctionCallMember<T> {
-    private final Apply<Object,Object> f;
+    private final Function<Object,Object> f;
 
     @SuppressWarnings("unchecked")
-    public <V> AppliedFunctionCallMember(PropertyName propertyName, MetaNamedMember<? super T,?> original, Apply<?,?> f) {
+    public <V> AppliedFunctionCallMember(PropertyName propertyName, MetaNamedMember<? super T,?> original, Function<?,?> f) {
         super(propertyName, original);
-        this.f = (Apply<Object, Object>) f;
+        this.f = (Function<Object, Object>) f;
     }
     
     @Override

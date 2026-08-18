@@ -13,13 +13,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import fi.solita.utils.api.filtering.Constraints_.Or_;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Functional;
-import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple3;
@@ -135,64 +134,49 @@ public class Constraints<T> {
         
         @SuppressWarnings("unchecked")
         private <V> Iterable<V> single(FilterType pattern, final MetaNamedMember<? super T,V> candidate) {
-            return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, List<Object>>, List<V>>() {
-                @Override
-                public List<V> apply(Pair<MetaNamedMember<T, Object>, List<Object>> filter) {
-                    if (candidate.equals(filter.left())) {
-                        return newList((V)Assert.singleton(filter.right()));
-                    }
-                    return emptyList();
+            return flatMap((Function<Pair<MetaNamedMember<T, Object>, List<Object>>, List<V>>) filter -> {
+                if (candidate.equals(filter.left())) {
+                    return newList((V)Assert.singleton(filter.right()));
                 }
+                return emptyList();
             }, find(pattern, filters).orElse(emptyList()));
         }
         
         private <V> Iterable<String> string(FilterType pattern, final MetaNamedMember<? super T,V> candidate) {
-            return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, List<Object>>, List<String>>() {
-                @Override
-                public List<String> apply(Pair<MetaNamedMember<T, Object>, List<Object>> filter) {
-                    if (candidate.equals(filter.left())) {
-                        return newList((String)Assert.singleton(filter.right()));
-                    }
-                    return emptyList();
+            return flatMap((Function<Pair<MetaNamedMember<T, Object>, List<Object>>, List<String>>) filter -> {
+                if (candidate.equals(filter.left())) {
+                    return newList((String)Assert.singleton(filter.right()));
                 }
+                return emptyList();
             }, find(pattern, filters).orElse(emptyList()));
         }
         
+        @SuppressWarnings("unchecked")
         private <V> Iterable<Pair<V,V>> pair(FilterType pattern, final MetaNamedMember<? super T,V> candidate) {
-            return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, List<Object>>, List<Pair<V,V>>>() {
-                @SuppressWarnings("unchecked")
-                @Override
-                public List<Pair<V,V>> apply(Pair<MetaNamedMember<T, Object>, List<Object>> filter) {
-                    if (candidate.equals(filter.left())) {
-                        return newList((Pair<V,V>)Tuple.of(filter.right().toArray()));
-                    }
-                    return emptyList();
+            return flatMap((Function<Pair<MetaNamedMember<T, Object>, List<Object>>, List<Pair<V, V>>>) filter -> {
+                if (candidate.equals(filter.left())) {
+                    return newList((Pair<V,V>)Tuple.of(filter.right().toArray()));
                 }
+                return emptyList();
             }, find(pattern, filters).orElse(emptyList()));
         }
         
         @SuppressWarnings("unchecked")
         private <V> Iterable<Set<V>> multi(FilterType pattern, final MetaNamedMember<? super T,V> candidate) {
-            return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, ?>, List<Set<V>>>() {
-                @Override
-                public List<Set<V>> apply(Pair<MetaNamedMember<T, Object>, ?> filter) {
-                    if (candidate.equals(filter.left())) {
-                        return Arrays.asList(newSet((List<V>)filter.right()));
-                    }
-                    return emptyList();
+            return flatMap((Function<Pair<MetaNamedMember<T, Object>, ?>, List<Set<V>>>) filter -> {
+                if (candidate.equals(filter.left())) {
+                    return Arrays.asList(newSet((List<V>)filter.right()));
                 }
+                return emptyList();
             }, find(pattern, filters).orElse(emptyList()));
         }
         
         private <V> Iterable<Void> empty(FilterType pattern, final MetaNamedMember<? super T,V> candidate) {
-            return flatMap(new Apply<Pair<MetaNamedMember<T, Object>, ?>, List<Void>>() {
-                @Override
-                public List<Void> apply(Pair<MetaNamedMember<T, Object>, ?> filter) {
-                    if (candidate.equals(filter.left())) {
-                        return emptyList();
-                    }
+            return flatMap((Function<Pair<MetaNamedMember<T, Object>, ?>, List<Void>>) filter -> {
+                if (candidate.equals(filter.left())) {
                     return emptyList();
                 }
+                return emptyList();
             }, find(pattern, filters).orElse(emptyList()));
         }
     }

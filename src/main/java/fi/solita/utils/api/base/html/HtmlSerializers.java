@@ -16,6 +16,8 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -33,13 +35,9 @@ import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.RequestUtil;
-import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.ApplyBiVoid;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple2;
 
@@ -59,7 +57,7 @@ public abstract class HtmlSerializers {
      * Some primitive serializers, to be used as helper functions for actual serialization
      */
     
-    public static final <T> HtmlSerializer<T> serializer(final ApplyBiVoid<T,HtmlCanvas> f) {
+    public static final <T> HtmlSerializer<T> serializer(final BiConsumer<T,HtmlCanvas> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -68,7 +66,7 @@ public abstract class HtmlSerializers {
         };
     }
     
-    public static final <T> HtmlSerializer<T> stringSerializer(final String cssTypeName, final Apply<T,? extends CharSequence> f) {
+    public static final <T> HtmlSerializer<T> stringSerializer(final String cssTypeName, final Function<T,? extends CharSequence> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -78,7 +76,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> charSerializer(final String cssTypeName, final Apply<T,Character> f) {
+    public static final <T> HtmlSerializer<T> charSerializer(final String cssTypeName, final Function<T,Character> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -89,7 +87,7 @@ public abstract class HtmlSerializers {
         };
     }
     
-    public static final <T> HtmlSerializer<T> shortSerializer(final String cssTypeName, final Apply<T,Short> f) {
+    public static final <T> HtmlSerializer<T> shortSerializer(final String cssTypeName, final Function<T,Short> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -99,7 +97,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> intSerializer(final String cssTypeName, final Apply<T,Integer> f) {
+    public static final <T> HtmlSerializer<T> intSerializer(final String cssTypeName, final Function<T,Integer> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -109,7 +107,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> longSerializer(final String cssTypeName, final Apply<T, Long> f) {
+    public static final <T> HtmlSerializer<T> longSerializer(final String cssTypeName, final Function<T, Long> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -119,7 +117,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> doubleSerializer(final String cssTypeName, final Apply<T, Double> f) {
+    public static final <T> HtmlSerializer<T> doubleSerializer(final String cssTypeName, final Function<T, Double> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -129,7 +127,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> bigIntegerSerializer(final String cssTypeName, final Apply<T, BigInteger> f) {
+    public static final <T> HtmlSerializer<T> bigIntegerSerializer(final String cssTypeName, final Function<T, BigInteger> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -139,7 +137,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> bigDecimalSerializer(final String cssTypeName, final Apply<T, BigDecimal> f) {
+    public static final <T> HtmlSerializer<T> bigDecimalSerializer(final String cssTypeName, final Function<T, BigDecimal> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -149,7 +147,7 @@ public abstract class HtmlSerializers {
             }
         };
     }
-    public static final <T> HtmlSerializer<T> booleanSerializer(final String cssTypeName, final Apply<T, Boolean> f) {
+    public static final <T> HtmlSerializer<T> booleanSerializer(final String cssTypeName, final Function<T, Boolean> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -161,7 +159,7 @@ public abstract class HtmlSerializers {
         };
     }
     
-    public static final <T> HtmlSerializer<T> delegateSerializer(final String cssTypeName, final Apply<T,?> f) {
+    public static final <T> HtmlSerializer<T> delegateSerializer(final String cssTypeName, final Function<T,?> f) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -175,7 +173,7 @@ public abstract class HtmlSerializers {
     /**
      * @param useValueAlsoForEnglish Defaults to false, in which case docName_en(value) is preferred for English.
      */
-    public final <T extends Enum<T>> HtmlSerializer<T> enumSerializer(final String typeClassSuffix, final Apply<T,String> valueProducer, final boolean useValueAlsoForEnglish) {
+    public final <T extends Enum<T>> HtmlSerializer<T> enumSerializer(final String typeClassSuffix, final Function<T,String> valueProducer, final boolean useValueAlsoForEnglish) {
         return new HtmlSerializer<T>() {
             @Override
             public void renderOn(T value, HtmlCanvas html, HtmlModule module) throws IOException {
@@ -189,7 +187,7 @@ public abstract class HtmlSerializers {
         };
     }
     
-    public final <T extends Enum<T>> HtmlSerializer<T> enumSerializer(final String typeClassSuffix, final Apply<T,String> f) {
+    public final <T extends Enum<T>> HtmlSerializer<T> enumSerializer(final String typeClassSuffix, final Function<T,String> f) {
         return enumSerializer(typeClassSuffix, f, false);
     }
     
@@ -209,7 +207,7 @@ public abstract class HtmlSerializers {
                         .render(new Renderable() {
                           @Override
                           public void renderOn(HtmlCanvas html) throws IOException {
-                            for (Field f: filter(Predicate.of(ClassUtils.PublicMembers).and(x -> !ClassUtils.StaticMembers.apply(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass()))) {
+                            for (Field f: filter(ClassUtils.PublicMembers.and(x -> !ClassUtils.StaticMembers.test(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass()))) {
                                 Object val;
                                 try {
                                     val = f.get(value);
@@ -447,15 +445,15 @@ public abstract class HtmlSerializers {
         Pair.of(DateTimeZone.class, stringSerializer("timezone", Serializers_.ser7.ap(s))),
         
         Pair.of(Map.Entry.class, entry),
-        Pair.of(Boolean.class, booleanSerializer("boolean", Function.<Boolean>id())),
-        Pair.of(CharSequence.class, stringSerializer("string", Function.<String>id())),
-        Pair.of(Short.class, shortSerializer("integer", Function.<Short>id())),
-        Pair.of(Integer.class, intSerializer("integer", Function.<Integer>id())),
-        Pair.of(Long.class, longSerializer("integer", Function.<Long>id())),
-        Pair.of(Double.class, doubleSerializer("double", Function.<Double>id())),
-        Pair.of(BigDecimal.class, bigDecimalSerializer("decimal", Function.<BigDecimal>id())),
-        Pair.of(BigInteger.class, bigIntegerSerializer("integer", Function.<BigInteger>id())),
-        Pair.of(Character.class, charSerializer("char", Function.<Character>id())),
+        Pair.of(Boolean.class, booleanSerializer("boolean", Function.identity())),
+        Pair.of(CharSequence.class, stringSerializer("string", Function.identity())),
+        Pair.of(Short.class, shortSerializer("integer", Function.identity())),
+        Pair.of(Integer.class, intSerializer("integer", Function.identity())),
+        Pair.of(Long.class, longSerializer("integer", Function.identity())),
+        Pair.of(Double.class, doubleSerializer("double", Function.identity())),
+        Pair.of(BigDecimal.class, bigDecimalSerializer("decimal", Function.identity())),
+        Pair.of(BigInteger.class, bigIntegerSerializer("integer", Function.identity())),
+        Pair.of(Character.class, charSerializer("char", Function.identity())),
         Pair.of(Void.class, nullValue),
         Pair.of(JsonSerializeAsBean.class, beanSerializer()),
         Pair.of(Map.class, map_),

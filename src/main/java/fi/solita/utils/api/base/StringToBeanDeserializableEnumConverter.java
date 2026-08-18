@@ -10,7 +10,6 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 
 import fi.solita.utils.api.JsonDeserializeAsBean;
-import fi.solita.utils.functional.Apply;
 
 public class StringToBeanDeserializableEnumConverter implements ConditionalGenericConverter {
 
@@ -32,11 +31,6 @@ public class StringToBeanDeserializableEnumConverter implements ConditionalGener
         if (source == null) {
             return null;
         }
-        return find(x -> ((String)source).toLowerCase().equals(x), map(new Apply<Object,String>() {
-            @Override
-            public String apply(Object t) {
-                return ((Enum)t).name().toLowerCase();
-            }
-        }, targetType.getType().getEnumConstants())).get();
+        return find(x -> ((String)source).toLowerCase().equals(x), map(t -> ((Enum)t).name().toLowerCase(), targetType.getType().getEnumConstants())).get();
     }
 }

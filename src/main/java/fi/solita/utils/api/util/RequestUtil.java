@@ -27,6 +27,7 @@ import static fi.solita.utils.functional.FunctionalM.find;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
@@ -37,7 +38,6 @@ import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.functional.ApplyBi;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -136,7 +136,7 @@ public abstract class RequestUtil {
             throw new RequestUtil.QueryParametersMustNotBeDuplicatedException();
         }
         
-        if (size(filter(x -> !x, map((ApplyBi<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
+        if (size(filter(x -> !x, map((BiFunction<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
             throw new RequestUtil.QueryParametersMustBeInAlphabeticalOrderException();
         }
         

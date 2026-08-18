@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,7 +57,6 @@ import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Function1;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -240,7 +240,7 @@ public abstract class HtmlConversionService {
         };
     }
     
-    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, final Optional<Pair<Includes<T>, Function1<MetaNamedMember<T, ?>,Renderable>>> properties, final Pair<Renderable,Set<String>> additionalQueryParameters) {
+    public static <T> Renderable pageHeader(final HtmlTitle title, final Request request, final boolean includeFormats, final Optional<Pair<Includes<T>, Function<MetaNamedMember<T, ?>,Renderable>>> properties, final Pair<Renderable,Set<String>> additionalQueryParameters) {
         return new Renderable() {
             @Override
             public void renderOn(HtmlCanvas html) throws IOException {
@@ -307,7 +307,7 @@ public abstract class HtmlConversionService {
                                     @SuppressWarnings("unchecked")
                                     @Override
                                     public void renderOn(HtmlCanvas html) throws IOException {
-                                        Pair<Includes<T>, Function1<MetaNamedMember<T, ?>,Renderable>> p = properties.get();
+                                        Pair<Includes<T>, Function<MetaNamedMember<T, ?>,Renderable>> p = properties.get();
                                         for (MetaNamedMember<T, ?> member: (List<MetaNamedMember<T, ?>>)(Object)Includes.withNestedMembers(p.left().allRootMembers, Include.All, p.left().builders)) {
                                             Set<String> ancestors = ancestors(member.getName());
                                             String js = "document.querySelectorAll(\".properties input[data-ancestors~='\" + event.target.value + \"']\").forEach(y => { y.disabled = event.target.checked; htmx.trigger(y, 'change'); })";

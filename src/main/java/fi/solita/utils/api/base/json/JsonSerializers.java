@@ -12,7 +12,9 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -38,11 +40,8 @@ import fi.solita.utils.api.base.Serializers_;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function;
-import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Tuple;
@@ -68,7 +67,7 @@ public class JsonSerializers {
      * Some primitive serializers, to be used as helper functions for actual serialization
      */
     
-    public static final <T> JsonSerializer<T> keySerializer(Class<T> clazz, final Apply<T,String> f) {
+    public static final <T> JsonSerializer<T> keySerializer(Class<T> clazz, final Function<T,String> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -77,7 +76,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> charSerializer(Class<T> clazz, final Apply<T,Character> f) {
+    public static final <T> JsonSerializer<T> charSerializer(Class<T> clazz, final Function<T,Character> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -85,7 +84,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> charDeserializer(Class<T> clazz, final Apply<Character,T> f) {
+    public static final <T> JsonDeserializer<T> charDeserializer(Class<T> clazz, final Function<Character,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -94,7 +93,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> stringSerializer(Class<T> clazz, final Apply<T,String> f) {
+    public static final <T> JsonSerializer<T> stringSerializer(Class<T> clazz, final Function<T,String> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -102,7 +101,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> stringDeserializer(Class<T> clazz, final Apply<String,T> f) {
+    public static final <T> JsonDeserializer<T> stringDeserializer(Class<T> clazz, final Function<String,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -111,7 +110,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> shortSerializer(Class<T> clazz, final Apply<T,Short> f) {
+    public static final <T> JsonSerializer<T> shortSerializer(Class<T> clazz, final Function<T,Short> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -119,7 +118,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> shortDeserializer(Class<T> clazz, final Apply<Short,T> f) {
+    public static final <T> JsonDeserializer<T> shortDeserializer(Class<T> clazz, final Function<Short,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -128,7 +127,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> intSerializer(Class<T> clazz, final Apply<T,Integer> f) {
+    public static final <T> JsonSerializer<T> intSerializer(Class<T> clazz, final Function<T,Integer> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -136,7 +135,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> intDeserializer(Class<T> clazz, final Apply<Integer,T> f) {
+    public static final <T> JsonDeserializer<T> intDeserializer(Class<T> clazz, final Function<Integer,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -145,7 +144,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> longSerializer(Class<T> clazz, final Apply<T,Long> f) {
+    public static final <T> JsonSerializer<T> longSerializer(Class<T> clazz, final Function<T,Long> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -153,7 +152,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> longDeserializer(Class<T> clazz, final Apply<Long,T> f) {
+    public static final <T> JsonDeserializer<T> longDeserializer(Class<T> clazz, final Function<Long,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -162,7 +161,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> bigIntegerSerializer(Class<T> clazz, final Apply<T,BigInteger> f) {
+    public static final <T> JsonSerializer<T> bigIntegerSerializer(Class<T> clazz, final Function<T,BigInteger> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -170,7 +169,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> bigIntegerDeserializer(Class<T> clazz, final Apply<BigInteger,T> f) {
+    public static final <T> JsonDeserializer<T> bigIntegerDeserializer(Class<T> clazz, final Function<BigInteger,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -179,7 +178,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> bigDecimalSerializer(Class<T> clazz, final Apply<T,BigDecimal> f) {
+    public static final <T> JsonSerializer<T> bigDecimalSerializer(Class<T> clazz, final Function<T,BigDecimal> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -187,7 +186,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> bigDecimalDeserializer(Class<T> clazz, final Apply<BigDecimal,T> f) {
+    public static final <T> JsonDeserializer<T> bigDecimalDeserializer(Class<T> clazz, final Function<BigDecimal,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -196,7 +195,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> booleanSerializer(Class<T> clazz, final Apply<T,Boolean> f) {
+    public static final <T> JsonSerializer<T> booleanSerializer(Class<T> clazz, final Function<T,Boolean> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -204,7 +203,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <T> JsonDeserializer<T> booleanDeserializer(Class<T> clazz, final Apply<Boolean,T> f) {
+    public static final <T> JsonDeserializer<T> booleanDeserializer(Class<T> clazz, final Function<Boolean,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -213,7 +212,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T> JsonSerializer<T> delegateSerializer(Class<T> clazz, final Apply<T,?> f) {
+    public static final <T> JsonSerializer<T> delegateSerializer(Class<T> clazz, final Function<T,?> f) {
         return new StdSerializer<T>(clazz) {
             @Override
             public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
@@ -221,7 +220,7 @@ public class JsonSerializers {
             }
         };
     }
-    public static final <D,T> JsonDeserializer<T> delegateDeserializer(final Class<T> clazz, final Class<D> delegate, final Apply<D,T> f) {
+    public static final <D,T> JsonDeserializer<T> delegateDeserializer(final Class<T> clazz, final Class<D> delegate, final Function<D,T> f) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -230,7 +229,7 @@ public class JsonSerializers {
         };
     }
     
-    public static final <T extends Enum<T>> JsonDeserializer<T> enumDeserializer(final Class<T> clazz, final Apply<T,String> serializer) {
+    public static final <T extends Enum<T>> JsonDeserializer<T> enumDeserializer(final Class<T> clazz, final Function<T,String> serializer) {
         return new StdDeserializer<T>(clazz) {
             @Override
             public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -380,7 +379,7 @@ public class JsonSerializers {
         Pair.of(Duration.class, stringSerializer(Duration.class, Serializers_.ser5.ap(s))),
         Pair.of(Period.class, stringSerializer(Period.class, Serializers_.ser6.ap(s))),
         Pair.of(DateTimeZone.class, stringSerializer(DateTimeZone.class, Serializers_.ser7.ap(s))),
-        Pair.of(BigDecimal.class, bigDecimalSerializer(BigDecimal.class, Function.<BigDecimal>id()))
+        Pair.of(BigDecimal.class, bigDecimalSerializer(BigDecimal.class, Function.identity()))
     );
     }
     
@@ -401,7 +400,7 @@ public class JsonSerializers {
     }
     
     public Map<Class<?>,JsonDeserializer<?>> deserializers() { return Collections.<Class<?>, JsonDeserializer<?>>newMap(
-            Pair.<Class<?>,JsonDeserializer<?>>of(BigDecimal.class, bigDecimalDeserializer(BigDecimal.class, Function.<BigDecimal>id())),
+            Pair.<Class<?>,JsonDeserializer<?>>of(BigDecimal.class, bigDecimalDeserializer(BigDecimal.class, Function.identity())),
             Pair.<Class<?>,JsonDeserializer<?>>of(DateTime.class, stringDeserializer(DateTime.class, Serializers_.deserDateTime.ap(s))),
             Pair.<Class<?>,JsonDeserializer<?>>of(Interval.class, stringDeserializer(Interval.class, Serializers_.deserInterval.ap(s))),
             Pair.<Class<?>,JsonDeserializer<?>>of(LocalDate.class, stringDeserializer(LocalDate.class, Serializers_.deserLocalDate.ap(s))),

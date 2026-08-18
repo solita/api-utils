@@ -1,15 +1,16 @@
 package fi.solita.utils.api.base;
 
+import java.util.function.Function;
+
 import org.junit.Test;
 
 import fi.solita.utils.api.base.http.HttpSerializers;
 import fi.solita.utils.api.types.Count;
-import fi.solita.utils.functional.Apply;
 
 public class CountConverterTest {
 
     @SuppressWarnings("unchecked")
-    private Apply<String,Count> c = (Apply<String, Count>) new HttpSerializers(new Serializers()).converters().get(Count.class);
+    private Function<String,Count> c = (Function<String, Count>) new HttpSerializers(new Serializers()).converters().get(Count.class);
     
     @Test
     public void hyvaksyyValidinArvon() {

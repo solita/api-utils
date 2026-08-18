@@ -11,7 +11,6 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.mkString;
 import static fi.solita.utils.functional.Functional.repeat;
 import static fi.solita.utils.functional.Functional.sort;
-import static fi.solita.utils.functional.FunctionalA.concat;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -39,10 +39,8 @@ import fi.solita.utils.api.base.csv.CsvSerializer.Cells;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple3;
@@ -63,7 +61,7 @@ public class CsvSerializers {
      * Some primitive serializers, to be used as helper functions for actual serialization
      */
     
-    public static final <T> CsvSerializer<T> stringSerializer(final Apply<T,? extends CharSequence> f) {
+    public static final <T> CsvSerializer<T> stringSerializer(final Function<T,? extends CharSequence> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -71,7 +69,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> charSerializer(final Apply<T,Character> f) {
+    public static final <T> CsvSerializer<T> charSerializer(final Function<T,Character> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -80,7 +78,7 @@ public class CsvSerializers {
         };
     }
     
-    public static final <T> CsvSerializer<T> shortSerializer(final Apply<T, Short> f) {
+    public static final <T> CsvSerializer<T> shortSerializer(final Function<T, Short> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -88,7 +86,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> intSerializer(final Apply<T, Integer> f) {
+    public static final <T> CsvSerializer<T> intSerializer(final Function<T, Integer> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -96,7 +94,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> longSerializer(final Apply<T, Long> f) {
+    public static final <T> CsvSerializer<T> longSerializer(final Function<T, Long> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -104,7 +102,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> doubleSerializer(final Apply<T, Double> f) {
+    public static final <T> CsvSerializer<T> doubleSerializer(final Function<T, Double> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -112,7 +110,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> bigIntegerSerializer(final Apply<T, BigInteger> f) {
+    public static final <T> CsvSerializer<T> bigIntegerSerializer(final Function<T, BigInteger> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -120,7 +118,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> bigDecimalSerializer(final Apply<T, BigDecimal> f) {
+    public static final <T> CsvSerializer<T> bigDecimalSerializer(final Function<T, BigDecimal> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -128,7 +126,7 @@ public class CsvSerializers {
             }
         };
     }
-    public static final <T> CsvSerializer<T> booleanSerializer(final Apply<T, Boolean> f) {
+    public static final <T> CsvSerializer<T> booleanSerializer(final Function<T, Boolean> f) {
         return new CsvSerializer<T>() {
             @Override
             public Cells render(CsvModule module, T value) {
@@ -147,7 +145,7 @@ public class CsvSerializers {
                     StringBuilder sb = new StringBuilder();
                     List<CharSequence> cells = newMutableList();
                     List<String> headers = newMutableList();
-                    for (Field f: sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.apply(x) && !ClassUtils.StaticMembers.apply(x), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                    for (Field f: sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                         Object val;
                         try {
                             val = f.get(value);
@@ -180,7 +178,7 @@ public class CsvSerializers {
                 if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
-                    Iterable<Field> fields = sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.apply(x) && !ClassUtils.StaticMembers.apply(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    Iterable<Field> fields = sort(Compare.by(CsvSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
                     return newList(flatMap(CsvSerializers_.fieldColumn.ap(module), fields));
                 }
             }
@@ -220,13 +218,13 @@ public class CsvSerializers {
         return merge(module, pair, x -> x + separator);
     }
     
-    protected static Cells merge(CsvModule module, Pair<?, ?> pair, Apply<? super String,String> mapFirst) {
+    protected static Cells merge(CsvModule module, Pair<?, ?> pair, Function<? super String,String> mapFirst) {
         Cells alku = module.serialize(pair.left());
         Cells loppu = module.serialize(pair.right());
         return new Cells(concat(alku.cells, loppu.cells), mapFirst.apply(cells2str(alku)) + cells2str(loppu)).withUnit(alku.unit);
     }
     
-    protected static Cells merge(CsvModule module, Tuple3<?, ?, ?> tuple, Apply<? super String,String> mapFirst, Apply<? super String,String> mapSecond) {
+    protected static Cells merge(CsvModule module, Tuple3<?, ?, ?> tuple, Function<? super String,String> mapFirst, Function<? super String,String> mapSecond) {
         Cells a = module.serialize(tuple._1);
         Cells b = module.serialize(tuple._2);
         Cells c = module.serialize(tuple._3);
@@ -372,15 +370,15 @@ public class CsvSerializers {
         Pair.of(DateTimeZone.class, stringSerializer(Serializers_.ser7.ap(s))),
         
         Pair.of(Map.Entry.class, entry),
-        Pair.of(Boolean.class, booleanSerializer(Function.<Boolean>id())),
-        Pair.of(CharSequence.class, stringSerializer(Function.<CharSequence>id())),
-        Pair.of(Short.class, shortSerializer(Function.<Short>id())),
-        Pair.of(Integer.class, intSerializer(Function.<Integer>id())),
-        Pair.of(Long.class, longSerializer(Function.<Long>id())),
-        Pair.of(Double.class, doubleSerializer(Function.<Double>id())),
-        Pair.of(BigDecimal.class, bigDecimalSerializer(Function.<BigDecimal>id())),
-        Pair.of(BigInteger.class, bigIntegerSerializer(Function.<BigInteger>id())),
-        Pair.of(Character.class, charSerializer(Function.<Character>id())),
+        Pair.of(Boolean.class, booleanSerializer(Function.identity())),
+        Pair.of(CharSequence.class, stringSerializer(Function.identity())),
+        Pair.of(Short.class, shortSerializer(Function.identity())),
+        Pair.of(Integer.class, intSerializer(Function.identity())),
+        Pair.of(Long.class, longSerializer(Function.identity())),
+        Pair.of(Double.class, doubleSerializer(Function.identity())),
+        Pair.of(BigDecimal.class, bigDecimalSerializer(Function.identity())),
+        Pair.of(BigInteger.class, bigIntegerSerializer(Function.identity())),
+        Pair.of(Character.class, charSerializer(Function.identity())),
         Pair.of(Void.class, nullValue),
         Pair.of(JsonSerializeAsBean.class, beanSerializer()),
         Pair.of(Map.class, map_),

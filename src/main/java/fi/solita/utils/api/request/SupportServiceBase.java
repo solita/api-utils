@@ -2,16 +2,12 @@ package fi.solita.utils.api.request;
 
 import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newArray;
-import static fi.solita.utils.functional.Collections.newList;
 import static fi.solita.utils.functional.Collections.newMap;
 import static fi.solita.utils.functional.Collections.newSet;
-import static fi.solita.utils.functional.Functional.concat;
-import static fi.solita.utils.functional.Functional.cons;
+import static fi.solita.utils.functional.FunctionalA.concat;
 import static fi.solita.utils.functional.FunctionalC.tail;
 
-
-
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -31,7 +27,6 @@ import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Either;
 import fi.solita.utils.functional.Function4;
-import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple3;
 

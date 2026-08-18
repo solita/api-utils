@@ -7,10 +7,10 @@ import static fi.solita.utils.functional.Functional.flatMap;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.format.geojson.FeatureObject;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public abstract class GeojsonResolver {
@@ -22,7 +22,7 @@ public abstract class GeojsonResolver {
         List<FeatureObject> ret = newMutableList();
         for (final MetaNamedMember<DTO,Object> member: (Iterable<MetaNamedMember<DTO,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
             for (DTO t: d) {
-                ret.addAll(newList(flatMap(new Apply<Object, Collection<FeatureObject>>() {
+                ret.addAll(newList(flatMap(new Function<Object, Collection<FeatureObject>>() {
                     @Override
                     public Collection<FeatureObject> apply(Object resolvable) {
                         return getFeaturesForResolvable(member, resolvable);

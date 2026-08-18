@@ -1,17 +1,16 @@
 package fi.solita.utils.api.types;
 
 import static fi.solita.utils.functional.Collections.newList;
-import static fi.solita.utils.functional.Functional.cons;
 import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.map;
+import static fi.solita.utils.functional.FunctionalA.cons;
 
 import java.util.List;
+import java.util.function.Function;
 
 import fi.solita.utils.api.filtering.Filter;
 import fi.solita.utils.api.filtering.FilterType;
-import fi.solita.utils.api.filtering.Filter_;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 
 public final class Filters {
@@ -33,7 +32,7 @@ public final class Filters {
     }
     
     public List<List<Filter>> spatialFilters() {
-        return newList(map(new Apply<List<Filter>,List<Filter>>() {
+        return newList(map(new Function<List<Filter>,List<Filter>>() {
             @Override
             public List<Filter> apply(List<Filter> and) {
                 return newList(filter(x -> x.pattern.equals(FilterType.INTERSECTS), and));

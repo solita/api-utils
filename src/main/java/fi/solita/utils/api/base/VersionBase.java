@@ -43,7 +43,6 @@ import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.ModificationUtils;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
 import java.util.Optional;
@@ -135,21 +134,11 @@ public abstract class VersionBase<REQ> {
     }
     
     public <K,T> Map<K,T> filterColumnsSingle(final Includes<T> includes, Map<K,T> ts) {
-        return includes.includesEverything ? ts : mapValue(new Apply<T,T>() {
-            @Override
-            public T apply(T source) {
-                return ModificationUtils.withPropertiesF(includes, functionProvider(Optional.empty())).apply(source);
-            }
-        }, ts);
+        return includes.includesEverything ? ts : mapValue(x -> ModificationUtils.withPropertiesF(includes, functionProvider(Optional.empty())).apply(x), ts);
     }
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(new Apply<Iterable<T>,Iterable<T>>() {
-            @Override
-            public Iterable<T> apply(Iterable<T> source) {
-                return map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty())), source);
-            }
-        }, (Map<K,Iterable<T>>)ts);
+        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(x -> map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty())), x), (Map<K,Iterable<T>>)ts);
     }
     @SuppressWarnings("unchecked")
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {

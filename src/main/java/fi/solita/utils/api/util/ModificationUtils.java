@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.function.Function;
 
 import org.joda.time.Interval;
 import org.slf4j.Logger;
@@ -27,10 +28,6 @@ import fi.solita.utils.api.Includes;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvingInterval;
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.api.types.PropertyName_;
-import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
@@ -45,22 +42,22 @@ public class ModificationUtils {
     /**
      * @see MemberUtil#excluding(Iterable)
      */
-    public static final <T> Apply<T,T> excluding(Setter<T, ?> setter) {
+    public static final <T> Function<T,T> excluding(Setter<T, ?> setter) {
         return excluding(newList(setter));
     }
 
     /**
      * @see MemberUtil#excluding(Iterable)
      */
-    public static final <T> Apply<T,T> excluding(Setter<T, ?> setter1, Setter<T, ?> setter2) {
+    public static final <T> Function<T,T> excluding(Setter<T, ?> setter1, Setter<T, ?> setter2) {
         return excluding(newList(setter1, setter2));
     }
 
     /**
      * Palauttaa funktion, joka nullaa (please forgive me!) annettujen Lensien osoittamat kentät.
      */
-    public static final <T> Apply<T,T> excluding(final Iterable<? extends Setter<T, ?>> setters) {
-        return new Apply<T, T>() {
+    public static final <T> Function<T,T> excluding(final Iterable<? extends Setter<T, ?>> setters) {
+        return new Function<T, T>() {
             @Override
             public T apply(T t) {
                 for (Setter<T,?> setter: setters) {
@@ -71,8 +68,8 @@ public class ModificationUtils {
         };
     }
 
-    public static final <T> Function1<T,T> withPropertiesF(Includes<T> includes, FunctionProvider fp) {
-        return includes.includesEverything ? Function.<T>id() : ModificationUtils_.<T>withProperties_topLevel().ap(newList(map(MemberUtil_.propertyNameFromMember, includes.includesFromColumnFiltering)), fp, Arrays.asList(includes.builders));
+    public static final <T> Function<T,T> withPropertiesF(Includes<T> includes, FunctionProvider fp) {
+        return includes.includesEverything ? Function.identity() : ModificationUtils_.<T>withProperties_topLevel().ap(newList(map(MemberUtil_.propertyNameFromMember, includes.includesFromColumnFiltering)), fp, Arrays.asList(includes.builders));
     }
 
     static final <T> T withProperties_topLevel(Collection<PropertyName> propertyNames, FunctionProvider fp, Iterable<Builder<?>> builders, T t) {
@@ -95,16 +92,16 @@ public class ModificationUtils {
         logger.debug("Including properties {} in {}", propertyNames, t);
         for (Builder<T> builder: it(MemberUtil.<T>findBuilderFor(builders, builderType(t)))) {
             logger.debug("Found Builder for {}", t.getClass());
-            for (Apply<? super T, Object> member: (Iterable<Apply<? super T, Object>>)builder.getMembers()) {
+            for (Function<? super T, Object> member: (Iterable<Function<? super T, Object>>)builder.getMembers()) {
                 logger.debug("Handling member {}", member);
-                List<PropertyName> subs = newList(filter(PropertyName_.startsWith.apply(Function.__, fp, MemberUtil.memberName(member)), propertyNames));
+                List<PropertyName> subs = newList(filter(x -> x.startsWith(fp, MemberUtil.memberName(member)), propertyNames));
                 String memberName = MemberUtil.memberName(member);
                 logger.debug("Relevant properties: {}", propertyNames);
                 if (!subs.isEmpty()) {
                     Object value = member.apply(t);
                     logger.debug("Got value: {}", value);
                     if (value != null) {
-                        List<PropertyName> subProps = newList(filter(x -> !x.isEmpty(fp), Functional.map(PropertyName_.stripPrefix.apply(Function.__, fp, memberName), subs)));
+                        List<PropertyName> subProps = newList(filter(x -> !x.isEmpty(fp), Functional.map(x -> x.stripPrefix(fp, memberName), subs)));
                         logger.debug("Relevant properties for nested: {}", subProps);
                         
                         Object nested;

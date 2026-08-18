@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import fi.solita.utils.api.base.Cells_;
 import fi.solita.utils.api.base.tsv.TsvModule;
@@ -26,7 +27,6 @@ import fi.solita.utils.api.base.tsv.TsvSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
-import fi.solita.utils.functional.ApplyBi;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -155,11 +155,11 @@ public class TsvConversionService {
     }
     
     private <K,V,O> Iterable<Iterable<Cells>> mapBody(final Map<K, ? extends Iterable<V>> obj, final Iterable<? extends MetaNamedMember<V, O>> members) {
-        return map((ApplyBi<K,V,Iterable<Cells>>)TsvConversionService_.<K,V,O>mapBodyRow().ap(this, members), flatMap(TsvConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
+        return map((BiFunction<K,V,Iterable<Cells>>)TsvConversionService_.<K,V,O>mapBodyRow().ap(this, members), flatMap(TsvConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
     }
     
     <K,V,O> Iterable<Cells> mapBodyRow(Iterable<? extends MetaNamedMember<V, O>> members, K key, V value) {
-        return cons(module.serialize(key), map((ApplyBi<Object,Class<?>,Cells>)TsvModule_.serialize1().ap(module), map(TsvConversionService_.<V,O>foo().ap(value), members)));
+        return cons(module.serialize(key), map((BiFunction<Object,Class<?>,Cells>)TsvModule_.serialize1().ap(module), map(TsvConversionService_.<V,O>foo().ap(value), members)));
     }
     
     @SuppressWarnings("unchecked")

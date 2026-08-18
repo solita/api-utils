@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.apache.poi.ss.format.CellFormat;
 import org.apache.poi.ss.usermodel.Cell;
@@ -42,13 +43,10 @@ import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.resolving.ResolvedMember;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
-import fi.solita.utils.functional.Function;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.Predicate;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple3;
 
@@ -68,7 +66,7 @@ public class ExcelSerializers {
      * Some primitive serializers, to be used as helper functions for actual serialization
      */
     
-    public static final <T> ExcelSerializer<T> stringSerializer(final Apply<T, ? extends CharSequence> f) {
+    public static final <T> ExcelSerializer<T> stringSerializer(final Function<T, ? extends CharSequence> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -76,7 +74,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> charSerializer(final Apply<T, Character> f) {
+    public static final <T> ExcelSerializer<T> charSerializer(final Function<T, Character> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -85,7 +83,7 @@ public class ExcelSerializers {
         };
     }
     
-    public static final <T> ExcelSerializer<T> shortSerializer(final Apply<T, Short> f) {
+    public static final <T> ExcelSerializer<T> shortSerializer(final Function<T, Short> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -93,7 +91,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> intSerializer(final Apply<T, Integer> f) {
+    public static final <T> ExcelSerializer<T> intSerializer(final Function<T, Integer> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -101,7 +99,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> longSerializer(final Apply<T, Long> f) {
+    public static final <T> ExcelSerializer<T> longSerializer(final Function<T, Long> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -109,7 +107,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> doubleSerializer(final Apply<T, Double> f) {
+    public static final <T> ExcelSerializer<T> doubleSerializer(final Function<T, Double> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -117,7 +115,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> bigIntegerSerializer(final Apply<T, BigInteger> f) {
+    public static final <T> ExcelSerializer<T> bigIntegerSerializer(final Function<T, BigInteger> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -125,7 +123,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> bigDecimalSerializer(final Apply<T, BigDecimal> f) {
+    public static final <T> ExcelSerializer<T> bigDecimalSerializer(final Function<T, BigDecimal> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -133,7 +131,7 @@ public class ExcelSerializers {
             }
         };
     }
-    public static final <T> ExcelSerializer<T> booleanSerializer(final Apply<T, Boolean> f) {
+    public static final <T> ExcelSerializer<T> booleanSerializer(final Function<T, Boolean> f) {
         return new ExcelSerializer<T>() {
             @Override
             public Cells render(ExcelModule module, Row row, int columnIndex, T value) {
@@ -152,7 +150,7 @@ public class ExcelSerializers {
                     List<Cell> cells = newMutableList();
                     List<String> headers = newMutableList();
                     StringBuilder sb = new StringBuilder();
-                    for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(Predicate.of(ClassUtils.PublicMembers).and(x -> !ClassUtils.StaticMembers.apply(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
+                    for (Field f: sort(Compare.by(ExcelSerializers_.fieldName), filter(ClassUtils.PublicMembers.and(x -> !ClassUtils.StaticMembers.test(x)), ClassUtils.AllDeclaredApplicationFields.apply(value.getClass())))) {
                         Object val;
                         try {
                             val = f.get(value);
@@ -188,7 +186,7 @@ public class ExcelSerializers {
                 if (ClassUtils.getEnumType(type).isPresent()) {
                     return newList("");
                 } else {
-                    Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.apply(x) && !ClassUtils.StaticMembers.apply(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
+                    Iterable<Field> fields = sort(Compare.by(ExcelSerializers_.fieldName), filter(x -> ClassUtils.PublicMembers.test(x) && !ClassUtils.StaticMembers.test(x), ClassUtils.AllDeclaredApplicationFields.apply(type)));
                     return newList(flatMap(ExcelSerializers_.fieldColumn.ap(module), fields));
                 }
             }
@@ -235,13 +233,13 @@ public class ExcelSerializers {
         return merge(module, row, columnIndex, pair, x -> x + separator);
     }
     
-    protected static Cells merge(ExcelModule module, Row row, int columnIndex, Pair<?, ?> pair, Apply<? super String,String> mapFirst) {
+    protected static Cells merge(ExcelModule module, Row row, int columnIndex, Pair<?, ?> pair, Function<? super String,String> mapFirst) {
         Cells alku = module.serialize(row, columnIndex, pair.left());
         Cells loppu = module.serialize(row, columnIndex+alku.cells.size(), pair.right());
         return new Cells(concat(alku.cells, loppu.cells), mapFirst.apply(cells2str(alku)) + cells2str(loppu)).withUnit(alku.unit);
     }
     
-    protected static Cells merge(ExcelModule module, Row row, int columnIndex, Tuple3<?, ?, ?> tuple, Apply<? super String,String> mapFirst, Apply<? super String,String> mapSecond) {
+    protected static Cells merge(ExcelModule module, Row row, int columnIndex, Tuple3<?, ?, ?> tuple, Function<? super String,String> mapFirst, Function<? super String,String> mapSecond) {
         Cells a = module.serialize(row, columnIndex, tuple._1);
         Cells b = module.serialize(row, columnIndex+a.cells.size(), tuple._2);
         Cells c = module.serialize(row, columnIndex+a.cells.size()+b.cells.size(), tuple._3);
@@ -476,15 +474,15 @@ public class ExcelSerializers {
         Pair.of(DateTimeZone.class, stringSerializer(Serializers_.ser7.ap(s))),
         
         Pair.of(Map.Entry.class, entry),
-        Pair.of(Boolean.class, booleanSerializer(Function.<Boolean>id())),
-        Pair.of(CharSequence.class, stringSerializer(Function.<CharSequence>id())),
-        Pair.of(Short.class, shortSerializer(Function.<Short>id())),
-        Pair.of(Integer.class, intSerializer(Function.<Integer>id())),
-        Pair.of(Long.class, longSerializer(Function.<Long>id())),
-        Pair.of(Double.class, doubleSerializer(Function.<Double>id())),
-        Pair.of(BigDecimal.class, bigDecimalSerializer(Function.<BigDecimal>id())),
-        Pair.of(BigInteger.class, bigIntegerSerializer(Function.<BigInteger>id())),
-        Pair.of(Character.class, charSerializer(Function.<Character>id())),
+        Pair.of(Boolean.class, booleanSerializer(Function.identity())),
+        Pair.of(CharSequence.class, stringSerializer(Function.identity())),
+        Pair.of(Short.class, shortSerializer(Function.identity())),
+        Pair.of(Integer.class, intSerializer(Function.identity())),
+        Pair.of(Long.class, longSerializer(Function.identity())),
+        Pair.of(Double.class, doubleSerializer(Function.identity())),
+        Pair.of(BigDecimal.class, bigDecimalSerializer(Function.identity())),
+        Pair.of(BigInteger.class, bigIntegerSerializer(Function.identity())),
+        Pair.of(Character.class, charSerializer(Function.identity())),
         Pair.of(Void.class, nullValue),
         Pair.of(JsonSerializeAsBean.class, beanSerializer()),
         Pair.of(Map.class, map_),

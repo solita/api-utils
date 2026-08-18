@@ -18,8 +18,10 @@ import org.joda.time.base.AbstractInterval;
 import fi.solita.utils.api.filtering.FilterParser;
 import fi.solita.utils.api.filtering.Literal;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Apply;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 import fi.solita.utils.functional.Pair;
 
 public class FunctionProvider {
@@ -46,13 +48,13 @@ public class FunctionProvider {
     
     public static final FunctionProvider NONE = new FunctionProvider() {
         @Override
-        public String mapArgument(String str, Apply<? super String, String> f) {
+        public String mapArgument(String str, Function<? super String, String> f) {
             return f.apply(str);
         }
         
         @Override
-        public boolean argumentMatches(String str, Apply<String, Boolean> f) {
-            return f.apply(str);
+        public boolean argumentMatches(String str, Predicate<String> f) {
+            return f.test(str);
         }
         
         @Override
@@ -69,7 +71,7 @@ public class FunctionProvider {
         return Optional.ofNullable(m.group(1)).orElse(m.group(4));
     }
     
-    public String mapArgument(String str, Apply<? super String,String> f) {
+    public String mapArgument(String str, Function<? super String,String> f) {
         Matcher m = FunctionProvider.PATTERN.matcher(str);
         if (m.matches()) {
             assertKnownFunction(getFunctionName(m));
@@ -116,17 +118,17 @@ public class FunctionProvider {
         }
     }
     
-    public boolean argumentMatches(String str, Apply<String,Boolean> f) {
+    public boolean argumentMatches(String str, Predicate<String> f) {
         Matcher m = FunctionProvider.PATTERN.matcher(str);
         if (m.matches()) {
             assertKnownFunction(getFunctionName(m));
             if (m.group(4) != null) {
-                return f.apply(m.group(3)) || f.apply(m.group(5));
+                return f.test(m.group(3)) || f.test(m.group(5));
             } else {
-                return f.apply(m.group(2));
+                return f.test(m.group(2));
             }
         } else {
-            return f.apply(str);
+            return f.test(str);
         }
     }
     

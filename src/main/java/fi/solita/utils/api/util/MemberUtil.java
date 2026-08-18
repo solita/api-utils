@@ -9,13 +9,13 @@ import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.FunctionalA.zip;
 
-
-
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import com.google.common.collect.Ordering;
 
@@ -25,13 +25,9 @@ import fi.solita.utils.api.functions.FunctionCallMember_;
 import fi.solita.utils.api.functions.FunctionProvider;
 import fi.solita.utils.api.resolving.ResolvableMember;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider;
-import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
 import fi.solita.utils.api.types.PropertyName;
-import fi.solita.utils.api.types.PropertyName_;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Compare;
 import fi.solita.utils.functional.Either;
-import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
@@ -126,14 +122,14 @@ public class MemberUtil {
     }
 
     public static final <T> List<? extends MetaNamedMember<? super T,?>> toMembers(ResolvableMemberProvider<?> resolvableMemberProvider, FunctionProvider fp, boolean onlyExact, Iterable<? extends MetaNamedMember<? super T,?>> fields, PropertyName propertyName) throws UnknownPropertyNameException {
-        List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(MemberUtil_.memberName.andThen(
+        List<? extends MetaNamedMember<? super T, ?>> ret = newList(filter(
               onlyExact
-            ? PropertyName_.isEqualTo.ap(propertyName, fp)
-            : x -> propertyName.isPrefixOf(fp, x) || propertyName.isWildcard()), fields));
+            ? x -> propertyName.isEqualTo(fp, MemberUtil.memberName(x))
+            : x -> propertyName.isPrefixOf(fp, MemberUtil.memberName(x)) || propertyName.isWildcard(), fields));
         if (ret.isEmpty()) {
             // Exactly the requested property was not found. Check if the property was resolvable, for example a reference to an external API
-            Iterable<? extends MetaNamedMember<? super T, ?>> allResolvableMembers = filter(ResolvableMemberProvider_.isResolvable.ap(resolvableMemberProvider), fields);
-            Iterable<? extends MetaNamedMember<? super T, ?>> potentialPrefixes = filter(MemberUtil_.memberName.andThen(PropertyName_.startsWith.ap(propertyName, fp)), allResolvableMembers);
+            Iterable<? extends MetaNamedMember<? super T, ?>> allResolvableMembers = filter(resolvableMemberProvider::isResolvable, fields);
+            Iterable<? extends MetaNamedMember<? super T, ?>> potentialPrefixes = filter(x -> propertyName.startsWith(fp, MemberUtil.memberName(x)), allResolvableMembers);
             for (MetaNamedMember<? super T, ?> prefix: sort(Compare.by(MemberUtil_.memberName.andThen(MemberUtil_.stringLength)), potentialPrefixes)) {
                 return newList(new ResolvableMember<T>(prefix, newSortedSet(Ordering.<PropertyName>natural(), newList(propertyName.stripPrefix(fp, memberName(prefix)))), resolvableMemberProvider.resolveType(prefix)));
             }
@@ -188,11 +184,11 @@ public class MemberUtil {
         return Optional.empty();
     }
     
-    public static <VALUES extends Tuple,T> Apply<VALUES,T> builderConstructor(final VALUES members) {
+    public static <VALUES extends Tuple,T> Function<VALUES,T> builderConstructor(final VALUES members) {
         @SuppressWarnings("unchecked")
         final List<MetaProperty<T,?>> ms = (List<MetaProperty<T,?>>)(Object)newList(members.toArray());
         
-        final Class<T> targetClass = Assert.singleton(newSet(map(new Apply<MetaProperty<T,?>, Class<T>>() {
+        final Class<T> targetClass = Assert.singleton(newSet(map(new Function<MetaProperty<T,?>, Class<T>>() {
             @SuppressWarnings("unchecked")
             @Override
             public Class<T> apply(MetaProperty<T,?> x) {
@@ -200,7 +196,7 @@ public class MemberUtil {
             }
         }, ms)));
         
-        return new Apply<VALUES, T>() {
+        return new Function<VALUES, T>() {
             @SuppressWarnings("unchecked")
             @Override
             public T apply(VALUES t) {
@@ -219,11 +215,11 @@ public class MemberUtil {
         };
     }
 
-    public static String memberName(Apply<?, ?> member) {
+    public static String memberName(Function<?, ?> member) {
         return ((MetaNamedMember<?,?>)member).getName();
     }
     
-    public static String memberNameWithDot(Apply<?, ?> member) {
+    public static String memberNameWithDot(Function<?, ?> member) {
         return memberName(member) + ".";
     }
     

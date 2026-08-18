@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import fi.solita.utils.api.NestedMember;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Functional;
 import java.util.Optional;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -99,8 +98,8 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     }
     
     @SuppressWarnings("unchecked")
-    public <U> NestedMember<S,T> modifyParent(Apply<U,U> modifier) {
-        return new NestedMember<S,T>(parent, child, parentModifier.andThen((Apply<Object,Object>) modifier), flatten);
+    public <U> NestedMember<S,T> modifyParent(Function<U,U> modifier) {
+        return new NestedMember<S,T>(parent, child, parentModifier.andThen((Function<Object,Object>) modifier), flatten);
     }
 
     @Override

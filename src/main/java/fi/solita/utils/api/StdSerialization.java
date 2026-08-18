@@ -36,15 +36,14 @@ import fi.solita.utils.api.resolving.GeojsonResolver;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
 import fi.solita.utils.api.util.UnavailableContentTypeException;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Apply3;
-import fi.solita.utils.functional.ApplyBi;
-import fi.solita.utils.functional.ApplyZero;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Functional;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Lens;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -103,8 +102,8 @@ public abstract class StdSerialization<BOUNDS> {
     
     public abstract ReferencedEnvelope bounds2envelope(BOUNDS place);
     
-    public static <DTO, SPATIAL> Function1<DTO, Optional<GeometryObject>> geojsonFromDto(Apply<DTO, SPATIAL> geometryGetter, final Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
-        return Function.of(geometryGetter).andThen(new Apply<SPATIAL, Optional<GeometryObject>>() {
+    public static <DTO, SPATIAL> Function<DTO, Optional<GeometryObject>> geojsonFromDto(Function<DTO, SPATIAL> geometryGetter, final Function<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
+        return geometryGetter.andThen(new Function<SPATIAL, Optional<GeometryObject>>() {
             @Override
             public Optional<GeometryObject> apply(SPATIAL t) {
                 return t == null ? Optional.empty() : toGeojson.apply(t);
@@ -118,12 +117,12 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, Iterable<DTO>>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, Iterable<DTO>>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
+            Function<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialBoundedMap(req, bbox, srsName, format, includes, data, dataTransformer, title, key, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
@@ -133,11 +132,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, Iterable<DTO>>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, Iterable<DTO>>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+            Function<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -151,7 +150,7 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
                     Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
@@ -201,12 +200,12 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, Iterable<DTO>>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, Iterable<DTO>>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key,
-            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+            Function<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -220,7 +219,7 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
                             flatten(mapValues(dataTransformer, d).values()))), resolvables),
                     Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
@@ -266,11 +265,11 @@ public abstract class StdSerialization<BOUNDS> {
         SRSName srsName,
         SerializationFormat format,
         Includes<DTO> includes,
-        ApplyZero<Map<KEY, DTO>> data,
-        Apply<DTO,DTO> dataTransformer,
+        Supplier<Map<KEY, DTO>> data,
+        Function<DTO,DTO> dataTransformer,
         HtmlTitle title,
-        Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-        Apply<? super DTO, ? extends SPATIAL> toGeojson,
+        Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+        Function<? super DTO, ? extends SPATIAL> toGeojson,
         Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
     Pair<byte[],Map<String,String>> response;
     switch (format) {
@@ -284,7 +283,7 @@ public abstract class StdSerialization<BOUNDS> {
                 concat(map(toFeature, map(
                         toGeojson,
                         geojsonPropertyTransformer,
-                        Function.constant(Optional.empty()),
+                        x -> Optional.empty(),
                         mapValue(dataTransformer, d).values())), resolvables),
                 Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
         break;
@@ -329,11 +328,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+            Function<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -347,7 +346,7 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
                             mapValue(dataTransformer, d).values())), resolvables),
                     Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
@@ -393,11 +392,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
+            Function<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialBoundedCollection(req, bbox, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
@@ -407,11 +406,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+            Function<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -425,7 +424,7 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
                             map(dataTransformer, d))), resolvables),
                     Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
             break;
@@ -470,11 +469,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
+            Function<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialCollection(req, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
 
@@ -483,11 +482,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-            Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+            Function<? super DTO, ? extends SPATIAL> toGeojson,
             Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -501,7 +500,7 @@ public abstract class StdSerialization<BOUNDS> {
                     concat(map(toFeature, map(
                             toGeojson,
                             geojsonPropertyTransformer,
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
                             map(dataTransformer, d))), resolvables),
                     Optional.of(Crs.of(srsName)))), Collections.<String,String>emptyMap());
                 break;
@@ -546,11 +545,11 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<DTO> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<DTO> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
             Lens<? super DTO, SPATIAL> geometryLens,
-            Apply<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
+            Function<? super SPATIAL, Optional<GeometryObject>> toGeojson) {
         return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, excluding(geometryLens), geojsonFromDto(geometryLens, toGeojson), Feature_.$1);
     }
     
@@ -559,13 +558,13 @@ public abstract class StdSerialization<BOUNDS> {
             final SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<DTO> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<DTO> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            final Apply<? super DTO, ? super DTO> geojsonPropertyTransformer,
-            final Apply<? super DTO, ? extends SPATIAL> toGeojson,
+            final Function<? super DTO, ? super DTO> geojsonPropertyTransformer,
+            final Function<? super DTO, ? extends SPATIAL> toGeojson,
             final Apply3<SPATIAL, Object, Optional<Crs>, Feature> toFeature) {
-        return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, new Apply<DTO, FeatureObject>() {
+        return stdSpatialSingle(req, srsName, format, includes, data, dataTransformer, title, new Function<DTO, FeatureObject>() {
             @Override
             public FeatureObject apply(DTO d) {
                 return toFeature.apply(
@@ -581,10 +580,10 @@ public abstract class StdSerialization<BOUNDS> {
             SRSName srsName,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<DTO> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<DTO> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
-            Apply<DTO, FeatureObject> toFeatures) {
+            Function<DTO, FeatureObject> toFeatures) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
             case JSON:
@@ -645,8 +644,8 @@ public abstract class StdSerialization<BOUNDS> {
             Request req,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -658,9 +657,9 @@ public abstract class StdSerialization<BOUNDS> {
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d.values(), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
-                            Function.constant(Optional.empty()), 
-                            Function.id(),
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
+                            Function.identity(),
+                            Functx -> Optional.empty(),
                             mapValue(dataTransformer, d).values())), resolvables),
                     Optional.empty())), Collections.<String,String>emptyMap());
             break;
@@ -702,8 +701,8 @@ public abstract class StdSerialization<BOUNDS> {
             Request req,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, Iterable<DTO>>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, Iterable<DTO>>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -715,9 +714,9 @@ public abstract class StdSerialization<BOUNDS> {
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                         concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
-                                Function.constant(Optional.empty()), 
-                                Function.id(),
-                                Function.constant(Optional.empty()),
+                                x -> Optional.empty(),
+                                Function.identity(),
+                                x -> Optional.empty(),
                                 flatten(mapValues(dataTransformer, d).values()))), resolvables),
                         Optional.empty())), Collections.<String,String>emptyMap());
             break;
@@ -759,8 +758,8 @@ public abstract class StdSerialization<BOUNDS> {
             Request req,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<Map<KEY, Iterable<DTO>>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<Map<KEY, Iterable<DTO>>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title,
             MetaNamedMember<? super DTO, KEY> key) {
         Pair<byte[],Map<String,String>> response;
@@ -773,9 +772,9 @@ public abstract class StdSerialization<BOUNDS> {
             Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(flatten(d.values()), includes);
             response = Pair.of(geoJson.serialize(new FeatureCollection(
                         concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
-                                Function.constant(Optional.empty()), 
-                                Function.id(),
-                                Function.constant(Optional.empty()),
+                                x -> Optional.empty(),
+                                Function.identity(),
+                                x -> Optional.empty(),
                                 flatten(mapValues(dataTransformer, d).values()))), resolvables),
                         Optional.empty())), Collections.<String,String>emptyMap());
             break;
@@ -817,8 +816,8 @@ public abstract class StdSerialization<BOUNDS> {
             Request req,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -830,9 +829,9 @@ public abstract class StdSerialization<BOUNDS> {
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
-                            Function.constant(Optional.empty()),
-                            Function.id(),
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
+                            Function.identity(),
+                            x -> Optional.empty(),
                             map(dataTransformer, d))), resolvables),
                     Optional.empty())), Collections.<String,String>emptyMap());
                 break;
@@ -874,8 +873,8 @@ public abstract class StdSerialization<BOUNDS> {
             Request req,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<DTO> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<DTO> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -937,9 +936,9 @@ public abstract class StdSerialization<BOUNDS> {
                 break;
             case GEOJSON:
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
-                    map((ApplyBi<String,Object,Feature>)Feature_.$2, map(
-                            Function.constant("typeName"),
-                            Function.id(),
+                    map((BiFunction<String,Object,Feature>)Feature_.$2, map(
+                            x -> "typeName",
+                            Function.identity(),
                             data)),
                     Optional.empty())), Collections.<String,String>emptyMap());
                 break;
@@ -981,8 +980,8 @@ public abstract class StdSerialization<BOUNDS> {
             Request req,
             SerializationFormat format,
             Includes<DTO> includes,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -994,9 +993,9 @@ public abstract class StdSerialization<BOUNDS> {
                 Collection<FeatureObject> resolvables = geojsonResolver.getResolvedFeatures(d, includes);
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
                     concat(Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
-                            Function.constant(Optional.empty()),
-                            Function.id(),
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
+                            Function.identity(),
+                            x -> Optional.empty(),
                             map(dataTransformer, d))), resolvables),
                     Optional.empty())), Collections.<String,String>emptyMap());
                 break;
@@ -1037,8 +1036,8 @@ public abstract class StdSerialization<BOUNDS> {
     public <DTO> Pair<byte[],Map<String,String>> stdStatic(
             Request req,
             SerializationFormat format,
-            ApplyZero<? extends Iterable<DTO>> data,
-            Apply<DTO,DTO> dataTransformer,
+            Supplier<? extends Iterable<DTO>> data,
+            Function<DTO,DTO> dataTransformer,
             HtmlTitle title) {
         Pair<byte[],Map<String,String>> response;
         switch (format) {
@@ -1049,9 +1048,9 @@ public abstract class StdSerialization<BOUNDS> {
                 Iterable<DTO> d = map(dataTransformer, data.get());
                 response = Pair.of(geoJson.serialize(new FeatureCollection(
                     Functional.<Optional<? extends GeometryObject>, Object, Optional<Crs>,Feature>map(Feature_.$1, Functional.<DTO, Optional<? extends GeometryObject>, Object, Optional<Crs>>map(
-                            Function.constant(Optional.empty()),
-                            Function.id(),
-                            Function.constant(Optional.empty()),
+                            x -> Optional.empty(),
+                            Function.identity(),
+                            x -> Optional.empty(),
                             d)),
                     Optional.empty())), Collections.<String,String>emptyMap());
                 break;
@@ -1094,7 +1093,7 @@ public abstract class StdSerialization<BOUNDS> {
      */
     public Pair<byte[],Map<String,String>> stdPassThrough(
             Request req,
-            ApplyZero<byte[]> data) {
+            Supplier<byte[]> data) {
         return Pair.of(data.get(), Collections.<String,String>emptyMap());
     }
 }

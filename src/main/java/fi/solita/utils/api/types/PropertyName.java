@@ -2,12 +2,12 @@ package fi.solita.utils.api.types;
 
 import static fi.solita.utils.functional.Functional.init;
 
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import fi.solita.utils.api.Documentation;
 import fi.solita.utils.api.functions.FunctionProvider;
-import fi.solita.utils.functional.Function1;
-import fi.solita.utils.functional.Predicate;
 
 @Documentation(description = "Palautettavat kentät aakkosjärjestyksessä. '-'-etuliitteellä voi jättää kenttiä pois", description_en = "Attributes to return, in alphabetic order. '-'-prefix can be used to exclude fields")
 public abstract class PropertyName implements Comparable<PropertyName> {
@@ -79,7 +79,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
         public boolean isEmpty(FunctionProvider fp) {
             return fp.argumentMatches(value, new Predicate<String>() {
                 @Override
-                public boolean accept(String candidate) {
+                public boolean test(String candidate) {
                     return candidate.isEmpty();
                 }
             });
@@ -88,7 +88,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
         public boolean isPrefixOf(FunctionProvider fp, final String longer) {
             return fp.argumentMatches(value, new Predicate<String>() {
                 @Override
-                public boolean accept(String candidate) {
+                public boolean test(String candidate) {
                     return (longer + ".").startsWith(candidate + ".");
                 }
             });
@@ -97,7 +97,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
         public boolean isEqualTo(FunctionProvider fp, final String prefix) {
             return fp.argumentMatches(value, new Predicate<String>() {
                 @Override
-                public boolean accept(String candidate) {
+                public boolean test(String candidate) {
                     return candidate.equals(prefix);
                 }
             });
@@ -115,7 +115,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
         }
         
         public PropertyName stripPrefix(FunctionProvider fp, final String prefix) {
-            return new FunctionCallPropertyName(fp.mapArgument(value, new Function1<String,String>() {
+            return new FunctionCallPropertyName(fp.mapArgument(value, new Function<String,String>() {
                 @Override
                 public String apply(String t) {
                     return t.equals(prefix) ? "" : t.replaceFirst(Pattern.quote(prefix + "."), "");
@@ -127,7 +127,7 @@ public abstract class PropertyName implements Comparable<PropertyName> {
             final String pre = prefix + ".";
             return fp.argumentMatches(value, new Predicate<String>() {
                 @Override
-                public boolean accept(String candidate) {
+                public boolean test(String candidate) {
                     return (candidate + ".").startsWith(pre);
                 }
             });

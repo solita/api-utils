@@ -9,8 +9,6 @@ import static fi.solita.utils.functional.Functional.headOptional;
 import static fi.solita.utils.functional.Functional.tail;
 import static fi.solita.utils.functional.FunctionalA.concat;
 
-
-
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -21,15 +19,15 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 
 import fi.solita.utils.api.DynamicMember;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Function1;
-import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
 
 public class ClassUtils {
@@ -128,7 +126,7 @@ public class ClassUtils {
         return primitiveClass;
     }
     
-    public static final Apply<Class<?>, Iterable<Class<?>>> AllExtendedClasses = new Apply<Class<?>, Iterable<Class<?>>>() {
+    public static final Function<Class<?>, Iterable<Class<?>>> AllExtendedClasses = new Function<Class<?>, Iterable<Class<?>>>() {
         @SuppressWarnings("unchecked")
         @Override
         public Iterable<Class<?>> apply(Class<?> source) {
@@ -136,7 +134,7 @@ public class ClassUtils {
         }
     };
     
-    public static final Apply<Class<?>, Iterable<Field>> AllDeclaredApplicationFields = new Apply<Class<?>, Iterable<Field>>() {
+    public static final Function<Class<?>, Iterable<Field>> AllDeclaredApplicationFields = new Function<Class<?>, Iterable<Field>>() {
         @Override
         public Iterable<Field> apply(Class<?> source) {
             if ( !source.getPackage().getName().startsWith("java") ) {
@@ -146,18 +144,8 @@ public class ClassUtils {
         }
     };
     
-    public static final Function1<Member, Boolean> PublicMembers = new Function1<Member, Boolean>() {
-        @Override
-        public Boolean apply(Member t) {
-            return Modifier.isPublic(t.getModifiers());
-        }
-    };
+    public static final Predicate<Member> PublicMembers = t -> Modifier.isPublic(t.getModifiers());
     
-    public static final Function1<Member, Boolean> StaticMembers = new Function1<Member, Boolean>() {
-        @Override
-        public Boolean apply(Member t) {
-            return Modifier.isStatic(t.getModifiers());
-        }
-    };
+    public static final Predicate<Member> StaticMembers = t -> Modifier.isStatic(t.getModifiers());
 }
 

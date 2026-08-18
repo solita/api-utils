@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -36,7 +37,6 @@ import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.types.SRSName_;
 import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Apply;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
 
@@ -51,8 +51,8 @@ public class HttpSerializers {
     
     
     
-    public static final <E extends Enum<E>> Apply<String, E> enumConverter(final Class<E> enumClass, final Apply<E,String> serialization) {
-        return new Apply<String, E>() {
+    public static final <E extends Enum<E>> Function<String, E> enumConverter(final Class<E> enumClass, final Function<E,String> serialization) {
+        return new Function<String, E>() {
             @Override
             public E apply(String source) {
                 for (E v: enumClass.getEnumConstants()) {
@@ -144,7 +144,7 @@ public class HttpSerializers {
         }
     }
     
-    private final Apply<String,Revision> revision = new Apply<String, Revision>() {
+    private final Function<String,Revision> revision = new Function<String, Revision>() {
         @Override
         public Revision apply(String source) throws InvalidValueException {
             try {
@@ -156,9 +156,9 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,PropertyName> propertyName = PropertyName_.of;
+    private final Function<String,PropertyName> propertyName = PropertyName_.of;
     
-    private final Apply<String,Filters> filter = new Apply<String, Filters>() {
+    private final Function<String,Filters> filter = new Function<String, Filters>() {
         @Override
         public Filters apply(String source) {
             List<List<Filter>> filters = FilterParser.parse(source);
@@ -169,14 +169,14 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,Boolean> bool = new Apply<String, Boolean>() {
+    private final Function<String,Boolean> bool = new Function<String, Boolean>() {
         @Override
         public Boolean apply(String source) {
             return Boolean.parseBoolean(source);
         }
     };
     
-    private final Apply<String,Character> character = new Apply<String, Character>() {
+    private final Function<String,Character> character = new Function<String, Character>() {
         @Override
         public Character apply(String source) {
             Assert.True(source.length() == 1);
@@ -184,49 +184,49 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,Short> _short = new Apply<String, Short>() {
+    private final Function<String,Short> _short = new Function<String, Short>() {
         @Override
         public Short apply(String source) {
             return Short.parseShort(source);
         }
     };
     
-    private final Apply<String,Integer> _int = new Apply<String, Integer>() {
+    private final Function<String,Integer> _int = new Function<String, Integer>() {
         @Override
         public Integer apply(String source) {
             return Integer.parseInt(source);
         }
     };
     
-    private final Apply<String,Long> _long = new Apply<String, Long>() {
+    private final Function<String,Long> _long = new Function<String, Long>() {
         @Override
         public Long apply(String source) {
             return Long.parseLong(source);
         }
     };
     
-    private final Apply<String,Double> _double = new Apply<String, Double>() {
+    private final Function<String,Double> _double = new Function<String, Double>() {
         @Override
         public Double apply(String source) {
             return Double.parseDouble(source);
         }
     };
     
-    private final Apply<String,BigInteger> biginteger = new Apply<String, BigInteger>() {
+    private final Function<String,BigInteger> biginteger = new Function<String, BigInteger>() {
         @Override
         public BigInteger apply(String source) {
             return new BigInteger(source);
         }
     };
     
-    private final Apply<String,BigDecimal> bigdecimal = new Apply<String, BigDecimal>() {
+    private final Function<String,BigDecimal> bigdecimal = new Function<String, BigDecimal>() {
         @Override
         public BigDecimal apply(String source) {
             return new BigDecimal(source);
         }
     };
     
-    private final Apply<String,Count> count = new Apply<String, Count>() {
+    private final Function<String,Count> count = new Function<String, Count>() {
         @Override
         public Count apply(String source) throws InvalidValueException {
             try {
@@ -243,7 +243,7 @@ public class HttpSerializers {
         return Integer.toString(i);
     }
     
-    private final Apply<String,StartIndex> startIndex = new Apply<String, StartIndex>() {
+    private final Function<String,StartIndex> startIndex = new Function<String, StartIndex>() {
         @Override
         public StartIndex apply(String source) throws InvalidStartIndexException {
             try {
@@ -255,7 +255,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,SRSName> srsName = new Apply<String, SRSName>() {
+    private final Function<String,SRSName> srsName = new Function<String, SRSName>() {
         @Override
         public SRSName apply(String source) throws InvalidValueException {
             try {
@@ -268,7 +268,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,DateTime> ajanhetki = new Apply<String, DateTime>() {
+    private final Function<String,DateTime> ajanhetki = new Function<String, DateTime>() {
         private final DateTime VALID_BEGIN = VALID.getStart();
         private final DateTime VALID_END = VALID.getEnd();
         
@@ -296,7 +296,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,Interval> interval = new Apply<String, Interval>() {
+    private final Function<String,Interval> interval = new Function<String, Interval>() {
         @Override
         public Interval apply(String source) throws InvalidValueException, IntervalNotWithinLimitsException {
             String[] parts = source.split("/");
@@ -355,7 +355,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,Duration> kesto = new Apply<String, Duration>() {
+    private final Function<String,Duration> kesto = new Function<String, Duration>() {
         @Override
         public Duration apply(String source) throws InvalidValueException {
             Duration ret;
@@ -372,7 +372,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,Period> jakso = new Apply<String, Period>() {
+    private final Function<String,Period> jakso = new Function<String, Period>() {
         @Override
         public Period apply(String source) throws InvalidValueException {
             Period ret;
@@ -388,7 +388,7 @@ public class HttpSerializers {
     public static final DateTimeFormatter dateTimeParser = ISODateTimeFormat.dateTimeNoMillis().withOffsetParsed();
     public static final Interval VALID = new Interval(dateTimeParser.parseDateTime("2010-01-01T00:00:00Z"), dateTimeParser.parseDateTime("2030-01-01T00:00:00Z"));
     
-    private final Apply<String,LocalDate> paiva = new Apply<String, LocalDate>() {
+    private final Function<String,LocalDate> paiva = new Function<String, LocalDate>() {
         private final DateTimeFormatter localDateParser = ISODateTimeFormat.localDateParser();
         
         private final LocalDate VALID_BEGIN = VALID.getStart().toLocalDate();
@@ -408,7 +408,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,LocalTime> kellonaika = new Apply<String, LocalTime>() {
+    private final Function<String,LocalTime> kellonaika = new Function<String, LocalTime>() {
         private final DateTimeFormatter localTimeParser = ISODateTimeFormat.localTimeParser();
         
         @Override
@@ -421,7 +421,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,DateTimeZone> zone = new Apply<String, DateTimeZone>() {
+    private final Function<String,DateTimeZone> zone = new Function<String, DateTimeZone>() {
         @Override
         public DateTimeZone apply(String source) throws InvalidTimeZoneException {
             try {
@@ -432,7 +432,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,URI> uri = new Apply<String, URI>() {
+    private final Function<String,URI> uri = new Function<String, URI>() {
         @Override
         public URI apply(String source) throws InvalidValueException {
             try {
@@ -443,7 +443,7 @@ public class HttpSerializers {
         }
     };
     
-    private final Apply<String,UUID> uuid = new Apply<String, UUID>() {
+    private final Function<String,UUID> uuid = new Function<String, UUID>() {
         @Override
         public UUID apply(String source) throws InvalidValueException {
             try {
@@ -456,7 +456,7 @@ public class HttpSerializers {
     
     
     
-    public Map<Class<?>,Apply<String,?>> converters() { return newMap(
+    public Map<Class<?>,Function<String,?>> converters() { return newMap(
         Pair.of(Revision.class, revision),
         Pair.of(PropertyName.class, propertyName),
         Pair.of(Filters.class, filter),

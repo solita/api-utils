@@ -1,6 +1,5 @@
 package fi.solita.utils.api.format;
 
-import fi.solita.utils.functional.Collections;
 import static fi.solita.utils.functional.Collections.emptyList;
 import static fi.solita.utils.functional.Collections.it;
 import static fi.solita.utils.functional.Collections.newList;
@@ -30,8 +29,6 @@ import static fi.solita.utils.functional.Functional.zipWithIndex;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
-
-
 import static org.rendersnake.HtmlAttributesFactory.http_equiv;
 import static org.rendersnake.HtmlAttributesFactory.id;
 import static org.rendersnake.HtmlAttributesFactory.type;
@@ -48,10 +45,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
@@ -74,16 +73,13 @@ import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.util.RequestUtil;
 import fi.solita.utils.api.util.ServletRequestUtil.Request;
-import fi.solita.utils.functional.Apply;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Compare;
-import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function1;
-import fi.solita.utils.functional.Monoids;
-import java.util.Optional;
-import fi.solita.utils.functional.Pair;
-import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Functional;
 import fi.solita.utils.functional.FunctionalM;
+import fi.solita.utils.functional.Monoids;
+import fi.solita.utils.functional.Pair;
+import fi.solita.utils.functional.SemiGroups;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -170,11 +166,11 @@ public class ChartConversionService {
         return newList(o);
     }
     
-    final <T> Apply<Apply<T, Object>, Map<String, Long>> categoryValues(final List<T> categoryObjects) {
-        return new Apply<Apply<T,Object>,Map<String,Long>>() {
+    final <T> Function<Function<T, Object>, Map<String, Long>> categoryValues(final List<T> categoryObjects) {
+        return new Function<Function<T,Object>,Map<String,Long>>() {
           @Override
-          public Map<String, Long> apply(Apply<T,Object> m) {
-             return mapValue(x -> Long.valueOf(x.size()), groupBy(ChartConversionService_.toKey.ap(ChartConversionService.this), flatMap(Function.of(m).andThen(ChartConversionService_.handleCollections), categoryObjects)));
+          public Map<String, Long> apply(Function<T,Object> m) {
+             return mapValue(x -> Long.valueOf(x.size()), groupBy(ChartConversionService_.toKey.ap(ChartConversionService.this), flatMap(m.andThen(ChartConversionService_.handleCollections), categoryObjects)));
           }};
     }
     
@@ -245,8 +241,8 @@ public class ChartConversionService {
         };
     }
 
-    private <T> Apply<Pair<MetaNamedMember<T, Object>, Object>, Iterable<Pair<String, Object>>> mkDataRows(final Map<Object, Object> values) {
-        return new Apply<Pair<MetaNamedMember<T,Object>,Object>,Iterable<Pair<String,Object>>>() {
+    private <T> Function<Pair<MetaNamedMember<T, Object>, Object>, Iterable<Pair<String, Object>>> mkDataRows(final Map<Object, Object> values) {
+        return new Function<Pair<MetaNamedMember<T,Object>,Object>,Iterable<Pair<String,Object>>>() {
              @Override
              public Iterable<Pair<String,Object>> apply(Pair<MetaNamedMember<T, Object>,Object> p) {
                  Object value = p.right();
@@ -354,7 +350,7 @@ public class ChartConversionService {
                 }
             }
             
-            Function1<T, Object> x = Function.of(head(members));
+            Function<T, Object> x = head(members);
             
             @SuppressWarnings({ "unchecked", "rawtypes" })
             Set<Object> xValues = !isEmpty(objs) && head(map(x, objs)) instanceof Comparable
@@ -384,7 +380,7 @@ public class ChartConversionService {
                     if (xIsListOfValuesFromASingleRow) {
                         // a single object with a single member that is a collection -> use the target collection as objects
                         objs = (Iterable<T>) head(xValues);
-                        x = (Function1<T, Object>) Function.id();
+                        x = (Function<T, Object>) Function.identity();
                     }
                     
                     List<Object> os = newList(recursivelyFlatten(map(x, objs)));
@@ -408,7 +404,7 @@ public class ChartConversionService {
                 }
             } else {
                 final Iterable<T> objs_ = objs;
-                yNames = newList(sort(flatMap(new Apply<MetaNamedMember<T,Object>,Iterable<String>>() {
+                yNames = newList(sort(flatMap(new Function<MetaNamedMember<T,Object>,Iterable<String>>() {
                     @Override
                     public Iterable<String> apply(MetaNamedMember<T, Object> m) {
                         Set<String> ret = newMutableSet();
@@ -446,7 +442,7 @@ public class ChartConversionService {
                     
                     Map<Object,Object> values = newMutableMap();
                     @SuppressWarnings("unchecked")
-                    Function1<T,Comparable<T>> xx = (Function1<T,Comparable<T>>)(Object)x;
+                    Function<T,Comparable<T>> xx = (Function<T,Comparable<T>>)(Object)x;
                     
                     if (xIsListOfValuesFromASingleRow) {
                         Iterable<Iterable<Object>> allRows = map(ChartConversionService_.handleCollections, sequence(Assert.singleton(objs), members));
@@ -468,7 +464,7 @@ public class ChartConversionService {
                     // y has at least one member, x is anything else -> chart counts
                     if (xIsListOfValuesFromASingleRow) {
                         Iterable<Iterable<Object>> allRows = map(ChartConversionService_.handleCollections, sequence(Assert.singleton(objs), members));
-                        Iterable<Function1<Object, Object>> tailMembers = repeat(Function.id(), size(tail(members)));
+                        Iterable<Function<Object, Object>> tailMembers = repeat(Function.identity(), size(tail(members)));
                         for (Iterable<Object> cat: transpose(allRows)) {
                             Iterable<Object> category = newList(cat);
                             List<Object> categoryObjects = newList(tail(category));
@@ -660,7 +656,7 @@ public class ChartConversionService {
               + "  label: am5.Label.new(root, {text:'-', paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 0})\n"
               + "})).events.on('click', ev => xAxis.set('groupInterval', { timeUnit: 'second', count: 1 }));\n"
                 : "")
-              + mkString("", map(new Apply<Pair<Integer,String>,String>() {
+              + mkString("", map(new Function<Pair<Integer,String>,String>() {
                 @Override
                 public String apply(Pair<Integer,String> yName) {
                     return "let series" + yName.left() + " = chart.series.push(\n"

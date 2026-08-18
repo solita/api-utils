@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.junit.Test;
 
@@ -23,7 +24,6 @@ import fi.solita.utils.api.util.MemberUtil.UnknownPropertyNameException;
 import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Function1;
 import java.util.Optional;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.lens.Builder;
@@ -159,7 +159,7 @@ public class IncludesTest {
     @Test
     public void withPropertiesF_appliesFunction() {
         Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, Optional.of(newList(PropertyName.of("round(baz)"))), FooDto.FIELDS, FooDto.BUILDERS, noGeometries, false);
-        Function1<FooDto, FooDto> mapper = ModificationUtils.withPropertiesF(includes, new FunctionProvider());
+        Function<FooDto, FooDto> mapper = ModificationUtils.withPropertiesF(includes, new FunctionProvider());
         FooDto foo = new FooDto("", new External(), 3.14);
         assertEquals(Double.valueOf(3.0), mapper.apply(foo).baz);
     }

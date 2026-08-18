@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.joda.time.Duration;
 
@@ -28,7 +29,6 @@ import fi.solita.utils.api.NestedMember;
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.util.MemberUtil;
-import fi.solita.utils.functional.Apply;
 import java.util.Optional;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -138,7 +138,7 @@ public abstract class ResolvableMemberProvider<REQ> {
         for (MetaNamedMember<T,Object> member: (Iterable<MetaNamedMember<T,Object>>)(Object)filter(ResolvableMemberProvider_.isResolvableMember, includes)) {
             final Set<PropertyName> propertyNames = ((ResolvableMember<?>) member).getResolvablePropertyNames();
             try {
-                List<Future<Void>> futures = pool.invokeAll(newList(map(new Apply<Object, Callable<Void>>() {
+                List<Future<Void>> futures = pool.invokeAll(newList(map(new Function<Object, Callable<Void>>() {
                     @Override
                     public Callable<Void> apply(final Object x) {
                         return new Callable<Void>() {
@@ -151,7 +151,7 @@ public abstract class ResolvableMemberProvider<REQ> {
                     }
                     // might be null in some edge-cases due to propertyName-filtering
                 }, filter(Objects::nonNull, unwrapResolvable(((ResolvableMember<T>)member).original, t)))), getTimeout().getMillis(), TimeUnit.MILLISECONDS);
-                foreach(new Apply<Future<Void>, Void>() {
+                foreach(new Function<Future<Void>, Void>() {
                     @Override
                     public Void apply(Future<Void> t) {
                         try {

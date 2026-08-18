@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -89,7 +89,7 @@ public class DynamicMember<V> implements MetaNamedMember<Map<String,V>,V> {
     }
     
     private static <V> Builder<Map<String,V>> builder(final Map<String,V> m) {
-        List<? extends Apply<Map<String,V>, ? extends Object>> members = newList(map(new Apply<String, MetaNamedMember<Map<String,V>, V>>() {
+        List<? extends Function<Map<String,V>, ? extends Object>> members = newList(map(new Function<String, MetaNamedMember<Map<String,V>, V>>() {
             @Override
             public MetaNamedMember<Map<String,V>, V> apply(final String k) {
                 return new MetaNamedMember<Map<String,V>, V>() {

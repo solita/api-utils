@@ -65,7 +65,6 @@ import fi.solita.utils.api.types.StartIndex;
 import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.RequestUtil;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Either;
 import java.util.Optional;
 import fi.solita.utils.functional.Pair;
@@ -271,7 +270,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
     public static final String DESCRIPTION_Filters = "ECQL-alijoukko, useita suodattimia voi erottaa sanalla ' AND ' / ECQL-subset, multiple filters can be separated with ' AND '. " + mkString(", ", Filters.SUPPORTED_OPERATIONS);
     
     public static abstract class DocumentingModelPropertyBuilder implements ModelPropertyBuilderPlugin {
-        protected static <T extends Enum<T>> void enumValue(ModelPropertyBuilder builder, Apply<T,String> f, Class<T> clazz) {
+        protected static <T extends Enum<T>> void enumValue(ModelPropertyBuilder builder, Function<T,String> f, Class<T> clazz) {
             List<String> vals = newList(map(f, ClassUtils.getEnumType(clazz).get().getEnumConstants()));
             builder.allowableValues(new AllowableListValues(vals, "string"))
                    .example(head(vals));
@@ -377,7 +376,7 @@ public abstract class SwaggerSupport extends ApiResourceController {
      */
     // TODO: Tämän sisältö oikeastaan riippuu API-versiosta, eli siis voi muuttua rajapinnan kehittyessä. Miten saisi versiokohtaiseksi?
     public static abstract class CustomTypeParameterBuilder implements ParameterBuilderPlugin {
-        protected static <T extends Enum<T>> void enumValue(ParameterBuilder builder, Apply<T,String> f, Class<T> clazz) {
+        protected static <T extends Enum<T>> void enumValue(ParameterBuilder builder, Function<T,String> f, Class<T> clazz) {
             List<String> vals = newList(map(f, ClassUtils.getEnumType(clazz).get().getEnumConstants()));
             builder.allowableValues(new AllowableListValues(vals, "string"));
         }

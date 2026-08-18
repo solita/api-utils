@@ -15,7 +15,6 @@ import static fi.solita.utils.functional.Functional.filter;
 import static fi.solita.utils.functional.Functional.flatMap;
 import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.forall;
-import static fi.solita.utils.functional.Functional.group;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.Functional.remove;
@@ -42,11 +41,11 @@ import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.util.RedundantPropertiesException;
-import fi.solita.utils.functional.Apply;
 import fi.solita.utils.functional.Collections;
-import fi.solita.utils.functional.Function;
 import fi.solita.utils.functional.Functional;
 import java.util.Optional;
+import java.util.function.Function;
+
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -121,8 +120,8 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         List<MetaNamedMember<? super T, ?>> ret = null;
         boolean includesEverything = false;
         
-        if (propertyNames.isPresent() && newList(propertyNames.get()).size() > newSet(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())).size()) {
-            throw new RedundantPropertiesException(newSortedSet(flatten(filter(x -> size(x) > 1, group(sort(map(PropertyName_.toProperty.apply(Function.__, fp), propertyNames.get())))))));
+        if (propertyNames.isPresent() && newList(propertyNames.get()).size() > newSet(map(x -> x.toProperty(fp), propertyNames.get())).size()) {
+            throw new RedundantPropertiesException(newSortedSet(flatten(filter(x -> size(x) > 1, Functional.<PropertyName>group(sort(map(y -> y.toProperty(fp), propertyNames.get())))))));
         }
         
         if (propertyNames.isPresent() && (Functional.isEmpty(propertyNames.get()) ||
@@ -203,7 +202,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
         
         final Map<String, List<MetaNamedMember<? super T, ?>>> resolvable = groupBy(MemberUtil_.memberName, filter(ResolvableMemberProvider_.isResolvableMember, ret));
     
-        ret = newList(distinct(map(new Apply<MetaNamedMember<? super T,?>, MetaNamedMember<? super T,?>>() {
+        ret = newList(distinct(map(new Function<MetaNamedMember<? super T,?>, MetaNamedMember<? super T,?>>() {
             @Override
             public MetaNamedMember<? super T, ?> apply(MetaNamedMember<? super T, ?> t) {
                 Optional<List<MetaNamedMember<? super T, ?>>> x = find(t.getName(), resolvable);

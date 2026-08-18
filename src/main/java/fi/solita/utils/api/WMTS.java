@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import fi.solita.utils.functional.Pred;
 import fi.solita.utils.functional.Tuple;
 import fi.solita.utils.functional.Tuple3;
 import fi.solita.utils.functional.Tuple4;
@@ -55,7 +55,7 @@ public class WMTS {
         }
     }
     
-    public static List<String> luoWmtsSeedUrlit(String time, String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers, Pred<Tuple3<Integer,Integer,Integer>> acceptSetRowCol) {
+    public static List<String> luoWmtsSeedUrlit(String time, String tilematrixset, Iterable<Tuple4<String, String, String, String>> wmtsLayers, Predicate<Tuple3<Integer,Integer,Integer>> acceptSetRowCol) {
         List<String> ret = newMutableList();
         
         for (int taso: newList(WMTS.MIN_LAYER_ID)) {
@@ -65,7 +65,7 @@ public class WMTS {
             for (Tuple4<String, String, String, String> layer: wmtsLayers) {
                 for (int i: range(0, tileja)) {
                     for (int j: range(0, tileja)) {
-                        if (acceptSetRowCol.apply(Tuple.of(taso, i, j))) {
+                        if (acceptSetRowCol.test(Tuple.of(taso, i, j))) {
                             ret.add(
                                 WMTS.LAYER_URL_TEMPLATE
                                     .replace("{{name}}", layer._1)

@@ -6,6 +6,8 @@ import static fi.solita.utils.functional.Functional.flatten;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.geotools.api.referencing.FactoryException;
 import org.geotools.api.referencing.operation.MathTransform;
@@ -18,15 +20,11 @@ import fi.solita.utils.api.filtering.Literal;
 import fi.solita.utils.api.types.Filters;
 import fi.solita.utils.api.types.SRSName;
 import fi.solita.utils.api.util.Assert;
-import fi.solita.utils.functional.Apply;
-import fi.solita.utils.functional.ApplyBi;
-import fi.solita.utils.functional.Function;
-import fi.solita.utils.functional.Function1;
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.lens.Setter;
 
 public class Transform {
-    public static <BOUNDS> BOUNDS resolveBounds(BOUNDS bbox, Filters filters, Apply<String,BOUNDS> fromWKT) {
+    public static <BOUNDS> BOUNDS resolveBounds(BOUNDS bbox, Filters filters, Function<String,BOUNDS> fromWKT) {
         if (filters != null) {
             List<List<Filter>> allSpatialFilters = filters.spatialFilters();
             List<Filter> spatialFilters = newList(flatten(allSpatialFilters));
@@ -92,11 +90,11 @@ public class Transform {
         }
     }
     
-    public static final <T,G> Function1<T,T> transforming(final SRSName source, final SRSName target, final Setter<T, G> setter, final ApplyBi<SRSName,G,G> f) {
-        return source.equals(target) ? Function.<T>id() : new Function1<T, T>() {
+    public static final <T,G> Function<T,T> transforming(final SRSName source, final SRSName target, final Setter<T, G> setter, final BiFunction<SRSName,G,G> f) {
+        return source.equals(target) ? Function.identity() : new Function<T, T>() {
             @Override
             public T apply(T t) {
-                return t == null ? t : setter.modify(t, Function.of(f).ap(target));
+                return t == null ? t : setter.modify(t, x -> f.apply(target, x));
             }
         };
     }

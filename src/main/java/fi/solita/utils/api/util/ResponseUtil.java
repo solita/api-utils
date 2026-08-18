@@ -212,7 +212,7 @@ public abstract class ResponseUtil {
                       (contextRelativePath.startsWith("/") ? contextRelativePath : "/" + contextRelativePath);
         Iterable<String> params = map(x -> encodeUrlQueryString(x.getKey() + "=" + x.getValue()), additionalUnescapedQueryParams.entrySet());
         if (request.getQueryString() != null && !request.getQueryString().isEmpty()) {
-            params = sort(concat(filter(ResponseUtil_.acceptParam.ap(queryParamsToExclude), request.getQueryString().split("&")), params));
+            params = sort(concat(filter(x -> acceptParam(queryParamsToExclude, x), request.getQueryString().split("&")), params));
         }
         String query = mkString("&", params);
         String uri = response.encodeRedirectURL(encodeUrlPath(path) + (query.isEmpty() ? "" : "?" + query));

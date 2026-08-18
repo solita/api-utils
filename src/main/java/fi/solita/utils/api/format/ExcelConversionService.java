@@ -38,8 +38,9 @@ import fi.solita.utils.api.base.excel.ExcelSerializer.Cells;
 import fi.solita.utils.api.util.Assert;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
-import fi.solita.utils.functional.ApplyBi;
 import java.util.Optional;
+import java.util.function.BiFunction;
+
 import fi.solita.utils.functional.Pair;
 import fi.solita.utils.functional.Tuple2;
 import fi.solita.utils.meta.MetaNamedMember;
@@ -216,7 +217,7 @@ public class ExcelConversionService {
     }
     
     private static <K,V,O> Iterable<Iterable<Pair<Object,Class<Object>>>> mapBody(final Map<K, ? extends Iterable<V>> obj, final Iterable<? extends MetaNamedMember<V, O>> members) {
-        return map((ApplyBi<K,V,Iterable<Pair<Object,Class<Object>>>>)ExcelConversionService_.<K,V,O>mapBodyRow().ap(members), flatMap(ExcelConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
+        return map((BiFunction<K,V,Iterable<Pair<Object,Class<Object>>>>)ExcelConversionService_.<K,V,O>mapBodyRow().ap(members), flatMap(ExcelConversionService_.<K,V>flatKeyToValues(), obj.entrySet()));
     }
     
     @SuppressWarnings("unchecked")
