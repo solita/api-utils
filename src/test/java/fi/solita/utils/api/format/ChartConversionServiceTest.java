@@ -211,7 +211,7 @@ public class ChartConversionServiceTest {
         // | blue | 2     |
         // | red  | 1     |
         // +------+-------+
-        MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(Row_.children, Child_.optionalValue));
+        MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofItOptionalFlatType(Row_.children, Child_.optionalValue));
 
         Pair<List<Map<Object, Object>>, List<String>> result = calculate(newList(
                 rowWithChildren(child(Optional.of("blue")), child(Optional.empty()), child(Optional.of("red"))),
@@ -509,7 +509,7 @@ public class ChartConversionServiceTest {
         // | bucket 0 .. 8        | [Some(value-bucket)]          | children.optionalValue | value-0 .. value-8    |
         // | bucket 9             | [None]                        | children.optionalValue | no produced row       |
         // +----------------------+-------------------------------+------------------------+-----------------------+
-        final MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofOptionFlatType(Row_.children, Child_.optionalValue));
+        final MetaNamedMember<Row, Object> nestedOptionalValues = asObjectMember(NestedMember.ofItOptionalFlatType(Row_.children, Child_.optionalValue));
         Pair<List<Map<Object, Object>>, List<String>> nestedOptionResult = calculateAndPrintElapsed("nested option selected values", size,
                 millionRows(size, new RowFactory() {
                     @Override

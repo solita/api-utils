@@ -10,11 +10,9 @@ import static fi.solita.utils.functional.Functional.map;
 import java.lang.reflect.AccessibleObject;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
-import fi.solita.utils.api.NestedMember;
-import fi.solita.utils.functional.Functional;
-import java.util.Optional;
 import fi.solita.utils.meta.MetaNamedMember;
 
 public class NestedMember<S,T> implements MetaNamedMember<S,T> {
@@ -29,7 +27,7 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     }
     
     @SuppressWarnings("unchecked")
-    public static final <S,U,T> NestedMember<S,Optional<T>> ofOption(MetaNamedMember<S, Optional<U>> parent, MetaNamedMember<? super U,T> child) {
+    public static final <S,U,T> NestedMember<S,Optional<T>> ofOptional(MetaNamedMember<S, Optional<U>> parent, MetaNamedMember<? super U,T> child) {
         return new NestedMember<S,Optional<T>>(parent, (MetaNamedMember<?, Optional<T>>) child, Function.identity(), false);
     }
 
@@ -38,8 +36,17 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, Function.identity(), true);
     }
     
-    public static final <S,U,T> NestedMember<S,Optional<T>> ofOptionFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,Optional<T>> child) {
+    public static final <S,U,T> NestedMember<S,Optional<T>> ofOptionalFlatType(MetaNamedMember<S, ? extends Optional<U>> parent, MetaNamedMember<? super U,Optional<T>> child) {
         return new NestedMember<S,Optional<T>>(parent, child, Function.identity(), true);
+    }
+    
+    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionalIterableFlatType(MetaNamedMember<S, ? extends Optional<U>> parent, MetaNamedMember<? super U,Iterable<T>> child) {
+        return new NestedMember<S,Iterable<T>>(parent, child, Function.identity(), true);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static final <S,U,T> NestedMember<S,Iterable<T>> ofItOptionalFlatType(MetaNamedMember<S, ? extends Iterable<U>> parent, MetaNamedMember<? super U,Optional<T>> child) {
+        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>)(Object)child, Function.identity(), true);
     }
 
     @SuppressWarnings("unchecked")
@@ -52,8 +59,13 @@ public class NestedMember<S,T> implements MetaNamedMember<S,T> {
     }
     
     @SuppressWarnings("unchecked")
-    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionItFlatType(MetaNamedMember<S, Optional<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
-        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, x -> Functional.flatten((Iterable<Iterable<?>>)x), true);
+    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionalItFlatType(MetaNamedMember<S, ? extends Optional<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Iterable<T>> child) {
+        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>) child, x -> ((Optional<Iterable<?>>)x).orElse(emptyList()), true);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static final <S,U,T> NestedMember<S,Iterable<T>> ofOptionalItOptionalFlatType(MetaNamedMember<S, ? extends Optional<? extends Iterable<U>>> parent, MetaNamedMember<? super U,? extends Optional<T>> child) {
+        return new NestedMember<S,Iterable<T>>(parent, (MetaNamedMember<?, Iterable<T>>)(Object)child, x -> ((Optional<Iterable<?>>)x).orElse(emptyList()), true);
     }
 
     private NestedMember(MetaNamedMember<S, ?> parent, MetaNamedMember<?,T> child, Function<Object,Object> parentModifier, boolean flatten) {
