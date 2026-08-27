@@ -71,32 +71,32 @@ public abstract class RevisionedSupportServiceBase extends SupportServiceBase im
         redirectToCurrentInterval(RevisionedSupportServiceBase_.redirectToCurrentRevisionAndInterval.ap(this), req, res, durationOrPeriod);
     }
     
-    protected Optional<Void> checkRevisions(Revision currentRevision, Revision revision, Request request, Response response) {
+    protected boolean checkRevisions(Revision currentRevision, Revision revision, Request request, Response response) {
         if (!withinTolerance(currentRevision, revision)) {
             ResponseUtil.redirectToAnotherRevision(currentRevision.revision, request, response);
-            return Optional.empty();
+            return false;
         }
-        return Optional.of(null);
+        return true;
     }
     
-    protected Optional<Void> checkRevision(Revision revision, Request request, Response response) {
+    protected boolean checkRevision(Revision revision, Request request, Response response) {
         Revision currentRevision = getCurrentRevision();
         return checkRevisions(currentRevision, revision, request, response);
     }
     
-    protected Optional<Void> checkRevisionAndUrl(Revision revision, Request request, Response response, String... acceptedParams) {
-        for (@SuppressWarnings("unused") Void v: it(checkRevision(revision, request, response))) {
+    protected boolean checkRevisionAndUrl(Revision revision, Request request, Response response, String... acceptedParams) {
+        if (checkRevision(revision, request, response)) {
             checkUrl(request, acceptedParams);
-            return Optional.of(null);
+            return true;
         }
-        return Optional.empty();
+        return false;
     }
     
     /**
      * @throws NotFoundException for unidentified format
      */
     protected Optional<RevisionedRequestData> checkRevisionAndUrlAndResolveFormat(Revision revision, Request request, Response response, String... acceptedParams) throws NotFoundException {
-        for (@SuppressWarnings("unused") Void v: it(checkRevision(revision, request, response))) {
+        if (checkRevision(revision, request, response)) {
             checkUrl(request, acceptedParams);
             RequestData data = NotFoundException.assertFound(resolveFormat(request, response));
             return Optional.of(new RevisionedRequestData(data.format, data.etags, revision));
