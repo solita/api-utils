@@ -17,18 +17,19 @@ import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.forall;
 import static fi.solita.utils.functional.Functional.head;
 import static fi.solita.utils.functional.Functional.map;
-import static fi.solita.utils.functional.Functional.remove;
 import static fi.solita.utils.functional.Functional.size;
 import static fi.solita.utils.functional.Functional.sort;
 import static fi.solita.utils.functional.Functional.subtract;
+import static fi.solita.utils.functional.FunctionalA.remove;
 import static fi.solita.utils.functional.FunctionalM.find;
 import static fi.solita.utils.functional.FunctionalM.groupBy;
 
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 import fi.solita.utils.api.format.SerializationFormat;
 import fi.solita.utils.api.functions.FunctionProvider;
@@ -37,15 +38,11 @@ import fi.solita.utils.api.resolving.ResolvableMemberProvider;
 import fi.solita.utils.api.resolving.ResolvableMemberProvider_;
 import fi.solita.utils.api.types.PropertyName;
 import fi.solita.utils.api.types.PropertyName_;
-import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.MemberUtil;
 import fi.solita.utils.api.util.MemberUtil_;
 import fi.solita.utils.api.util.RedundantPropertiesException;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.Functional;
-import java.util.Optional;
-import java.util.function.Function;
-
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -235,20 +232,16 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     public static <T> List<MetaNamedMember<? super T, ?>> withNestedMembers(Collection<? extends MetaNamedMember<? super T, ?>> members, Includes.Include include, Builder<?>... builders) {
         List<MetaNamedMember<? super T, ?>> ret = newMutableList();
         for (MetaNamedMember<? super T, ?> member: members) {
-            Type actualType = ClassUtils.getGenericType(member.getMember());
             ret.add(member);
             for (Builder<?> builder: it(MemberUtil.findBuilderFor(newList(builders), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(member)))) {
                 if (include == Includes.Include.NoBuildable) {
                     ret.remove(member);
                 }
                 for (MetaNamedMember<?, ?> nestedMember: withNestedMembers((Collection<? extends MetaNamedMember<T, ?>>) builder.getMembers(), include, newArray(Builder.class, remove(builder, builders)))) {
-                    Class<?> actualNestedType = MemberUtil.memberClass(nestedMember);
-                    boolean flatten = Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(actualNestedType);
-                    NestedMember<? super T,?> mem = NestedMember.unchecked(member, nestedMember, flatten);
-                    if (Iterable.class.isAssignableFrom(ClassUtils.typeClass(actualType)) && Iterable.class.isAssignableFrom(ClassUtils.typeClass(ClassUtils.getFirstTypeArgument(actualType).orElse(void.class)))) {
-                        // parent returns iterable of iterable -> flatten
-                        mem = mem.modifyParent(x -> flatten((Iterable<Iterable<Object>>)x));
-                    }
+                    Optional<Builder<Object>> resultBuilder = MemberUtil.findBuilderFor(newList(builders), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(nestedMember));
+                    NestedMember<? super T,?> mem = resultBuilder.isPresent()
+                        ? NestedMember.ofUnchecked(member, nestedMember, true) // result is still buildable -> make flattening nested member
+                        : NestedMember.ofUnchecked(member, nestedMember, false); // result is not buildable -> don't flat away child-Iterables
                     ret.add(mem);
                     if (include == Includes.Include.OnlyLeaf) {
                         ret.remove(member);

@@ -380,7 +380,8 @@ public class ChartConversionService {
                 } else {
                     if (xIsListOfValuesFromASingleRow) {
                         // a single object with a single member that is a collection -> use the target collection as objects
-                        objs = (Iterable<T>) head(xValues);
+                        Object h = head(xValues);
+                        objs = h instanceof Optional ? it((Optional<T>)h) : (Iterable<T>)h;
                         x = (Function<T, Object>) Function.identity();
                     }
                     
