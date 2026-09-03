@@ -286,11 +286,11 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         
         boolean parentOptionalIterable = parentClass.equals(Optional.class) && parentSubclass.map(Iterable.class::isAssignableFrom).orElse(false);
         boolean parentOptional = parentClass.equals(Optional.class);
-        boolean parentIterable = parentClass.equals(Iterable.class);
+        boolean parentIterable = Iterable.class.isAssignableFrom(parentClass);
         
         boolean childOptionalIterable = c instanceof NestedMember && childClass.equals(Optional.class) && childSubclass.map(Iterable.class::isAssignableFrom).orElse(false);
         boolean childOptional = childClass.equals(Optional.class);
-        boolean childIterable = childClass.equals(Iterable.class);
+        boolean childIterable = Iterable.class.isAssignableFrom(childClass);
         
         if (flattenChildIterables && parentOptionalIterable && childOptionalIterable) {
             return ofOptIt_OptIt((MetaNamedMember<S, Optional<Iterable<Object>>>)p, (MetaNamedMember<Object, Optional<Iterable<Object>>>)c);
