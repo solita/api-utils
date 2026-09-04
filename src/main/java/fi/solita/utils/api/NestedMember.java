@@ -49,7 +49,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,T>(p, c) {
             @Override
             public T apply(S s) {
-                return c.apply(p.apply(s));
+                U u = p.apply(s);
+                return u == null ? null : c.apply(u);
             }
             @Override
             public Type resultingType() {
@@ -66,7 +67,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Optional<T>>(p, c) {
             @Override
             public Optional<T> apply(S s) {
-                return ((Optional<U>)p.apply(s)).map(u -> c.apply(u));
+                Optional<U> u = (Optional<U>)p.apply(s);
+                return u == null ? null : u.map(c::apply);
             }
             @Override
             public Type resultingType() {
@@ -83,7 +85,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(map(c, p.apply(s)));
+                Iterable<U> u = p.apply(s);
+                return u == null ? null : newList(map(c, u));
             }
             @Override
             public Type resultingType() {
@@ -100,7 +103,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(concatMap(c, p.apply(s)));
+                Iterable<U> u = p.apply(s);
+                return u == null ? null : newList(concatMap(c, u));
             }
             @Override
             public Type resultingType() {
@@ -117,7 +121,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(flatMap(c, p.apply(s)));
+                Iterable<U> u = p.apply(s);
+                return u == null ? null : newList(flatMap(c, u));
             }
             @Override
             public Type resultingType() {
@@ -134,7 +139,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(flatten(concatMap(c, p.apply(s))));
+                Iterable<U> u = p.apply(s);
+                return u == null ? null : newList(flatten(concatMap(c, u)));
             }
             @Override
             public Type resultingType() {
@@ -151,7 +157,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Optional<T>>(p, c) {
             @Override
             public Optional<T> apply(S s) {
-                return p.apply(s).flatMap(u -> c.apply(u));
+                Optional<U> u = p.apply(s);
+                return u == null ? null : u.flatMap(c::apply);
             }
             @Override
             public Type resultingType() {
@@ -168,7 +175,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(p.apply(s).map(c).orElse(emptyList()));
+                Optional<U> u = p.apply(s);
+                return u == null ? null : newList(u.map(c).orElse(emptyList()));
             }
             @Override
             public Type resultingType() {
@@ -185,7 +193,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(p.apply(s).flatMap(c).orElse(emptyList()));
+                Optional<U> u = p.apply(s);
+                return u == null ? null : newList(u.flatMap(c).orElse(emptyList()));
             }
             @Override
             public Type resultingType() {
@@ -203,8 +212,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
             @Override
             public Iterable<T> apply(S s) {
                 @SuppressWarnings("unchecked")
-                Iterable<U> pp = ((Optional<Iterable<U>>)p.apply(s)).orElse(emptyList());
-                return newList(map(c, pp));
+                Optional<Iterable<U>> u = (Optional<Iterable<U>>)p.apply(s);
+                return u == null ? null : newList(map(c, u.orElse(emptyList())));
             }
             @Override
             public Type resultingType() {
@@ -221,7 +230,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
         return new NestedMember<S,Iterable<T>>(p, c) {
             @Override
             public Iterable<T> apply(S s) {
-                return newList(p.apply(s).map(u -> concatMap(c, u)).orElse(emptyList()));
+                Optional<? extends Iterable<U>> u = p.apply(s);
+                return u == null ? null : newList(u.map(uu -> concatMap(c, uu)).orElse(emptyList()));
             }
             @Override
             public Type resultingType() {
@@ -239,8 +249,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
             @Override
             public Iterable<T> apply(S s) {
                 @SuppressWarnings("unchecked")
-                Optional<Iterable<U>> pp = (Optional<Iterable<U>>) p.apply(s);
-                return newList(flatMap(c, pp.orElse(emptyList())));
+                Optional<Iterable<U>> u = (Optional<Iterable<U>>) p.apply(s);
+                return u == null ? null : newList(flatMap(c, u.orElse(emptyList())));
             }
             @Override
             public Type resultingType() {
@@ -258,8 +268,8 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
             @Override
             public Iterable<T> apply(S s) {
                 @SuppressWarnings("unchecked")
-                Optional<Iterable<U>> pp = (Optional<Iterable<U>>) p.apply(s);
-                return newList(flatten(concatMap(c, pp.orElse(emptyList()))));
+                Optional<Iterable<U>> u = (Optional<Iterable<U>>) p.apply(s);
+                return u == null ? null : newList(flatten(concatMap(c, u.orElse(emptyList()))));
             }
             @Override
             public Type resultingType() {
