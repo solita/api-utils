@@ -239,7 +239,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
                 }
                 for (MetaNamedMember<?, ?> nestedMember: withNestedMembers((Collection<? extends MetaNamedMember<T, ?>>) builder.getMembers(), include, newArray(Builder.class, remove(builder, builders)))) {
                     Optional<Builder<Object>> resultBuilder = MemberUtil.findBuilderFor(newList(builders), MemberUtil.actualTypeUnwrappingOptionAndEitherAndIterables(nestedMember));
-                    NestedMember<? super T,?> mem = resultBuilder.isPresent()
+                    NestedMember<? super T,?> mem = resultBuilder.isPresent() || nestedMember instanceof NestedMember
                         ? NestedMember.ofUnchecked(member, nestedMember, true) // result is still buildable -> make flattening nested member
                         : NestedMember.ofUnchecked(member, nestedMember, false); // result is not buildable -> don't flat away child-Iterables
                     ret.add(mem);

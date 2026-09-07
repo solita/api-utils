@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 
 import fi.solita.utils.api.util.ClassUtils;
+import fi.solita.utils.functional.Collections;
 import fi.solita.utils.meta.MetaNamedMember;
 
 class WrapperType<T> implements ParameterizedType {
@@ -59,6 +60,64 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
             @Override
             public String toString() {
                 return "of:" + super.toString();
+            }
+        };
+    }
+    
+    public static final <S,U,T> NestedMember<S,Optional<T>> of_Opt(MetaNamedMember<S, U> p, MetaNamedMember<? super U,Optional<T>> c) {
+        return new NestedMember<S,Optional<T>>(p, c) {
+            @Override
+            public Optional<T> apply(S s) {
+                U u = p.apply(s);
+                return u == null ? null : c.apply(u);
+            }
+            @Override
+            public Type resultingType() {
+                return new WrapperType<>(Optional.class, c instanceof NestedMember ? ((NestedMember<?,?>) c).resultingType() : ClassUtils.getFirstTypeArgument(ClassUtils.getGenericType(c.getMember())).get());
+            }
+            @Override
+            public String toString() {
+                return "ofIt_Opt:" + super.toString();
+            }
+        };
+    }
+
+    public static final <S,U,T> NestedMember<S,Iterable<T>> of_It(MetaNamedMember<S, U> p, MetaNamedMember<? super U,? extends Iterable<T>> c) {
+        return new NestedMember<S,Iterable<T>>(p, c) {
+            @Override
+            public Iterable<T> apply(S s) {
+                U u = p.apply(s);
+                return u == null ? null : newList(c.apply(u));
+            }
+            @Override
+            public Type resultingType() {
+                return new WrapperType<>(Iterable.class, c instanceof NestedMember ? ((NestedMember<?,?>) c).resultingType() : ClassUtils.getFirstTypeArgument(ClassUtils.getGenericType(c.getMember())).get());
+            }
+            @Override
+            public String toString() {
+                return "ofIt_It:" + super.toString();
+            }
+        };
+    }
+    
+    public static final <S,U,T> NestedMember<S,Iterable<T>> of_OptIt(MetaNamedMember<S, U> p, MetaNamedMember<? super U,Optional<Iterable<T>>> c) {
+        return new NestedMember<S,Iterable<T>>(p, c) {
+            @Override
+            public Iterable<T> apply(S s) {
+                U u = p.apply(s);
+                if (u == null) {
+                    return null;
+                }
+                Optional<Iterable<T>> t = c.apply(u);
+                return t == null ? null : t.map(Collections::newList).orElse(emptyList());
+            }
+            @Override
+            public Type resultingType() {
+                return new WrapperType<>(Iterable.class, c instanceof NestedMember ? ((NestedMember<?,?>) c).resultingType() : ClassUtils.getFirstTypeArgument(ClassUtils.getFirstTypeArgument(ClassUtils.getGenericType(c.getMember())).get()).get());
+            }
+            @Override
+            public String toString() {
+                return "ofIt_OptIt:" + super.toString();
             }
         };
     }
@@ -326,6 +385,12 @@ public abstract class NestedMember<S,T> implements MetaNamedMember<S,T> {
             return ofIt_((MetaNamedMember<S, Iterable<Object>>)p, (MetaNamedMember<Object, Object>)c);
         } else if (parentOptional) {
             return ofOpt_((MetaNamedMember<S, Optional<Object>>)p, (MetaNamedMember<Object, Object>)c);
+        } else if (flattenChildIterables && childOptionalIterable) {
+            return of_OptIt((MetaNamedMember<S, Object>)p, (MetaNamedMember<Object, Optional<Iterable<Object>>>)c);
+        } else if (flattenChildIterables && childIterable) {
+            return of_It((MetaNamedMember<S, Object>)p, (MetaNamedMember<Object, Iterable<Object>>)c);
+        } else if (childOptional) {
+            return of_Opt((MetaNamedMember<S, Object>)p, (MetaNamedMember<Object, Optional<Object>>)c);
         } else {
             return of((MetaNamedMember<S, Object>)p, (MetaNamedMember<Object, Object>)c);
         }
