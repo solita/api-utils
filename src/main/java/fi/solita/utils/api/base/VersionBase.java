@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.function.Predicate;
 
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
@@ -109,6 +110,8 @@ public abstract class VersionBase<REQ> {
         return (ResolvableMemberProvider<REQ>) ResolvableMemberProvider.NONE;
     }
     
+    
+    
     /**
      * @param option
      */
@@ -116,9 +119,15 @@ public abstract class VersionBase<REQ> {
         return new FunctionProvider();
     }
     
+    protected boolean acceptProperty(MetaNamedMember<?,?> m) {
+        return true;
+    }
+    
     public Filtering filtering(REQ req) {
         return new Filtering(httpModule, jsonModule, resolvableMemberProvider(), functionProvider(Optional.of(req)));
     }
+    
+    
     
     public <K,T> Map<K,T> filterRowsSingle(REQ req, Includes<T> includes, Filters filters, Map<K,T> ts) {
         return filtering(req).filterDataSingle(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
@@ -133,20 +142,24 @@ public abstract class VersionBase<REQ> {
         return filtering(req).filterData(includes.includesFromRowFiltering, includes.geometryMembers, filters, ts);
     }
     
+    
+    
     public <K,T> Map<K,T> filterColumnsSingle(final Includes<T> includes, Map<K,T> ts) {
-        return includes.includesEverything ? ts : mapValue(x -> ModificationUtils.withPropertiesF(includes, functionProvider(Optional.empty())).apply(x), ts);
+        return includes.includesEverything ? ts : mapValue(x -> ModificationUtils.withPropertiesF(includes, functionProvider(Optional.empty()), this::acceptProperty).apply(x), ts);
     }
     @SuppressWarnings("unchecked")
     public <K,T> Map<K,Iterable<T>> filterColumns(final Includes<T> includes, Map<K,? extends Iterable<T>> ts) {
-        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(x -> map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty())), x), (Map<K,Iterable<T>>)ts);
+        return includes.includesEverything ? (Map<K, Iterable<T>>)ts : mapValue(x -> map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty()), this::acceptProperty), x), (Map<K,Iterable<T>>)ts);
     }
     @SuppressWarnings("unchecked")
     public <K,T> SortedMap<K,Iterable<T>> filterColumns(Includes<T> includes, SortedMap<K,? extends Iterable<T>> ts) {
-        return includes.includesEverything ? (SortedMap<K, Iterable<T>>)ts : FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty())), ts);
+        return includes.includesEverything ? (SortedMap<K, Iterable<T>>)ts : FunctionalM.map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty()), this::acceptProperty), ts);
     }
     public final <T> Iterable<T> filterColumns(Includes<T> includes, Iterable<T> ts) {
-        return includes.includesEverything ? ts : map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty())), ts);
+        return includes.includesEverything ? ts : map(ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty()), this::acceptProperty), ts);
     }
+    
+    
     
     @Deprecated
     public <K,T> Map<K,T> filterSingle(REQ req, Includes<T> includes, Filters filters, Map<K,T> ts) {
@@ -190,18 +203,12 @@ public abstract class VersionBase<REQ> {
     }
     
     public final <T> T filter(REQ req, Includes<T> includes, T t) {
-        return includes.includesEverything ? t : resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty())).apply(t));
+        return includes.includesEverything ? t : resolvableMemberProvider().mutateResolvables(req, includes, ModificationUtils.<T>withPropertiesF(includes, functionProvider(Optional.empty()), this::acceptProperty).apply(t));
     }
     
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters) {
-        return resolveIncludes(format, propertyNames, members, builders, filters, Collections.<MetaNamedMember<? super T, ?>>emptyList());
-    }
     
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry) {
-        return resolveIncludes(format, propertyNames, members, builders, filters, newList(geometry));
-    }
-    
-    public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
+
+    protected <T> Includes<T> mkIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
         Includes<T> includesFromPropertyNames =
                   Includes.resolveIncludes(resolvableMemberProvider(), functionProvider(Optional.empty()), format, propertyNames,                                    members, builders, geometries, false);
         Includes<T> includesFromFilters = filters == null || filters.or.isEmpty()
@@ -211,40 +218,52 @@ public abstract class VersionBase<REQ> {
         return new Includes<T>(includesFromPropertyNames.includes(), includesFromFilters.includes(), distinct(concat(includesFromPropertyNames.geometryMembers, includesFromFilters.geometryMembers)), includesFromPropertyNames.includesEverything || includesFromFilters.includesEverything, members, builders);
     }
     
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters) {
+        return mkIncludes(format, propertyNames, members, builders, filters, Collections.<MetaNamedMember<? super T, ?>>emptyList());
+    }
+    
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry) {
+        return mkIncludes(format, propertyNames, members, builders, filters, newList(geometry));
+    }
+    
+    public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, Iterable<? extends MetaNamedMember<? super T,?>> geometries) {
+        return mkIncludes(format, propertyNames, members, builders, filters, geometries);
+    }
+    
     @Deprecated
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters) {
-        return resolveIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>emptyList());
+        return mkIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>emptyList());
     }
     
     @Deprecated
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry) {
-        return resolveIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry));
+        return mkIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry));
     }
 
     @Deprecated
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
-        return resolveIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
+        return mkIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
     }
     
     @Deprecated
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Iterable<PropertyName> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Filters filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, @SuppressWarnings("unchecked") MetaNamedMember<? super T,?>... geometry3) {
-        return resolveIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
+        return mkIncludes(format, Optional.ofNullable(propertyNames), members, builders, filters, Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Optional<Filters> filters) {
-        return resolveIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>emptyList());
+        return mkIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>emptyList());
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Optional<Filters> filters, MetaNamedMember<? super T,?> geometry) {
-        return resolveIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry));
+        return mkIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry));
     }
 
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Optional<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2) {
-        return resolveIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
+        return mkIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(geometry, geometry2));
     }
     
     public <T> Includes<T> resolveIncludes(SerializationFormat format, Optional<? extends Iterable<PropertyName>> propertyNames, Collection<? extends MetaNamedMember<? super T,?>> members, Builder<?>[] builders, Optional<Filters> filters, MetaNamedMember<? super T,?> geometry, MetaNamedMember<? super T,?> geometry2, @SuppressWarnings("unchecked") MetaNamedMember<? super T,?>... geometry3) {
-        return resolveIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
+        return mkIncludes(format, propertyNames, members, builders, filters.orElse(Filters.EMPTY), Collections.<MetaNamedMember<? super T,?>>newList(cons(geometry, cons(geometry2, geometry3))));
     }
     
     

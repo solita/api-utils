@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.joda.time.Interval;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.functional.lens.Setter;
 import fi.solita.utils.meta.MetaField;
+import fi.solita.utils.meta.MetaNamedMember;
 
 public class ModificationUtils {
     
@@ -68,18 +70,18 @@ public class ModificationUtils {
         };
     }
 
-    public static final <T> Function<T,T> withPropertiesF(Includes<T> includes, FunctionProvider fp) {
-        return includes.includesEverything ? Function.identity() : ModificationUtils_.<T>withProperties_topLevel().ap(newList(map(MemberUtil_.propertyNameFromMember, includes.includesFromColumnFiltering)), fp, Arrays.asList(includes.builders));
+    public static final <T> Function<T,T> withPropertiesF(Includes<T> includes, FunctionProvider fp, Predicate<MetaNamedMember<?,?>> acceptProperty) {
+        return includes.includesEverything ? Function.identity() : x -> withProperties_topLevel(newList(map(MemberUtil_.propertyNameFromMember, includes.includesFromColumnFiltering)), fp, acceptProperty, Arrays.asList(includes.builders), x);
     }
 
-    static final <T> T withProperties_topLevel(Collection<PropertyName> propertyNames, FunctionProvider fp, Iterable<Builder<?>> builders, T t) {
+    static final <T> T withProperties_topLevel(Collection<PropertyName> propertyNames, FunctionProvider fp, Predicate<MetaNamedMember<?,?>> acceptProperty, Iterable<Builder<?>> builders, T t) {
         if (t == null) {
             return t;
         }
         if (!MemberUtil.findBuilderFor(builders, builderType(t)).isPresent()) {
             throw new IllegalArgumentException("No Builder found for the type of the root object: " + builderType(t) + ". You have a bug?");
         }
-        return ModificationUtils.withProperties(propertyNames, builders, fp, t);
+        return ModificationUtils.withProperties(propertyNames, builders, fp, acceptProperty, t);
     }
     
     @SuppressWarnings("unchecked")
@@ -88,11 +90,11 @@ public class ModificationUtils {
     }
 
     @SuppressWarnings("unchecked")
-    static final <T> T withProperties(Collection<PropertyName> propertyNames, Iterable<Builder<?>> builders, FunctionProvider fp, T t) {
+    static final <T> T withProperties(Collection<PropertyName> propertyNames, Iterable<Builder<?>> builders, FunctionProvider fp, Predicate<MetaNamedMember<?,?>> acceptProperty, T t) {
         logger.debug("Including properties {} in {}", propertyNames, t);
         for (Builder<T> builder: it(MemberUtil.<T>findBuilderFor(builders, builderType(t)))) {
             logger.debug("Found Builder for {}", t.getClass());
-            for (Function<? super T, Object> member: (Iterable<Function<? super T, Object>>)builder.getMembers()) {
+            for (MetaNamedMember<? super T, Object> member: filter(acceptProperty, (Iterable<MetaNamedMember<? super T, Object>>)builder.getMembers())) {
                 logger.debug("Handling member {}", member);
                 List<PropertyName> subs = newList(filter(x -> x.startsWith(fp, MemberUtil.memberName(member)), propertyNames));
                 String memberName = MemberUtil.memberName(member);
@@ -108,7 +110,7 @@ public class ModificationUtils {
                         if (subProps.isEmpty()) {
                             nested = Assert.singleton(subs).applyFunction(fp, value);
                         } else {
-                            nested = withProperties(subProps, builders, fp, value);
+                            nested = withProperties(subProps, builders, fp, acceptProperty, value);
                         }
                         logger.debug("Builder.with({},{})", member, nested);
                         
@@ -129,28 +131,28 @@ public class ModificationUtils {
             logger.debug("Object is a SortedSet: {}", t.getClass());
             SortedSet<Object> ret = newMutableSortedSet(((SortedSet<Object>) t).comparator());
             for (Object o: (SortedSet<Object>)t) {
-                ret.add(withProperties(propertyNames, builders, fp, o));
+                ret.add(withProperties(propertyNames, builders, fp, acceptProperty, o));
             }
             return (T) ret;
         } else if (t instanceof Set) {
             logger.debug("Object is a Set: {}", t.getClass());
             Set<Object> ret = newMutableSetOfSize(((Set<?>) t).size());
             for (Object o: (Set<Object>)t) {
-                ret.add(withProperties(propertyNames, builders, fp, o));
+                ret.add(withProperties(propertyNames, builders, fp, acceptProperty, o));
             }
             return (T) ret;
         } else if (t instanceof List || t instanceof Collection) {
             logger.debug("Object is a List/Collection: {}", t.getClass());
             List<Object> ret = newMutableListOfSize(((Collection<?>) t).size());
             for (Object o: (List<Object>)t) {
-                ret.add(withProperties(propertyNames, builders, fp, o));
+                ret.add(withProperties(propertyNames, builders, fp, acceptProperty, o));
             }
             return (T) ret;
         } else if (t instanceof SortedMap) {
             logger.debug("Object is a SortedMap: {}", t.getClass());
             SortedMap<Object,Object> ret = newMutableSortedMap(((SortedMap<Object,Object>) t).comparator());
             for (SortedMap.Entry<Object, Object> o: ((SortedMap<Object,Object>)t).entrySet()) {
-                ret.put(o.getKey(), withProperties(propertyNames, builders, fp, o.getValue()));
+                ret.put(o.getKey(), withProperties(propertyNames, builders, fp, acceptProperty, o.getValue()));
             }
             if (((SortedMap<?,?>) t).size() != ret.size()) {
                 throw new IllegalStateException("Something wrong");
@@ -160,7 +162,7 @@ public class ModificationUtils {
             logger.debug("Object is a Map: {}", t.getClass());
             Map<Object,Object> ret = newMutableMapOfSize(((Map<?,?>) t).size());
             for (Map.Entry<Object, Object> o: ((Map<Object,Object>)t).entrySet()) {
-                ret.put(o.getKey(), withProperties(propertyNames, builders, fp, o.getValue()));
+                ret.put(o.getKey(), withProperties(propertyNames, builders, fp, acceptProperty, o.getValue()));
             }
             if (((Map<?,?>) t).size() != ret.size()) {
                 throw new IllegalStateException("Something wrong");
@@ -168,7 +170,7 @@ public class ModificationUtils {
             return (T) ret;
         } else if (t instanceof Optional) {
             logger.debug("Object is an Option: {}", t.getClass());
-            return (T)((Optional<T>) t).map(ModificationUtils_.withProperties().ap(propertyNames, builders, fp));
+            return (T)((Optional<T>) t).map(x -> withProperties(propertyNames, builders, fp, acceptProperty, x));
         }
         
         logger.debug("No builder found for {}", t.getClass());

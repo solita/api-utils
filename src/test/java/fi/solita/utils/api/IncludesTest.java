@@ -5,6 +5,8 @@ import static fi.solita.utils.functional.Functional.isEmpty;
 import static fi.solita.utils.functional.Functional.size;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -36,6 +38,19 @@ public class IncludesTest {
     private static final SerializationFormat someFormat = SerializationFormat.JSON;
 
     public static class External {
+        public static final List<? extends MetaNamedMember<External,?>> FIELDS = Tuple.asList(IncludesTest_.External_.$Fields());
+        public static final Builder<External> BUILDER = Builder.of(IncludesTest_.External_.$Fields(), IncludesTest_.External_.$1);
+
+        public String accepted;
+        public String rejected;
+
+        public External() {
+        }
+
+        public External(String accepted, String rejected) {
+            this.accepted = accepted;
+            this.rejected = rejected;
+        }
     }
     
     private static ResolvableMemberProvider<?> externalProvider = new ResolvableMemberProvider<Object>() {
@@ -57,7 +72,7 @@ public class IncludesTest {
     public static class FooDto {
         public static final List<? extends MetaNamedMember<FooDto,?>> FIELDS = Tuple.asList(FooDto_.$Fields());
         public static final Builder<FooDto> BUILDER = Builder.of(FooDto_.$Fields(), FooDto_.$);
-        public static final Builder<?>[] BUILDERS = { BUILDER };
+        public static final Builder<?>[] BUILDERS = { BUILDER, External.BUILDER };
         
         public String bar;
         public External someId; 
@@ -159,8 +174,25 @@ public class IncludesTest {
     @Test
     public void withPropertiesF_appliesFunction() {
         Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, new FunctionProvider(), someFormat, Optional.of(newList(PropertyName.of("round(baz)"))), FooDto.FIELDS, FooDto.BUILDERS, noGeometries, false);
-        Function<FooDto, FooDto> mapper = ModificationUtils.withPropertiesF(includes, new FunctionProvider());
+        Function<FooDto, FooDto> mapper = ModificationUtils.withPropertiesF(includes, new FunctionProvider(), x -> true);
         FooDto foo = new FooDto("", new External(), 3.14);
         assertEquals(Double.valueOf(3.0), mapper.apply(foo).baz);
+    }
+
+    @Test
+    public void withPropertiesF_includesOnlyMembersAndNestedMembersAcceptedByAcceptProperty() {
+        Includes<FooDto> includes = Includes.resolveIncludes(ResolvableMemberProvider.NONE, FunctionProvider.NONE, someFormat,
+                Optional.of(newList(PropertyName.of("bar"), PropertyName.of("baz"), PropertyName.of("someId.accepted"), PropertyName.of("someId.rejected"))),
+                FooDto.FIELDS, FooDto.BUILDERS, noGeometries, false);
+        Function<FooDto, FooDto> mapper = ModificationUtils.withPropertiesF(includes, FunctionProvider.NONE,
+                member -> member.getName().equals("bar") || member.getName().equals("someId") || member.getName().equals("accepted"));
+
+        FooDto mapped = mapper.apply(new FooDto("bar", new External("accepted", "rejected"), 3.14));
+
+        assertEquals("bar", mapped.bar);
+        assertNotNull(mapped.someId);
+        assertEquals("accepted", mapped.someId.accepted);
+        assertNull(mapped.someId.rejected);
+        assertNull(mapped.baz);
     }
 }
