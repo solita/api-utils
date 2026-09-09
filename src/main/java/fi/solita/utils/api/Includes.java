@@ -75,7 +75,7 @@ public class Includes<T> implements Iterable<MetaNamedMember<T,?>> {
     
     public static final <T> Includes<T> all(Collection<? extends MetaNamedMember<? super T,?>> includes, Builder<?>[] builders) {
         // Note: includesEverything is false, to allow the possibility for the implementation to still filter out some properties
-        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false, includes);
+        return new Includes<T>(Includes.withNestedMembers(includes, Include.All, builders), Collections.<MetaNamedMember<? super T, ?>>emptyList(), Collections.<MetaNamedMember<? super T, ?>>emptyList(), false, includes, builders);
     }
     
     @SuppressWarnings("unchecked")
