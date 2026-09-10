@@ -79,7 +79,7 @@ public class FilteringTest {
     }
     public static final Data data = new Data();
 
-    private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), new JsonModule(Collections.<Class<?>,JsonSerializer<?>>emptyMap(),Collections.<Class<?>,JsonSerializer<?>>emptyMap(),Collections.<Class<?>,JsonDeserializer<?>>emptyMap(),Collections.<Class<?>,Class<?>>emptyMap()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);
+    private Filtering filtering = new Filtering(new HttpModule(new HttpSerializers(new Serializers()).converters()), new JsonModule(Collections.<Class<?>,JsonSerializer<?>>emptyMap(),Collections.<Class<?>,JsonSerializer<?>>emptyMap(),Collections.<Class<?>,JsonDeserializer<?>>emptyMap()), ResolvableMemberProvider.NONE, FunctionProvider.NONE);
     
     
     

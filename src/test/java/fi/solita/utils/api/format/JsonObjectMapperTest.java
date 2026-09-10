@@ -28,8 +28,7 @@ public class JsonObjectMapperTest {
             new JsonModule(
                 jsonSerializers.serializers(),
                 jsonSerializers.keySerializers(),
-                jsonSerializers.deserializers(),
-                jsonSerializers.rawTypes()
+                jsonSerializers.deserializers()
             )
         );
     }

@@ -9,12 +9,11 @@ import static fi.solita.utils.functional.Functional.flatten;
 import static fi.solita.utils.functional.Functional.map;
 import static fi.solita.utils.functional.FunctionalM.mapValue;
 
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
-import java.util.function.Predicate;
 
 import org.eclipse.persistence.jaxb.metadata.MetadataSource;
 
@@ -46,7 +45,6 @@ import fi.solita.utils.api.util.ClassUtils;
 import fi.solita.utils.api.util.ModificationUtils;
 import fi.solita.utils.functional.Collections;
 import fi.solita.utils.functional.FunctionalM;
-import java.util.Optional;
 import fi.solita.utils.functional.lens.Builder;
 import fi.solita.utils.meta.MetaNamedMember;
 
@@ -85,7 +83,7 @@ public abstract class VersionBase<REQ> {
     protected XmlSerializers xmlSerializers() { return new XmlSerializers(serializers()); }
     
     public final HttpModule httpModule = new HttpModule(httpSerializers().converters());
-    public final JsonModule jsonModule = new JsonModule(jsonSerializers().serializers(), jsonSerializers().keySerializers(), jsonSerializers().deserializers(), jsonSerializers().rawTypes());
+    public final JsonModule jsonModule = new JsonModule(jsonSerializers().serializers(), jsonSerializers().keySerializers(), jsonSerializers().deserializers());
     public final HtmlModule htmlModule = new HtmlModule(htmlSerializers().serializers());
     public final CsvModule csvModule = new CsvModule(csvSerializers().serializers());
     public final TsvModule tsvModule = new TsvModule(tsvSerializers().serializers());

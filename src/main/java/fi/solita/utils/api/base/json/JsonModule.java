@@ -29,11 +29,10 @@ import java.util.Optional;
 
 public class JsonModule extends SimpleModule {
 
-    public final Map<Class<?>,Class<?>> rawTypes;
     public final Map<Class<?>,JsonSerializer<?>> keySerializers;
 
     @SuppressWarnings("unchecked")
-    public JsonModule(Map<Class<?>, JsonSerializer<?>> serializers, Map<Class<?>, JsonSerializer<?>> keySerializers, Map<Class<?>, JsonDeserializer<?>> deserializers, Map<Class<?>,Class<?>> rawTypes) {
+    public JsonModule(Map<Class<?>, JsonSerializer<?>> serializers, Map<Class<?>, JsonSerializer<?>> keySerializers, Map<Class<?>, JsonDeserializer<?>> deserializers) {
         for (Map.Entry<Class<?>, JsonSerializer<?>> s: serializers.entrySet()) {
             this.addSerializer((Class<Object>)s.getKey(), (JsonSerializer<Object>)s.getValue());
         }
@@ -43,7 +42,6 @@ public class JsonModule extends SimpleModule {
         for (Map.Entry<Class<?>, JsonDeserializer<?>> s: deserializers.entrySet()) {
             this.addDeserializer((Class<Object>)s.getKey(), (JsonDeserializer<Object>)s.getValue());
         }
-        this.rawTypes = rawTypes;
         this.keySerializers = keySerializers;
     }
     
