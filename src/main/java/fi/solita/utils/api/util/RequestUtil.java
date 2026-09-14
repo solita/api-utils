@@ -136,9 +136,9 @@ public abstract class RequestUtil {
             throw new RequestUtil.QueryParametersMustNotBeDuplicatedException();
         }
         
-        if (size(filter(x -> !x, map((BiFunction<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
+        /*if (size(filter(x -> !x, map((BiFunction<String,String,Boolean>)RequestUtil_.inOrder, zip(parameterNames, tail(parameterNames))))) > 1) {
             throw new RequestUtil.QueryParametersMustBeInAlphabeticalOrderException();
-        }
+        }*/
         
         if (parameterNames.contains("cql_filter") && (parameterNames.contains("count") || parameterNames.contains("startIndex"))) {
             throw new RequestUtil.FilteringNotSupportedWithPaginationException();
