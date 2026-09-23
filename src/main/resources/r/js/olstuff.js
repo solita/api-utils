@@ -357,6 +357,14 @@ var olstuff = function(constants, util, includeCredentials, headers) {
             }
         },
         
+        refresh: function(layers) {
+            layers.forEach(function(layer) {
+                if (layer.getSource()) {
+                    layer.getSource().refresh();
+                }
+            });
+        },
+        
         newVectorLayerNoTile: function(url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter) {
             return ret.newVectorLayerImpl(false, url, shortName, title_fi, title_en, opacity, propertyName, styleOrHandler, typeNames, simplify, cql_filter);
         },
