@@ -417,11 +417,19 @@ public abstract class OpenAPISupport {
         protected void postCustomize(AnnotatedType type, ModelConverterContext context, Supplier<Schema<?>> schema) {
             Annotation[] annotations = Optional.ofNullable(type.getCtxAnnotations()).orElse(new Annotation[0]);
             Pair<Optional<String>, Optional<String>> d = doc(Optional.ofNullable(type.getPropertyName()), type.getType(), annotations, Optional.empty());
-            for (String s: it(d.right())) {
+            if (d.right().isPresent()) {
                 if (schema.get().getDescription() == null) {
-                    schema.get().description(langsToList(s));
+                    schema.get().description(langsToList(d.right().get()));
+                }
+            } else if (d.left().isPresent()) {
+                // no description, use name
+                if (schema.get().getDescription() == null) {
+                    schema.get().description(langsToList(d.left().get()));
+                } else {
+                    schema.get().description(langsToList(d.left().get()) + "\n" + schema.get().getDescription());
                 }
             }
+            
             for (Class<?> clazz: it(Optional.of(MemberUtil.memberClassUnwrappingOption(type.getType())))) {
                 for (String title: it(getSchemaTitle(clazz))) {
                     schema.get().title(title);
@@ -563,8 +571,9 @@ public abstract class OpenAPISupport {
     protected Pair<Optional<String>,Optional<String>> doc(Optional<String> name, Type genericType, Annotation[] annotations, Optional<Class<?>> declaringClass) {
         for (Documentation doc: (Iterable<Documentation>)(Object)concat(find(OpenAPISupport_.equalsDocumentation, annotations),
                                                                         find(OpenAPISupport_.equalsDocumentation, ClassUtils.resolveClass(genericType).get().getAnnotations()))) {
-            return Pair.<Optional<String>,Optional<String>>of(doc.name().isEmpty() && doc.name_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
-                           doc.description().isEmpty() && doc.description_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
+            return Pair.<Optional<String>,Optional<String>>of(
+                    doc.name().isEmpty() && doc.name_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(str2option(doc.name()), str2option(doc.name_en())))),
+                    doc.description().isEmpty() && doc.description_en().isEmpty() ? Optional.empty() : str2option(mkString(" / ", concat(str2option(doc.description()), str2option(doc.description_en())))));
         }
         return Pair.of(Optional.empty(), Optional.empty());
     }
