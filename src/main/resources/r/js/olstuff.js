@@ -388,7 +388,7 @@ var olstuff = function(constants, util, includeCredentials, headers) {
                      (url.indexOf('time=') >= 0 || url.indexOf('time-infra=') >= 0 || !instant ? '' : '&time=' + instant + (instant.indexOf('/') < 0 ? '/' + instant : '')) +
                      (!typeNames ? '' : '&typeNames=' + typeNames);
 
-            var layerTitle = ret.mkLayerTitle(title_fi, title_en);
+            var layerTitle = ret.mkLayerTitle(title_fi, title_en, shortName);
             var aborter = new AbortController();
             var layer;
             var source = new ol.source.Vector({
@@ -512,8 +512,8 @@ var olstuff = function(constants, util, includeCredentials, headers) {
             return layer;
         },
         
-        mkLayerTitle: function(title_fi, title_en) {
-            return '<span lang="fi">' + ret.modifyLayerTitle(title_fi) + '</span><span lang="en">' + ret.modifyLayerTitle(title_en) + '</span>';
+        mkLayerTitle: function(title_fi, title_en, shortName) {
+            return '<span lang="fi" ' + (shortName ? 'class="ot-' + shortName + '"' : '') + '>' + ret.modifyLayerTitle(title_fi) + '</span><span lang="en">' + ret.modifyLayerTitle(title_en) + '</span>';
         },
         
         modifyLayerTitle: function(title) {
